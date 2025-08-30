@@ -1,7 +1,7 @@
 import express from 'express';
 import { db } from '../config/database.js';
-import { applications, jobs, users } from '../schema.js';
-import { eq, and } from 'drizzle-orm';
+import { applications, jobs, users, companies } from '../schema.js';
+import { eq, and, sql, desc } from 'drizzle-orm';
 import { authenticateToken } from './auth.js';
 
 const router = express.Router();
@@ -143,9 +143,9 @@ router.get('/:id', authenticateToken, async (req, res) => {
     }
 });
 
-// Update application status (HR/Admin only)
+// Update application status (Employer/Admin only)
 router.put('/:id/status', authenticateToken, async (req, res) => {
-    if (req.user.role !== 'hr' && req.user.role !== 'admin') {
+    if (req.user.role !== 'employer' && req.user.role !== 'admin') {
         return res.status(403).json({ message: 'Access denied' });
     }
 
@@ -177,9 +177,9 @@ router.put('/:id/status', authenticateToken, async (req, res) => {
     }
 });
 
-// Get applications for a job (HR/Admin only)
+// Get applications for a job (Employer/Admin only)
 router.get('/job/:jobId', authenticateToken, async (req, res) => {
-    if (req.user.role !== 'hr' && req.user.role !== 'admin') {
+    if (req.user.role !== 'employer' && req.user.role !== 'admin') {
         return res.status(403).json({ message: 'Access denied' });
     }
 
@@ -262,9 +262,9 @@ router.get('/job/:jobId', authenticateToken, async (req, res) => {
     }
 });
 
-// Get all applications (HR/Admin only)
+// Get all applications (Employer/Admin only)
 router.get('/', authenticateToken, async (req, res) => {
-    if (req.user.role !== 'hr' && req.user.role !== 'admin') {
+    if (req.user.role !== 'employer' && req.user.role !== 'admin') {
         return res.status(403).json({ message: 'Access denied' });
     }
 
@@ -324,7 +324,7 @@ router.get('/', authenticateToken, async (req, res) => {
         if (user_id) {
             query = query.where(eq(applications.user_id, user_id));
             countQuery = countQuery.where(eq(applications.user_id, user_id));
-    }
+        }
 
         // Get the total count
         const countResult = await countQuery.get();
@@ -349,32 +349,32 @@ router.get('/', authenticateToken, async (req, res) => {
             job_type: app.job_type,
             work_mode: app.work_mode,
             status: app.status,
-                applied_at: app.created_at,
-                applicant: {
-                    username: app.applicant_username,
-                    email: app.applicant_email,
-                    name: app.applicant_name
-                }
-            }));
+            applied_at: app.created_at,
+            applicant: {
+                username: app.applicant_username,
+                email: app.applicant_email,
+                name: app.applicant_name
+            }
+        }));
 
-            res.json({
-                applications: formattedApplications,
-                pagination: {
-                    page: parseInt(page),
-                    limit: parseInt(limit),
-                    total: countResult.count,
-                    pages: Math.ceil(countResult.count / parseInt(limit))
-                }
-            });
+        res.json({
+            applications: formattedApplications,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total: countResult.count,
+                pages: Math.ceil(countResult.count / parseInt(limit))
+            }
+        });
     } catch (error) {
         console.error('Error retrieving applications:', error);
         res.status(500).json({ message: 'Database error' });
     }
 });
 
-// Delete application (HR/Admin only)
+// Delete application (Employer/Admin only)
 router.delete('/:id', authenticateToken, async (req, res) => {
-    if (req.user.role !== 'hr' && req.user.role !== 'admin') {
+    if (req.user.role !== 'employer' && req.user.role !== 'admin') {
         return res.status(403).json({ message: 'Access denied' });
     }
 

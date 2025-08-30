@@ -240,113 +240,133 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// Create new job (HR/Admin only)
-router.post('/', authenticateToken, (req, res) => {
-    if (req.user.role !== 'hr' && req.user.role !== 'admin') {
-        return res.status(403).json({ message: 'Access denied' });
-    }
-
-    const {
-        title,
-        company_id,
-        location,
-        salary_min,
-        salary_max,
-        salary_currency = 'INR',
-        job_type,
-        work_mode,
-        experience_min,
-        experience_max,
-        english_level,
-        description,
-        requirements,
-        benefits
-    } = req.body;
-
-    if (!title || !company_id || !location || !job_type || !work_mode || !description) {
-        return res.status(400).json({ message: 'Required fields missing' });
-    }
-
-    const query = `
-    INSERT INTO jobs (
-      title, company_id, location, salary_min, salary_max, salary_currency,
-      job_type, work_mode, experience_min, experience_max, english_level,
-      description, requirements, benefits
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
-
-    const params = [
-        title, company_id, location, salary_min, salary_max, salary_currency,
-        job_type, work_mode, experience_min, experience_max, english_level,
-        description, requirements, benefits
-    ];
-
-    db.run(query, params, function (err) {
-        if (err) {
-            return res.status(500).json({ message: 'Error creating job' });
+// Create new job (Employer/Admin only)
+router.post('/', authenticateToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'employer' && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Access denied' });
         }
+
+        const {
+            title,
+            company_id,
+            location,
+            salary_min,
+            salary_max,
+            salary_currency = 'INR',
+            job_type,
+            work_mode,
+            experience_min,
+            experience_max,
+            english_level,
+            description,
+            requirements,
+            benefits
+        } = req.body;
+
+        if (!title || !company_id || !location || !job_type || !work_mode || !description) {
+            return res.status(400).json({ message: 'Required fields missing' });
+        }
+
+        const result = await db.insert(jobs).values({
+            title,
+            company_id: parseInt(company_id),
+            location,
+            salary_min: salary_min ? parseInt(salary_min) : null,
+            salary_max: salary_max ? parseInt(salary_max) : null,
+            salary_currency,
+            job_type,
+            work_mode,
+            experience_min: experience_min ? parseInt(experience_min) : null,
+            experience_max: experience_max ? parseInt(experience_max) : null,
+            english_level,
+            description,
+            requirements,
+            benefits,
+            status: 'active'
+        }).returning({ id: jobs.id });
 
         res.status(201).json({
             message: 'Job created successfully',
-            jobId: this.lastID
+            jobId: result[0].id
         });
-    });
+    } catch (error) {
+        console.error('Error creating job:', error);
+        res.status(500).json({ message: 'Error creating job', error: error.message });
+    }
 });
 
-// Update job (HR/Admin only)
-router.put('/:id', authenticateToken, (req, res) => {
-    if (req.user.role !== 'hr' && req.user.role !== 'admin') {
-        return res.status(403).json({ message: 'Access denied' });
-    }
-
-    const { id } = req.params;
-    const updateFields = req.body;
-
-    // Remove fields that shouldn't be updated
-    delete updateFields.id;
-    delete updateFields.created_at;
-
-    if (Object.keys(updateFields).length === 0) {
-        return res.status(400).json({ message: 'No fields to update' });
-    }
-
-    const setClause = Object.keys(updateFields).map(key => `${key} = ?`).join(', ');
-    const query = `UPDATE jobs SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`;
-
-    const params = [...Object.values(updateFields), id];
-
-    db.run(query, params, function (err) {
-        if (err) {
-            return res.status(500).json({ message: 'Error updating job' });
+// Update job (Employer/Admin only)
+router.put('/:id', authenticateToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'employer' && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Access denied' });
         }
 
-        if (this.changes === 0) {
+        const { id } = req.params;
+        const updateFields = { ...req.body };
+
+        // Remove fields that shouldn't be updated
+        delete updateFields.id;
+        delete updateFields.created_at;
+        delete updateFields.updated_at;
+
+        if (Object.keys(updateFields).length === 0) {
+            return res.status(400).json({ message: 'No fields to update' });
+        }
+
+        // Convert numeric fields
+        if (updateFields.company_id) updateFields.company_id = parseInt(updateFields.company_id);
+        if (updateFields.salary_min) updateFields.salary_min = parseInt(updateFields.salary_min);
+        if (updateFields.salary_max) updateFields.salary_max = parseInt(updateFields.salary_max);
+        if (updateFields.experience_min) updateFields.experience_min = parseInt(updateFields.experience_min);
+        if (updateFields.experience_max) updateFields.experience_max = parseInt(updateFields.experience_max);
+
+        // Add updated_at timestamp
+        updateFields.updated_at = sql`CURRENT_TIMESTAMP`;
+
+        const result = await db
+            .update(jobs)
+            .set(updateFields)
+            .where(eq(jobs.id, parseInt(id)));
+
+        if (result.rowsAffected === 0) {
             return res.status(404).json({ message: 'Job not found' });
         }
 
         res.json({ message: 'Job updated successfully' });
-    });
+    } catch (error) {
+        console.error('Error updating job:', error);
+        res.status(500).json({ message: 'Error updating job', error: error.message });
+    }
 });
 
-// Delete job (HR/Admin only)
-router.delete('/:id', authenticateToken, (req, res) => {
-    if (req.user.role !== 'hr' && req.user.role !== 'admin') {
-        return res.status(403).json({ message: 'Access denied' });
-    }
-
-    const { id } = req.params;
-
-    db.run('UPDATE jobs SET status = "inactive" WHERE id = ?', [id], function (err) {
-        if (err) {
-            return res.status(500).json({ message: 'Error deleting job' });
+// Delete job (Employer/Admin only)
+router.delete('/:id', authenticateToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'employer' && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Access denied' });
         }
 
-        if (this.changes === 0) {
+        const { id } = req.params;
+
+        const result = await db
+            .update(jobs)
+            .set({ 
+                status: 'inactive',
+                updated_at: sql`CURRENT_TIMESTAMP`
+            })
+            .where(eq(jobs.id, parseInt(id)));
+
+        if (result.rowsAffected === 0) {
             return res.status(404).json({ message: 'Job not found' });
         }
 
         res.json({ message: 'Job deleted successfully' });
-    });
+    } catch (error) {
+        console.error('Error deleting job:', error);
+        res.status(500).json({ message: 'Error deleting job', error: error.message });
+    }
 });
 
 export default router;

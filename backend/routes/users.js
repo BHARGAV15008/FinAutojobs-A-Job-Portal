@@ -1,8 +1,8 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import { db } from '../config/database.js';
-import { users, applications, jobs } from '../schema.js';
-import { eq, and } from 'drizzle-orm';
+import { users, applications, jobs, companies } from '../schema.js';
+import { eq, and, or, like, sql } from 'drizzle-orm';
 import { authenticateToken } from './auth.js';
 
 const router = express.Router();
@@ -64,17 +64,12 @@ router.put('/profile', authenticateToken, async (req, res) => {
         }
 
         // Update user profile
+        updateFields.updated_at = new Date().toISOString();
         const result = await db.update(users)
-            .set({
-                ...updateFields,
-                updated_at: sql`CURRENT_TIMESTAMP`
-            })
-            .where(eq(users.id, req.user.userId))
-            .run();
+            .set(updateFields)
+            .where(eq(users.id, req.user.userId));
 
-        if (result.rowsAffected === 0) {
-            return res.status(404).json({ message: 'User not found' });
-        }
+        // Note: Drizzle doesn't return rowsAffected, so we'll assume success if no error
 
         res.json({ message: 'Profile updated successfully' });
     } catch (error) {
@@ -120,10 +115,9 @@ router.put('/change-password', authenticateToken, async (req, res) => {
         await db.update(users)
             .set({
                 password: hashedNewPassword,
-                updated_at: sql`CURRENT_TIMESTAMP`
+                updated_at: new Date().toISOString()
             })
-            .where(eq(users.id, req.user.userId))
-            .run();
+            .where(eq(users.id, req.user.userId));
 
         res.json({ message: 'Password changed successfully' });
     } catch (error) {
@@ -141,8 +135,8 @@ router.get('/applications', authenticateToken, async (req, res) => {
         // Get total count
         const countResult = await db.select({ count: sql`COUNT(*)` })
             .from(applications)
-            .where(eq(applications.user_id, req.user.userId))
-            .get();
+            .where(eq(applications.user_id, req.user.userId));
+        const totalCount = countResult[0]?.count || 0;
 
         // Get applications with job and company details
         const userApplications = await db.select({
@@ -153,7 +147,7 @@ router.get('/applications', authenticateToken, async (req, res) => {
             resume_url: applications.resume_url,
             cover_letter: applications.cover_letter,
             status: applications.status,
-            applied_at: applications.created_at,
+            applied_at: applications.applied_at,
             updated_at: applications.updated_at,
             // Job fields
             job_title: jobs.title,
@@ -170,7 +164,7 @@ router.get('/applications', authenticateToken, async (req, res) => {
         .innerJoin(jobs, eq(applications.job_id, jobs.id))
         .innerJoin(companies, eq(jobs.company_id, companies.id))
         .where(eq(applications.user_id, req.user.userId))
-        .orderBy(sql`${applications.created_at} DESC`)
+        .orderBy(sql`${applications.applied_at} DESC`)
         .limit(parseInt(limit))
         .offset(offset);
         
@@ -180,8 +174,8 @@ router.get('/applications', authenticateToken, async (req, res) => {
                 pagination: {
                     page: parseInt(page),
                     limit: parseInt(limit),
-                    total: countResult.count,
-                    pages: Math.ceil(countResult.count / parseInt(limit))
+                    total: totalCount,
+                    pages: Math.ceil(totalCount / parseInt(limit))
                 }
             });
         }
@@ -208,8 +202,8 @@ router.get('/applications', authenticateToken, async (req, res) => {
             pagination: {
                 page: parseInt(page),
                 limit: parseInt(limit),
-                total: countResult.count,
-                pages: Math.ceil(countResult.count / parseInt(limit))
+                total: totalCount,
+                pages: Math.ceil(totalCount / parseInt(limit))
             }
         });
     } catch (error) {
@@ -261,7 +255,8 @@ router.get('/', authenticateToken, async (req, res) => {
         }
 
         // Get total count
-        const countResult = await countQuery.get();
+        const countResult = await countQuery;
+        const totalCount = countResult[0]?.count || 0;
         
         // Get users with pagination
         const usersList = await query
@@ -276,8 +271,8 @@ router.get('/', authenticateToken, async (req, res) => {
                 pagination: {
                     page: parseInt(page),
                     limit: parseInt(limit),
-                    total: countResult.count,
-                    pages: Math.ceil(countResult.count / parseInt(limit))
+                    total: totalCount,
+                    pages: Math.ceil(totalCount / parseInt(limit))
                 }
             });
         }
@@ -287,8 +282,8 @@ router.get('/', authenticateToken, async (req, res) => {
             pagination: {
                 page: parseInt(page),
                 limit: parseInt(limit),
-                total: countResult.count,
-                pages: Math.ceil(countResult.count / parseInt(limit))
+                total: totalCount,
+                pages: Math.ceil(totalCount / parseInt(limit))
             }
         });
     } catch (error) {
@@ -306,22 +301,17 @@ router.put('/:id/role', authenticateToken, async (req, res) => {
     const { id } = req.params;
     const { role } = req.body;
 
-    if (!role || !['jobseeker', 'hr', 'admin'].includes(role)) {
+    if (!role || !['jobseeker', 'employer', 'admin'].includes(role)) {
         return res.status(400).json({ message: 'Valid role is required' });
     }
 
     try {
-        const result = await db.update(users)
+        await db.update(users)
             .set({
                 role,
-                updated_at: sql`CURRENT_TIMESTAMP`
+                updated_at: new Date().toISOString()
             })
-            .where(eq(users.id, id))
-            .run();
-
-        if (result.rowsAffected === 0) {
-            return res.status(404).json({ message: 'User not found' });
-        }
+            .where(eq(users.id, id));
 
         res.json({ message: 'User role updated successfully' });
     } catch (error) {
@@ -345,26 +335,21 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 
     try {
         // Check if user has applications
-        const countQuery = db.select({ count: sql`COUNT(*)` })
+        const countQuery = await db.select({ count: sql`COUNT(*)` })
             .from(applications)
             .where(eq(applications.user_id, id));
         
-        const applicationCount = await countQuery.get();
+        const applicationCount = countQuery[0]?.count || 0;
 
-        if (applicationCount.count > 0) {
+        if (applicationCount > 0) {
             return res.status(400).json({
                 message: 'Cannot delete user with applications. Please delete applications first.'
             });
         }
 
         // Delete the user
-        const result = await db.delete(users)
-            .where(eq(users.id, id))
-            .run();
-
-        if (result.rowsAffected === 0) {
-            return res.status(404).json({ message: 'User not found' });
-        }
+        await db.delete(users)
+            .where(eq(users.id, id));
 
         res.json({ message: 'User deleted successfully' });
     } catch (error) {

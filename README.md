@@ -156,7 +156,7 @@ The project uses:
 ### Backend Deployment
 1. Set environment variables for production
 2. Build the application: `npm run build`
-3. Start production server: `npm start`
+3. Start production server: `npm run dev
 
 ### Frontend Deployment
 1. Build the application: `npm run build`

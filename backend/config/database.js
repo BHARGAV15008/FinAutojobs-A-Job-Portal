@@ -27,24 +27,171 @@ const db = drizzle(sqlite, { schema });
 // Initialize database and seed data
 const initializeDatabase = async () => {
   try {
-    // Run migrations if needed
-    // await migrate(db, { migrationsFolder: './migrations' });
-    
-    // For now, we'll just ensure the database is connected
+    // Ensure database connection
     await db.select({ result: sql`1` });
     console.log('✅ Connected to SQLite database with Drizzle ORM');
     
-    // Check if data already exists
-    const companyCountResult = await db.select({ count: sql`COUNT(*)` })
-      .from(schema.companies);
-    const companyCount = companyCountResult[0];
+    // Create tables if they don't exist (using raw SQL for initial setup)
+    await createTables();
     
-    if (companyCount.count === 0) {
-      console.log('📊 Inserting sample data...');
+    // Check if data already exists
+    try {
+      const companyCountResult = await db.select({ count: sql`COUNT(*)` })
+        .from(schema.companies);
+      const companyCount = companyCountResult[0];
+      
+      if (companyCount.count === 0) {
+        console.log('📊 Inserting sample data...');
+        await insertSampleData();
+      }
+    } catch (error) {
+      // If tables don't exist, create them and then insert sample data
+      console.log('📊 Creating tables and inserting sample data...');
       await insertSampleData();
     }
   } catch (error) {
     console.error('❌ Database initialization failed:', error);
+    throw error;
+  }
+};
+
+// Create tables using raw SQL (temporary solution until proper migrations)
+const createTables = async () => {
+  try {
+    // Create users table
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        full_name TEXT NOT NULL,
+        phone TEXT,
+        role TEXT DEFAULT 'jobseeker' CHECK (role IN ('jobseeker', 'employer', 'admin')),
+        status TEXT DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'suspended')),
+        bio TEXT,
+        location TEXT,
+        profile_picture TEXT,
+        linkedin_url TEXT,
+        github_url TEXT,
+        portfolio_url TEXT,
+        skills TEXT,
+        qualification TEXT,
+        experience_years INTEGER,
+        company_name TEXT,
+        position TEXT,
+        email_verified BOOLEAN DEFAULT FALSE,
+        phone_verified BOOLEAN DEFAULT FALSE,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create companies table
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS companies (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        description TEXT,
+        logo_url TEXT,
+        website TEXT,
+        location TEXT,
+        industry TEXT,
+        size TEXT,
+        founded_year INTEGER,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create job_categories table
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS job_categories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT UNIQUE NOT NULL,
+        description TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create jobs table
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS jobs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        company_id INTEGER NOT NULL,
+        category_id INTEGER,
+        location TEXT,
+        salary_min INTEGER,
+        salary_max INTEGER,
+        salary_currency TEXT DEFAULT 'INR',
+        job_type TEXT DEFAULT 'Full Time' CHECK (job_type IN ('Full Time', 'Part Time', 'Contract', 'Internship', 'Freelance')),
+        work_mode TEXT DEFAULT 'Work from Office' CHECK (work_mode IN ('Work from Office', 'Work from Home', 'Hybrid')),
+        experience_min INTEGER DEFAULT 0,
+        experience_max INTEGER,
+        english_level TEXT,
+        description TEXT,
+        requirements TEXT,
+        benefits TEXT,
+        status TEXT DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'closed')),
+        posted_by INTEGER,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+        FOREIGN KEY (category_id) REFERENCES job_categories(id) ON DELETE SET NULL,
+        FOREIGN KEY (posted_by) REFERENCES users(id) ON DELETE SET NULL
+      )
+    `);
+
+    // Create applications table
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS applications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        job_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'reviewed', 'shortlisted', 'rejected', 'hired')),
+        cover_letter TEXT,
+        resume_url TEXT,
+        applied_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        UNIQUE(job_id, user_id)
+      )
+    `);
+
+    // Create saved_jobs table
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS saved_jobs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        job_id INTEGER NOT NULL,
+        saved_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
+        UNIQUE(user_id, job_id)
+      )
+    `);
+
+    // Create user_sessions table
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS user_sessions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        token TEXT NOT NULL,
+        refresh_token TEXT,
+        expires_at TEXT NOT NULL,
+        status TEXT DEFAULT 'active' CHECK (status IN ('active', 'revoked', 'expired')),
+        ip_address TEXT,
+        user_agent TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    console.log('✅ Database tables created successfully');
+  } catch (error) {
+    console.error('Error creating tables:', error);
     throw error;
   }
 };
