@@ -1,53 +1,289 @@
-import React, { useState } from 'react';
-import { Download, Edit, Plus, Trash2, Eye } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
+import { Download, Edit, Plus, Trash2, Eye, ArrowLeft, ArrowRight } from 'lucide-react';
+import TemplateSelector from '../components/TemplateSelector';
+import AIResumeBuilder from '../components/AIResumeBuilder';
+import { resumeTemplates } from '../data/resumeTemplates';
 
 const ResumePage = () => {
-    const [activeTab, setActiveTab] = useState('builder');
+    const [currentStep, setCurrentStep] = useState('template'); // 'template', 'builder', 'preview'
+    const [selectedTemplate, setSelectedTemplate] = useState(null);
     const [resumeData, setResumeData] = useState({
         personalInfo: {
-            name: '',
+            firstName: '',
+            lastName: '',
             email: '',
             phone: '',
             location: '',
-            summary: ''
+            linkedin: '',
+            website: ''
         },
-        experience: [
-            {
-                id: 1,
-                title: '',
-                company: '',
-                location: '',
-                startDate: '',
-                endDate: '',
-                current: false,
-                description: ''
-            }
-        ],
-        education: [
-            {
-                id: 1,
-                degree: '',
-                institution: '',
-                location: '',
-                startDate: '',
-                endDate: '',
-                gpa: ''
-            }
-        ],
-        skills: []
+        professionalSummary: '',
+        experience: [],
+        education: [],
+        skills: [],
+        achievements: [],
+        certifications: [],
+        languages: []
     });
 
-    const addExperience = () => {
-        const newExperience = {
-            id: Date.now(),
-            title: '',
-            company: '',
-            location: '',
-            startDate: '',
-            endDate: '',
-            current: false,
-            description: ''
-        };
+    const handleTemplateSelect = useCallback((template) => {
+        setSelectedTemplate(template);
+    }, []);
+
+    const handleResumeDataChange = useCallback((data) => {
+        setResumeData(data);
+    }, []);
+
+    const handleNextStep = () => {
+        if (currentStep === 'template' && selectedTemplate) {
+            setCurrentStep('builder');
+        } else if (currentStep === 'builder') {
+            setCurrentStep('preview');
+        }
+    };
+
+    const handlePrevStep = () => {
+        if (currentStep === 'builder') {
+            setCurrentStep('template');
+        } else if (currentStep === 'preview') {
+            setCurrentStep('builder');
+        }
+    };
+
+    const downloadResume = () => {
+        // Implementation for PDF download
+        alert('Resume download functionality will be implemented');
+    };
+
+    const saveResume = () => {
+        // Implementation for saving resume
+        alert('Resume saved successfully!');
+    };
+
+    const renderStepIndicator = () => {
+        const steps = [
+            { id: 'template', name: 'Choose Template', icon: '🎨' },
+            { id: 'builder', name: 'Build Resume', icon: '✏️' },
+            { id: 'preview', name: 'Preview & Download', icon: '👁️' }
+        ];
+
+        return (
+            <div className="flex justify-center mb-8">
+                <div className="flex items-center space-x-4">
+                    {steps.map((step, index) => (
+                        <React.Fragment key={step.id}>
+                            <div className={`flex items-center space-x-2 px-4 py-2 rounded-lg ${
+                                currentStep === step.id 
+                                    ? 'bg-blue-600 text-white' 
+                                    : steps.findIndex(s => s.id === currentStep) > index
+                                        ? 'bg-green-600 text-white'
+                                        : 'bg-gray-200 text-gray-600'
+                            }`}>
+                                <span className="text-lg">{step.icon}</span>
+                                <span className="font-medium">{step.name}</span>
+                            </div>
+                            {index < steps.length - 1 && (
+                                <ArrowRight className="h-5 w-5 text-gray-400" />
+                            )}
+                        </React.Fragment>
+                    ))}
+                </div>
+            </div>
+        );
+    };
+
+    const renderTemplateStep = () => (
+        <div>
+            <TemplateSelector 
+                onTemplateSelect={handleTemplateSelect}
+                selectedTemplate={selectedTemplate}
+            />
+            <div className="flex justify-center mt-8">
+                <button
+                    onClick={handleNextStep}
+                    disabled={!selectedTemplate}
+                    className={`flex items-center px-6 py-3 rounded-lg font-medium transition-colors ${
+                        selectedTemplate
+                            ? 'bg-blue-600 text-white hover:bg-blue-700'
+                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
+                >
+                    Continue to Builder
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                </button>
+            </div>
+        </div>
+    );
+
+    const renderBuilderStep = () => (
+        <div>
+            <AIResumeBuilder 
+                selectedTemplate={selectedTemplate}
+                onDataChange={handleResumeDataChange}
+                resumeData={resumeData}
+            />
+            <div className="flex justify-between mt-8">
+                <button
+                    onClick={handlePrevStep}
+                    className="flex items-center px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back to Templates
+                </button>
+                <button
+                    onClick={handleNextStep}
+                    className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                    Preview Resume
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                </button>
+            </div>
+        </div>
+    );
+
+    const renderPreviewStep = () => (
+        <div>
+            <div className="bg-white rounded-lg shadow-lg p-8 max-w-4xl mx-auto">
+                <div className="mb-6">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Resume Preview</h2>
+                    <p className="text-gray-600">Template: <span className="font-medium text-blue-600">{selectedTemplate?.name}</span></p>
+                </div>
+                
+                {/* Resume Preview Content */}
+                <div className="border-2 border-gray-200 rounded-lg p-8 bg-gray-50 min-h-[800px]" style={{
+                    background: selectedTemplate ? `linear-gradient(135deg, ${selectedTemplate.colors[0]}10, ${selectedTemplate.colors[1]}10)` : '#f9fafb'
+                }}>
+                    {/* Header */}
+                    <div className="text-center mb-8 pb-6 border-b-2" style={{ borderColor: selectedTemplate?.colors[0] || '#e5e7eb' }}>
+                        <h1 className="text-3xl font-bold mb-2" style={{ color: selectedTemplate?.colors[0] || '#1f2937' }}>
+                            {resumeData.personalInfo.firstName} {resumeData.personalInfo.lastName}
+                        </h1>
+                        <div className="text-gray-600 space-y-1">
+                            {resumeData.personalInfo.email && <p>{resumeData.personalInfo.email}</p>}
+                            {resumeData.personalInfo.phone && <p>{resumeData.personalInfo.phone}</p>}
+                            {resumeData.personalInfo.location && <p>{resumeData.personalInfo.location}</p>}
+                            {resumeData.personalInfo.linkedin && <p>{resumeData.personalInfo.linkedin}</p>}
+                        </div>
+                    </div>
+
+                    {/* Professional Summary */}
+                    {resumeData.professionalSummary && (
+                        <div className="mb-6">
+                            <h3 className="text-lg font-semibold mb-3" style={{ color: selectedTemplate?.colors[0] || '#1f2937' }}>
+                                Professional Summary
+                            </h3>
+                            <p className="text-gray-700 leading-relaxed">{resumeData.professionalSummary}</p>
+                        </div>
+                    )}
+
+                    {/* Experience */}
+                    {resumeData.experience.length > 0 && (
+                        <div className="mb-6">
+                            <h3 className="text-lg font-semibold mb-3" style={{ color: selectedTemplate?.colors[0] || '#1f2937' }}>
+                                Work Experience
+                            </h3>
+                            {resumeData.experience.map((exp, index) => (
+                                <div key={exp.id || index} className="mb-4">
+                                    <div className="flex justify-between items-start mb-1">
+                                        <h4 className="font-medium text-gray-900">{exp.jobTitle}</h4>
+                                        <span className="text-sm text-gray-600">
+                                            {exp.startDate} - {exp.current ? 'Present' : exp.endDate}
+                                        </span>
+                                    </div>
+                                    <p className="text-gray-700 mb-1">{exp.company} • {exp.location}</p>
+                                    {exp.description && <p className="text-gray-600 text-sm">{exp.description}</p>}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Education */}
+                    {resumeData.education.length > 0 && (
+                        <div className="mb-6">
+                            <h3 className="text-lg font-semibold mb-3" style={{ color: selectedTemplate?.colors[0] || '#1f2937' }}>
+                                Education
+                            </h3>
+                            {resumeData.education.map((edu, index) => (
+                                <div key={edu.id || index} className="mb-3">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <h4 className="font-medium text-gray-900">{edu.degree}</h4>
+                                            <p className="text-gray-700">{edu.institution} • {edu.location}</p>
+                                        </div>
+                                        <span className="text-sm text-gray-600">{edu.graduationDate}</span>
+                                    </div>
+                                    {edu.gpa && <p className="text-sm text-gray-600">GPA: {edu.gpa}</p>}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Skills */}
+                    {resumeData.skills.length > 0 && (
+                        <div className="mb-6">
+                            <h3 className="text-lg font-semibold mb-3" style={{ color: selectedTemplate?.colors[0] || '#1f2937' }}>
+                                Skills
+                            </h3>
+                            <div className="flex flex-wrap gap-2">
+                                {resumeData.skills.map((skill, index) => (
+                                    <span
+                                        key={index}
+                                        className="px-3 py-1 rounded-full text-sm font-medium"
+                                        style={{ 
+                                            backgroundColor: selectedTemplate?.colors[1] || '#3b82f6',
+                                            color: 'white'
+                                        }}
+                                    >
+                                        {skill}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-between mt-8">
+                    <button
+                        onClick={handlePrevStep}
+                        className="flex items-center px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                    >
+                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        Back to Builder
+                    </button>
+                    <div className="flex space-x-4">
+                        <button 
+                            onClick={saveResume}
+                            className="flex items-center bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
+                        >
+                            <Eye className="h-4 w-4 mr-2" />
+                            Save Resume
+                        </button>
+                        <button 
+                            onClick={downloadResume}
+                            className="flex items-center bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                            <Download className="h-4 w-4 mr-2" />
+                            Download PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    const renderCurrentStep = () => {
+        switch (currentStep) {
+            case 'template':
+                return renderTemplateStep();
+            case 'builder':
+                return renderBuilderStep();
+            case 'preview':
+                return renderPreviewStep();
+            default:
+                return renderTemplateStep();
+        }
+    };
         setResumeData(prev => ({
             ...prev,
             experience: [...prev.experience, newExperience]
@@ -135,8 +371,8 @@ const ResumePage = () => {
                             <button
                                 onClick={() => setActiveTab('builder')}
                                 className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'builder'
-                                        ? 'border-blue-500 text-blue-600'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                    ? 'border-blue-500 text-blue-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                     }`}
                             >
                                 Resume Builder
@@ -144,8 +380,8 @@ const ResumePage = () => {
                             <button
                                 onClick={() => setActiveTab('preview')}
                                 className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'preview'
-                                        ? 'border-blue-500 text-blue-600'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                    ? 'border-blue-500 text-blue-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                     }`}
                             >
                                 Preview

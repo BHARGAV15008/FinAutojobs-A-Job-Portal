@@ -385,66 +385,66 @@ const ProfessionalRecruiterDashboard = () => {
         const jobApplications = applications.filter(app => app.job_id === job.id);
 
         return (
-            <div className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all duration-200 p-6">
-                <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-start space-x-3">
-                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <Briefcase className="w-6 h-6 text-blue-600" />
+            <div className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-200 p-7">
+                <div className="flex items-start justify-between mb-5">
+                    <div className="flex items-start space-x-4">
+                        <div className="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <Briefcase className="w-7 h-7 text-blue-600" />
                         </div>
                         <div className="min-w-0 flex-1">
-                            <h3 className="text-lg font-semibold text-gray-900">{job.title}</h3>
-                            <p className="text-sm text-gray-600">{job.company_name}</p>
+                            <h3 className="text-xl font-bold text-gray-900 mb-1">{job.title}</h3>
+                            <p className="text-base text-gray-600">{job.company_name}</p>
                         </div>
                     </div>
 
                     <div className="flex flex-col items-end space-y-2">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(job.status)}`}>
+                        <span className={`px-3 py-1.5 rounded-full text-sm font-semibold border ${getStatusColor(job.status)}`}>
                             {job.status}
                         </span>
-                        <div className={`px-2 py-1 rounded text-xs font-medium ${getScoreColor(job.ai_score)}`}>
+                        <div className={`px-3 py-1.5 rounded text-sm font-semibold ${getScoreColor(job.ai_score)}`}>
                             Score: {job.ai_score}
                         </div>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
+                <div className="grid grid-cols-3 gap-4 mb-5 p-4 bg-gray-50 rounded-lg">
                     <div className="text-center">
-                        <div className="text-sm font-semibold text-gray-900">{job.views?.toLocaleString() || '0'}</div>
-                        <div className="text-xs text-gray-500">Views</div>
+                        <div className="text-lg font-bold text-gray-900">{job.views?.toLocaleString() || '0'}</div>
+                        <div className="text-sm text-gray-500">Views</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-sm font-semibold text-gray-900">{jobApplications.length}</div>
-                        <div className="text-xs text-gray-500">Applications</div>
+                        <div className="text-lg font-bold text-gray-900">{jobApplications.length}</div>
+                        <div className="text-sm text-gray-500">Applications</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-sm font-semibold text-gray-900">{job.engagement}%</div>
-                        <div className="text-xs text-gray-500">Engagement</div>
+                        <div className="text-lg font-bold text-gray-900">{job.engagement}%</div>
+                        <div className="text-sm text-gray-500">Engagement</div>
                     </div>
                 </div>
 
-                <div className="space-y-2 mb-4">
-                    <div className="flex items-center text-sm text-gray-600">
-                        <MapPin className="w-4 h-4 mr-2" />
+                <div className="space-y-3 mb-5">
+                    <div className="flex items-center text-base text-gray-600">
+                        <MapPin className="w-5 h-5 mr-3" />
                         {job.location}
                         {job.remote && (
-                            <span className="ml-2 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
+                            <span className="ml-3 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
                                 Remote
                             </span>
                         )}
                     </div>
-                    <div className="flex items-center text-sm text-gray-600">
-                        <DollarSign className="w-4 h-4 mr-2" />
+                    <div className="flex items-center text-base text-gray-600">
+                        <DollarSign className="w-5 h-5 mr-3" />
                         ${job.salary_min?.toLocaleString()} - ${job.salary_max?.toLocaleString()}
                     </div>
                 </div>
 
-                <div className="flex space-x-2">
-                    <button className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium">
-                        <Eye className="w-4 h-4 mr-1 inline" />
+                <div className="flex space-x-3">
+                    <button className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-base font-semibold">
+                        <Eye className="w-5 h-5 mr-2 inline" />
                         View
                     </button>
-                    <button className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium">
-                        <Edit className="w-4 h-4 mr-1 inline" />
+                    <button className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-base font-semibold">
+                        <Edit className="w-5 h-5 mr-2 inline" />
                         Edit
                     </button>
                 </div>
@@ -1162,29 +1162,36 @@ const ProfessionalRecruiterDashboard = () => {
 
                         {activeTab === 'jobs' && (
                             <div className="space-y-6">
+                                <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-2xl border border-blue-200 p-8 mb-6">
+                                    <div className="flex items-center space-x-4 mb-4">
+                                        <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                                            <Briefcase className="w-7 h-7 text-blue-600" />
+                                        </div>
+                                        <h2 className="text-3xl font-bold text-gray-900">Job Postings</h2>
+                                    </div>
+                                    <p className="text-gray-600 text-lg leading-relaxed mb-6">
+                                        Manage your job listings with AI-powered optimization and advanced analytics
+                                    </p>
+                                </div>
                                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center space-y-4 lg:space-y-0">
                                     <div>
-                                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Job Postings</h2>
-                                        <p className="text-gray-600">
-                                            Manage your job listings with AI-powered optimization
-                                        </p>
                                     </div>
-                                    <div className="flex items-center space-x-3">
+                                    <div className="flex items-center space-x-2">
                                         <div className="relative">
-                                            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                                            <Search className="w-4 h-4 absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400" />
                                             <input
                                                 type="text"
                                                 placeholder="Search jobs..."
                                                 value={searchTerm}
                                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                className="pl-8 pr-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             />
                                         </div>
                                         <button
                                             onClick={() => setShowAddJobModal(true)}
-                                            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                            className="flex items-center px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
                                         >
-                                            <Plus className="w-4 h-4 mr-2" />
+                                            <Plus className="w-4 h-4 mr-1.5" />
                                             Create Job
                                         </button>
                                     </div>
