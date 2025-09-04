@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../components/ui/use-toast';
 import { Link, useLocation } from 'wouter';
+import api from '../utils/api';
 import {
     Users, FileText, Briefcase, Calendar, MapPin, DollarSign, Eye, Edit,
     Grid, List, Search, Plus, CheckCircle, Video, Brain, Sparkles, BarChart3,
@@ -34,101 +35,59 @@ const ProfessionalApplicantDashboard = () => {
     ]);
     const chatMessagesRef = useRef(null);
 
-    // Mock data for applications with enhanced details
-    const [applications, setApplications] = useState([
-        {
-            id: 1,
-            job_title: 'Senior React Developer',
-            company_name: 'Tech Innovations Inc.',
-            company_logo: 'https://images.unsplash.com/photo-1549924231-f129b911e442?w=40&h=40&fit=crop',
-            location: 'San Francisco, CA',
-            salary_min: 120000,
-            salary_max: 180000,
-            status: 'shortlisted',
-            applied_at: '2024-01-20',
-            ai_match: 95,
-            skills_match: 92,
-            experience_match: 88,
-            interview_scheduled: true,
-            interview_date: '2024-01-25',
-            remote: true,
-            job_type: 'Full-time',
-            response_time: '2 days'
-        },
-        {
-            id: 2,
-            job_title: 'Frontend Developer',
-            company_name: 'StartupX',
-            company_logo: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=40&h=40&fit=crop',
-            location: 'New York, NY',
-            salary_min: 90000,
-            salary_max: 130000,
-            status: 'pending',
-            applied_at: '2024-01-18',
-            ai_match: 87,
-            skills_match: 85,
-            experience_match: 90,
-            interview_scheduled: false,
-            remote: false,
-            job_type: 'Full-time',
-            response_time: '5 days'
-        },
-        {
-            id: 3,
-            job_title: 'Full Stack Engineer',
-            company_name: 'Enterprise Solutions',
-            company_logo: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=40&h=40&fit=crop',
-            location: 'Remote',
-            salary_min: 110000,
-            salary_max: 160000,
-            status: 'reviewed',
-            applied_at: '2024-01-15',
-            ai_match: 91,
-            skills_match: 89,
-            experience_match: 93,
-            interview_scheduled: false,
-            remote: true,
-            job_type: 'Full-time',
-            response_time: '3 days'
-        }
-    ]);
+    // Applications data from API
+    const [applications, setApplications] = useState([]);
+    const [applicationsLoading, setApplicationsLoading] = useState(true);
 
-    // Mock recommended jobs
-    const [recommendedJobs] = useState([
-        {
-            id: 4,
-            title: 'React Native Developer',
-            company: 'Mobile First Inc.',
-            location: 'Austin, TX',
-            salary: '$95k - $140k',
-            match_score: 94,
-            posted: '2 days ago',
-            applicants: 23,
-            remote: true
-        },
-        {
-            id: 5,
-            title: 'Senior Frontend Engineer',
-            company: 'Design Co.',
-            location: 'Seattle, WA',
-            salary: '$130k - $180k',
-            match_score: 89,
-            posted: '1 day ago',
-            applicants: 45,
-            remote: false
-        },
-        {
-            id: 6,
-            title: 'JavaScript Developer',
-            company: 'Code Labs',
-            location: 'Remote',
-            salary: '$85k - $125k',
-            match_score: 86,
-            posted: '3 days ago',
-            applicants: 67,
-            remote: true
+    // Fetch applications from API
+    useEffect(() => {
+        const fetchApplications = async () => {
+            try {
+                setApplicationsLoading(true);
+                const response = await api.getApplications();
+                const data = await response.json();
+                setApplications(data.applications || []);
+            } catch (error) {
+                console.error('Error fetching applications:', error);
+                toast({
+                    title: "Error",
+                    description: "Failed to load applications",
+                    variant: "destructive"
+                });
+            } finally {
+                setApplicationsLoading(false);
+            }
+        };
+
+        if (user) {
+            fetchApplications();
         }
-    ]);
+    }, [user, toast]);
+
+    // Recommended jobs from API
+    const [recommendedJobs, setRecommendedJobs] = useState([]);
+    const [jobsLoading, setJobsLoading] = useState(true);
+
+    // Fetch recommended jobs from API
+    useEffect(() => {
+        const fetchRecommendedJobs = async () => {
+            try {
+                setJobsLoading(true);
+                const response = await api.getJobs({ limit: 6, recommended: true });
+                const data = await response.json();
+                setRecommendedJobs(data.jobs || []);
+            } catch (error) {
+                console.error('Error fetching recommended jobs:', error);
+                // Keep empty array on error
+            } finally {
+                setJobsLoading(false);
+            }
+        };
+
+        if (user) {
+            fetchRecommendedJobs();
+        }
+    }, [user]);
 
     const aiInsights = [
         { type: 'recommendation', message: 'Your React skills are in high demand! 12 new matching jobs available', priority: 'high' },
@@ -136,16 +95,63 @@ const ProfessionalApplicantDashboard = () => {
         { type: 'alert', message: 'Interview reminder: Tech Innovations Inc. tomorrow at 2 PM', priority: 'urgent' }
     ];
 
-    const userProfile = {
-        name: user?.full_name || 'John Doe',
-        title: 'Frontend Developer',
-        location: 'San Francisco, CA',
-        experience: '5+ years',
-        skills: ['React', 'TypeScript', 'Node.js', 'GraphQL', 'AWS'],
+    // User profile data from API
+    const [userProfile, setUserProfile] = useState(null);
+    const [profileLoading, setProfileLoading] = useState(true);
+
+    // Fetch user profile from API
+    useEffect(() => {
+        const fetchUserProfile = async () => {
+            try {
+                setProfileLoading(true);
+                const response = await api.getProfile();
+                const data = await response.json();
+                setUserProfile({
+                    name: data.full_name || user?.full_name || 'User',
+                    title: data.title || 'Job Seeker',
+                    location: data.location || 'Location not set',
+                    experience: data.experience || 'Not specified',
+                    skills: data.skills || [],
+                    avatar: data.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face',
+                    profile_completion: data.profile_completion || 85,
+                    resume_uploaded: data.resume_uploaded || false
+                });
+            } catch (error) {
+                console.error('Error fetching user profile:', error);
+                // Set default profile on error
+                setUserProfile({
+                    name: user?.full_name || 'User',
+                    title: 'Job Seeker',
+                    location: 'Location not set',
+                    experience: 'Not specified',
+                    skills: [],
+                    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face',
+                    profile_completion: 85,
+                    resume_uploaded: false
+                });
+            } finally {
+                setProfileLoading(false);
+            }
+        };
+
+        if (user) {
+            fetchUserProfile();
+        }
+    }, [user]);
+
+    // Default profile fallback
+    const defaultProfile = {
+        name: user?.full_name || 'User',
+        title: 'Job Seeker',
+        location: 'Location not set',
+        experience: 'Not specified',
+        skills: [],
         avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face',
         profile_completion: 85,
-        resume_uploaded: true
+        resume_uploaded: false
     };
+
+    const currentProfile = userProfile || defaultProfile;
 
     useEffect(() => {
         if (chatMessagesRef.current) {
@@ -433,16 +439,16 @@ const ProfessionalApplicantDashboard = () => {
                     <div className="border-t border-gray-200 p-4">
                         <div className="flex items-center space-x-3">
                             <img
-                                src={userProfile.avatar}
-                                alt={userProfile.name}
+                                src={currentProfile.avatar}
+                                        alt={currentProfile.name}
                                 className="w-10 h-10 rounded-full"
                             />
                             {!sidebarCollapsed && (
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium text-gray-900 truncate">
-                                        {userProfile.name}
+                                        {currentProfile.name}
                                     </p>
-                                    <p className="text-xs text-gray-500 truncate">{userProfile.title}</p>
+                                    <p className="text-xs text-gray-500 truncate">{currentProfile.title}</p>
                                 </div>
                             )}
                         </div>
@@ -465,7 +471,7 @@ const ProfessionalApplicantDashboard = () => {
                                     {activeTab === 'career' && 'Career Insights'}
                                 </h1>
                                 <p className="text-gray-600 mt-1">
-                                    Welcome back, {userProfile.name}! Let's find your next opportunity.
+                                    Welcome back, {currentProfile.name}! Let's find your next opportunity.
                                 </p>
                             </div>
                             <div className="flex items-center space-x-4">
@@ -747,14 +753,26 @@ const ProfessionalApplicantDashboard = () => {
                                 </div>
 
                                 {/* Applications Grid */}
-                                <div className={viewMode === 'cards' 
-                                    ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'
-                                    : 'space-y-4'
-                                }>
-                                    {filteredApplications.map((application) => (
-                                        <ApplicationCard key={application.id} application={application} />
-                                    ))}
-                                </div>
+                                {applicationsLoading ? (
+                                    <div className="flex items-center justify-center py-12">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                        <span className="ml-3 text-gray-600">Loading applications...</span>
+                                    </div>
+                                ) : filteredApplications.length === 0 ? (
+                                    <div className="text-center py-12">
+                                        <div className="text-gray-500 mb-2">No applications found</div>
+                                        <p className="text-sm text-gray-400">Start applying to jobs to see them here</p>
+                                    </div>
+                                ) : (
+                                    <div className={viewMode === 'cards' 
+                                        ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'
+                                        : 'space-y-4'
+                                    }>
+                                        {filteredApplications.map((application) => (
+                                            <ApplicationCard key={application.id} application={application} />
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -771,11 +789,23 @@ const ProfessionalApplicantDashboard = () => {
                                     </p>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                                    {recommendedJobs.map((job) => (
-                                        <JobRecommendationCard key={job.id} job={job} />
-                                    ))}
-                                </div>
+                                {jobsLoading ? (
+                                    <div className="flex items-center justify-center py-12">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                        <span className="ml-3 text-gray-600">Loading job recommendations...</span>
+                                    </div>
+                                ) : recommendedJobs.length === 0 ? (
+                                    <div className="text-center py-12">
+                                        <div className="text-gray-500 mb-2">No job recommendations available</div>
+                                        <p className="text-sm text-gray-400">Complete your profile to get personalized recommendations</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                                        {recommendedJobs.map((job) => (
+                                            <JobRecommendationCard key={job.id} job={job} />
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -793,6 +823,12 @@ const ProfessionalApplicantDashboard = () => {
                                     </p>
                                 </div>
 
+                                {profileLoading ? (
+                                    <div className="flex items-center justify-center py-12">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                        <span className="ml-3 text-gray-600">Loading profile...</span>
+                                    </div>
+                                ) : (
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                     {/* Profile Completion */}
                                     <div className="lg:col-span-2 space-y-6">
@@ -807,19 +843,19 @@ const ProfessionalApplicantDashboard = () => {
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div>
                                                     <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                                                    <input type="text" value="John Doe" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                                                    <input type="text" value={currentProfile.name || ''} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
                                                 </div>
                                                 <div>
                                                     <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                                                    <input type="email" value="john.doe@email.com" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                                                    <input type="email" value={currentProfile.email || ''} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
                                                 </div>
                                                 <div>
                                                     <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                                                    <input type="tel" value="+1 (555) 123-4567" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                                                    <input type="tel" value={currentProfile.phone || ''} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
                                                 </div>
                                                 <div>
                                                     <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                                                    <input type="text" value="San Francisco, CA" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                                                    <input type="text" value={currentProfile.location || ''} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
                                                 </div>
                                             </div>
                                         </div>
@@ -836,7 +872,7 @@ const ProfessionalApplicantDashboard = () => {
                                                 rows={4} 
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                 placeholder="Write a compelling summary of your professional experience and goals..."
-                                                defaultValue="Experienced React developer with 5+ years in building scalable web applications. Passionate about creating user-friendly interfaces and optimizing performance. Looking for senior-level opportunities in innovative tech companies."
+                                                defaultValue={currentProfile.summary || ''}
                                             />
                                         </div>
 
@@ -996,6 +1032,7 @@ const ProfessionalApplicantDashboard = () => {
                                         </div>
                                     </div>
                                 </div>
+                                )}
                             </div>
                         )}
 

@@ -1,13 +1,14 @@
 import React, { useState, useCallback } from 'react';
 import { Download, Edit, Plus, Trash2, Eye, ArrowLeft, ArrowRight, Check, X, Upload, FileText, User, Briefcase, Star, Sparkles, Zap } from 'lucide-react';
 
-// Enhanced resume templates with more variety and realistic previews
+// Enhanced resume templates with more variety
 const resumeTemplates = [
     {
         id: 'modern-professional',
         name: 'Modern Professional',
         category: 'Professional',
         description: 'Clean and modern design perfect for corporate roles and business professionals',
+        thumbnail: '/api/placeholder/300/400',
         colors: ['#2563eb', '#1e40af', '#3b82f6'],
         features: ['ATS-friendly', 'Clean layout', 'Professional fonts', 'Modern styling'],
         suitable: ['Finance', 'Corporate', 'Management', 'Consulting'],
@@ -18,6 +19,7 @@ const resumeTemplates = [
         name: 'Executive Classic',
         category: 'Executive',
         description: 'Sophisticated design for senior-level positions with elegant typography',
+        thumbnail: '/api/placeholder/300/400',
         colors: ['#1f2937', '#374151', '#6b7280'],
         features: ['Executive summary focus', 'Achievement highlights', 'Premium look', 'Leadership emphasis'],
         suitable: ['Executive', 'Senior Management', 'Director', 'C-Level'],
@@ -28,6 +30,7 @@ const resumeTemplates = [
         name: 'Creative Modern',
         category: 'Creative',
         description: 'Eye-catching design for creative professionals with visual appeal',
+        thumbnail: '/api/placeholder/300/400',
         colors: ['#7c3aed', '#8b5cf6', '#a78bfa'],
         features: ['Visual appeal', 'Color accents', 'Modern typography', 'Portfolio ready'],
         suitable: ['Design', 'Marketing', 'Creative', 'Media'],
@@ -38,6 +41,7 @@ const resumeTemplates = [
         name: 'Minimalist Clean',
         category: 'Minimalist',
         description: 'Simple and clean design focusing on content with maximum readability',
+        thumbnail: '/api/placeholder/300/400',
         colors: ['#000000', '#4b5563', '#9ca3af'],
         features: ['Minimal design', 'Content focus', 'Easy to read', 'Scannable'],
         suitable: ['Tech', 'Engineering', 'Research', 'Academia'],
@@ -48,6 +52,7 @@ const resumeTemplates = [
         name: 'Finance Professional',
         category: 'Finance',
         description: 'Tailored for finance and banking professionals with metrics focus',
+        thumbnail: '/api/placeholder/300/400',
         colors: ['#059669', '#10b981', '#34d399'],
         features: ['Numbers-focused', 'Achievement metrics', 'Professional layout', 'Data visualization'],
         suitable: ['Finance', 'Banking', 'Investment', 'Accounting'],
@@ -58,6 +63,7 @@ const resumeTemplates = [
         name: 'Automotive Engineer',
         category: 'Engineering',
         description: 'Designed for automotive and engineering roles with technical emphasis',
+        thumbnail: '/api/placeholder/300/400',
         colors: ['#dc2626', '#ef4444', '#f87171'],
         features: ['Technical skills focus', 'Project highlights', 'Engineering layout', 'Innovation showcase'],
         suitable: ['Automotive', 'Engineering', 'Manufacturing', 'R&D'],
@@ -68,6 +74,7 @@ const resumeTemplates = [
         name: 'Tech Innovator',
         category: 'Technology',
         description: 'Modern design for tech professionals with cutting-edge styling',
+        thumbnail: '/api/placeholder/300/400',
         colors: ['#0891b2', '#06b6d4', '#22d3ee'],
         features: ['Tech-focused', 'Skills visualization', 'Modern layout', 'Innovation emphasis'],
         suitable: ['Technology', 'Software', 'IT', 'Startups'],
@@ -78,6 +85,7 @@ const resumeTemplates = [
         name: 'Consultant Premium',
         category: 'Consulting',
         description: 'Premium design for consulting professionals with impact focus',
+        thumbnail: '/api/placeholder/300/400',
         colors: ['#7c2d12', '#ea580c', '#fb923c'],
         features: ['Consulting focus', 'Client impact', 'Premium feel', 'Results-driven'],
         suitable: ['Consulting', 'Strategy', 'Advisory', 'Management'],
@@ -88,6 +96,7 @@ const resumeTemplates = [
         name: 'Startup Dynamic',
         category: 'Startup',
         description: 'Dynamic design for startup environments with growth metrics',
+        thumbnail: '/api/placeholder/300/400',
         colors: ['#be185d', '#ec4899', '#f472b6'],
         features: ['Dynamic layout', 'Growth metrics', 'Startup culture', 'Agility showcase'],
         suitable: ['Startup', 'Growth', 'Innovation', 'Entrepreneurship'],
@@ -98,6 +107,7 @@ const resumeTemplates = [
         name: 'Academic Scholar',
         category: 'Academic',
         description: 'Professional design for academic positions with research focus',
+        thumbnail: '/api/placeholder/300/400',
         colors: ['#4338ca', '#6366f1', '#818cf8'],
         features: ['Research focus', 'Publications', 'Academic layout', 'Scholarly presentation'],
         suitable: ['Academic', 'Research', 'Education', 'PhD'],
@@ -108,6 +118,7 @@ const resumeTemplates = [
         name: 'Sales Achiever',
         category: 'Sales',
         description: 'Results-focused design for sales professionals with performance metrics',
+        thumbnail: '/api/placeholder/300/400',
         colors: ['#16a34a', '#22c55e', '#4ade80'],
         features: ['Results-driven', 'Achievement focus', 'Sales metrics', 'Performance showcase'],
         suitable: ['Sales', 'Business Development', 'Account Management', 'Revenue'],
@@ -118,6 +129,7 @@ const resumeTemplates = [
         name: 'Healthcare Professional',
         category: 'Healthcare',
         description: 'Clean design for healthcare professionals with certifications focus',
+        thumbnail: '/api/placeholder/300/400',
         colors: ['#0d9488', '#14b8a6', '#5eead4'],
         features: ['Healthcare focus', 'Certifications', 'Professional layout', 'Patient care emphasis'],
         suitable: ['Healthcare', 'Medical', 'Nursing', 'Therapy'],
@@ -128,6 +140,7 @@ const resumeTemplates = [
         name: 'Legal Advocate',
         category: 'Legal',
         description: 'Professional design for legal professionals with case highlights',
+        thumbnail: '/api/placeholder/300/400',
         colors: ['#1e40af', '#3b82f6', '#60a5fa'],
         features: ['Legal focus', 'Case highlights', 'Professional tone', 'Advocacy showcase'],
         suitable: ['Legal', 'Law', 'Compliance', 'Paralegal'],
@@ -138,6 +151,7 @@ const resumeTemplates = [
         name: 'Project Manager',
         category: 'Management',
         description: 'Organized design for project managers with delivery metrics',
+        thumbnail: '/api/placeholder/300/400',
         colors: ['#7c3aed', '#8b5cf6', '#a78bfa'],
         features: ['Project focus', 'Team leadership', 'Delivery metrics', 'Process optimization'],
         suitable: ['Project Management', 'Operations', 'Leadership', 'Agile'],
@@ -148,6 +162,7 @@ const resumeTemplates = [
         name: 'Data Scientist',
         category: 'Data Science',
         description: 'Analytics-focused design for data professionals with technical skills',
+        thumbnail: '/api/placeholder/300/400',
         colors: ['#dc2626', '#ef4444', '#f87171'],
         features: ['Data visualization', 'Analytics focus', 'Technical skills', 'ML/AI showcase'],
         suitable: ['Data Science', 'Analytics', 'Research', 'Machine Learning'],
@@ -158,6 +173,7 @@ const resumeTemplates = [
         name: 'Marketing Creative',
         category: 'Marketing',
         description: 'Creative design for marketing professionals with campaign highlights',
+        thumbnail: '/api/placeholder/300/400',
         colors: ['#f59e0b', '#fbbf24', '#fcd34d'],
         features: ['Campaign highlights', 'Creative layout', 'Brand focus', 'ROI metrics'],
         suitable: ['Marketing', 'Brand Management', 'Digital Marketing', 'Social Media'],
@@ -168,6 +184,7 @@ const resumeTemplates = [
         name: 'Operations Efficient',
         category: 'Operations',
         description: 'Streamlined design for operations professionals with efficiency metrics',
+        thumbnail: '/api/placeholder/300/400',
         colors: ['#059669', '#10b981', '#34d399'],
         features: ['Process focus', 'Efficiency metrics', 'Operations layout', 'Cost optimization'],
         suitable: ['Operations', 'Supply Chain', 'Logistics', 'Process Improvement'],
@@ -178,80 +195,11 @@ const resumeTemplates = [
         name: 'HR People Focused',
         category: 'Human Resources',
         description: 'People-centered design for HR professionals with culture highlights',
+        thumbnail: '/api/placeholder/300/400',
         colors: ['#be185d', '#ec4899', '#f472b6'],
         features: ['People focus', 'Culture highlights', 'HR metrics', 'Employee engagement'],
         suitable: ['Human Resources', 'Talent Acquisition', 'People Operations', 'HRBP'],
         premium: false
-    },
-    {
-        id: 'classic-traditional',
-        name: 'Classic Traditional',
-        category: 'Professional',
-        description: 'Timeless design perfect for conservative industries and traditional roles',
-        colors: ['#1f2937', '#6b7280', '#9ca3af'],
-        features: ['Conservative layout', 'Traditional fonts', 'Formal structure', 'Time-tested'],
-        suitable: ['Banking', 'Law', 'Government', 'Insurance'],
-        premium: false
-    },
-    {
-        id: 'modern-sidebar',
-        name: 'Modern Sidebar',
-        category: 'Creative',
-        description: 'Contemporary design with sidebar layout for creative professionals',
-        colors: ['#6366f1', '#8b5cf6', '#d946ef'],
-        features: ['Sidebar layout', 'Modern design', 'Color blocks', 'Visual hierarchy'],
-        suitable: ['Design', 'Creative', 'Architecture', 'Marketing'],
-        premium: false
-    },
-    {
-        id: 'corporate-elite',
-        name: 'Corporate Elite',
-        category: 'Executive',
-        description: 'Premium corporate design for C-level executives and board members',
-        colors: ['#0f172a', '#1e293b', '#334155'],
-        features: ['Executive presence', 'Premium styling', 'Leadership focus', 'Board-ready'],
-        suitable: ['CEO', 'CFO', 'VP', 'Board Member'],
-        premium: true
-    },
-    {
-        id: 'startup-founder',
-        name: 'Startup Founder',
-        category: 'Startup',
-        description: 'Innovative design for entrepreneurs and startup founders',
-        colors: ['#f59e0b', '#f97316', '#ea580c'],
-        features: ['Innovation focus', 'Entrepreneurial', 'Growth metrics', 'Venture-ready'],
-        suitable: ['Founder', 'Entrepreneur', 'Startup', 'Innovation'],
-        premium: false
-    },
-    {
-        id: 'tech-senior',
-        name: 'Tech Senior',
-        category: 'Technology',
-        description: 'Advanced template for senior technology professionals and architects',
-        colors: ['#059669', '#0891b2', '#0284c7'],
-        features: ['Technical leadership', 'Architecture focus', 'System design', 'Senior level'],
-        suitable: ['Tech Lead', 'Architect', 'CTO', 'Principal Engineer'],
-        premium: true
-    },
-    {
-        id: 'medical-specialist',
-        name: 'Medical Specialist',
-        category: 'Healthcare',
-        description: 'Specialized design for medical doctors and healthcare specialists',
-        colors: ['#0d9488', '#0891b2', '#0284c7'],
-        features: ['Medical focus', 'Specialization', 'Credentials', 'Research'],
-        suitable: ['Doctor', 'Specialist', 'Surgeon', 'Medical Research'],
-        premium: false
-    },
-    {
-        id: 'finance-executive',
-        name: 'Finance Executive',
-        category: 'Finance',
-        description: 'Executive-level template for senior finance professionals',
-        colors: ['#1e40af', '#1d4ed8', '#2563eb'],
-        features: ['Financial leadership', 'Strategic focus', 'P&L responsibility', 'Board reporting'],
-        suitable: ['CFO', 'Finance Director', 'VP Finance', 'Controller'],
-        premium: true
     }
 ];
 
@@ -268,111 +216,14 @@ const templateCategories = [
     'Healthcare',
     'Legal',
     'Marketing',
-    'Operations',
-    'Sales',
-    'Startup',
-    'Data Science',
-    'Human Resources',
-    'Minimalist'
+    'Operations'
 ];
-
-// Template Thumbnail Component
-const TemplateThumbnail = ({ template }) => {
-    const [primaryColor, secondaryColor, accentColor] = template.colors;
-
-    return (
-        <div className="w-full h-80 bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-            <div className="p-4 h-full flex flex-col text-xs">
-                <div className="text-center mb-3">
-                    <div
-                        className="h-4 rounded mb-1"
-                        style={{ backgroundColor: primaryColor }}
-                    ></div>
-                    <div className="h-1 bg-gray-400 rounded mb-1 w-3/4 mx-auto"></div>
-                    <div className="h-1 bg-gray-300 rounded w-1/2 mx-auto"></div>
-                </div>
-
-                <div className="text-center mb-3 space-y-0.5">
-                    <div className="h-0.5 bg-gray-400 rounded w-2/3 mx-auto"></div>
-                    <div className="h-0.5 bg-gray-400 rounded w-1/2 mx-auto"></div>
-                    <div className="h-0.5 bg-gray-400 rounded w-3/5 mx-auto"></div>
-                </div>
-
-                <div className="mb-3">
-                    <div
-                        className="h-2 rounded mb-1 w-1/3"
-                        style={{ backgroundColor: secondaryColor }}
-                    ></div>
-                    <div className="space-y-0.5">
-                        <div className="h-0.5 bg-gray-300 rounded"></div>
-                        <div className="h-0.5 bg-gray-300 rounded w-5/6"></div>
-                        <div className="h-0.5 bg-gray-300 rounded w-4/5"></div>
-                    </div>
-                </div>
-
-                <div className="mb-3 flex-1">
-                    <div
-                        className="h-2 rounded mb-1 w-2/5"
-                        style={{ backgroundColor: secondaryColor }}
-                    ></div>
-                    <div className="space-y-2">
-                        <div className="border-l-2 pl-2" style={{ borderColor: accentColor }}>
-                            <div className="h-1 bg-gray-400 rounded w-3/4 mb-0.5"></div>
-                            <div className="h-0.5 bg-gray-300 rounded w-1/2 mb-1"></div>
-                            <div className="space-y-0.5">
-                                <div className="h-0.5 bg-gray-300 rounded"></div>
-                                <div className="h-0.5 bg-gray-300 rounded w-4/5"></div>
-                            </div>
-                        </div>
-
-                        <div className="border-l-2 pl-2" style={{ borderColor: accentColor }}>
-                            <div className="h-1 bg-gray-400 rounded w-2/3 mb-0.5"></div>
-                            <div className="h-0.5 bg-gray-300 rounded w-2/5 mb-1"></div>
-                            <div className="space-y-0.5">
-                                <div className="h-0.5 bg-gray-300 rounded w-5/6"></div>
-                                <div className="h-0.5 bg-gray-300 rounded w-3/4"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="mb-2">
-                    <div
-                        className="h-2 rounded mb-1 w-1/4"
-                        style={{ backgroundColor: secondaryColor }}
-                    ></div>
-                    <div className="flex flex-wrap gap-1">
-                        {[...Array(6)].map((_, i) => (
-                            <div
-                                key={i}
-                                className="h-1.5 rounded w-8"
-                                style={{
-                                    backgroundColor: i < 3 ? primaryColor : accentColor,
-                                    opacity: 0.8
-                                }}
-                            ></div>
-                        ))}
-                    </div>
-                </div>
-
-                <div>
-                    <div
-                        className="h-2 rounded mb-1 w-1/3"
-                        style={{ backgroundColor: secondaryColor }}
-                    ></div>
-                    <div className="h-1 bg-gray-400 rounded w-3/4 mb-0.5"></div>
-                    <div className="h-0.5 bg-gray-300 rounded w-1/2"></div>
-                </div>
-            </div>
-        </div>
-    );
-};
 
 // AI content suggestions
 const aiContentSuggestions = {
     finance: {
         summaries: [
-            "Results-driven finance professional with [years] years of experience in financial analysis, risk management, and strategic planning. Proven track record of improving financial performance and driving cost optimization initiatives.",
+            "Results-driven finance professional with {years} years of experience in financial analysis, risk management, and strategic planning. Proven track record of improving financial performance and driving cost optimization initiatives.",
             "Experienced financial analyst with expertise in financial modeling, valuation, and investment analysis. Strong background in corporate finance and capital markets with a focus on delivering actionable insights.",
             "Detail-oriented finance professional specializing in financial planning & analysis, budgeting, and forecasting. Demonstrated ability to support strategic decision-making through comprehensive financial analysis."
         ],
@@ -380,15 +231,15 @@ const aiContentSuggestions = {
             'Financial Modeling', 'Excel', 'SQL', 'Python', 'Tableau', 'Bloomberg Terminal', 'Risk Analysis', 'Valuation', 'Financial Reporting', 'GAAP', 'IFRS', 'Budget Analysis', 'Forecasting', 'Investment Analysis', 'Portfolio Management'
         ],
         achievements: [
-            "Improved financial reporting accuracy by [percentage]% through implementation of automated processes",
-            "Led cost reduction initiative resulting in $[amount] annual savings",
-            "Developed financial models that supported $[amount] in strategic investments",
-            "Reduced month-end close process by [days] days through process optimization"
+            "Improved financial reporting accuracy by {percentage}% through implementation of automated processes",
+            "Led cost reduction initiative resulting in ${amount} annual savings",
+            "Developed financial models that supported ${amount} in strategic investments",
+            "Reduced month-end close process by {days} days through process optimization"
         ]
     },
     technology: {
         summaries: [
-            "Innovative software engineer with [years] years of experience in full-stack development, cloud architecture, and agile methodologies. Passionate about creating scalable solutions and driving digital transformation.",
+            "Innovative software engineer with {years} years of experience in full-stack development, cloud architecture, and agile methodologies. Passionate about creating scalable solutions and driving digital transformation.",
             "Results-oriented technology professional with expertise in software development, system design, and team leadership. Strong background in emerging technologies and continuous improvement.",
             "Experienced tech professional specializing in software architecture, DevOps, and product development. Proven ability to deliver high-quality solutions on time and within budget."
         ],
@@ -396,15 +247,15 @@ const aiContentSuggestions = {
             'JavaScript', 'Python', 'React', 'Node.js', 'AWS', 'Docker', 'Kubernetes', 'MongoDB', 'PostgreSQL', 'Git', 'CI/CD', 'Microservices', 'RESTful APIs', 'Agile/Scrum', 'Machine Learning'
         ],
         achievements: [
-            "Developed microservices architecture that improved system performance by [percentage]%",
-            "Led development team of [number] engineers to deliver [number] major features",
-            "Reduced deployment time by [percentage]% through CI/CD pipeline optimization",
-            "Built scalable application serving [amount] monthly active users"
+            "Developed microservices architecture that improved system performance by {percentage}%",
+            "Led development team of {number} engineers to deliver {number} major features",
+            "Reduced deployment time by {percentage}% through CI/CD pipeline optimization",
+            "Built scalable application serving {amount} monthly active users"
         ]
     },
     marketing: {
         summaries: [
-            "Creative marketing professional with [years] years of experience in digital marketing, brand management, and campaign optimization. Proven track record of driving customer acquisition and engagement.",
+            "Creative marketing professional with {years} years of experience in digital marketing, brand management, and campaign optimization. Proven track record of driving customer acquisition and engagement.",
             "Strategic marketing leader with expertise in content marketing, social media, and data analytics. Strong background in brand development and multi-channel campaign management.",
             "Results-driven marketing professional specializing in growth marketing, performance optimization, and customer journey mapping. Demonstrated ability to scale marketing operations and ROI."
         ],
@@ -412,10 +263,10 @@ const aiContentSuggestions = {
             'Digital Marketing', 'Google Analytics', 'Facebook Ads', 'Google Ads', 'SEO/SEM', 'Content Marketing', 'Social Media', 'Email Marketing', 'Marketing Automation', 'A/B Testing', 'CRM', 'Conversion Optimization', 'Brand Management', 'Copywriting', 'Photoshop'
         ],
         achievements: [
-            "Increased lead generation by [percentage]% through multi-channel marketing campaigns",
-            "Improved conversion rate by [percentage]% through A/B testing and optimization",
-            "Managed marketing budget of $[amount] with [percentage]% ROI improvement",
-            "Grew social media following by [percentage]% in [number] months"
+            "Increased lead generation by {percentage}% through multi-channel marketing campaigns",
+            "Improved conversion rate by {percentage}% through A/B testing and optimization",
+            "Managed marketing budget of ${amount} with {percentage}% ROI improvement",
+            "Grew social media following by {percentage}% in {number} months"
         ]
     }
 };
@@ -428,14 +279,14 @@ const generateAIContent = (industry, field, experience = '3-5') => {
     const randomAchievements = suggestions.achievements.slice(0, 3);
 
     return {
-        summary: randomSummary.replace('[years]', experience),
+        summary: randomSummary.replace('{years}', experience),
         skills: suggestions.skills.slice(0, 10),
         achievements: randomAchievements.map(achievement =>
             achievement
-                .replace('[percentage]', Math.floor(Math.random() * 30) + 10)
-                .replace('[amount]', (Math.floor(Math.random() * 500) + 100) + 'K')
-                .replace('[days]', Math.floor(Math.random() * 5) + 2)
-                .replace('[number]', Math.floor(Math.random() * 10) + 5)
+                .replace('{percentage}', Math.floor(Math.random() * 30) + 10)
+                .replace('{amount}', (Math.floor(Math.random() * 500) + 100) + 'K')
+                .replace('{days}', Math.floor(Math.random() * 5) + 2)
+                .replace('{number}', Math.floor(Math.random() * 10) + 5)
         )
     };
 };
@@ -466,6 +317,7 @@ const EnhancedResumeBuilder = () => {
         languages: []
     });
 
+    // AI states
     const [aiSuggestions, setAiSuggestions] = useState(null);
     const [selectedIndustry, setSelectedIndustry] = useState('finance');
     const [experienceLevel, setExperienceLevel] = useState('3-5');
@@ -530,6 +382,7 @@ const EnhancedResumeBuilder = () => {
         }
     };
 
+    // Start Modal Component
     const StartModal = () => (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
@@ -581,18 +434,42 @@ const EnhancedResumeBuilder = () => {
                         </div>
                         <ArrowRight className="h-5 w-5 text-gray-400" />
                     </button>
+
+                    <button
+                        onClick={() => handleStartOption('linkedin')}
+                        className="w-full flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                    >
+                        <div className="flex items-center">
+                            <User className="h-6 w-6 text-gray-600 mr-3" />
+                            <span className="font-medium text-gray-900">Create with LinkedIn profile</span>
+                        </div>
+                        <ArrowRight className="h-5 w-5 text-gray-400" />
+                    </button>
+
+                    <button
+                        onClick={() => handleStartOption('example')}
+                        className="w-full flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                    >
+                        <div className="flex items-center">
+                            <Star className="h-6 w-6 text-gray-600 mr-3" />
+                            <span className="font-medium text-gray-900">Create from example</span>
+                        </div>
+                        <ArrowRight className="h-5 w-5 text-gray-400" />
+                    </button>
                 </div>
             </div>
         </div>
     );
 
+    // Template Selector Component
     const TemplateSelector = () => (
         <div className="p-8">
             <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold text-gray-900 mb-4">Choose Your Resume Template</h2>
-                <p className="text-lg text-gray-600">Select from our collection of 25+ professional, ATS-friendly resume templates</p>
+                <p className="text-lg text-gray-600">Select from our collection of 18+ professional, ATS-friendly resume templates</p>
             </div>
 
+            {/* Search and Filters */}
             <div className="mb-8">
                 <div className="flex justify-center mb-6">
                     <input
@@ -609,8 +486,8 @@ const EnhancedResumeBuilder = () => {
                         <button
                             key={category}
                             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedCategory === category
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                 }`}
                             onClick={() => setSelectedCategory(category)}
                         >
@@ -620,18 +497,33 @@ const EnhancedResumeBuilder = () => {
                 </div>
             </div>
 
+            {/* Templates Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
                 {filteredTemplates.map(template => (
                     <div
                         key={template.id}
                         className={`bg-white border-2 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 ${selectedTemplate?.id === template.id
-                                ? 'border-blue-500 ring-2 ring-blue-200'
-                                : 'border-gray-200 hover:border-gray-300'
+                            ? 'border-blue-500 ring-2 ring-blue-200'
+                            : 'border-gray-200 hover:border-gray-300'
                             }`}
                         onClick={() => handleTemplateSelect(template)}
                     >
-                        <div className="relative">
-                            <TemplateThumbnail template={template} />
+                        {/* Template Thumbnail */}
+                        <div className="relative h-64 bg-gradient-to-br from-gray-50 to-gray-100">
+                            <div className="absolute inset-0 p-4 flex flex-col">
+                                <div className={`h-6 rounded mb-2 opacity-80`} style={{ backgroundColor: template.colors[0] }}></div>
+                                <div className="flex-1 space-y-2">
+                                    <div className="h-2 bg-gray-300 rounded w-3/4"></div>
+                                    <div className="h-2 bg-gray-300 rounded w-1/2"></div>
+                                    <div className="h-2 bg-gray-300 rounded w-2/3"></div>
+                                    <div className="mt-4 space-y-1">
+                                        <div className="h-1.5 bg-gray-400 rounded w-1/3"></div>
+                                        <div className="h-1 bg-gray-300 rounded w-4/5"></div>
+                                        <div className="h-1 bg-gray-300 rounded w-3/5"></div>
+                                        <div className="h-1 bg-gray-300 rounded w-2/3"></div>
+                                    </div>
+                                </div>
+                            </div>
 
                             {selectedTemplate?.id === template.id && (
                                 <div className="absolute top-2 right-2 bg-blue-600 rounded-full p-1">
@@ -646,6 +538,7 @@ const EnhancedResumeBuilder = () => {
                             )}
                         </div>
 
+                        {/* Template Info */}
                         <div className="p-4">
                             <h3 className="font-semibold text-gray-900 mb-1">{template.name}</h3>
                             <p className="text-sm text-gray-600 mb-3">{template.description}</p>
@@ -693,12 +586,15 @@ const EnhancedResumeBuilder = () => {
         </div>
     );
 
+    // Resume Builder Component
     const ResumeBuilder = () => {
         const sections = [
             { id: 'personal', name: 'Personal Details', icon: '👤' },
             { id: 'summary', name: 'Professional Summary', icon: '📝' },
             { id: 'experience', name: 'Work Experience', icon: '💼' },
-            { id: 'skills', name: 'Skills', icon: '⚡' }
+            { id: 'education', name: 'Education', icon: '🎓' },
+            { id: 'skills', name: 'Skills', icon: '⚡' },
+            { id: 'achievements', name: 'Achievements', icon: '🏆' }
         ];
 
         const renderPersonalSection = () => (
@@ -800,6 +696,8 @@ const EnhancedResumeBuilder = () => {
                             <option value="finance">Finance</option>
                             <option value="technology">Technology</option>
                             <option value="marketing">Marketing</option>
+                            <option value="healthcare">Healthcare</option>
+                            <option value="engineering">Engineering</option>
                         </select>
                         <select
                             value={experienceLevel}
@@ -927,6 +825,66 @@ const EnhancedResumeBuilder = () => {
                                     placeholder="Goldman Sachs"
                                 />
                             </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                                <input
+                                    type="text"
+                                    value={exp.location}
+                                    onChange={(e) => setResumeData(prev => ({
+                                        ...prev,
+                                        experience: prev.experience.map(e =>
+                                            e.id === exp.id ? { ...e, location: e.target.value } : e
+                                        )
+                                    }))}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="New York, NY"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
+                                <input
+                                    type="month"
+                                    value={exp.startDate}
+                                    onChange={(e) => setResumeData(prev => ({
+                                        ...prev,
+                                        experience: prev.experience.map(e =>
+                                            e.id === exp.id ? { ...e, startDate: e.target.value } : e
+                                        )
+                                    }))}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex items-center mb-4">
+                            <input
+                                type="checkbox"
+                                checked={exp.current}
+                                onChange={(e) => setResumeData(prev => ({
+                                    ...prev,
+                                    experience: prev.experience.map(e =>
+                                        e.id === exp.id ? { ...e, current: e.target.checked } : e
+                                    )
+                                }))}
+                                className="mr-2"
+                            />
+                            <label className="text-sm text-gray-700">Currently working here</label>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Job Description</label>
+                            <textarea
+                                value={exp.description}
+                                onChange={(e) => setResumeData(prev => ({
+                                    ...prev,
+                                    experience: prev.experience.map(e =>
+                                        e.id === exp.id ? { ...e, description: e.target.value } : e
+                                    )
+                                }))}
+                                placeholder="Describe your key responsibilities and achievements in this role..."
+                                rows={3}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            />
                         </div>
                     </div>
                 ))}
@@ -1003,6 +961,35 @@ const EnhancedResumeBuilder = () => {
                             </div>
                         ))}
                     </div>
+
+                    {aiSuggestions && aiSuggestions.skills && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h4 className="font-medium text-blue-900 mb-3">AI-Suggested Skills:</h4>
+                            <div className="flex flex-wrap gap-2">
+                                {aiSuggestions.skills.map((skill, index) => (
+                                    <button
+                                        key={index}
+                                        type="button"
+                                        onClick={() => {
+                                            if (!resumeData.skills.includes(skill)) {
+                                                setResumeData(prev => ({
+                                                    ...prev,
+                                                    skills: [...prev.skills, skill]
+                                                }));
+                                            }
+                                        }}
+                                        className={`px-3 py-1 rounded-full text-sm transition-colors ${resumeData.skills.includes(skill)
+                                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                            : 'bg-white text-blue-800 border border-blue-200 hover:bg-blue-100'
+                                            }`}
+                                        disabled={resumeData.skills.includes(skill)}
+                                    >
+                                        {skill}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             );
         };
@@ -1034,8 +1021,8 @@ const EnhancedResumeBuilder = () => {
                         <button
                             key={section.id}
                             className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${currentSection === section.id
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
                                 }`}
                             onClick={() => setCurrentSection(section.id)}
                         >
@@ -1069,6 +1056,7 @@ const EnhancedResumeBuilder = () => {
         );
     };
 
+    // Resume Preview Component
     const ResumePreview = () => {
         const fullName = `${resumeData.personalInfo.firstName} ${resumeData.personalInfo.lastName}`.trim();
 
@@ -1087,10 +1075,19 @@ const EnhancedResumeBuilder = () => {
                             <Download className="h-5 w-5 mr-2" />
                             Download PDF
                         </button>
+                        <button
+                            onClick={() => console.log('Saving resume...')}
+                            className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors flex items-center"
+                        >
+                            <Eye className="h-5 w-5 mr-2" />
+                            Save Draft
+                        </button>
                     </div>
                 </div>
 
+                {/* Resume Preview */}
                 <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-8 max-w-4xl mx-auto">
+                    {/* Header */}
                     <div className="text-center mb-8 pb-6 border-b border-gray-200">
                         <h1 className="text-3xl font-bold text-gray-900 mb-3">
                             {fullName || 'Your Name'}
@@ -1103,6 +1100,7 @@ const EnhancedResumeBuilder = () => {
                         </div>
                     </div>
 
+                    {/* Professional Summary */}
                     {resumeData.professionalSummary && (
                         <div className="mb-8">
                             <h3 className="text-xl font-semibold text-gray-900 mb-3">Professional Summary</h3>
@@ -1110,6 +1108,7 @@ const EnhancedResumeBuilder = () => {
                         </div>
                     )}
 
+                    {/* Experience */}
                     {resumeData.experience.length > 0 && (
                         <div className="mb-8">
                             <h3 className="text-xl font-semibold text-gray-900 mb-4">Work Experience</h3>
@@ -1130,6 +1129,7 @@ const EnhancedResumeBuilder = () => {
                         </div>
                     )}
 
+                    {/* Skills */}
                     {resumeData.skills.length > 0 && (
                         <div className="mb-8">
                             <h3 className="text-xl font-semibold text-gray-900 mb-4">Skills</h3>
@@ -1160,6 +1160,7 @@ const EnhancedResumeBuilder = () => {
         );
     };
 
+    // Step Indicator Component
     const StepIndicator = () => {
         const steps = [
             { id: 'template', name: 'Choose Template', completed: selectedTemplate !== null },
@@ -1172,10 +1173,10 @@ const EnhancedResumeBuilder = () => {
                 {steps.map((step, index) => (
                     <div key={step.id} className="flex items-center">
                         <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${currentStep === step.id
-                                ? 'border-blue-600 bg-blue-600 text-white'
-                                : step.completed
-                                    ? 'border-green-600 bg-green-600 text-white'
-                                    : 'border-gray-300 bg-white text-gray-500'
+                            ? 'border-blue-600 bg-blue-600 text-white'
+                            : step.completed
+                                ? 'border-green-600 bg-green-600 text-white'
+                                : 'border-gray-300 bg-white text-gray-500'
                             }`}>
                             {step.completed ? (
                                 <Check className="h-5 w-5" />
@@ -1217,13 +1218,16 @@ const EnhancedResumeBuilder = () => {
             {showStartModal && <StartModal />}
 
             <div className="max-w-7xl mx-auto px-4">
+                {/* Header */}
                 <div className="text-center mb-8">
                     <h1 className="text-4xl font-bold text-gray-900 mb-4">AI-Powered Resume Builder</h1>
                     <p className="text-lg text-gray-600">Create professional resumes with AI assistance and beautiful templates</p>
                 </div>
 
+                {/* Step Indicator */}
                 <StepIndicator />
 
+                {/* Main Content */}
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                     {renderCurrentStep()}
                 </div>

@@ -5,6 +5,7 @@ import {
     Building, TrendingUp, Bell, Settings, ChevronDown, Mail, ArrowUpRight,
     Send, X, Home, Save, Clock, Globe, Building2
 } from 'lucide-react';
+import { api } from '../utils/api';
 
 const ProfessionalRecruiterDashboard = () => {
     const [activeTab, setActiveTab] = useState('overview');
@@ -57,84 +58,47 @@ const ProfessionalRecruiterDashboard = () => {
         { type: 'alert', message: '3 high-priority candidates require immediate review', priority: 'urgent' }
     ];
 
-    const [jobs, setJobs] = useState([
-        {
-            id: 1,
-            title: 'Senior React Developer',
-            company_name: 'Tech Innovations Inc.',
-            location: 'San Francisco, CA',
-            salary_min: 120000,
-            salary_max: 180000,
-            status: 'active',
-            created_at: '2024-01-15',
-            remote: true,
-            views: 2847,
-            engagement: 23.5,
-            ai_score: 92
-        },
-        {
-            id: 2,
-            title: 'UX Designer',
-            company_name: 'Design Studio',
-            location: 'New York, NY',
-            salary_min: 90000,
-            salary_max: 130000,
-            status: 'active',
-            created_at: '2024-01-10',
-            remote: false,
-            views: 1923,
-            engagement: 18.2,
-            ai_score: 87
-        }
-    ]);
+    const [jobs, setJobs] = useState([]);
+    const [jobsLoading, setJobsLoading] = useState(true);
 
-    const [applications, setApplications] = useState([
-        {
-            id: 1,
-            applicant_name: 'Sarah Johnson',
-            applicant_email: 'sarah.j@email.com',
-            job_title: 'Senior React Developer',
-            job_id: 1,
-            status: 'pending',
-            applied_at: '2024-01-20',
-            score: 95,
-            experience: '5+ years',
-            skills: ['React', 'TypeScript', 'Node.js', 'GraphQL', 'AWS'],
-            ai_match: 97,
-            cultural_fit: 92,
-            interview_scheduled: false
-        },
-        {
-            id: 2,
-            applicant_name: 'Michael Chen',
-            applicant_email: 'michael.c@email.com',
-            job_title: 'UX Designer',
-            job_id: 2,
-            status: 'reviewed',
-            applied_at: '2024-01-18',
-            score: 88,
-            experience: '3+ years',
-            skills: ['Figma', 'Adobe XD', 'Prototyping', 'User Research'],
-            ai_match: 91,
-            cultural_fit: 88,
-            interview_scheduled: true
-        },
-        {
-            id: 3,
-            applicant_name: 'Emma Wilson',
-            applicant_email: 'emma.w@email.com',
-            job_title: 'Senior React Developer',
-            job_id: 1,
-            status: 'shortlisted',
-            applied_at: '2024-01-16',
-            score: 95,
-            experience: '7+ years',
-            skills: ['React', 'GraphQL', 'AWS', 'Docker'],
-            ai_match: 98,
-            cultural_fit: 95,
-            interview_scheduled: true
-        }
-    ]);
+    const [applications, setApplications] = useState([]);
+    const [applicationsLoading, setApplicationsLoading] = useState(true);
+
+    // Fetch jobs data
+    useEffect(() => {
+        const fetchJobs = async () => {
+            try {
+                setJobsLoading(true);
+                const jobsData = await api.getJobs();
+                setJobs(jobsData || []);
+            } catch (error) {
+                console.error('Error fetching jobs:', error);
+                setJobs([]);
+            } finally {
+                setJobsLoading(false);
+            }
+        };
+        fetchJobs();
+    }, []);
+
+    // Fetch applications data
+    useEffect(() => {
+        const fetchApplications = async () => {
+            try {
+                setApplicationsLoading(true);
+                const applicationsData = await api.getApplications();
+                setApplications(applicationsData || []);
+            } catch (error) {
+                console.error('Error fetching applications:', error);
+                setApplications([]);
+            } finally {
+                setApplicationsLoading(false);
+            }
+        };
+        fetchApplications();
+    }, []);
+
+    // Mock applications data removed - now using real API data
 
     const user = {
         name: 'Alex Morgan',
@@ -1039,24 +1003,35 @@ const ProfessionalRecruiterDashboard = () => {
                                     <div className="bg-white rounded-lg border border-gray-200 p-6">
                                         <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Candidates This Week</h3>
                                         <div className="space-y-4">
-                                            {applications.slice(0, 3).map((app) => (
-                                                <div key={app.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                                    <div className="flex items-center space-x-3">
-                                                        <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center text-gray-600 font-semibold">
-                                                            {app.applicant_name.charAt(0)}
-                                                        </div>
-                                                        <div>
-                                                            <p className="font-medium text-gray-900">{app.applicant_name}</p>
-                                                            <p className="text-sm text-gray-500">{app.job_title}</p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <div className={`px-2 py-1 rounded text-xs font-medium ${getScoreColor(app.ai_match)}`}>
-                                                            {app.ai_match}%
-                                                        </div>
-                                                    </div>
+                                            {applicationsLoading ? (
+                                                <div className="flex items-center justify-center py-8">
+                                                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                                                    <span className="ml-2 text-gray-600 text-sm">Loading...</span>
                                                 </div>
-                                            ))}
+                                            ) : applications.length === 0 ? (
+                                                <div className="text-center py-8">
+                                                    <p className="text-gray-500 text-sm">No applications yet</p>
+                                                </div>
+                                            ) : (
+                                                applications.slice(0, 3).map((app) => (
+                                                    <div key={app.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                                        <div className="flex items-center space-x-3">
+                                                            <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center text-gray-600 font-semibold">
+                                                                {app.applicant_name?.charAt(0) || 'U'}
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-medium text-gray-900">{app.applicant_name || 'Unknown'}</p>
+                                                                <p className="text-sm text-gray-500">{app.job_title || 'No title'}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <div className={`px-2 py-1 rounded text-xs font-medium ${getScoreColor(app.ai_match || 0)}`}>
+                                                                {app.ai_match || 0}%
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
                                         </div>
                                     </div>
 
@@ -1144,17 +1119,22 @@ const ProfessionalRecruiterDashboard = () => {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                                    {filteredApplications.map((application) => (
-                                        <ApplicationCard key={application.id} application={application} />
-                                    ))}
-                                </div>
-
-                                {filteredApplications.length === 0 && (
+                                {applicationsLoading ? (
+                                    <div className="flex items-center justify-center py-12">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                        <span className="ml-3 text-gray-600">Loading applications...</span>
+                                    </div>
+                                ) : filteredApplications.length === 0 ? (
                                     <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
                                         <Users className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                                         <h3 className="text-lg font-medium text-gray-900 mb-2">No applications found</h3>
                                         <p className="text-gray-500">Try adjusting your search or filter criteria.</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                                        {filteredApplications.map((application) => (
+                                            <ApplicationCard key={application.id} application={application} />
+                                        ))}
                                     </div>
                                 )}
                             </div>
@@ -1197,17 +1177,22 @@ const ProfessionalRecruiterDashboard = () => {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                                    {filteredJobs.map((job) => (
-                                        <JobCard key={job.id} job={job} />
-                                    ))}
-                                </div>
-
-                                {filteredJobs.length === 0 && (
+                                {jobsLoading ? (
+                                    <div className="flex items-center justify-center py-12">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                        <span className="ml-3 text-gray-600">Loading jobs...</span>
+                                    </div>
+                                ) : filteredJobs.length === 0 ? (
                                     <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
                                         <Briefcase className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                                         <h3 className="text-lg font-medium text-gray-900 mb-2">No jobs found</h3>
                                         <p className="text-gray-500">Start by creating your first job posting.</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                                        {filteredJobs.map((job) => (
+                                            <JobCard key={job.id} job={job} />
+                                        ))}
                                     </div>
                                 )}
                             </div>

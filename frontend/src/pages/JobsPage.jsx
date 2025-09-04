@@ -189,92 +189,22 @@ const JobsPage = () => {
     ];
 
     useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            fetchJobs();
-        }, 300); // Debounce API calls by 300ms
-        
-        return () => clearTimeout(timeoutId);
-    }, [filters]);
+        fetchJobs();
+    }, []); // Remove filters dependency to prevent page refresh on every filter change
+
+    // Apply filters when user clicks the search button instead
+    const applyFilters = () => {
+        fetchJobs();
+    };
 
     const fetchJobs = async () => {
         setLoading(true);
         try {
-            // Filter jobs based on current filters
-            let filteredJobs = [...mockJobs];
-            
-            // Apply search filter
-            if (filters.search) {
-                const searchTerm = filters.search.toLowerCase();
-                filteredJobs = filteredJobs.filter(job => 
-                    job.title.toLowerCase().includes(searchTerm) ||
-                    job.company.toLowerCase().includes(searchTerm) ||
-                    job.skills.some(skill => skill.toLowerCase().includes(searchTerm))
-                );
-            }
-            
-            // Apply location filter
-            if (filters.location) {
-                filteredJobs = filteredJobs.filter(job => 
-                    job.location.includes(filters.location)
-                );
-            }
-            
-            // Apply department filter
-            if (filters.department) {
-                filteredJobs = filteredJobs.filter(job => 
-                    job.department === filters.department
-                );
-            }
-            
-            // Apply job type filter
-            if (filters.jobType) {
-                filteredJobs = filteredJobs.filter(job => 
-                    job.type === filters.jobType
-                );
-            }
-            
-            // Apply work mode filter
-            if (filters.workMode) {
-                filteredJobs = filteredJobs.filter(job => 
-                    job.workMode === filters.workMode
-                );
-            }
-            
-            // Apply experience filter
-            if (filters.experience) {
-                filteredJobs = filteredJobs.filter(job => 
-                    job.experience === filters.experience
-                );
-            }
-            
-            // Apply skills filter
-            if (filters.skills.length > 0) {
-                filteredJobs = filteredJobs.filter(job => 
-                    filters.skills.some(skill => 
-                        job.skills.some(jobSkill => 
-                            jobSkill.toLowerCase().includes(skill.toLowerCase())
-                        )
-                    )
-                );
-            }
-            
-            // Apply salary range filter
-            if (filters.salaryRange[0] > 0 || filters.salaryRange[1] < 1500000) {
-                filteredJobs = filteredJobs.filter(job => 
-                    job.salaryMin >= filters.salaryRange[0] && 
-                    job.salaryMax <= filters.salaryRange[1]
-                );
-            }
-            
             setTimeout(() => {
-                setJobs(filteredJobs);
-                setPagination({ 
-                    page: filters.page, 
-                    pages: Math.ceil(filteredJobs.length / 10), 
-                    total: filteredJobs.length 
-                });
+                setJobs(mockJobs);
+                setPagination({ page: 1, pages: 1, total: mockJobs.length });
                 setLoading(false);
-            }, 500);
+            }, 1000);
         } catch (err) {
             setError('Failed to fetch jobs');
             setLoading(false);
@@ -320,45 +250,45 @@ const JobsPage = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+        <div className="min-h-screen bg-gray-50">
             <div className="w-full px-0 py-8">
                 {/* Enhanced Header */}
-                <div className="text-center mb-10 px-4 py-12 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-3xl mx-4 shadow-xl border border-white/40">
+                <div className="text-center mb-10 px-4 py-12 bg-white rounded-xl mx-4 shadow-sm border border-gray-100">
                     <div className="flex justify-center items-center gap-4 mb-6">
-                        <div className="p-4 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-lg">
-                            <Briefcase className="h-8 w-8 text-white" />
+                        <div className="p-4 bg-gray-200 rounded-xl shadow-sm">
+                            <Briefcase className="h-8 w-8 text-gray-700" />
                         </div>
-                        <div className="p-4 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl shadow-lg">
-                            <Building2 className="h-8 w-8 text-white" />
+                        <div className="p-4 bg-gray-200 rounded-xl shadow-sm">
+                            <Building2 className="h-8 w-8 text-gray-700" />
                         </div>
-                        <div className="p-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl shadow-lg">
-                            <Sparkles className="h-8 w-8 text-white" />
+                        <div className="p-4 bg-gray-200 rounded-xl shadow-sm">
+                            <Sparkles className="h-8 w-8 text-gray-700" />
                         </div>
                     </div>
                     <h1 className="text-5xl font-bold text-gray-900 mb-4 leading-tight">
-                        Premium <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Finance & Auto</span> Jobs
+                        Premium <span className="text-gray-700">Finance & Auto</span> Jobs
                     </h1>
-                    <p className="text-xl text-gray-700 max-w-3xl mx-auto mb-8 leading-relaxed">
+                    <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8 leading-relaxed">
                         Discover exclusive opportunities in Finance and Automotive industries with top-tier companies
                     </p>
                     <div className="flex justify-center items-center gap-8 mt-6 text-lg text-gray-600">
-                        <div className="flex items-center gap-3 bg-white/80 px-6 py-3 rounded-full shadow-md">
-                            <Users className="h-6 w-6 text-blue-600" />
+                        <div className="flex items-center gap-3 bg-gray-100 px-6 py-3 rounded-lg shadow-sm">
+                            <Users className="h-6 w-6 text-gray-700" />
                             <span className="font-semibold">10,000+ Jobs</span>
                         </div>
-                        <div className="flex items-center gap-3 bg-white/80 px-6 py-3 rounded-full shadow-md">
-                            <Building2 className="h-6 w-6 text-green-600" />
+                        <div className="flex items-center gap-3 bg-gray-100 px-6 py-3 rounded-lg shadow-sm">
+                            <Building2 className="h-6 w-6 text-gray-700" />
                             <span className="font-semibold">500+ Companies</span>
                         </div>
-                        <div className="flex items-center gap-3 bg-white/80 px-6 py-3 rounded-full shadow-md">
-                            <Star className="h-6 w-6 text-yellow-500" />
+                        <div className="flex items-center gap-3 bg-gray-100 px-6 py-3 rounded-lg shadow-sm">
+                            <Star className="h-6 w-6 text-gray-700" />
                             <span className="font-semibold">Verified</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Compact Search & Quick Filters Bar */}
-                <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-3 mb-8 mx-4">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-3 mb-8 mx-4">
                     <div className="flex items-center gap-3 mb-3">
                         <div className="flex-1">
                             <div className="relative">
@@ -368,42 +298,69 @@ const JobsPage = () => {
                                     placeholder="Search jobs, companies, skills..."
                                     value={filters.search}
                                     onChange={(e) => handleFilterChange('search', e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-0 text-sm placeholder-gray-400 bg-white/90"
+                                    className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:border-gray-400 focus:ring-0 text-sm placeholder-gray-400 bg-white"
                                 />
                             </div>
                         </div>
-                        <select className="px-3 py-2.5 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-0 text-sm bg-white/90 min-w-[120px]">
+                        <select className="px-3 py-2.5 border border-gray-200 rounded-lg focus:border-gray-400 focus:ring-0 text-sm bg-white min-w-[120px]">
                             <option>All Locations</option>
                             <option>Mumbai</option>
                             <option>Delhi NCR</option>
                             <option>Bangalore</option>
                             <option>Pune</option>
                         </select>
-                        <select className="px-3 py-2.5 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-0 text-sm bg-white/90 min-w-[120px]">
+                        <select className="px-3 py-2.5 border border-gray-200 rounded-lg focus:border-gray-400 focus:ring-0 text-sm bg-white min-w-[120px]">
                             <option>Experience</option>
                             <option>0-1 years</option>
                             <option>2-4 years</option>
                             <option>5+ years</option>
                         </select>
-                        <button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-300">
+                        <button
+                            onClick={applyFilters}
+                            className="bg-gray-700 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-800 transition-all duration-300"
+                        >
                             Search
                         </button>
                     </div>
                     <div className="flex justify-center items-center flex-wrap gap-2">
-                        <span className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium cursor-pointer hover:bg-blue-200 transition-colors">
+                        {/* Finance Skills */}
+                        <span className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium cursor-pointer hover:bg-gray-200 transition-colors">
                             Financial Analyst
                         </span>
-                        <span className="px-3 py-1.5 bg-green-100 text-green-700 rounded-full text-xs font-medium cursor-pointer hover:bg-green-200 transition-colors">
-                            Automotive Engineer
-                        </span>
-                        <span className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-xs font-medium cursor-pointer hover:bg-purple-200 transition-colors">
+                        <span className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium cursor-pointer hover:bg-gray-200 transition-colors">
                             Investment Banking
                         </span>
-                        <span className="px-3 py-1.5 bg-orange-100 text-orange-700 rounded-full text-xs font-medium cursor-pointer hover:bg-orange-200 transition-colors">
+                        <span className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium cursor-pointer hover:bg-gray-200 transition-colors">
+                            Risk Management
+                        </span>
+                        <span className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium cursor-pointer hover:bg-gray-200 transition-colors">
+                            Financial Modeling
+                        </span>
+                        <span className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium cursor-pointer hover:bg-gray-200 transition-colors">
+                            Portfolio Management
+                        </span>
+                        <span className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium cursor-pointer hover:bg-gray-200 transition-colors">
+                            Equity Research
+                        </span>
+
+                        {/* Automotive Skills */}
+                        <span className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium cursor-pointer hover:bg-gray-200 transition-colors">
+                            Automotive Engineer
+                        </span>
+                        <span className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium cursor-pointer hover:bg-gray-200 transition-colors">
                             Vehicle Design
                         </span>
-                        <span className="px-3 py-1.5 bg-pink-100 text-pink-700 rounded-full text-xs font-medium cursor-pointer hover:bg-pink-200 transition-colors">
-                            Risk Management
+                        <span className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium cursor-pointer hover:bg-gray-200 transition-colors">
+                            Powertrain Development
+                        </span>
+                        <span className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium cursor-pointer hover:bg-gray-200 transition-colors">
+                            EV Technology
+                        </span>
+                        <span className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium cursor-pointer hover:bg-gray-200 transition-colors">
+                            Automotive Manufacturing
+                        </span>
+                        <span className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium cursor-pointer hover:bg-gray-200 transition-colors">
+                            ADAS Systems
                         </span>
                     </div>
                 </div>
@@ -412,46 +369,46 @@ const JobsPage = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mx-4">
                     {/* Left Column - Extra Filters */}
                     <div className="lg:col-span-2 hidden lg:block">
-                        <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-4 sticky top-8">
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 sticky top-8">
                             <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                                <Filter className="h-4 w-4 text-blue-600" />
+                                <Filter className="h-4 w-4 text-gray-700" />
                                 Filters
                             </h3>
                             {/* Date Posted */}
                             <div className="mb-4">
-                                <label className="block text-xs font-medium text-gray-800 mb-2 flex items-center gap-1">
-                                    <Calendar className="h-3 w-3 text-blue-600" />
+                                <label className="block text-sm font-medium text-gray-800 mb-2 flex items-center gap-1">
+                                    <Calendar className="h-4 w-4 text-gray-700" />
                                     Date
                                 </label>
                                 <div className="space-y-1">
-                                    <label className="flex items-center group cursor-pointer">
-                                        <input type="radio" name="datePosted" value="all" defaultChecked className="w-3 h-3 text-blue-600 border border-gray-300 focus:ring-blue-500 focus:ring-1" />
-                                        <span className="ml-2 text-xs text-gray-700 group-hover:text-gray-900 transition-colors">All</span>
+                                    <label className="flex items-center group cursor-pointer py-1">
+                                        <input type="radio" name="datePosted" value="all" defaultChecked className="w-4 h-4 text-gray-700 border border-gray-300 focus:ring-gray-500 focus:ring-1 flex-shrink-0" />
+                                        <span className="ml-3 text-sm text-gray-700 group-hover:text-gray-900 transition-colors">All</span>
                                     </label>
-                                    <label className="flex items-center group cursor-pointer">
-                                        <input type="radio" name="datePosted" value="24h" className="w-3 h-3 text-blue-600 border border-gray-300 focus:ring-blue-500 focus:ring-1" />
-                                        <span className="ml-2 text-xs text-gray-700 group-hover:text-gray-900 transition-colors">24h</span>
+                                    <label className="flex items-center group cursor-pointer py-1">
+                                        <input type="radio" name="datePosted" value="24h" className="w-4 h-4 text-gray-700 border border-gray-300 focus:ring-gray-500 focus:ring-1 flex-shrink-0" />
+                                        <span className="ml-3 text-sm text-gray-700 group-hover:text-gray-900 transition-colors">24h</span>
                                     </label>
-                                    <label className="flex items-center group cursor-pointer">
-                                        <input type="radio" name="datePosted" value="3d" className="w-3 h-3 text-blue-600 border border-gray-300 focus:ring-blue-500 focus:ring-1" />
-                                        <span className="ml-2 text-xs text-gray-700 group-hover:text-gray-900 transition-colors">Last 3 days</span>
+                                    <label className="flex items-center group cursor-pointer py-1">
+                                        <input type="radio" name="datePosted" value="3d" className="w-4 h-4 text-gray-700 border border-gray-300 focus:ring-gray-500 focus:ring-1 flex-shrink-0" />
+                                        <span className="ml-3 text-sm text-gray-700 group-hover:text-gray-900 transition-colors">Last 3 days</span>
                                     </label>
-                                    <label className="flex items-center group cursor-pointer">
-                                        <input type="radio" name="datePosted" value="7d" className="w-3 h-3 text-blue-600 border border-gray-300 focus:ring-blue-500 focus:ring-1" />
-                                        <span className="ml-2 text-xs text-gray-700 group-hover:text-gray-900 transition-colors">Last 7 days</span>
+                                    <label className="flex items-center group cursor-pointer py-1">
+                                        <input type="radio" name="datePosted" value="7d" className="w-4 h-4 text-gray-700 border border-gray-300 focus:ring-gray-500 focus:ring-1 flex-shrink-0" />
+                                        <span className="ml-3 text-sm text-gray-700 group-hover:text-gray-900 transition-colors">Last 7 days</span>
                                     </label>
                                 </div>
                             </div>
 
                             {/* Salary Range with Progress Bar */}
                             <div className="mb-4">
-                                <label className="block text-xs font-medium text-gray-800 mb-2 flex items-center gap-1">
-                                    <TrendingUp className="h-3 w-3 text-green-600" />
+                                <label className="block text-sm font-medium text-gray-800 mb-2 flex items-center gap-1">
+                                    <TrendingUp className="h-4 w-4 text-gray-700" />
                                     Salary
                                 </label>
                                 <div className="mb-2">
-                                    <p className="text-xs text-gray-600 mb-1">Minimum monthly salary</p>
-                                    <div className="bg-green-600 text-white px-2 py-1 rounded text-xs font-medium inline-block mb-2">
+                                    <p className="text-sm text-gray-600 mb-1">Minimum monthly salary</p>
+                                    <div className="bg-gray-700 text-white px-2 py-1 rounded text-sm font-medium inline-block mb-2">
                                         ₹{(filters.salaryRange[0] / 100000).toFixed(0)}L
                                     </div>
                                     <div className="relative">
@@ -464,7 +421,7 @@ const JobsPage = () => {
                                             onChange={(e) => handleFilterChange('salaryRange', [parseInt(e.target.value), filters.salaryRange[1]])}
                                             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
                                         />
-                                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                        <div className="flex justify-between text-sm text-gray-500 mt-1">
                                             <span>0</span>
                                             <span>1.5 Lakhs</span>
                                         </div>
@@ -474,13 +431,13 @@ const JobsPage = () => {
 
                             {/* Work Mode */}
                             <div className="mb-4">
-                                <label className="block text-xs font-medium text-gray-800 mb-2 flex items-center gap-1">
-                                    <Home className="h-3 w-3 text-purple-600" />
+                                <label className="block text-sm font-medium text-gray-800 mb-2 flex items-center gap-1">
+                                    <Home className="h-4 w-4 text-gray-700" />
                                     Work Mode
                                 </label>
                                 <div className="space-y-1">
                                     {workModes.map((mode) => (
-                                        <label key={mode} className="flex items-center group cursor-pointer">
+                                        <label key={mode} className="flex items-center group cursor-pointer py-1">
                                             <input
                                                 type="checkbox"
                                                 value={mode}
@@ -491,67 +448,27 @@ const JobsPage = () => {
                                                         handleFilterChange('workMode', '');
                                                     }
                                                 }}
-                                                className="w-3 h-3 text-blue-600 border border-gray-300 rounded focus:ring-blue-500 focus:ring-1"
+                                                className="w-4 h-4 text-gray-600 border border-gray-200 rounded focus:ring-blue-200 focus:ring-1 flex-shrink-0"
                                             />
-                                            <span className="ml-2 text-xs text-gray-700 group-hover:text-gray-900 transition-colors">{mode}</span>
+                                            <span className="ml-3 text-sm text-gray-700 group-hover:text-gray-900 transition-colors">{mode}</span>
                                         </label>
                                     ))}
                                 </div>
-                            </div>
-
-                            {/* Department */}
-                            <div className="mb-4">
-                                <label className="block text-xs font-medium text-gray-800 mb-2 flex items-center gap-1">
-                                    <Building2 className="h-3 w-3 text-indigo-600" />
-                                    Department
-                                </label>
-                                <div className="mb-2">
-                                    <div className="relative">
-                                        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3" />
-                                        <input
-                                            type="text"
-                                            placeholder="Search"
-                                            className="w-full pl-8 pr-3 py-1.5 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-gray-50 text-xs"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="space-y-1 max-h-24 overflow-y-auto">
-                                    {departments.slice(0, 6).map((dept) => (
-                                        <label key={dept} className="flex items-center group cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                className="w-3 h-3 text-blue-600 border border-gray-300 rounded focus:ring-blue-500 focus:ring-1"
-                                                checked={filters.department === dept}
-                                                onChange={(e) => {
-                                                    if (e.target.checked) {
-                                                        handleFilterChange('department', dept);
-                                                    } else {
-                                                        handleFilterChange('department', '');
-                                                    }
-                                                }}
-                                            />
-                                            <span className="ml-2 text-xs text-gray-700 group-hover:text-gray-900 transition-colors">{dept}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                                <button className="text-teal-600 text-xs font-medium mt-1 hover:text-teal-700 transition-colors">
-                                    Show more ▷
-                                </button>
                             </div>
 
                             {/* Locations */}
                             <div className="mb-4">
-                                <label className="block text-xs font-medium text-gray-800 mb-2 flex items-center gap-1">
-                                    <MapPin className="h-3 w-3 text-purple-600" />
+                                <label className="block text-sm font-medium text-gray-800 mb-2 flex items-center gap-1">
+                                    <MapPin className="h-4 w-4 text-gray-700" />
                                     Locations
                                 </label>
                                 <div className="space-y-1 max-h-24 overflow-y-auto">
                                     {locations.slice(0, 6).map((location) => (
-                                        <label key={location} className="flex items-center group cursor-pointer">
+                                        <label key={location} className="flex items-center group cursor-pointer py-1">
                                             <input
                                                 type="radio"
                                                 name="location"
-                                                className="w-3 h-3 text-purple-600 border border-gray-300 focus:ring-purple-500 focus:ring-1"
+                                                className="w-4 h-4 text-gray-600 border border-gray-300 focus:ring-gray-500 focus:ring-1 flex-shrink-0"
                                                 checked={filters.location === location}
                                                 onChange={() => {
                                                     setFilters(prev => ({
@@ -560,33 +477,30 @@ const JobsPage = () => {
                                                     }));
                                                 }}
                                             />
-                                            <span className="ml-2 text-xs text-gray-700 group-hover:text-gray-900 transition-colors">{location.split(',')[0]}</span>
+                                            <span className="ml-3 text-sm text-gray-700 group-hover:text-gray-900 transition-colors">{location.split(',')[0]}</span>
                                         </label>
                                     ))}
                                 </div>
-                                <button className="text-teal-600 text-xs font-medium mt-1 hover:text-teal-700 transition-colors">
-                                    Show more ▷
-                                </button>
                             </div>
 
                             {/* Sort By */}
                             <div className="mb-4">
-                                <label className="block text-xs font-medium text-gray-800 mb-2 flex items-center gap-1">
-                                    <Award className="h-3 w-3 text-yellow-600" />
+                                <label className="block text-sm font-medium text-gray-800 mb-2 flex items-center gap-1">
+                                    <Award className="h-4 w-4 text-gray-700" />
                                     Sort By
                                 </label>
                                 <div className="space-y-1">
-                                    <label className="flex items-center group cursor-pointer">
-                                        <input type="radio" name="sortBy" value="relevant" defaultChecked className="w-3 h-3 text-blue-600 border border-gray-300 focus:ring-blue-500 focus:ring-1" />
-                                        <span className="ml-2 text-xs text-gray-700 group-hover:text-gray-900 transition-colors">Relevant</span>
+                                    <label className="flex items-center group cursor-pointer py-1">
+                                        <input type="radio" name="sortBy" value="relevant" defaultChecked className="w-4 h-4 text-gray-600 border border-gray-300 focus:ring-gray-500 focus:ring-1 flex-shrink-0" />
+                                        <span className="ml-3 text-sm text-gray-700 group-hover:text-gray-900 transition-colors">Relevant</span>
                                     </label>
-                                    <label className="flex items-center group cursor-pointer">
-                                        <input type="radio" name="sortBy" value="salary" className="w-3 h-3 text-blue-600 border border-gray-300 focus:ring-blue-500 focus:ring-1" />
-                                        <span className="ml-2 text-xs text-gray-700 group-hover:text-gray-900 transition-colors">Salary - High to low</span>
+                                    <label className="flex items-center group cursor-pointer py-1">
+                                        <input type="radio" name="sortBy" value="salary" className="w-4 h-4 text-gray-600 border border-gray-300 focus:ring-gray-500 focus:ring-1 flex-shrink-0" />
+                                        <span className="ml-3 text-sm text-gray-700 group-hover:text-gray-900 transition-colors">Salary - High to low</span>
                                     </label>
-                                    <label className="flex items-center group cursor-pointer">
-                                        <input type="radio" name="sortBy" value="date" className="w-3 h-3 text-blue-600 border border-gray-300 focus:ring-blue-500 focus:ring-1" />
-                                        <span className="ml-2 text-xs text-gray-700 group-hover:text-gray-900 transition-colors">Date posted - New to Old</span>
+                                    <label className="flex items-center group cursor-pointer py-1">
+                                        <input type="radio" name="sortBy" value="date" className="w-4 h-4 text-gray-600 border border-gray-300 focus:ring-gray-500 focus:ring-1 flex-shrink-0" />
+                                        <span className="ml-3 text-sm text-gray-700 group-hover:text-gray-900 transition-colors">Date posted - New to Old</span>
                                     </label>
                                 </div>
                             </div>
@@ -595,57 +509,57 @@ const JobsPage = () => {
 
                     {/* Main Column - Job Cards */}
                     <div className="lg:col-span-8 col-span-1">
-                        <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-4 min-h-[300px]">
+                        <div className="bg-gray-50/30 rounded-lg shadow-sm border border-gray-50 p-4 min-h-[300px]">
                             {/* Job Cards */}
                             <div className="space-y-3">
                                 {jobs && jobs.length > 0 ? (
                                     jobs.map((job) => (
-                                        <div key={job.id} className={`bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border ${job.featured ? 'border-blue-200 bg-gradient-to-r from-blue-50/40 to-purple-50/40 ring-2 ring-blue-100' : 'border-gray-200 hover:border-blue-300'} relative group`}>
+                                        <div key={job.id} className={`bg-white/70 rounded-lg shadow-sm hover:shadow transition-all duration-300 p-6 border ${job.featured ? 'border-gray-100 bg-gray-50/50' : 'border-gray-50 hover:border-gray-100'} relative group backdrop-blur-sm`}>
                                             {/* Top Row - Company Logo, Title, and Actions */}
                                             <div className="flex items-start justify-between gap-4 mb-4">
                                                 <div className="flex items-start gap-4 flex-1">
                                                     {/* Company Logo */}
-                                                    <div className={`w-14 h-14 ${job.jobRole.includes('Financial') || job.jobRole.includes('Investment') || job.jobRole.includes('Risk') ? 'bg-gradient-to-br from-emerald-500 to-teal-600' : 'bg-gradient-to-br from-blue-500 to-indigo-600'} rounded-xl flex items-center justify-center shadow-md flex-shrink-0`}>
-                                                        <span className="text-white font-bold text-lg">{job.companyLogo}</span>
+                                                    <div className="w-14 h-14 bg-gray-50 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0 border border-gray-100">
+                                                        <span className="text-gray-600 font-bold text-lg">{job.companyLogo}</span>
                                                     </div>
                                                     {/* Job Info */}
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex items-start justify-between gap-3">
                                                             <div className="flex-1 min-w-0">
                                                                 <h4 className="text-xl font-bold text-gray-900 mb-2 leading-tight">
-                                                                    <Link to={`/job/${job.id}`} className="hover:text-blue-600 transition-colors">{job.title}</Link>
+                                                                    <Link to={`/job/${job.id}`} className="hover:text-gray-700 transition-colors">{job.title}</Link>
                                                                 </h4>
                                                                 <div className="flex items-center gap-3 mb-2">
                                                                     <p className="text-base text-gray-700 font-semibold">{job.company}</p>
-                                                                    {job.verified && <CheckCircle className="h-4 w-4 text-green-500" />}
+                                                                    {job.verified && <CheckCircle className="h-4 w-4 text-gray-700" />}
                                                                     {job.urgentHiring && (
-                                                                        <span className="bg-orange-100 text-orange-700 px-3 py-1.5 rounded-full text-xs font-semibold">
+                                                                        <span className="bg-orange-50 text-orange-600 px-3 py-1.5 rounded-lg text-xs font-semibold border border-orange-100">
                                                                             🚀 Urgent Hiring
                                                                         </span>
                                                                     )}
                                                                 </div>
                                                                 <div className="flex items-center gap-3 text-base text-gray-600">
                                                                     <div className="flex items-center gap-1.5">
-                                                                        <Star className="h-4 w-4 text-yellow-500" />
+                                                                        <Star className="h-4 w-4 text-gray-700" />
                                                                         <span className="font-medium">{job.rating}</span>
                                                                     </div>
                                                                     <span className="text-gray-400">•</span>
                                                                     <div className="flex items-center gap-1.5">
-                                                                        <Users className="h-4 w-4" />
+                                                                        <Users className="h-4 w-4 text-gray-600" />
                                                                         <span className="font-medium">{job.applicants} applied</span>
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                             {/* Action Buttons */}
                                                             <div className="flex items-center gap-2 flex-shrink-0">
-                                                                <button className="p-2.5 rounded-lg hover:bg-red-50 transition-colors group">
-                                                                    <Heart className="h-5 w-5 text-gray-400 group-hover:text-red-500 transition-colors" />
+                                                                <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group">
+                                                                    <Heart className="h-5 w-5 text-gray-400 group-hover:text-gray-700 transition-colors" />
                                                                 </button>
-                                                                <button className="p-2.5 rounded-lg hover:bg-blue-50 transition-colors group">
-                                                                    <Bookmark className="h-5 w-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                                                                <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group">
+                                                                    <Bookmark className="h-5 w-5 text-gray-400 group-hover:text-gray-700 transition-colors" />
                                                                 </button>
-                                                                <button className="p-2.5 rounded-lg hover:bg-gray-50 transition-colors group">
-                                                                    <Share2 className="h-5 w-5 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                                                                <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group">
+                                                                    <Share2 className="h-5 w-5 text-gray-400 group-hover:text-gray-700 transition-colors" />
                                                                 </button>
                                                             </div>
                                                         </div>
@@ -655,41 +569,41 @@ const JobsPage = () => {
 
                                             {/* Middle Row - Job Details */}
                                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                                                <div className="flex items-center gap-2 text-sm text-gray-700 bg-gray-50/80 rounded-lg px-4 py-3">
-                                                    <MapPin className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                                                <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50/50 rounded-lg px-4 py-3 border border-gray-100/50">
+                                                    <MapPin className="h-4 w-4 text-gray-500 flex-shrink-0" />
                                                     <span className="truncate font-medium">{job.location.split(',')[0]}</span>
                                                 </div>
-                                                <div className="flex items-center gap-2 text-sm text-gray-700 bg-purple-50/80 rounded-lg px-4 py-3">
-                                                    <Home className="h-4 w-4 text-purple-500 flex-shrink-0" />
+                                                <div className="flex items-center gap-2 text-sm text-gray-700 bg-gray-50/80 rounded-lg px-4 py-3">
+                                                    <Home className="h-4 w-4 text-gray-500 flex-shrink-0" />
                                                     <span className="truncate font-medium">{job.workMode.replace('Work from ', '')}</span>
                                                 </div>
-                                                <div className="flex items-center gap-2 text-sm text-gray-700 bg-emerald-50/80 rounded-lg px-4 py-3">
-                                                    <DollarSign className="h-4 w-4 text-emerald-500 flex-shrink-0" />
-                                                    <span className="font-bold text-emerald-700 truncate">{job.salary.split(' - ')[0]}</span>
+                                                <div className="flex items-center gap-2 text-sm text-gray-700 bg-gray-50/80 rounded-lg px-4 py-3">
+                                                    <DollarSign className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                                                    <span className="font-bold text-gray-700 truncate">{job.salary.split(' - ')[0]}</span>
                                                 </div>
-                                                <div className="flex items-center gap-2 text-sm text-gray-700 bg-blue-50/80 rounded-lg px-4 py-3">
-                                                    <Briefcase className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                                                <div className="flex items-center gap-2 text-sm text-gray-700 bg-gray-50/80 rounded-lg px-4 py-3">
+                                                    <Briefcase className="h-4 w-4 text-gray-500 flex-shrink-0" />
                                                     <span className="truncate font-medium">{job.experience}</span>
                                                 </div>
                                             </div>
 
                                             {/* Skills and Tags */}
                                             <div className="flex flex-wrap gap-2 mb-4">
-                                                <span className={`px-4 py-2 rounded-lg text-sm font-semibold ${job.type === 'Full-time' ? 'bg-emerald-100 text-emerald-700' : job.type === 'Part-time' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
+                                                <span className={`px-4 py-2 rounded-lg text-sm font-semibold ${job.type === 'Full-time' ? 'bg-blue-50 text-blue-600 border border-blue-100' : job.type === 'Part-time' ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-purple-50 text-purple-600 border border-purple-100'}`}>
                                                     {job.type}
                                                 </span>
                                                 {job.skills?.slice(0, 3).map((skill, index) => (
-                                                    <span key={index} className="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-semibold border border-blue-100">
+                                                    <span key={index} className="px-4 py-2 bg-gray-50/70 text-gray-600 rounded-lg text-sm font-semibold border border-gray-100/70">
                                                         {skill}
                                                     </span>
                                                 ))}
                                                 {job.skills?.length > 3 && (
-                                                    <span className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-semibold">
+                                                    <span className="px-4 py-2 bg-gray-50 text-gray-500 rounded-lg text-sm font-semibold border border-gray-100">
                                                         +{job.skills.length - 3} more
                                                     </span>
                                                 )}
                                                 {job.featured && (
-                                                    <span className="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-4 py-2 text-sm font-bold rounded-lg shadow-md">
+                                                    <span className="bg-yellow-50 text-yellow-600 px-4 py-2 text-sm font-bold rounded-lg shadow-sm border border-yellow-100">
                                                         ✨ FEATURED
                                                     </span>
                                                 )}
@@ -699,19 +613,19 @@ const JobsPage = () => {
                                             <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                                                 <div className="flex items-center gap-4 text-sm text-gray-600">
                                                     <div className="flex items-center gap-1.5">
-                                                        <Clock className="h-4 w-4" />
+                                                        <Clock className="h-4 w-4 text-gray-500" />
                                                         <span className="font-medium">{job.posted}</span>
                                                     </div>
                                                     <div className="flex items-center gap-1.5">
-                                                        <Eye className="h-4 w-4" />
+                                                        <Eye className="h-4 w-4 text-gray-500" />
                                                         <span className="font-medium">View details</span>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-3">
-                                                    <button className="border-2 border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/50 transition-all duration-200">
+                                                    <button className="border border-gray-200 text-gray-600 px-4 py-2 rounded-lg text-sm font-semibold hover:border-gray-300 hover:text-gray-700 hover:bg-gray-50 transition-all duration-200">
                                                         View Details
                                                     </button>
-                                                    <button className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-2 rounded-lg text-sm font-bold hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md">
+                                                    <button className="bg-blue-50 text-blue-600 px-6 py-2 rounded-lg text-sm font-bold hover:bg-blue-100 transition-all duration-200 shadow-sm border border-blue-100">
                                                         Apply Now
                                                     </button>
                                                 </div>
@@ -720,7 +634,7 @@ const JobsPage = () => {
                                     ))
                                 ) : (
                                     <div className="text-center py-12">
-                                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
                                             <Search className="h-8 w-8 text-gray-400" />
                                         </div>
                                         <h3 className="text-xl font-semibold text-gray-900 mb-2">No Jobs Found</h3>
@@ -734,17 +648,17 @@ const JobsPage = () => {
                                 <button
                                     disabled={pagination.page <= 1}
                                     onClick={() => setFilters(prev => ({ ...prev, page: (prev.page || 1) - 1 }))}
-                                    className="px-5 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="px-5 py-2 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-gray-600"
                                 >
                                     <ChevronLeft className="w-5 h-5" />
                                 </button>
-                                <div className="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">
+                                <div className="px-5 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium border border-blue-100">
                                     Page {pagination.page} of {pagination.pages}
                                 </div>
                                 <button
                                     disabled={pagination.page >= pagination.pages}
                                     onClick={() => setFilters(prev => ({ ...prev, page: (prev.page || 1) + 1 }))}
-                                    className="px-5 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="px-5 py-2 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-gray-600"
                                 >
                                     <ChevronRight className="w-5 h-5" />
                                 </button>
@@ -754,23 +668,23 @@ const JobsPage = () => {
 
                     {/* Right Column - Job Roles & Skills */}
                     <div className="lg:col-span-2 hidden lg:block">
-                        <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-6 sticky top-8">
-                            <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                                <Star className="h-5 w-5 text-purple-600" />
+                        <div className="bg-gray-50/50 rounded-lg shadow-sm border border-gray-100/50 p-6 sticky top-8 backdrop-blur-sm">
+                            <h3 className="text-base font-bold text-gray-900 mb-6 flex items-center gap-2">
+                                <Star className="h-5 w-5 text-gray-700" />
                                 Job Roles & Skills
                             </h3>
                             {/* Job Roles */}
                             <div className="mb-6">
                                 <h4 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                                    <Briefcase className="h-4 w-4 text-blue-600" />
+                                    <Briefcase className="h-4 w-4 text-gray-700" />
                                     Job Roles
                                 </h4>
                                 <div className="space-y-2 max-h-48 overflow-y-auto">
                                     {jobRoles.map((role) => (
-                                        <label key={role} className="flex items-center group cursor-pointer hover:bg-blue-50 p-2 rounded-lg transition-colors">
+                                        <label key={role} className="flex items-center group cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
                                             <input
                                                 type="checkbox"
-                                                className="w-4 h-4 text-blue-600 border border-gray-300 rounded focus:ring-blue-500 focus:ring-1"
+                                                className="w-4 h-4 text-gray-600 border border-gray-200 rounded focus:ring-blue-200 focus:ring-1 flex-shrink-0"
                                                 checked={filters.jobRole.includes(role)}
                                                 onChange={(e) => {
                                                     if (e.target.checked) {
@@ -786,7 +700,7 @@ const JobsPage = () => {
                                                     }
                                                 }}
                                             />
-                                            <span className="ml-2 text-sm text-gray-700 group-hover:text-gray-900 transition-colors">{role}</span>
+                                            <span className="ml-3 text-sm text-gray-700 group-hover:text-gray-900 transition-colors">{role}</span>
                                         </label>
                                     ))}
                                 </div>
@@ -795,22 +709,22 @@ const JobsPage = () => {
                             {/* Skills */}
                             <div className="mb-6">
                                 <h4 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                                    <Award className="h-4 w-4 text-green-600" />
+                                    <Award className="h-4 w-4 text-gray-700" />
                                     Required Skills
                                 </h4>
                                 <div className="mb-3">
                                     <input
                                         type="text"
                                         placeholder="Search skills..."
-                                        className="w-full p-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full p-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-200 bg-gray-50/50"
                                     />
                                 </div>
                                 <div className="space-y-2 max-h-56 overflow-y-auto">
                                     {skillsList.slice(0, 15).map((skill) => (
-                                        <label key={skill} className="flex items-center group cursor-pointer hover:bg-green-50 p-2 rounded-lg transition-colors">
+                                        <label key={skill} className="flex items-center group cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
                                             <input
                                                 type="checkbox"
-                                                className="w-4 h-4 text-green-600 border border-gray-300 rounded focus:ring-green-500 focus:ring-1"
+                                                className="w-4 h-4 text-gray-600 border border-gray-300 rounded focus:ring-gray-500 focus:ring-1 flex-shrink-0"
                                                 checked={filters.skills.includes(skill)}
                                                 onChange={(e) => {
                                                     if (e.target.checked) {
@@ -826,46 +740,56 @@ const JobsPage = () => {
                                                     }
                                                 }}
                                             />
-                                            <span className="ml-2 text-sm text-gray-700 group-hover:text-gray-900 transition-colors">{skill}</span>
+                                            <span className="ml-3 text-sm text-gray-700 group-hover:text-gray-900 transition-colors">{skill}</span>
                                         </label>
                                     ))}
                                     {skillsList.length > 15 && (
-                                        <button className="text-blue-600 text-sm font-medium hover:text-blue-700 transition-colors p-2 rounded-lg hover:bg-blue-50 w-full text-left">
+                                        <button className="text-gray-600 text-sm font-medium hover:text-gray-700 transition-colors p-2 rounded-lg hover:bg-gray-50 w-full text-left">
                                             Show {skillsList.length - 15} more skills →
                                         </button>
                                     )}
                                 </div>
                             </div>
 
-                            {/* Locations */}
-                            <div className="mb-6">
-                                <h4 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                                    <MapPin className="h-4 w-4 text-purple-600" />
-                                    Locations
-                                </h4>
-                                <div className="space-y-2 max-h-40 overflow-y-auto">
-                                    {locations.map((location) => (
-                                        <label key={location} className="flex items-center group cursor-pointer hover:bg-purple-50 p-2 rounded-lg transition-colors">
+                            {/* Department */}
+                            <div className="mb-4">
+                                <label className="block text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                                    <Building2 className="h-4 w-4 text-gray-700" />
+                                    Department
+                                </label>
+                                <div className="mb-3">
+                                    <div className="relative">
+                                        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                                        <input
+                                            type="text"
+                                            placeholder="Search"
+                                            className="w-full pl-8 pr-3 py-2.5 border border-gray-200 rounded-lg focus:border-blue-200 focus:ring-1 focus:ring-blue-200 bg-gray-50/50 text-sm"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-1 max-h-24 overflow-y-auto">
+                                    {departments.slice(0, 6).map((dept) => (
+                                        <label key={dept} className="flex items-center group cursor-pointer py-1 hover:bg-gray-50 px-2 rounded-lg transition-colors">
                                             <input
-                                                type="radio"
-                                                name="location"
-                                                className="w-4 h-4 text-purple-600 border border-gray-300 focus:ring-purple-500 focus:ring-1"
-                                                checked={filters.location === location}
-                                                onChange={() => {
-                                                    setFilters(prev => ({
-                                                        ...prev,
-                                                        location: location
-                                                    }));
+                                                type="checkbox"
+                                                className="w-4 h-4 text-gray-600 border border-gray-300 rounded focus:ring-gray-500 focus:ring-1 flex-shrink-0"
+                                                checked={filters.department === dept}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        handleFilterChange('department', dept);
+                                                    } else {
+                                                        handleFilterChange('department', '');
+                                                    }
                                                 }}
                                             />
-                                            <span className="ml-2 text-sm text-gray-700 group-hover:text-gray-900 transition-colors">{location}</span>
+                                            <span className="ml-3 text-sm text-gray-700 group-hover:text-gray-900 transition-colors">{dept}</span>
                                         </label>
                                     ))}
                                 </div>
                             </div>
 
                             {/* Clear Filters */}
-                            <div className="pt-4 border-t border-gray-200">
+                            <div className="pt-4 border-t border-gray-100">
                                 <button
                                     onClick={() => setFilters({
                                         search: '',
@@ -879,7 +803,7 @@ const JobsPage = () => {
                                         jobRole: '',
                                         page: 1
                                     })}
-                                    className="w-full bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 py-3 px-4 rounded-xl text-sm font-medium hover:from-gray-200 hover:to-gray-300 transition-all duration-300 shadow-sm hover:shadow-md"
+                                    className="w-full bg-gray-50 text-gray-600 py-3 px-4 rounded-lg text-sm font-medium hover:bg-gray-100 transition-all duration-300 shadow-sm hover:shadow-md border border-gray-100"
                                 >
                                     🗑️ Clear All Filters
                                 </button>
@@ -892,7 +816,7 @@ const JobsPage = () => {
                 <div className="lg:col-span-12 lg:block hidden mt-6 mx-4">
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
                         {/* Job Market Insights */}
-                        <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-4">
+                        <div className="bg-gray-50/50 rounded-xl shadow-lg border border-gray-100/50 p-4 backdrop-blur-sm">
                             <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
                                 <TrendingUp className="h-4 w-4 text-blue-600" />
                                 Job Market Insights
