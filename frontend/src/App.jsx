@@ -6,6 +6,7 @@ import { TooltipProvider } from "./components/ui/tooltip"
 import { queryClient } from "./lib/queryClient"
 import { ThemeProvider, CssBaseline } from '@mui/material'
 import theme from './theme'
+import ErrorBoundary from './components/ErrorBoundary'
 import Navigation from './components/Navigation'
 import HomePageNew from './pages/HomePageNew'
 import JobsPage from './pages/JobsPage'
@@ -155,10 +156,12 @@ function App() {
         <CssBaseline />
         <TooltipProvider>
           <AuthProvider>
-            <Toaster />
-            <WouterRouter>
-              <Router />
-            </WouterRouter>
+            <ErrorBoundary>
+              <Toaster />
+              <WouterRouter>
+                <Router />
+              </WouterRouter>
+            </ErrorBoundary>
           </AuthProvider>
         </TooltipProvider>
       </ThemeProvider>

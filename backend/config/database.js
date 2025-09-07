@@ -1,9 +1,9 @@
 import { drizzle } from 'drizzle-orm/better-sqlite3';
-import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import Database from 'better-sqlite3';
 import { sql } from 'drizzle-orm';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { AppError } from '../middleware/errorHandler.js';
 
 // Get current directory in ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -24,6 +24,16 @@ sqlite.pragma('foreign_keys = ON');
 // Create Drizzle ORM instance
 const db = drizzle(sqlite, { schema });
 
+// Database health check
+export const checkDatabaseHealth = async () => {
+  try {
+    await db.select({ result: sql`1` });
+    return { healthy: true, message: 'Database connection successful' };
+  } catch (error) {
+    return { healthy: false, message: error.message };
+  }
+};
+
 // Initialize database and seed data
 const initializeDatabase = async () => {
   try {
@@ -31,11 +41,8 @@ const initializeDatabase = async () => {
     await db.select({ result: sql`1` });
     console.log('✅ Connected to SQLite database with Drizzle ORM');
     
-    // Create tables if they don't exist (using raw SQL for initial setup)
-    await createTables();
-    
-    // Run migrations to add missing columns
-    await runMigrations();
+    // Ensure tables exist with proper error handling
+    await ensureTablesExist();
     
     // Check if data already exists
     try {
@@ -58,9 +65,11 @@ const initializeDatabase = async () => {
   }
 };
 
-// Create tables using raw SQL (temporary solution until proper migrations)
-const createTables = async () => {
+// Ensure tables exist with proper error handling
+const ensureTablesExist = async () => {
   try {
+    console.log('🔧 Ensuring database tables exist...');
+    
     // Create users table
     sqlite.exec(`
       CREATE TABLE IF NOT EXISTS users (
@@ -94,6 +103,14 @@ const createTables = async () => {
       )
     `);
 
+    // Add indexes for performance
+    sqlite.exec(`
+      CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+      CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+      CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+      CREATE INDEX IF NOT EXISTS idx_users_status ON users(status);
+    `);
+
     // Create companies table
     sqlite.exec(`
       CREATE TABLE IF NOT EXISTS companies (
@@ -121,6 +138,14 @@ const createTables = async () => {
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         updated_at TEXT DEFAULT CURRENT_TIMESTAMP
       )
+    `);
+
+    // Add indexes for companies
+    sqlite.exec(`
+      CREATE INDEX IF NOT EXISTS idx_companies_name ON companies(name);
+      CREATE INDEX IF NOT EXISTS idx_companies_industry ON companies(industry);
+      CREATE INDEX IF NOT EXISTS idx_companies_location ON companies(location);
+      CREATE INDEX IF NOT EXISTS idx_companies_status ON companies(status);
     `);
 
     // Create job_categories table
@@ -179,6 +204,17 @@ const createTables = async () => {
       )
     `);
 
+    // Add indexes for jobs
+    sqlite.exec(`
+      CREATE INDEX IF NOT EXISTS idx_jobs_company_id ON jobs(company_id);
+      CREATE INDEX IF NOT EXISTS idx_jobs_category_id ON jobs(category_id);
+      CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status);
+      CREATE INDEX IF NOT EXISTS idx_jobs_location ON jobs(location);
+      CREATE INDEX IF NOT EXISTS idx_jobs_job_type ON jobs(job_type);
+      CREATE INDEX IF NOT EXISTS idx_jobs_work_mode ON jobs(work_mode);
+      CREATE INDEX IF NOT EXISTS idx_jobs_created_at ON jobs(created_at);
+    `);
+
     // Create applications table
     sqlite.exec(`
       CREATE TABLE IF NOT EXISTS applications (
@@ -196,6 +232,14 @@ const createTables = async () => {
       )
     `);
 
+    // Add indexes for applications
+    sqlite.exec(`
+      CREATE INDEX IF NOT EXISTS idx_applications_job_id ON applications(job_id);
+      CREATE INDEX IF NOT EXISTS idx_applications_user_id ON applications(user_id);
+      CREATE INDEX IF NOT EXISTS idx_applications_status ON applications(status);
+      CREATE INDEX IF NOT EXISTS idx_applications_applied_at ON applications(applied_at);
+    `);
+
     // Create saved_jobs table
     sqlite.exec(`
       CREATE TABLE IF NOT EXISTS saved_jobs (
@@ -207,6 +251,12 @@ const createTables = async () => {
         FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
         UNIQUE(user_id, job_id)
       )
+    `);
+
+    // Add indexes for saved_jobs
+    sqlite.exec(`
+      CREATE INDEX IF NOT EXISTS idx_saved_jobs_user_id ON saved_jobs(user_id);
+      CREATE INDEX IF NOT EXISTS idx_saved_jobs_job_id ON saved_jobs(job_id);
     `);
 
     // Create user_sessions table
@@ -226,120 +276,17 @@ const createTables = async () => {
       )
     `);
 
+    // Add indexes for user_sessions
+    sqlite.exec(`
+      CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);
+      CREATE INDEX IF NOT EXISTS idx_user_sessions_token ON user_sessions(token);
+      CREATE INDEX IF NOT EXISTS idx_user_sessions_expires_at ON user_sessions(expires_at);
+    `);
+
     console.log('✅ Database tables created successfully');
   } catch (error) {
-    console.error('Error creating tables:', error);
-    throw error;
-  }
-};
-
-// Run migrations to add missing columns
-const runMigrations = async () => {
-  try {
-    // Check if reset_token columns exist, if not add them
-    try {
-      const testQuery = sqlite.prepare("SELECT reset_token FROM users LIMIT 1");
-      testQuery.all();
-    } catch (error) {
-      if (error.message.includes('no such column: reset_token')) {
-        console.log('Adding reset_token columns...');
-        sqlite.exec(`
-          ALTER TABLE users ADD COLUMN reset_token TEXT;
-          ALTER TABLE users ADD COLUMN reset_token_expires TEXT;
-        `);
-        console.log('✅ Reset token columns added successfully');
-      }
-    }
-    
-    // Check if resume_url column exists, if not add it
-    try {
-      const testQuery = sqlite.prepare("SELECT resume_url FROM users LIMIT 1");
-      testQuery.all();
-    } catch (error) {
-      if (error.message.includes('no such column: resume_url')) {
-        console.log('Adding resume_url column...');
-        sqlite.exec(`ALTER TABLE users ADD COLUMN resume_url TEXT;`);
-        console.log('✅ Resume URL column added successfully');
-      }
-    }
-    
-    // Check if company_id column exists, if not add it
-    try {
-      const testQuery = sqlite.prepare("SELECT company_id FROM users LIMIT 1");
-      testQuery.all();
-    } catch (error) {
-      if (error.message.includes('no such column: company_id')) {
-        console.log('Adding company_id column...');
-        sqlite.exec(`ALTER TABLE users ADD COLUMN company_id INTEGER;`);
-        console.log('✅ Company ID column added successfully');
-      }
-    }
-    
-    // Fix full_name NOT NULL constraint by recreating the table
-    try {
-      const tableInfo = sqlite.prepare("PRAGMA table_info(users)").all();
-      const fullNameColumn = tableInfo.find(col => col.name === 'full_name');
-      
-      if (fullNameColumn && fullNameColumn.notnull === 1) {
-        console.log('Fixing full_name NOT NULL constraint...');
-        
-        // Create new table without NOT NULL constraint
-        sqlite.exec(`
-          CREATE TABLE users_new (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL,
-            full_name TEXT,
-            phone TEXT,
-            role TEXT DEFAULT 'jobseeker' CHECK (role IN ('jobseeker', 'employer', 'admin')),
-            status TEXT DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'suspended')),
-            bio TEXT,
-            location TEXT,
-            profile_picture TEXT,
-            linkedin_url TEXT,
-            github_url TEXT,
-            portfolio_url TEXT,
-            skills TEXT,
-            qualification TEXT,
-            experience_years INTEGER,
-            resume_url TEXT,
-            company_name TEXT,
-            position TEXT,
-            company_id INTEGER,
-            email_verified BOOLEAN DEFAULT FALSE,
-            phone_verified BOOLEAN DEFAULT FALSE,
-            reset_token TEXT,
-            reset_token_expires TEXT,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-          );
-          
-          INSERT INTO users_new SELECT * FROM users;
-          DROP TABLE users;
-          ALTER TABLE users_new RENAME TO users;
-        `);
-        
-        console.log('✅ Full name constraint fixed successfully');
-      }
-    } catch (error) {
-      console.error('Error fixing full_name constraint:', error);
-    }
-    
-    // Add last_used column to user_sessions table if missing
-    try {
-      const testQuery = sqlite.prepare("SELECT last_used FROM user_sessions LIMIT 1");
-      testQuery.all();
-    } catch (error) {
-      if (error.message.includes('no such column: last_used')) {
-        console.log('Adding last_used column to user_sessions...');
-        sqlite.exec(`ALTER TABLE user_sessions ADD COLUMN last_used TEXT DEFAULT CURRENT_TIMESTAMP;`);
-        console.log('✅ Last used column added successfully');
-      }
-    }
-    
-  } catch (error) {
-    console.error('Migration error:', error);
+    console.error('❌ Error creating tables:', error);
+    throw new AppError('Database initialization failed', 500);
   }
 };
 
@@ -486,4 +433,4 @@ const insertSampleData = async () => {
   }
 };
 
-export { db, initializeDatabase };
+export { db, initializeDatabase, checkDatabaseHealth };
