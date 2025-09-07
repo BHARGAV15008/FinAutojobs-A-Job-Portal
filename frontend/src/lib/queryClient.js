@@ -7,6 +7,8 @@ async function throwIfResNotOk(res) {
   }
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export async function apiRequest(
   method,
   url,
@@ -16,12 +18,13 @@ export async function apiRequest(
   const headers = {
     "Content-Type": "application/json",
   };
-  
+
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const res = await fetch(url, {
+  const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+  const res = await fetch(fullUrl, {
     method,
     headers,
     body: data ? JSON.stringify(data) : undefined,
@@ -34,7 +37,9 @@ export async function apiRequest(
 
 export const getQueryFn = ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/"), {
+    const url = queryKey.join("/");
+    const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+    const res = await fetch(fullUrl, {
       credentials: "include",
     });
 
@@ -52,11 +57,11 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
     },
     mutations: {
-      retry: false,
+      retry: 1,
     },
   },
 });

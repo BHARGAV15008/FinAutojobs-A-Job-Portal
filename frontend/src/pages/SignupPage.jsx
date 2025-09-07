@@ -6,7 +6,7 @@ import { Eye, EyeOff, Mail, Lock, User, Building2, Car, Calculator, TrendingUp, 
 
 const SignupPage = () => {
   const [formData, setFormData] = useState({
-    name: '',
+    username: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -40,7 +40,15 @@ const SignupPage = () => {
 
     setLoading(true)
     try {
-      const result = await signup(formData)
+      // Send the data in the format backend expects
+      const signupData = {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role
+      }
+
+      const result = await signup(signupData)
       if (result.success) {
         toast({
           title: "Success",
@@ -154,22 +162,22 @@ const SignupPage = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="bg-white/80 backdrop-blur-sm p-8 rounded-3xl shadow-2xl border border-gray-100 space-y-6">
-            {/* Name Field */}
+            {/* Username Field */}
             <div>
-              <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
-                👤 Full Name
+              <label htmlFor="username" className="block text-sm font-semibold text-gray-700 mb-2">
+                👤 Username
               </label>
               <div className="relative">
                 <User className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
-                  id="name"
-                  name="name"
+                  id="username"
+                  name="username"
                   type="text"
                   required
-                  value={formData.name}
+                  value={formData.username}
                   onChange={handleChange}
                   className="w-full pl-12 pr-4 py-4 bg-gray-50/80 border border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 text-gray-900 placeholder-gray-500"
-                  placeholder="Enter your full name"
+                  placeholder="Enter your username"
                 />
               </div>
             </div>
@@ -276,13 +284,13 @@ const SignupPage = () => {
               />
               <label htmlFor="terms" className="ml-3 block text-sm font-medium text-gray-700">
                 📋 I agree to the{' '}
-                <a href="#" className="text-blue-600 hover:text-blue-700 font-semibold">
+                <Link to="/terms-of-service" className="text-blue-600 hover:text-blue-700 font-semibold">
                   Terms & Conditions
-                </a>{' '}
+                </Link>{' '}
                 and{' '}
-                <a href="#" className="text-blue-600 hover:text-blue-700 font-semibold">
+                <Link to="/privacy-policy" className="text-blue-600 hover:text-blue-700 font-semibold">
                   Privacy Policy
-                </a>
+                </Link>
               </label>
             </div>
 

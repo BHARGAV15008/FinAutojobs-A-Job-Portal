@@ -1,35 +1,41 @@
-import { useState } from 'react';
-import { Link } from 'wouter';
-import {
-  Search,
-  MapPin,
-  Briefcase,
-  TrendingUp,
-  Users,
-  Building2,
-  Award,
-  ChevronRight,
-  Star,
-  Heart,
-  ArrowRight,
-  Zap,
-  Lightbulb,
-  BookOpen,
-  ShieldCheck,
-  Rocket,
-  Code,
-  DollarSign,
-  Globe,
-  UserPlus,
-  Laptop,
-  User,
-  BarChart2,
-  Smile,
-  Clock,
-  CheckCircle,
-} from 'lucide-react';
+import React, { useState } from 'react';
+import { Link as WouterLink } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import api from '../utils/api';
+
+// Material UI Components
+import {
+  Box,
+  Typography,
+  Button,
+  TextField,
+  InputAdornment,
+  Container,
+  Grid,
+  Paper,
+  Card,
+  CardContent,
+  CardMedia,
+  Avatar,
+  Chip,
+  IconButton,
+  Rating,
+} from '@mui/material';
+
+// Material UI Icons
+import SearchIcon from '@mui/icons-material/Search';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import PeopleIcon from '@mui/icons-material/People';
+import BusinessIcon from '@mui/icons-material/Business';
+import WorkIcon from '@mui/icons-material/Work';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import FlashOnIcon from '@mui/icons-material/FlashOn';
+import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
+import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
+import CodeIcon from '@mui/icons-material/Code';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 const HomePage = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -54,10 +60,10 @@ const HomePage = () => {
   };
 
   const stats = [
-    { icon: Users, label: 'Active Users', value: '2M+' },
-    { icon: Building2, label: 'Companies', value: '50K+' },
-    { icon: Briefcase, label: 'Jobs Posted', value: '100K+' },
-    { icon: Award, label: 'Success Rate', value: '95%' },
+    { icon: PeopleIcon, label: 'Active Users', value: '2M+' },
+    { icon: BusinessIcon, label: 'Companies', value: '50K+' },
+    { icon: WorkIcon, label: 'Jobs Posted', value: '100K+' },
+    { icon: EmojiEventsIcon, label: 'Success Rate', value: '95%' },
   ];
 
   const popularSearches = [
@@ -69,10 +75,10 @@ const HomePage = () => {
   ];
 
   const features = [
-    { icon: Zap, title: 'Fast Matching', description: 'Get matched with jobs in seconds using AI-powered recommendations.' },
-    { icon: ShieldCheck, title: 'Verified Jobs', description: 'All jobs are verified for authenticity and quality.' },
-    { icon: Rocket, title: 'Career Growth', description: 'Access tools and resources to boost your career.' },
-    { icon: Code, title: 'Tech-Driven', description: 'Cutting-edge technology for a seamless job search experience.' },
+    { icon: FlashOnIcon, title: 'Fast Matching', description: 'Get matched with jobs in seconds using AI-powered recommendations.' },
+    { icon: VerifiedUserIcon, title: 'Verified Jobs', description: 'All jobs are verified for authenticity and quality.' },
+    { icon: RocketLaunchIcon, title: 'Career Growth', description: 'Access tools and resources to boost your career.' },
+    { icon: CodeIcon, title: 'Tech-Driven', description: 'Cutting-edge technology for a seamless job search experience.' },
   ];
 
   const testimonials = [
@@ -100,309 +106,561 @@ const HomePage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <Box sx={{ backgroundColor: 'background.default', minHeight: '100vh' }}>
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-purple-600 to-blue-500 text-white py-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-fade-in">
-            Find Your <span className="text-yellow-300">Dream Job</span>
-          </h1>
-          <p className="text-xl md:text-2xl mb-10 text-blue-100 max-w-3xl mx-auto animate-fade-in">
+      <Box
+        sx={{
+          background: 'linear-gradient(135deg, #6B46C1 0%, #3182CE 100%)',
+          color: 'white',
+          py: { xs: 12, md: 16 },
+          px: { xs: 2, sm: 3, lg: 4 },
+          textAlign: 'center',
+        }}
+      >
+        <Container maxWidth="md">
+          <Typography variant="h1" component="h1" sx={{ fontWeight: 800, mb: 3 }}>
+            Find Your <Box component="span" sx={{ color: '#FFD700' }}>Dream Job</Box>
+          </Typography>
+          <Typography variant="h5" sx={{ mb: 6, color: 'rgba(255,255,255,0.8)' }}>
             India’s #1 job platform connecting millions of job seekers with top employers
-          </p>
+          </Typography>
 
           {/* Search Form */}
-          <form onSubmit={handleSearch} className="max-w-4xl mx-auto bg-white rounded-xl shadow-2xl p-4 md:p-6 transform hover:scale-105 transition-transform">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Job title, keywords, or company"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div className="flex-1 relative">
-                <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Location"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <button
-                type="submit"
-                className="bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 text-white font-semibold py-3 px-8 rounded-lg transition-all duration-300 shadow-lg transform hover:scale-105"
-              >
-                Search Jobs
-              </button>
-            </div>
-          </form>
+          <Paper
+            component="form"
+            onSubmit={handleSearch}
+            sx={{
+              p: { xs: 2, md: 3 },
+              borderRadius: 3,
+              boxShadow: 6,
+              mx: 'auto',
+              maxWidth: '800px',
+              display: 'flex',
+              flexDirection: { xs: 'column', md: 'row' },
+              gap: 2,
+              transition: 'transform 0.3s ease-in-out',
+              '&:hover': {
+                transform: 'scale(1.02)',
+              },
+            }}
+          >
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Job title, keywords, or company"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              sx={{
+                backgroundColor: 'white',
+                borderRadius: 2,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                  paddingLeft: 1,
+                },
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: 'text.secondary' }} />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Location"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              sx={{
+                backgroundColor: 'white',
+                borderRadius: 2,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                  paddingLeft: 1,
+                },
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LocationOnIcon sx={{ color: 'text.secondary' }} />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              size="large"
+              sx={{
+                minWidth: { xs: '100%', md: '150px' },
+                background: 'linear-gradient(45deg, #6B46C1 30%, #3182CE 90%)',
+                '&:hover': {
+                  background: 'linear-gradient(45deg, #553C9A 30%, #2C5282 90%)',
+                  boxShadow: '0px 6px 12px rgba(0,0,0,0.15)',
+                },
+                borderRadius: 2,
+              }}
+            >
+              Search Jobs
+            </Button>
+          </Paper>
 
-          <div className="mt-12 flex justify-center space-x-4">
-            <span className="text-sm bg-white/20 px-4 py-2 rounded-full animate-pulse">🔥 Trending: AI Jobs, Remote Work, Startups</span>
-          </div>
-        </div>
-      </section>
+          <Box sx={{ mt: 6 }}>
+            <Chip
+              label="🔥 Trending: AI Jobs, Remote Work, Startups"
+              sx={{
+                backgroundColor: 'rgba(255,255,255,0.2)',
+                color: 'white',
+                fontSize: '0.9rem',
+                px: 2,
+                py: 1,
+                borderRadius: 4,
+                animation: 'pulse 2s infinite',
+                '@keyframes pulse': {
+                  '0%': { boxShadow: '0 0 0 0 rgba(255,255,255,0.4)' },
+                  '70%': { boxShadow: '0 0 0 10px rgba(255,255,255,0)' },
+                  '100%': { boxShadow: '0 0 0 0 rgba(255,255,255,0)' },
+                },
+              }}
+            />
+          </Box>
+        </Container>
+      </Box>
 
       {/* Stats Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+      <Box sx={{ py: { xs: 8, md: 12 }, backgroundColor: 'background.paper' }}>
+        <Container maxWidth="lg">
+          <Grid container spacing={4}>
             {stats.map((stat, index) => (
-              <div key={index} className="text-center p-6 bg-gray-50 rounded-xl shadow-sm hover:shadow-lg transition-shadow transform hover:scale-105">
-                <div className="flex justify-center mb-4">
-                  <stat.icon className="w-8 h-8 text-purple-600" />
-                </div>
-                <div className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</div>
-                <div className="text-gray-600">{stat.label}</div>
-              </div>
+              <Grid item xs={12} sm={6} md={3} key={index}>
+                <Paper
+                  elevation={1}
+                  sx={{
+                    p: 3,
+                    textAlign: 'center',
+                    borderRadius: 3,
+                    transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
+                    '&:hover': {
+                      transform: 'translateY(-5px)',
+                      boxShadow: 3,
+                    },
+                  }}
+                >
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                    <stat.icon sx={{ fontSize: 40, color: 'primary.main' }} />
+                  </Box>
+                  <Typography variant="h4" component="div" sx={{ fontWeight: 700, mb: 1 }}>
+                    {stat.value}
+                  </Typography>
+                  <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+                    {stat.label}
+                  </Typography>
+                </Paper>
+              </Grid>
             ))}
-          </div>
-        </div>
-      </section>
+          </Grid>
+        </Container>
+      </Box>
 
       {/* Features Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4 animate-fade-in">
+      <Box sx={{ py: { xs: 8, md: 12 }, backgroundColor: 'background.default' }}>
+        <Container maxWidth="lg">
+          <Box sx={{ textAlign: 'center', mb: { xs: 8, md: 12 } }}>
+            <Typography variant="h2" component="h2" sx={{ fontWeight: 700, mb: 2 }}>
               Why Choose Us?
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto animate-fade-in">
+            </Typography>
+            <Typography variant="h6" sx={{ color: 'text.secondary', maxWidth: '700px', mx: 'auto' }}>
               Discover the benefits of using our platform for your job search
-            </p>
-          </div>
+            </Typography>
+          </Box>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <Grid container spacing={4}>
             {features.map((feature, index) => (
-              <div key={index} className="bg-white p-8 rounded-xl shadow-sm hover:shadow-lg transition-shadow transform hover:scale-105">
-                <div className="flex justify-center mb-6">
-                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center">
-                    <feature.icon className="w-8 h-8 text-purple-600" />
-                  </div>
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">{feature.title}</h3>
-                <p className="text-gray-600">{feature.description}</p>
-              </div>
+              <Grid item xs={12} sm={6} md={3} key={index}>
+                <Card
+                  sx={{
+                    p: 3,
+                    textAlign: 'center',
+                    transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
+                    '&:hover': {
+                      transform: 'translateY(-5px)',
+                      boxShadow: 3,
+                    },
+                  }}
+                >
+                  <CardContent>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+                      <Avatar sx={{ bgcolor: 'primary.50', width: 64, height: 64 }}>
+                        <feature.icon sx={{ fontSize: 36, color: 'primary.main' }} />
+                      </Avatar>
+                    </Box>
+                    <Typography variant="h6" component="h3" sx={{ fontWeight: 600, mb: 1.5 }}>
+                      {feature.title}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                      {feature.description}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
             ))}
-          </div>
-        </div>
-      </section>
+          </Grid>
+        </Container>
+      </Box>
 
       {/* Featured Jobs */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4 animate-fade-in">
+      <Box sx={{ py: { xs: 8, md: 12 }, backgroundColor: 'background.paper' }}>
+        <Container maxWidth="lg">
+          <Box sx={{ textAlign: 'center', mb: { xs: 8, md: 12 } }}>
+            <Typography variant="h2" component="h2" sx={{ fontWeight: 700, mb: 2 }}>
               Featured Jobs
-            </h2>
-            <p className="text-gray-600 animate-fade-in">
+            </Typography>
+            <Typography variant="h6" sx={{ color: 'text.secondary' }}>
               Discover the latest opportunities from top companies
-            </p>
-          </div>
+            </Typography>
+          </Box>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <Grid container spacing={4}>
             {jobsData?.jobs?.map((job) => (
-              <div key={job.id} className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-shadow overflow-hidden transform hover:scale-105">
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center space-x-4">
-                      {job.logo ? (
-                        <img src={job.logo} alt={job.company} className="w-12 h-12 rounded-lg object-cover" />
-                      ) : (
-                        <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                          <Briefcase className="w-6 h-6 text-gray-400" />
-                        </div>
-                      )}
-                      <div>
-                        <h3 className="font-semibold text-gray-900 text-lg">{job.title}</h3>
-                        <p className="text-gray-600">{job.company}</p>
-                      </div>
-                    </div>
-                    <button className="p-2 text-gray-400 hover:text-red-500 transition-colors">
-                      <Heart className="w-5 h-5" />
-                    </button>
-                  </div>
+              <Grid item xs={12} md={6} lg={4} key={job.id}>
+                <Card
+                  sx={{
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
+                    '&:hover': {
+                      transform: 'translateY(-5px)',
+                      boxShadow: 3,
+                    },
+                  }}
+                >
+                  <CardContent sx={{ flexGrow: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        {job.logo ? (
+                          <Avatar src={job.logo} alt={job.company} sx={{ width: 48, height: 48 }} />
+                        ) : (
+                          <Avatar sx={{ bgcolor: 'grey.200', width: 48, height: 48 }}>
+                            <WorkIcon sx={{ color: 'grey.600' }} />
+                          </Avatar>
+                        )}
+                        <Box>
+                          <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
+                            {job.title}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {job.company}
+                          </Typography>
+                        </Box>
+                      </Box>
+                      <IconButton aria-label="add to favorites">
+                        <FavoriteBorderIcon />
+                      </IconButton>
+                    </Box>
 
-                  <div className="space-y-3 mb-6">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <MapPin className="w-4 h-4 mr-2" />
-                      {job.location}
-                    </div>
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Briefcase className="w-4 h-4 mr-2" />
-                      {job.type} • {job.mode}
-                    </div>
-                    <div className="text-sm font-medium text-green-600">₹{job.salary}/month</div>
-                  </div>
+                    <Box sx={{ mb: 2 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <LocationOnIcon sx={{ fontSize: 18, color: 'text.secondary', mr: 1 }} />
+                        <Typography variant="body2" color="text.secondary">
+                          {job.location}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <WorkIcon sx={{ fontSize: 18, color: 'text.secondary', mr: 1 }} />
+                        <Typography variant="body2" color="text.secondary">
+                          {job.type} • {job.mode}
+                        </Typography>
+                      </Box>
+                      <Typography variant="subtitle1" color="success.main" sx={{ fontWeight: 600 }}>
+                        ₹{job.salary}/month
+                      </Typography>
+                    </Box>
 
-                  <div className="flex flex-wrap gap-2 mb-6">
-                    {job.skills?.slice(0, 3).map((skill, i) => (
-                      <span key={i} className="px-3 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">{skill}</span>
-                    ))}
-                  </div>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                      {job.skills?.slice(0, 3).map((skill, i) => (
+                        <Chip key={i} label={skill} size="small" sx={{ bgcolor: 'primary.50', color: 'primary.main' }} />
+                      ))}
+                    </Box>
 
-                  <Link
-                    to={`/job/${job.id}`}
-                    className="block w-full text-center bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 text-white py-2.5 px-4 rounded-lg transition-all duration-300 font-medium"
-                  >
-                    View Job
-                  </Link>
-                </div>
-              </div>
+                    <WouterLink to={`/job/${job.id}`} style={{ textDecoration: 'none' }}>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        fullWidth
+                        endIcon={<ArrowForwardIcon />}
+                        sx={{ mt: 'auto' }}
+                      >
+                        View Job
+                      </Button>
+                    </WouterLink>
+                  </CardContent>
+                </Card>
+              </Grid>
             ))}
-          </div>
+          </Grid>
 
-          <div className="text-center mt-12">
-            <Link
-              to="/jobs"
-              className="inline-block bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 text-white py-3 px-8 rounded-lg transition-all duration-300 shadow-lg transform hover:scale-105"
-            >
-              View All Jobs
-            </Link>
-          </div>
-        </div>
-      </section>
+          <Box sx={{ textAlign: 'center', mt: { xs: 6, md: 8 } }}>
+            <WouterLink to="/jobs" style={{ textDecoration: 'none' }}>
+              <Button
+                variant="contained"
+                color="primary"
+                size="large"
+                endIcon={<ArrowForwardIcon />}
+                sx={{
+                  background: 'linear-gradient(45deg, #6B46C1 30%, #3182CE 90%)',
+                  '&:hover': {
+                    background: 'linear-gradient(45deg, #553C9A 30%, #2C5282 90%)',
+                    boxShadow: '0px 6px 12px rgba(0,0,0,0.15)',
+                  },
+                }}
+              >
+                View All Jobs
+              </Button>
+            </WouterLink>
+          </Box>
+        </Container>
+      </Box>
 
       {/* Popular Searches */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4 animate-fade-in">
+      <Box sx={{ py: { xs: 8, md: 12 }, backgroundColor: 'background.default' }}>
+        <Container maxWidth="lg">
+          <Box sx={{ textAlign: 'center', mb: { xs: 8, md: 12 } }}>
+            <Typography variant="h2" component="h2" sx={{ fontWeight: 700, mb: 2 }}>
               Popular Searches
-            </h2>
-            <p className="text-gray-600 animate-fade-in">
+            </Typography>
+            <Typography variant="h6" sx={{ color: 'text.secondary' }}>
               Trending job categories this week
-            </p>
-          </div>
+            </Typography>
+          </Box>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+          <Grid container spacing={4}>
             {popularSearches.map((search, index) => (
-              <div key={index} className="relative group cursor-pointer rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow transform hover:scale-105">
-                <div className="relative overflow-hidden">
-                  <img
-                    src={search.image}
+              <Grid item xs={12} sm={6} md={4} lg={2.4} key={index}> {/* lg={2.4} for 5 items in a row */}
+                <Card
+                  sx={{
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    position: 'relative',
+                    transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
+                    '&:hover': {
+                      transform: 'translateY(-5px)',
+                      boxShadow: 3,
+                    },
+                  }}
+                >
+                  <CardMedia
+                    component="img"
+                    height="140"
+                    image={search.image}
                     alt={search.title}
-                    className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-500"
+                    sx={{ objectFit: 'cover' }}
                   />
-                  <div className="absolute inset-0 bg-black bg-opacity-30 group-hover:bg-opacity-20 transition-all duration-300" />
-                  <div className="absolute top-3 right-3 bg-red-500 text-white text-xs px-2.5 py-1.5 rounded-full font-semibold">
-                    {search.trending}
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-black/80 to-transparent">
-                    <h3 className="text-white font-semibold text-lg">{search.title}</h3>
-                  </div>
-                </div>
-              </div>
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 70%, rgba(0,0,0,0) 100%)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'flex-end',
+                      p: 2,
+                    }}
+                  >
+                    <Chip
+                      label={search.trending}
+                      size="small"
+                      sx={{
+                        position: 'absolute',
+                        top: 12,
+                        right: 12,
+                        backgroundColor: 'error.main',
+                        color: 'white',
+                        fontWeight: 600,
+                      }}
+                    />
+                    <Typography variant="h6" component="h3" sx={{ color: 'white', fontWeight: 600 }}>
+                      {search.title}
+                    </Typography>
+                  </Box>
+                </Card>
+              </Grid>
             ))}
-          </div>
-        </div>
-      </section>
+          </Grid>
+        </Container>
+      </Box>
 
       {/* Featured Companies */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4 animate-fade-in">
+      <Box sx={{ py: { xs: 8, md: 12 }, backgroundColor: 'background.paper' }}>
+        <Container maxWidth="lg">
+          <Box sx={{ textAlign: 'center', mb: { xs: 8, md: 12 } }}>
+            <Typography variant="h2" component="h2" sx={{ fontWeight: 700, mb: 2 }}>
               Top Companies
-            </h2>
-            <p className="text-gray-600 animate-fade-in">
+            </Typography>
+            <Typography variant="h6" sx={{ color: 'text.secondary' }}>
               Work with the best companies in India
-            </p>
-          </div>
+            </Typography>
+          </Box>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
+          <Grid container spacing={4}>
             {companiesData?.companies?.map((company) => (
-              <div key={company.id} className="text-center group cursor-pointer">
-                <div className="bg-white rounded-xl p-6 shadow-sm hover:shadow-lg transition-shadow transform hover:scale-105 h-full flex flex-col items-center justify-center">
+              <Grid item xs={6} sm={4} md={2} key={company.id}>
+                <Paper
+                  elevation={1}
+                  sx={{
+                    p: 3,
+                    textAlign: 'center',
+                    borderRadius: 3,
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
+                    '&:hover': {
+                      transform: 'translateY(-5px)',
+                      boxShadow: 3,
+                    },
+                  }}
+                >
                   {company.logo_url ? (
-                    <img
-                      src={company.logo_url}
-                      alt={company.name}
-                      className="w-16 h-16 mx-auto mb-4 object-contain transition-transform duration-300 group-hover:scale-110"
-                    />
+                    <Avatar src={company.logo_url} alt={company.name} sx={{ width: 64, height: 64, mb: 2 }} />
                   ) : (
-                    <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-lg flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
-                      <Building2 className="w-8 h-8 text-gray-400" />
-                    </div>
+                    <Avatar sx={{ bgcolor: 'grey.200', width: 64, height: 64, mb: 2 }}>
+                      <BusinessIcon sx={{ fontSize: 36, color: 'grey.600' }} />
+                    </Avatar>
                   )}
-                  <h3 className="font-semibold text-gray-900 text-sm group-hover:text-purple-600 transition-colors">{company.name}</h3>
-                </div>
-              </div>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                    {company.name}
+                  </Typography>
+                </Paper>
+              </Grid>
             ))}
-          </div>
-        </div>
-      </section>
+          </Grid>
+        </Container>
+      </Box>
 
       {/* Testimonials */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4 animate-fade-in">
+      <Box sx={{ py: { xs: 8, md: 12 }, backgroundColor: 'background.default' }}>
+        <Container maxWidth="lg">
+          <Box sx={{ textAlign: 'center', mb: { xs: 8, md: 12 } }}>
+            <Typography variant="h2" component="h2" sx={{ fontWeight: 700, mb: 2 }}>
               Success Stories
-            </h2>
-            <p className="text-gray-600 animate-fade-in">
+            </Typography>
+            <Typography variant="h6" sx={{ color: 'text.secondary' }}>
               Hear from people who found their dream jobs
-            </p>
-          </div>
+            </Typography>
+          </Box>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <Grid container spacing={4}>
             {testimonials.map((testimonial, index) => (
-              <div key={index} className="bg-white p-8 rounded-xl shadow-sm hover:shadow-lg transition-shadow transform hover:scale-105">
-                <div className="flex items-center mb-6">
-                  <img
-                    src={testimonial.avatar}
-                    alt={testimonial.name}
-                    className="w-16 h-16 rounded-full object-cover mr-4 border-2 border-purple-500"
-                  />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">{testimonial.name}</h4>
-                    <p className="text-gray-600 text-sm">{testimonial.role} at {testimonial.company}</p>
-                  </div>
-                </div>
-                <p className="text-gray-700 italic mb-4">"{testimonial.quote}"</p>
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
-                  ))}
-                </div>
-              </div>
+              <Grid item xs={12} md={6} lg={4} key={index}>
+                <Card
+                  sx={{
+                    p: 3,
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
+                    '&:hover': {
+                      transform: 'translateY(-5px)',
+                      boxShadow: 3,
+                    },
+                  }}
+                >
+                  <CardContent sx={{ flexGrow: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                      <Avatar src={testimonial.avatar} alt={testimonial.name} sx={{ width: 64, height: 64, mr: 2, border: '2px solid', borderColor: 'primary.main' }} />
+                      <Box>
+                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                          {testimonial.name}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {testimonial.role} at {testimonial.company}
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <Typography variant="body1" sx={{ fontStyle: 'italic', mb: 2, color: 'text.primary' }}>
+                      "{testimonial.quote}"
+                    </Typography>
+                    <Rating name="read-only" value={5} readOnly sx={{ color: 'warning.main' }} />
+                  </CardContent>
+                </Card>
+              </Grid>
             ))}
-          </div>
-        </div>
-      </section>
+          </Grid>
+        </Container>
+      </Box>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-br from-purple-600 to-blue-500 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold mb-6 animate-fade-in">
+      <Box
+        sx={{
+          background: 'linear-gradient(135deg, #6B46C1 0%, #3182CE 100%)',
+          color: 'white',
+          py: { xs: 10, md: 14 },
+          px: { xs: 2, sm: 3, lg: 4 },
+          textAlign: 'center',
+        }}
+      >
+        <Container maxWidth="md">
+          <Typography variant="h2" component="h2" sx={{ fontWeight: 700, mb: 3 }}>
             Ready to Start Your Career?
-          </h2>
-          <p className="text-xl mb-10 text-blue-100 max-w-2xl mx-auto animate-fade-in">
+          </Typography>
+          <Typography variant="h6" sx={{ mb: 6, color: 'rgba(255,255,255,0.8)', maxWidth: '700px', mx: 'auto' }}>
             Join millions of job seekers and find your perfect match today
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/register"
-              className="bg-white text-purple-600 hover:bg-gray-100 font-semibold py-3 px-8 rounded-lg transition-all duration-300 shadow-lg transform hover:scale-105 flex items-center gap-2 justify-center"
-            >
-              Create Account <UserPlus className="w-5 h-5" />
-            </Link>
-            <Link
-              to="/jobs"
-              className="border-2 border-white text-white hover:bg-white hover:text-purple-600 font-semibold py-3 px-8 rounded-lg transition-all duration-300 shadow-lg transform hover:scale-105 flex items-center gap-2 justify-center"
-            >
-              Browse Jobs <Search className="w-5 h-5" />
-            </Link>
-          </div>
-        </div>
-      </section>
-    </div>
+          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, justifyContent: 'center' }}>
+            <WouterLink to="/register" style={{ textDecoration: 'none' }}>
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={<PersonAddIcon />}
+                sx={{
+                  backgroundColor: 'white',
+                  color: 'primary.main',
+                  '&:hover': {
+                    backgroundColor: 'grey.100',
+                    boxShadow: '0px 6px 12px rgba(0,0,0,0.15)',
+                  },
+                  borderRadius: 2,
+                  px: 4,
+                  py: 1.5,
+                }}
+              >
+                Create Account
+              </Button>
+            </WouterLink>
+            <WouterLink to="/jobs" style={{ textDecoration: 'none' }}>
+              <Button
+                variant="outlined"
+                size="large"
+                startIcon={<SearchIcon />}
+                sx={{
+                  borderColor: 'white',
+                  color: 'white',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255,255,255,0.1)',
+                    borderColor: 'white',
+                    boxShadow: '0px 6px 12px rgba(0,0,0,0.15)',
+                  },
+                  borderRadius: 2,
+                  px: 4,
+                  py: 1.5,
+                }}
+              >
+                Browse Jobs
+              </Button>
+            </WouterLink>
+          </Box>
+        </Container>
+      </Box>
+    </Box>
   );
 };
 

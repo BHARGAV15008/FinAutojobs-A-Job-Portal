@@ -150,6 +150,32 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  const forgotPassword = async (email) => {
+    try {
+      const response = await api.forgotPassword(email)
+      const data = await response.json()
+      return { success: true, data }
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message || 'Failed to send reset email'
+      }
+    }
+  }
+
+  const resetPassword = async (token, newPassword) => {
+    try {
+      const response = await api.resetPassword(token, newPassword)
+      const data = await response.json()
+      return { success: true, data }
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message || 'Failed to reset password'
+      }
+    }
+  }
+
   const logout = async () => {
     try {
       await api.logout()
@@ -194,6 +220,8 @@ export const AuthProvider = ({ children }) => {
     verifyEmailOTP,
     sendSMSOTP,
     verifySMSOTP,
+    forgotPassword,
+    resetPassword,
     isAuthenticated: !!user,
   }
 

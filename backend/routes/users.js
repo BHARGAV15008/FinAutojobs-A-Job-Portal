@@ -7,7 +7,9 @@ import {
     getUserApplications,
     getAllUsers,
     updateUserRole,
-    deleteUser
+    deleteUser,
+    getProfileAnalytics,
+    getProfileActivity
 } from '../controllers/usersController.js';
 
 const router = express.Router();
@@ -23,6 +25,12 @@ router.put('/change-password', authenticateToken, changePassword);
 
 // Get user applications (authenticated user only)
 router.get('/applications', authenticateToken, getUserApplications);
+
+// Get profile analytics (authenticated user only)
+router.get('/profile/analytics', authenticateToken, getProfileAnalytics);
+
+// Get profile activity (authenticated user only)
+router.get('/profile/activity', authenticateToken, getProfileActivity);
 
 // Get all users (Admin only)
 router.get('/', authenticateToken, getAllUsers);

@@ -15,12 +15,18 @@ const api = {
   getProfile: () => apiRequest('GET', '/api/auth/me'),
   updateProfile: (data) => apiRequest('PUT', '/api/users/profile', data),
   changePassword: (data) => apiRequest('PUT', '/api/users/change-password', data),
+  getProfileAnalytics: () => apiRequest('GET', '/api/users/profile/analytics'),
+  getProfileActivity: () => apiRequest('GET', '/api/users/profile/activity'),
   
   // OTP verification endpoints
   sendEmailOTP: (email) => apiRequest('POST', '/api/auth/send-email-otp', { email }),
   verifyEmailOTP: (email, otp) => apiRequest('POST', '/api/auth/verify-email-otp', { email, otp }),
   sendSMSOTP: (phone) => apiRequest('POST', '/api/auth/send-sms-otp', { phone }),
   verifySMSOTP: (phone, otp) => apiRequest('POST', '/api/auth/verify-sms-otp', { phone, otp }),
+  
+  // Password reset endpoints
+  forgotPassword: (email) => apiRequest('POST', '/api/auth/forgot-password', { email }),
+  resetPassword: (token, newPassword) => apiRequest('POST', '/api/auth/reset-password', { token, newPassword }),
   
   // Jobs endpoints
   getJobs: (params) => {

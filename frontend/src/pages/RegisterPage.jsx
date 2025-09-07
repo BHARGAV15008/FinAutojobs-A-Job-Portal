@@ -117,7 +117,9 @@ const RegisterPage = () => {
     qualification: '',
     companyName: '',
     position: '',
-    role: 'jobseeker'
+    role: 'jobseeker',
+    emailVerified: false,
+    phoneVerified: false
   })
   const [selectedSkill, setSelectedSkill] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -188,6 +190,16 @@ const RegisterPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
+    // Validate all required fields
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.password) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive"
+      })
+      return
+    }
+
     if (formData.password !== formData.confirmPassword) {
       toast({
         title: "Error",
@@ -206,10 +218,60 @@ const RegisterPage = () => {
       return
     }
 
+    if (!emailVerified) {
+      toast({
+        title: "Error",
+        description: "Please verify your email address",
+        variant: "destructive"
+      })
+      return
+    }
+
+    if (!phoneVerified) {
+      toast({
+        title: "Error",
+        description: "Please verify your phone number",
+        variant: "destructive"
+      })
+      return
+    }
+
+    // Additional role-specific validations
+    if (activeTab === 0 && formData.skills.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please add at least one skill",
+        variant: "destructive"
+      })
+      return
+    }
+
+    if (activeTab === 1 && (!formData.companyName || !formData.position)) {
+      toast({
+        title: "Error",
+        description: "Please fill in all company details",
+        variant: "destructive"
+      })
+      return
+    }
+
     const submitData = {
-      ...formData,
+      username: `${formData.firstName}${formData.lastName}`.toLowerCase().replace(/\s+/g, ''),
+      email: formData.email,
+      password: formData.password,
+      full_name: `${formData.firstName} ${formData.lastName}`.trim(),
+      phone: formData.phone,
       role: activeTab === 0 ? 'jobseeker' : 'employer',
-      name: `${formData.firstName} ${formData.lastName}`.trim()
+      // Role-specific fields for jobseekers
+      ...(activeTab === 0 && {
+        skills: JSON.stringify(formData.skills),
+        qualification: formData.qualification
+      }),
+      // Role-specific fields for employers
+      ...(activeTab === 1 && {
+        company_name: formData.companyName,
+        position: formData.position
+      })
     }
 
     setLoading(true)
@@ -318,6 +380,7 @@ const RegisterPage = () => {
       if (result.success) {
         setEmailVerified(true)
         setShowEmailOTP(false)
+        setFormData(prev => ({ ...prev, emailVerified: true }))
         toast({
           title: "Success",
           description: "Email verified successfully!",
@@ -339,6 +402,7 @@ const RegisterPage = () => {
       if (result.success) {
         setPhoneVerified(true)
         setShowPhoneOTP(false)
+        setFormData(prev => ({ ...prev, phoneVerified: true }))
         toast({
           title: "Success",
           description: "Phone number verified successfully!",
@@ -630,7 +694,7 @@ const RegisterPage = () => {
                           Add
                         </Button>
                       </Box>
-                      
+
                       {/* Selected Skills Display */}
                       {formData.skills.length > 0 && (
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>

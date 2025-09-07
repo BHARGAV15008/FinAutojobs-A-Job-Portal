@@ -414,6 +414,106 @@ export const updateUserStatus = async (req, res) => {
   }
 };
 
+// Get profile analytics
+export const getProfileAnalytics = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    // Get user applications count
+    const applicationsResult = await db.select({ count: sql`count(*)` })
+      .from(applications)
+      .where(eq(applications.user_id, userId));
+
+    const applicationsSent = applicationsResult[0]?.count || 0;
+
+    // Get shortlisted applications count
+    const shortlistedResult = await db.select({ count: sql`count(*)` })
+      .from(applications)
+      .where(and(
+        eq(applications.user_id, userId),
+        eq(applications.status, 'shortlisted')
+      ));
+
+    const shortlisted = shortlistedResult[0]?.count || 0;
+
+    // Mock data for profile views and other analytics
+    const analytics = {
+      profileViews: Math.floor(Math.random() * 300) + 50,
+      applicationsSent: parseInt(applicationsSent),
+      shortlisted: parseInt(shortlisted),
+      profileCompleteness: 85,
+      skillMatchRate: Math.floor(Math.random() * 30) + 70
+    };
+
+    res.json(analytics);
+
+  } catch (error) {
+    console.error('Get profile analytics error:', error);
+    res.status(500).json({ 
+      message: 'Internal server error while fetching profile analytics' 
+    });
+  }
+};
+
+// Get profile activity
+export const getProfileActivity = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    // Get recent applications with job and company details
+    const recentApplications = await db.select({
+      id: applications.id,
+      status: applications.status,
+      applied_at: applications.applied_at,
+      job_title: jobs.title,
+      company_name: companies.name
+    })
+    .from(applications)
+    .leftJoin(jobs, eq(applications.job_id, jobs.id))
+    .leftJoin(companies, eq(jobs.company_id, companies.id))
+    .where(eq(applications.user_id, userId))
+    .orderBy(desc(applications.applied_at))
+    .limit(10);
+
+    // Transform to activity format
+    const activities = recentApplications.map(app => ({
+      id: app.id,
+      type: 'application_sent',
+      message: `Applied to ${app.job_title} at ${app.company_name}`,
+      time: app.applied_at,
+      status: app.status
+    }));
+
+    // Add some mock profile view activities
+    const mockActivities = [
+      {
+        id: 'pv1',
+        type: 'profile_view',
+        message: 'Profile viewed by TechCorp Recruiter',
+        time: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'pv2',
+        type: 'profile_view',
+        message: 'Profile viewed by StartupXYZ HR',
+        time: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString()
+      }
+    ];
+
+    const allActivities = [...activities, ...mockActivities]
+      .sort((a, b) => new Date(b.time) - new Date(a.time))
+      .slice(0, 15);
+
+    res.json(allActivities);
+
+  } catch (error) {
+    console.error('Get profile activity error:', error);
+    res.status(500).json({ 
+      message: 'Internal server error while fetching profile activity' 
+    });
+  }
+};
+
 // Export aliases for route compatibility
 export const getUserProfile = getProfile;
 export const updateUserProfile = updateProfile;

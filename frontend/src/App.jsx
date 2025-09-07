@@ -1,4 +1,4 @@
-import { Switch, Route, useLocation } from 'wouter'
+import { Route, Router as WouterRouter, useLocation } from 'wouter'
 import { AuthProvider } from './contexts/AuthContext'
 import { QueryClientProvider } from "@tanstack/react-query"
 import { Toaster } from "./components/ui/toaster"
@@ -7,15 +7,12 @@ import { queryClient } from "./lib/queryClient"
 import { ThemeProvider, CssBaseline } from '@mui/material'
 import theme from './theme'
 import Navigation from './components/Navigation'
-import HomePage from './pages/HomePageNew'
+import HomePageNew from './pages/HomePageNew'
 import JobsPage from './pages/JobsPage'
 import JobDetailPage from './pages/JobDetailPage'
 import AddJobPage from './pages/AddJobPage'
 import {
-  ResumePage,
   HRLoginPage,
-  JobPrepPage,
-  ProfilePage,
   ApplicationsPage,
   AdminDashboard,
   AboutPage,
@@ -23,14 +20,19 @@ import {
   PrivacyPolicyPage,
   TermsOfServicePage,
   PricingPage,
-  CompaniesPage,
   CompanyDetailPage,
-  SkillsAssessmentPage,
-  SalaryInsightsPage,
   JobAlertsPage,
 } from './pages/BasicPages'
+import ProfilePage from './pages/ProfilePage'
+import ResumePage from './pages/ResumeBuilderPage'
+import CompaniesPage from './pages/CompaniesPage'
+import SkillsAssessmentPage from './pages/SkillsAssessmentPage'
+import SalaryInsightsPage from './pages/SalaryInsightsPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import SignupPage from './pages/SignupPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import ApplicantDashboard from './pages/ApplicantDashboard'
 import RecruiterDashboard from './pages/RecruiterDashboard'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -42,44 +44,48 @@ function Router() {
   const isDashboard = location.includes('-dashboard');
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#fafafa' }}>
       {!isDashboard && <Navigation />}
-      <main className="flex-1">
-        <Switch>
-          <Route path="/" component={HomePage} />
-          <Route path="/jobs" component={JobsPage} />
-          <Route path="/job/:id" component={JobDetailPage} />
-          <Route path="/add-job" component={AddJobPage} />
-          <Route path="/resume" component={ResumePage} />
-          <Route path="/hr-login" component={HRLoginPage} />
-          <Route path="/job-prep" component={JobPrepPage} />
-          <Route path="/login" component={LoginPage} />
-          <Route path="/register" component={RegisterPage} />
-          <Route path="/profile" component={ProfilePage} />
-          <Route path="/applications" component={ApplicationsPage} />
-          <Route path="/applicant-dashboard" component={ApplicantDashboard} />
-          <Route path="/recruiter-dashboard" component={RecruiterDashboard} />
-          <Route path="/admin-dashboard">
+      <main style={{ flex: 1 }}>
+        <Route path="/">{() => <HomePageNew />}</Route>
+        <Route path="/jobs">{() => <JobsPage />}</Route>
+        <Route path="/job/:id">{(params) => <JobDetailPage id={params.id} />}</Route>
+        <Route path="/add-job">{() => <AddJobPage />}</Route>
+        <Route path="/resume">{() => <ResumePage />}</Route>
+        <Route path="/hr-login">{() => <HRLoginPage />}</Route>
+        <Route path="/login">{() => <LoginPage />}</Route>
+        <Route path="/register">{() => <RegisterPage />}</Route>
+        <Route path="/signup">{() => <SignupPage />}</Route>
+        <Route path="/forgot-password">{() => <ForgotPasswordPage />}</Route>
+        <Route path="/reset-password">{() => <ResetPasswordPage />}</Route>
+        <Route path="/profile">{() => <ProfilePage />}</Route>
+        <Route path="/applications">{() => <ApplicationsPage />}</Route>
+        <Route path="/applicant-dashboard">{() => <ApplicantDashboard />}</Route>
+        <Route path="/recruiter-dashboard">{() => <RecruiterDashboard />}</Route>
+        <Route path="/admin-dashboard">
+          {() => (
             <ProtectedRoute requiredRole="admin">
               <AdminDashboard />
             </ProtectedRoute>
-          </Route>
-          <Route path="/companies" component={CompaniesPage} />
-          <Route path="/company/:id" component={CompanyDetailPage} />
-          <Route path="/skills-assessment" component={SkillsAssessmentPage} />
-          <Route path="/salary-insights" component={SalaryInsightsPage} />
-          <Route path="/job-alerts">
+          )}
+        </Route>
+        <Route path="/companies">{() => <CompaniesPage />}</Route>
+        <Route path="/company/:id">{(params) => <CompanyDetailPage id={params.id} />}</Route>
+        <Route path="/skills-assessment">{() => <SkillsAssessmentPage />}</Route>
+        <Route path="/salary-insights">{() => <SalaryInsightsPage />}</Route>
+        <Route path="/job-alerts">
+          {() => (
             <ProtectedRoute requiredRole="jobseeker">
               <JobAlertsPage />
             </ProtectedRoute>
-          </Route>
-          <Route path="/about" component={AboutPage} />
-          <Route path="/contact" component={ContactPage} />
-          <Route path="/pricing" component={PricingPage} />
-          <Route path="/privacy-policy" component={PrivacyPolicyPage} />
-          <Route path="/terms-of-service" component={TermsOfServicePage} />
-          <Route component={NotFound} />
-        </Switch>
+          )}
+        </Route>
+        <Route path="/about">{() => <AboutPage />}</Route>
+        <Route path="/contact">{() => <ContactPage />}</Route>
+        <Route path="/pricing">{() => <PricingPage />}</Route>
+        <Route path="/privacy-policy">{() => <PrivacyPolicyPage />}</Route>
+        <Route path="/terms-of-service">{() => <TermsOfServicePage />}</Route>
+        <Route path="/:rest*">{() => <NotFound />}</Route>
       </main>
 
       {/* Footer */}
@@ -112,8 +118,6 @@ function Router() {
               <ul className="space-y-2 text-neutral-400">
                 <li><a href="/jobs" className="hover:text-white transition-colors">Browse Jobs</a></li>
                 <li><a href="/resume" className="hover:text-white transition-colors">Resume Builder</a></li>
-                <li><a href="/job-prep" className="hover:text-white transition-colors">Interview Prep</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Career Tips</a></li>
               </ul>
             </div>
             <div>
@@ -152,7 +156,9 @@ function App() {
         <TooltipProvider>
           <AuthProvider>
             <Toaster />
-            <Router />
+            <WouterRouter>
+              <Router />
+            </WouterRouter>
           </AuthProvider>
         </TooltipProvider>
       </ThemeProvider>

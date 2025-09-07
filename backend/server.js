@@ -6,11 +6,16 @@ import rateLimit from 'express-rate-limit';
 import session from 'express-session';
 import passport from 'passport';
 import dotenv from 'dotenv';
+import { createServer } from 'http';
+import WebSocketService from './services/websocketService.js';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Create HTTP server for Socket.IO
+const server = createServer(app);
 
 // Security middleware
 app.use(helmet());
@@ -24,9 +29,28 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 // CORS configuration
+const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001', 
+    'http://localhost:3002',
+    'http://localhost:5173',
+    'http://localhost:4173',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:3001',
+    'http://127.0.0.1:3002',
+    'http://127.0.0.1:5173',
+    'http://localhost:3002'
+];
+
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-    credentials: true
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+    optionsSuccessStatus: 200
 }));
 
 // Body parsing middleware
@@ -58,12 +82,14 @@ import jobsRoutes from './routes/jobs.js';
 import companiesRoutes from './routes/companies.js';
 import usersRoutes from './routes/users.js';
 import applicationsRoutes from './routes/applications.js';
+import savedJobsRoutes from './routes/savedJobs.js';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobsRoutes);
 app.use('/api/companies', companiesRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/applications', applicationsRoutes);
+app.use('/api/saved-jobs', savedJobsRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -88,7 +114,12 @@ app.use('*', (req, res) => {
     res.status(404).json({ message: 'Route not found' });
 });
 
-app.listen(PORT, () => {
+// Initialize WebSocket service
+const webSocketService = new WebSocketService(server);
+
+// Start server
+server.listen(PORT, () => {
     console.log(`🚀 FinAutoJobs Backend Server running on port ${PORT}`);
     console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+    console.log(`🔌 WebSocket service enabled for real-time features`);
 });

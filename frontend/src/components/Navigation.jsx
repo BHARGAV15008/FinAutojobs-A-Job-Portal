@@ -72,8 +72,6 @@ const Navigation = () => {
     { label: 'Salary Insights', path: '/salary-insights', icon: <TrendingUp /> },
     { label: 'Skills Assessment', path: '/skills-assessment', icon: <School /> },
     { label: 'Resume Builder', path: '/resume', icon: <Description /> },
-    { label: 'Interview Prep', path: '/job-prep', icon: <Psychology /> },
-    { label: 'Career Guidance', path: '/career-guidance', icon: <Psychology /> },
     ...(user && user.role === 'jobseeker' ? [{ label: 'Job Alerts', path: '/job-alerts', icon: <Notifications /> }] : []),
   ];
 
@@ -96,12 +94,12 @@ const Navigation = () => {
       <List>
         {mainMenuItems.map((item) => (
           <ListItem
-            button
             key={item.label}
             component={Link}
             href={item.path}
             onClick={handleDrawerToggle}
             selected={location === item.path}
+            sx={{ cursor: 'pointer' }}
           >
             <ListItemIcon>{item.icon}</ListItemIcon>
             <ListItemText primary={item.label} />
@@ -112,12 +110,12 @@ const Navigation = () => {
       <List>
         {companyMenuItems.map((item) => (
           <ListItem
-            button
             key={item.label}
             component={Link}
             href={item.path}
             onClick={handleDrawerToggle}
             selected={location === item.path}
+            sx={{ cursor: 'pointer' }}
           >
             <ListItemIcon>{item.icon}</ListItemIcon>
             <ListItemText primary={item.label} />
@@ -325,7 +323,7 @@ const Navigation = () => {
                 </Button>
                 <Button
                   component={Link}
-                  href="/signup"
+                  href="/register"
                   variant="contained"
                   color="primary"
                 >

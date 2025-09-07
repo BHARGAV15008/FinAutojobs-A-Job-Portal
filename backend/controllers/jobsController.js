@@ -1,5 +1,5 @@
 import { db } from '../config/database.js';
-import { jobs, companies, applications } from '../schema.js';
+import { jobs, companies, applications, users } from '../schema.js';
 import { eq, like, and, or, desc, asc, sql } from 'drizzle-orm';
 
 // Get all jobs with filtering and pagination
@@ -363,6 +363,86 @@ export const deleteJob = async (req, res) => {
     res.status(500).json({ 
       message: 'Internal server error while deleting job' 
     });
+  }
+};
+
+// Get recommended jobs for current user
+export const getRecommendedJobs = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    // Load user for skills and location
+    const userResult = await db.select({
+      id: users.id,
+      skills: users.skills,
+      location: users.location
+    }).from(users).where(eq(users.id, userId)).limit(1);
+
+    if (userResult.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const user = userResult[0];
+
+    // Basic heuristic: match by skills keywords and/or location
+    const whereConds = [eq(jobs.status, 'active')];
+
+    if (user.location) {
+      whereConds.push(like(jobs.location, `%${user.location}%`));
+    }
+
+    // skills is stored as JSON string or comma separated
+    let skillsList = [];
+    if (user.skills) {
+      try {
+        const parsed = JSON.parse(user.skills);
+        if (Array.isArray(parsed)) skillsList = parsed;
+      } catch (_) {
+        skillsList = String(user.skills).split(',').map(s => s.trim()).filter(Boolean);
+      }
+    }
+
+    // Build OR condition on title/requirements for skills
+    let skillsOr = null;
+    if (skillsList.length > 0) {
+      const skillLikes = skillsList.slice(0, 8).map(skill => or(
+        like(jobs.title, `%${skill}%`),
+        like(jobs.requirements, `%${skill}%`),
+        like(jobs.description, `%${skill}%`)
+      ));
+      // Combine multiple ORs into one OR by reducing
+      if (skillLikes.length === 1) skillsOr = skillLikes[0];
+      else skillsOr = or(...skillLikes);
+    }
+
+    const whereFinal = skillsOr ? and(...whereConds, skillsOr) : and(...whereConds);
+
+    // Return top N recent matching jobs
+    const result = await db.select({
+      id: jobs.id,
+      title: jobs.title,
+      description: jobs.description,
+      requirements: jobs.requirements,
+      location: jobs.location,
+      salary_min: jobs.salary_min,
+      salary_max: jobs.salary_max,
+      salary_currency: jobs.salary_currency,
+      job_type: jobs.job_type,
+      work_mode: jobs.work_mode,
+      company_name: companies.name,
+      company_logo: companies.logo_url,
+      company_location: companies.location
+    })
+    .from(jobs)
+    .leftJoin(companies, eq(jobs.company_id, companies.id))
+    .where(whereFinal)
+    .orderBy(desc(jobs.created_at))
+    .limit(20);
+
+    res.json({ jobs: result });
+  } catch (error) {
+    console.error('Get recommended jobs error:', error);
+    res.status(500).json({ message: 'Internal server error while fetching recommended jobs' });
   }
 };
 

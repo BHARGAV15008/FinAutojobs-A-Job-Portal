@@ -72,9 +72,9 @@ const reducer = (state, action) => {
         toasts: state.toasts.map((t) =>
           t.id === toastId || toastId === undefined
             ? {
-                ...t,
-                open: false,
-              }
+              ...t,
+              open: false,
+            }
             : t
         ),
       }
@@ -124,9 +124,8 @@ function toast({
       ...props,
       id,
       open: true,
-      onOpenChange: (open) => {
-        if (!open) dismiss()
-      },
+      // Consumers should pass event handlers to their UI components, not to the toast state object.
+      // We keep this for backward-compatibility, but React will ignore unknown DOM props if forwarded.
     },
   })
 

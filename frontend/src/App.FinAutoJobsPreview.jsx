@@ -8,7 +8,7 @@ import { queryClient } from "./lib/queryClient";
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import theme from './theme';
 import Navigation from './components/Navigation';
-import HomePage from './pages/HomePageNew';
+import HomePageNew from './pages/HomePageNew';
 import JobsPage from './pages/JobsPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -51,21 +51,21 @@ function ComponentShowcase() {
       <Typography variant="h3" gutterBottom align="center" fontWeight="bold">
         FinAutoJobs - Component Showcase
       </Typography>
-      
+
       <Box sx={{ mb: 6 }}>
         <Typography variant="h4" gutterBottom>
           Job Card Component
         </Typography>
         <Grid container spacing={3}>
           <Grid item xs={12} md={6} lg={4}>
-            <JobCard 
-              job={mockJob} 
+            <JobCard
+              job={mockJob}
               onFavoriteToggle={(id) => console.log('Favorite toggled:', id)}
               onBookmarkToggle={(id) => console.log('Bookmark toggled:', id)}
             />
           </Grid>
           <Grid item xs={12} md={6} lg={4}>
-            <JobCard 
+            <JobCard
               job={{
                 ...mockJob,
                 id: 2,
@@ -97,7 +97,7 @@ function Router() {
       {!isDashboard && <Navigation />}
       <main className="flex-1">
         <Switch>
-          <Route path="/" component={HomePage} />
+          <Route path="/" component={HomePageNew} />
           <Route path="/jobs" component={JobsPage} />
           <Route path="/login" component={LoginPage} />
           <Route path="/register" component={RegisterPage} />

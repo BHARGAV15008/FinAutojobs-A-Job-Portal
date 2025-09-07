@@ -84,7 +84,7 @@ const FilterDrawer = styled(Drawer)(({ theme }) => ({
 const JobsPage = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-    
+
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -273,11 +273,18 @@ const JobsPage = () => {
     ];
 
     useEffect(() => {
-        // Simulate API call
-        setTimeout(() => {
-            setJobs(mockJobs);
-            setLoading(false);
-        }, 1000);
+        const fetchJobs = async () => {
+            try {
+                const response = await api.getJobs({ limit: 50 });
+                const data = await response.json();
+                setJobs(data.jobs || data);
+                setLoading(false);
+            } catch (error) {
+                console.error('Error fetching jobs:', error);
+                setLoading(false);
+            }
+        };
+        fetchJobs();
     }, []);
 
     const handleSearch = () => {
@@ -325,18 +332,18 @@ const JobsPage = () => {
 
     const filteredJobs = jobs.filter(job => {
         const matchesSearch = job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            job.skills.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()));
+            job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            job.skills.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()));
         const matchesLocation = !selectedLocation || job.location.includes(selectedLocation);
         const matchesExperience = !selectedExperience || job.experience === selectedExperience;
         const matchesJobType = !selectedJobType || job.type === selectedJobType || (selectedJobType === 'Remote' && job.remote);
-        
+
         if (selectedTab === 0) return matchesSearch && matchesLocation && matchesExperience && matchesJobType; // All
         if (selectedTab === 1) return matchesSearch && matchesLocation && matchesExperience && matchesJobType && job.department === 'Finance';
         if (selectedTab === 2) return matchesSearch && matchesLocation && matchesExperience && matchesJobType && job.department === 'Engineering';
         if (selectedTab === 3) return matchesSearch && matchesLocation && matchesExperience && matchesJobType && job.featured;
         if (selectedTab === 4) return matchesSearch && matchesLocation && matchesExperience && matchesJobType && job.remote;
-        
+
         return matchesSearch && matchesLocation && matchesExperience && matchesJobType;
     });
 
@@ -347,8 +354,8 @@ const JobsPage = () => {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
                         <Avatar
-                            sx={{ 
-                                bgcolor: 'primary.main', 
+                            sx={{
+                                bgcolor: 'primary.main',
                                 color: 'white',
                                 width: 56,
                                 height: 56,
@@ -381,16 +388,16 @@ const JobsPage = () => {
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                         <Tooltip title={favorites.has(job.id) ? 'Remove from favorites' : 'Add to favorites'}>
                             <IconButton onClick={() => toggleFavorite(job.id)} size="small">
-                                {favorites.has(job.id) ? 
-                                    <Favorite color="error" /> : 
+                                {favorites.has(job.id) ?
+                                    <Favorite color="error" /> :
                                     <FavoriteBorder />
                                 }
                             </IconButton>
                         </Tooltip>
                         <Tooltip title={bookmarks.has(job.id) ? 'Remove bookmark' : 'Bookmark job'}>
                             <IconButton onClick={() => toggleBookmark(job.id)} size="small">
-                                {bookmarks.has(job.id) ? 
-                                    <Bookmark color="primary" /> : 
+                                {bookmarks.has(job.id) ?
+                                    <Bookmark color="primary" /> :
                                     <BookmarkBorder />
                                 }
                             </IconButton>
@@ -450,7 +457,7 @@ const JobsPage = () => {
                         label={job.workMode}
                         size="small"
                         color={job.workMode === 'Remote' ? 'success' : job.workMode === 'Hybrid' ? 'warning' : 'default'}
-                        icon={job.workMode === 'Remote' ? <RemoteWork /> : undefined}
+                        icon={job.workMode === 'Remote' ? <Home /> : undefined}
                     />
                     {job.featured && (
                         <Chip
@@ -566,7 +573,7 @@ const JobsPage = () => {
                 <FilterList sx={{ mr: 1, verticalAlign: 'middle' }} />
                 Filters
             </Typography>
-            
+
             <Box sx={{ mb: 3 }}>
                 <Typography variant="subtitle2" gutterBottom>
                     Location
@@ -766,7 +773,28 @@ const JobsPage = () => {
             <Grid container spacing={3} sx={{ mb: 4 }}>
                 {filteredJobs.map((job) => (
                     <Grid item xs={12} md={6} lg={4} key={job.id}>
-                        <JobCardComponent job={job} />
+                        <JobCardComponent job={{
+                            ...job,
+                            companyLogo: job.company_logo || job.company_name?.charAt(0),
+                            salaryMin: job.salary_min,
+                            salaryMax: job.salary_max,
+                            experience: `${job.experience_min}-${job.experience_max} years`,
+                            department: job.company_industry,
+                            workMode: job.work_mode,
+                            type: job.job_type,
+                            posted: "Recent", // You might want to calculate this from created_at
+                            skills: JSON.parse(job.skills_required),
+                            views: Math.floor(Math.random() * 2000) + 500, // Random view count for demo
+                            rating: (Math.random() * 1 + 4).toFixed(1), // Random rating between 4.0-5.0
+                            applicants: Math.floor(Math.random() * 50) + 10, // Random applicant count
+                            featured: job.status === "featured",
+                            companySize: "100+", // Add this if available from API
+                            remote: job.work_mode.toLowerCase().includes('remote'),
+                            urgentHiring: false, // Add this if available from API
+                            verified: true, // Add this if available from API
+                            company: job.company_name,
+                            location: job.location
+                        }} />
                     </Grid>
                 ))}
             </Grid>

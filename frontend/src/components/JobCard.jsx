@@ -27,7 +27,7 @@ import {
   Verified,
   Star,
   FlashOn,
-  Home as RemoteWork,
+  Home,
   Visibility,
   Groups,
 } from '@mui/icons-material';
@@ -194,7 +194,7 @@ const JobCard = ({ job, onFavoriteToggle, onBookmarkToggle, isFavorited = false,
               (job.workMode === 'Remote' || job.mode === 'Remote') ? 'success' : 
               (job.workMode === 'Hybrid' || job.mode === 'Hybrid') ? 'warning' : 'default'
             }
-            icon={(job.workMode === 'Remote' || job.mode === 'Remote') ? <RemoteWork /> : undefined}
+            icon={(job.workMode === 'Remote' || job.mode === 'Remote') ? <Home /> : undefined}
           />
           {job.featured && (
             <Chip

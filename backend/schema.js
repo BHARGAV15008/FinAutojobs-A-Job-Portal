@@ -34,6 +34,11 @@ export const users = sqliteTable('users', {
   status: text('status').notNull().default('active'), // 'active', 'inactive', 'suspended'
   email_verified: integer('email_verified', { mode: 'boolean' }).notNull().default(false),
   phone_verified: integer('phone_verified', { mode: 'boolean' }).notNull().default(false),
+  
+  // Password reset fields
+  reset_token: text('reset_token'),
+  reset_token_expires: text('reset_token_expires'),
+  
   created_at: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
   updated_at: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`)
 });

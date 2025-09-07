@@ -41,6 +41,8 @@ import {
     ChevronRight,
     PlayCircle,
     NotificationsActive,
+    School,
+    Star,
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
 import { styled } from '@mui/material/styles';
@@ -95,11 +97,13 @@ const CategoryImage = styled('img')({
     transition: 'transform 0.3s ease',
 });
 
-const HomePage = () => {
+const HomePageNew = () => {
     const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // Check if viewport is mobile size
+
     const [searchQuery, setSearchQuery] = useState('');
-    const [location, setLocation] = useState('');
+
+    const [locationQuery, setLocationQuery] = useState('');
     const [selectedTab, setSelectedTab] = useState(0);
 
     const { data: jobsData } = useQuery({
@@ -116,10 +120,102 @@ const HomePage = () => {
         e.preventDefault();
         const params = new URLSearchParams();
         if (searchQuery) params.append('search', searchQuery);
-        if (location) params.append('location', location);
+        if (locationQuery) params.append('location', locationQuery);
         window.location.href = `/jobs?${params.toString()}`;
     };
 
+    // Mock data for demonstration
+    const featuredJobs = [
+        {
+            id: 1,
+            title: 'Senior Software Engineer',
+            company: 'TechCorp India',
+            location: 'Bangalore',
+            salary: '₹15-25 LPA',
+            type: 'Full-time',
+            logo: '/api/placeholder/40/40'
+        },
+        {
+            id: 2,
+            title: 'Financial Analyst',
+            company: 'FinanceHub',
+            location: 'Mumbai',
+            salary: '₹8-12 LPA',
+            type: 'Full-time',
+            logo: '/api/placeholder/40/40'
+        },
+        {
+            id: 3,
+            title: 'Marketing Manager',
+            company: 'BrandWorks',
+            location: 'Delhi',
+            salary: '₹10-18 LPA',
+            type: 'Full-time',
+            logo: '/api/placeholder/40/40'
+        }
+    ];
+
+    const jobCategories = [
+        {
+            title: 'Technology',
+            image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b',
+            count: '10,000+',
+            color: theme.palette.primary.main,
+            icon: <Code />,
+        },
+        {
+            title: 'Finance',
+            image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c',
+            count: '5,000+',
+            color: theme.palette.secondary.main,
+            icon: <AttachMoney />,
+        },
+        {
+            title: 'Marketing',
+            image: 'https://images.unsplash.com/photo-1552664730-d307ca884978',
+            count: '3,000+',
+            color: '#FF6B6B',
+            icon: <TrendingUp />,
+        },
+        {
+            title: 'Sales',
+            image: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43',
+            count: '4,000+',
+            color: '#4ECDC4',
+            icon: <Business />,
+        },
+    ];
+
+    const testimonials = [
+        {
+            name: 'Priya Sharma',
+            role: 'Software Developer',
+            company: 'Tech Solutions',
+            message: 'Thanks to FinAutoJobs, I found my dream job within 2 weeks! The platform is very user-friendly and has great job opportunities.',
+            rating: 5
+        },
+        {
+            name: 'Rahul Kumar',
+            role: 'Financial Analyst',
+            company: 'Investment Corp',
+            message: 'As a fresher, I was worried about finding a good job. FinAutoJobs helped me connect with top companies and land my first job.',
+            rating: 5
+        },
+        {
+            name: 'Sneha Patel',
+            role: 'Marketing Manager',
+            company: 'Brand Agency',
+            message: 'The job recommendations were spot-on! I got multiple interview calls and finally chose the perfect role for my career growth.',
+            rating: 5
+        }
+    ];
+
+    const stats = [
+        { number: '1M+', label: 'Active Job Seekers', icon: <Group /> },
+        { number: '50K+', label: 'Companies Hiring', icon: <Business /> },
+        { number: '2L+', label: 'Jobs Posted', icon: <Work /> },
+        { number: '95%', label: 'Success Rate', icon: <EmojiEvents /> }
+    ];
     const popularLocations = [
         'Mumbai',
         'Delhi',
@@ -129,32 +225,7 @@ const HomePage = () => {
         'Pune',
     ];
 
-    const jobCategories = [
-        {
-            title: 'Technology',
-            image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b',
-            count: '10,000+',
-            color: theme.palette.primary.main,
-        },
-        {
-            title: 'Finance',
-            image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c',
-            count: '5,000+',
-            color: theme.palette.secondary.main,
-        },
-        {
-            title: 'Marketing',
-            image: 'https://images.unsplash.com/photo-1552664730-d307ca884978',
-            count: '3,000+',
-            color: '#FF6B6B',
-        },
-        {
-            title: 'Sales',
-            image: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43',
-            count: '4,000+',
-            color: '#4ECDC4',
-        },
-    ];
+    ;
 
     return (
         <Box>
@@ -195,17 +266,17 @@ const HomePage = () => {
                                 }}
                             >
                                 Find Your Dream Job
-                                    <Box
-                                        component="span"
-                                        sx={{
-                                            color: theme.palette.secondary.light,
-                                            display: 'block',
-                                            fontSize: { xs: '1.5rem', md: '2rem' },
-                                            mt: 1,
-                                        }}
-                                    >
-                                        100,000+ Jobs • 25,000+ Companies
-                                    </Box>
+                                <Box
+                                    component="span"
+                                    sx={{
+                                        color: theme.palette.secondary.light,
+                                        display: 'block',
+                                        fontSize: { xs: '1.5rem', md: '2rem' },
+                                        mt: 1,
+                                    }}
+                                >
+                                    100,000+ Jobs • 25,000+ Companies
+                                </Box>
                             </Typography>
 
                             <Typography variant="h6" sx={{ mb: 4, maxWidth: 600 }}>
@@ -414,7 +485,7 @@ const HomePage = () => {
                                                 variant="rounded"
                                                 sx={{ width: 56, height: 56 }}
                                             >
-                                                {job.company[0]}
+                                                {job?.company?.[0] || '?'}
                                             </Avatar>
                                             <Box>
                                                 <Typography variant="h6" gutterBottom>
@@ -625,6 +696,53 @@ const HomePage = () => {
                 </Grid>
             </Container>
 
+            {/* Testimonials Section */}
+            <Box sx={{ py: 8, bgcolor: 'grey.50' }}>
+                <Container maxWidth="lg">
+                    <Typography variant="h4" gutterBottom align="center" fontWeight="bold">
+                        Success Stories
+                    </Typography>
+                    <Typography variant="subtitle1" align="center" color="text.secondary" paragraph>
+                        Hear from professionals who found their dream jobs through FinAutoJobs
+                    </Typography>
+
+                    <Grid container spacing={4} sx={{ mt: 3 }}>
+                        {testimonials.map((testimonial, index) => (
+                            <Grid item xs={12} md={4} key={index}>
+                                <Card sx={{ height: '100%', p: 3, textAlign: 'center' }}>
+                                    <Avatar
+                                        sx={{
+                                            width: 80,
+                                            height: 80,
+                                            mx: 'auto',
+                                            mb: 2,
+                                            bgcolor: 'primary.main',
+                                            fontSize: '2rem'
+                                        }}
+                                    >
+                                        {testimonial.name.charAt(0)}
+                                    </Avatar>
+                                    <Box sx={{ mb: 2 }}>
+                                        {[...Array(testimonial.rating)].map((_, i) => (
+                                            <Star key={i} sx={{ color: 'warning.main', fontSize: 20 }} />
+                                        ))}
+                                    </Box>
+                                    <Typography variant="body1" paragraph sx={{ fontStyle: 'italic' }}>
+                                        "{testimonial.message}"
+                                    </Typography>
+                                    <Typography variant="h6" fontWeight="bold">
+                                        {testimonial.name}
+                                    </Typography>
+                                    <Typography variant="subtitle2" color="text.secondary">
+                                        {testimonial.role} at {testimonial.company}
+                                    </Typography>
+                                </Card>
+                            </Grid>
+                        ))}
+                    </Grid>
+                </Container>
+            </Box>
+
             {/* Call to Action */}
             <Box sx={{ textAlign: 'center', py: 8 }}>
                 <Container maxWidth="md">
@@ -660,4 +778,4 @@ const HomePage = () => {
     );
 };
 
-export default HomePage;
+export default HomePageNew;

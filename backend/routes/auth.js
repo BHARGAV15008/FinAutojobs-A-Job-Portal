@@ -10,6 +10,8 @@ import {
   verifyEmailOTP,
   sendSMSOTP,
   verifySMSOTP,
+  forgotPassword,
+  resetPassword,
   authenticateToken
 } from '../controllers/authController.js';
 
@@ -38,6 +40,10 @@ router.post('/send-email-otp', sendEmailOTP);
 router.post('/verify-email-otp', verifyEmailOTP);
 router.post('/send-sms-otp', sendSMSOTP);
 router.post('/verify-sms-otp', verifySMSOTP);
+
+// Password reset routes
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
 
 // Export authenticateToken middleware for use in other routes
 export { authenticateToken };

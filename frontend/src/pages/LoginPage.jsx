@@ -118,8 +118,8 @@ const LoginPage = () => {
     setLoading(true)
 
     const result = await login({
-      ...formData,
-      role: activeTab === 0 ? 'jobseeker' : 'recruiter'
+      email: formData.username, // LoginPage uses 'username' field but should send as 'email' for backend
+      password: formData.password
     })
     
     if (!result.success) {
@@ -424,7 +424,13 @@ const LoginPage = () => {
                     }
                     label="Remember me"
                   />
-                  <Button variant="text" color="primary" size="small">
+                  <Button
+                    component={Link}
+                    to="/forgot-password"
+                    variant="text"
+                    color="primary"
+                    size="small"
+                  >
                     Forgot password?
                   </Button>
                 </Box>

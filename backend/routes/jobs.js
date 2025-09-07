@@ -6,13 +6,17 @@ import {
   createJob, 
   updateJob, 
   deleteJob, 
-  getJobStats 
+  getJobStats, 
+  getRecommendedJobs
 } from '../controllers/jobsController.js';
 
 const router = express.Router();
 
 // Get all jobs with optional filters
 router.get('/', getJobs);
+
+// Recommended jobs for current user
+router.get('/recommended', authenticateToken, getRecommendedJobs);
 
 // Get job by ID
 router.get('/:id', getJobById);

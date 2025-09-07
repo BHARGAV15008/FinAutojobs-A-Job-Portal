@@ -34,6 +34,9 @@ const initializeDatabase = async () => {
     // Create tables if they don't exist (using raw SQL for initial setup)
     await createTables();
     
+    // Run migrations to add missing columns
+    await runMigrations();
+    
     // Check if data already exists
     try {
       const companyCountResult = await db.select({ count: sql`COUNT(*)` })
@@ -65,7 +68,7 @@ const createTables = async () => {
         username TEXT UNIQUE NOT NULL,
         email TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
-        full_name TEXT NOT NULL,
+        full_name TEXT,
         phone TEXT,
         role TEXT DEFAULT 'jobseeker' CHECK (role IN ('jobseeker', 'employer', 'admin')),
         status TEXT DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'suspended')),
@@ -78,10 +81,14 @@ const createTables = async () => {
         skills TEXT,
         qualification TEXT,
         experience_years INTEGER,
+        resume_url TEXT,
         company_name TEXT,
         position TEXT,
+        company_id INTEGER,
         email_verified BOOLEAN DEFAULT FALSE,
         phone_verified BOOLEAN DEFAULT FALSE,
+        reset_token TEXT,
+        reset_token_expires TEXT,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         updated_at TEXT DEFAULT CURRENT_TIMESTAMP
       )
@@ -214,6 +221,7 @@ const createTables = async () => {
         ip_address TEXT,
         user_agent TEXT,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        last_used TEXT DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       )
     `);
@@ -222,6 +230,116 @@ const createTables = async () => {
   } catch (error) {
     console.error('Error creating tables:', error);
     throw error;
+  }
+};
+
+// Run migrations to add missing columns
+const runMigrations = async () => {
+  try {
+    // Check if reset_token columns exist, if not add them
+    try {
+      const testQuery = sqlite.prepare("SELECT reset_token FROM users LIMIT 1");
+      testQuery.all();
+    } catch (error) {
+      if (error.message.includes('no such column: reset_token')) {
+        console.log('Adding reset_token columns...');
+        sqlite.exec(`
+          ALTER TABLE users ADD COLUMN reset_token TEXT;
+          ALTER TABLE users ADD COLUMN reset_token_expires TEXT;
+        `);
+        console.log('✅ Reset token columns added successfully');
+      }
+    }
+    
+    // Check if resume_url column exists, if not add it
+    try {
+      const testQuery = sqlite.prepare("SELECT resume_url FROM users LIMIT 1");
+      testQuery.all();
+    } catch (error) {
+      if (error.message.includes('no such column: resume_url')) {
+        console.log('Adding resume_url column...');
+        sqlite.exec(`ALTER TABLE users ADD COLUMN resume_url TEXT;`);
+        console.log('✅ Resume URL column added successfully');
+      }
+    }
+    
+    // Check if company_id column exists, if not add it
+    try {
+      const testQuery = sqlite.prepare("SELECT company_id FROM users LIMIT 1");
+      testQuery.all();
+    } catch (error) {
+      if (error.message.includes('no such column: company_id')) {
+        console.log('Adding company_id column...');
+        sqlite.exec(`ALTER TABLE users ADD COLUMN company_id INTEGER;`);
+        console.log('✅ Company ID column added successfully');
+      }
+    }
+    
+    // Fix full_name NOT NULL constraint by recreating the table
+    try {
+      const tableInfo = sqlite.prepare("PRAGMA table_info(users)").all();
+      const fullNameColumn = tableInfo.find(col => col.name === 'full_name');
+      
+      if (fullNameColumn && fullNameColumn.notnull === 1) {
+        console.log('Fixing full_name NOT NULL constraint...');
+        
+        // Create new table without NOT NULL constraint
+        sqlite.exec(`
+          CREATE TABLE users_new (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            full_name TEXT,
+            phone TEXT,
+            role TEXT DEFAULT 'jobseeker' CHECK (role IN ('jobseeker', 'employer', 'admin')),
+            status TEXT DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'suspended')),
+            bio TEXT,
+            location TEXT,
+            profile_picture TEXT,
+            linkedin_url TEXT,
+            github_url TEXT,
+            portfolio_url TEXT,
+            skills TEXT,
+            qualification TEXT,
+            experience_years INTEGER,
+            resume_url TEXT,
+            company_name TEXT,
+            position TEXT,
+            company_id INTEGER,
+            email_verified BOOLEAN DEFAULT FALSE,
+            phone_verified BOOLEAN DEFAULT FALSE,
+            reset_token TEXT,
+            reset_token_expires TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+          );
+          
+          INSERT INTO users_new SELECT * FROM users;
+          DROP TABLE users;
+          ALTER TABLE users_new RENAME TO users;
+        `);
+        
+        console.log('✅ Full name constraint fixed successfully');
+      }
+    } catch (error) {
+      console.error('Error fixing full_name constraint:', error);
+    }
+    
+    // Add last_used column to user_sessions table if missing
+    try {
+      const testQuery = sqlite.prepare("SELECT last_used FROM user_sessions LIMIT 1");
+      testQuery.all();
+    } catch (error) {
+      if (error.message.includes('no such column: last_used')) {
+        console.log('Adding last_used column to user_sessions...');
+        sqlite.exec(`ALTER TABLE user_sessions ADD COLUMN last_used TEXT DEFAULT CURRENT_TIMESTAMP;`);
+        console.log('✅ Last used column added successfully');
+      }
+    }
+    
+  } catch (error) {
+    console.error('Migration error:', error);
   }
 };
 

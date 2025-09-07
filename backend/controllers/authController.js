@@ -102,6 +102,7 @@ export const register = async (req, res) => {
     // Store refresh token in database
     await db.insert(userSessions).values({
       user_id: user.id,
+      token: token,
       refresh_token: refreshToken,
       expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
     });
@@ -172,6 +173,7 @@ export const login = async (req, res) => {
     // Store refresh token in database
     await db.insert(userSessions).values({
       user_id: user.id,
+      token: token,
       refresh_token: refreshToken,
       expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
     });
@@ -592,6 +594,120 @@ export const verifySMSOTP = async (req, res) => {
     console.error('Verify SMS OTP error:', error);
     res.status(500).json({ 
       message: 'Failed to verify SMS OTP' 
+    });
+  }
+};
+
+// Forgot Password - Send reset email
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        message: 'Email is required'
+      });
+    }
+
+    // Find user by email
+    const userResult = await db.select()
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+
+    if (userResult.length === 0) {
+      // Don't reveal that user doesn't exist
+      return res.json({
+        message: 'If an account with that email exists, you will receive a password reset email.'
+      });
+    }
+
+    const user = userResult[0];
+
+    // Generate reset token
+    const resetToken = Math.random().toString(36).substr(2, 15) + Math.random().toString(36).substr(2, 15);
+    const resetTokenExpires = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour
+
+    // Update user with reset token
+    await db.update(users)
+      .set({
+        reset_token: resetToken,
+        reset_token_expires: resetTokenExpires
+      })
+      .where(eq(users.id, user.id));
+
+    // Send reset email
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+    const subject = 'FinAutoJobs - Password Reset Request';
+    const body = `You have requested a password reset for your FinAutoJobs account.\n\nClick the link below to reset your password:\n${resetUrl}\n\nThis link will expire in 1 hour.\n\nIf you didn't request this reset, please ignore this email.`;
+    
+    await sendEmail(email, subject, body);
+
+    res.json({
+      message: 'If an account with that email exists, you will receive a password reset email.'
+    });
+
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({
+      message: 'Internal server error'
+    });
+  }
+};
+
+// Reset Password - Reset with token
+export const resetPassword = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res.status(400).json({
+        message: 'Reset token and new password are required'
+      });
+    }
+
+    // Find user by reset token
+    const userResult = await db.select()
+      .from(users)
+      .where(eq(users.reset_token, token))
+      .limit(1);
+
+    if (userResult.length === 0) {
+      return res.status(400).json({
+        message: 'Invalid or expired reset token'
+      });
+    }
+
+    const user = userResult[0];
+
+    // Check if token is expired
+    if (new Date(user.reset_token_expires) < new Date()) {
+      return res.status(400).json({
+        message: 'Reset token has expired'
+      });
+    }
+
+    // Hash new password
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // Update password and clear reset token
+    await db.update(users)
+      .set({
+        password: hashedPassword,
+        reset_token: null,
+        reset_token_expires: null
+      })
+      .where(eq(users.id, user.id));
+
+    res.json({
+      message: 'Password reset successfully'
+    });
+
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({
+      message: 'Internal server error'
     });
   }
 };

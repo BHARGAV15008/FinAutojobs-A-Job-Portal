@@ -1,14 +1,20 @@
-import React from 'react'
+import { Redirect } from 'wouter';
+import { useAuth } from '../contexts/AuthContext';
+import ApplicantProfilePage from './ApplicantProfilePage';
+import RecruiterProfilePage from './RecruiterProfilePage';
 
 const ProfilePage = () => {
-    return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
-            <div className="bg-white border border-gray-200 rounded-lg p-8 max-w-2xl w-full">
-                <h1 className="text-2xl font-bold text-gray-900 mb-4">Your Profile</h1>
-                <p className="text-gray-700">User profile details will be shown here.</p>
-            </div>
-        </div>
-    )
-}
+    const { user } = useAuth();
 
-export default ProfilePage
+    if (!user) {
+        return <Redirect to="/login" />;
+    }
+
+    if (user?.role === 'recruiter') {
+        return <RecruiterProfilePage />;
+    }
+
+    return <ApplicantProfilePage />;
+};
+
+export default ProfilePage;

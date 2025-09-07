@@ -13,7 +13,7 @@ const BasicPage = ({ title, description, icon: Icon, backLink = "/" }) => (
     >
       Back
     </Button>
-    
+
     <Box sx={{ textAlign: 'center', py: 8 }}>
       <Icon sx={{ fontSize: 80, color: 'primary.main', mb: 3 }} />
       <Typography variant="h3" component="h1" gutterBottom fontWeight="bold">
@@ -65,15 +65,6 @@ export const JobPrepPage = () => (
     title="Interview Preparation"
     description="Prepare for your next job interview"
     icon={Psychology}
-    backLink="/"
-  />
-);
-
-export const ProfilePage = () => (
-  <BasicPage
-    title="Profile"
-    description="Manage your profile information"
-    icon={Person}
     backLink="/"
   />
 );

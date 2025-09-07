@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useLocation, Link } from 'wouter';
 import {
     AppBar,
@@ -18,6 +18,14 @@ import {
     ListItemText,
     ListItemIcon,
     Divider,
+    Paper,
+    InputBase,
+    Popper,
+    Grow,
+    ClickAwayListener,
+    Grid,
+    useTheme,
+    useMediaQuery,
 } from '@mui/material';
 import {
     Menu as MenuIcon,
@@ -33,15 +41,28 @@ import {
     Logout,
     Dashboard,
     PostAdd,
+    Search as SearchIcon,
+    BusinessCenter,
+    Code,
+    AccountBalance,
+    LocalHospital,
+    Engineering,
+    Store,
+    ExpandMore,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 
 const Navigation = () => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [location] = useLocation();
     const { user, logout } = useAuth();
     const [anchorElNav, setAnchorElNav] = useState(null);
     const [anchorElUser, setAnchorElUser] = useState(null);
     const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [openJobMenu, setOpenJobMenu] = useState(false);
+    const jobMenuRef = useRef(null);
 
     const handleOpenNavMenu = (event) => {
         setAnchorElNav(event.currentTarget);
@@ -62,8 +83,59 @@ const Navigation = () => {
         setMobileDrawerOpen(!mobileDrawerOpen);
     };
 
+    const handleJobMenuOpen = () => {
+        setOpenJobMenu(true);
+    };
+
+    const handleJobMenuClose = () => {
+        setOpenJobMenu(false);
+    };
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+        if (searchQuery.trim()) {
+            // Implement search functionality
+            // window.location.href = `/jobs?search=${encodeURIComponent(searchQuery)}`;
+        }
+    };
+
+    const jobCategories = [
+        {
+            title: 'Technology',
+            icon: <Code />,
+            subcategories: ['Software Development', 'Data Science', 'DevOps', 'Cybersecurity']
+        },
+        {
+            title: 'Finance',
+            icon: <AccountBalance />,
+            subcategories: ['Banking', 'Investment', 'Accounting', 'Insurance']
+        },
+        {
+            title: 'Healthcare',
+            icon: <LocalHospital />,
+            subcategories: ['Medical', 'Nursing', 'Healthcare Tech', 'Administration']
+        },
+        {
+            title: 'Engineering',
+            icon: <Engineering />,
+            subcategories: ['Mechanical', 'Electrical', 'Civil', 'Chemical']
+        },
+        {
+            title: 'Business',
+            icon: <BusinessCenter />,
+            subcategories: ['Marketing', 'Sales', 'HR', 'Operations']
+        }
+    ];
+
     const mainMenuItems = [
-        { label: 'Jobs', path: '/jobs', icon: <Work /> },
+        {
+            label: 'Jobs',
+            path: '/jobs',
+            icon: <Work />,
+            hasMegaMenu: true,
+            ref: jobMenuRef,
+            onClick: handleJobMenuOpen,
+        },
         { label: 'Resume Builder', path: '/resume', icon: <Description /> },
         { label: 'Job Prep', path: '/job-prep', icon: <School /> },
     ];
@@ -83,23 +155,99 @@ const Navigation = () => {
     ] : [];
 
     const drawer = (
-        <Box sx={{ width: 250 }} role="presentation">
+        <Box sx={{ width: 280 }} role="presentation">
+            {/* Mobile Search */}
+            <Box sx={{ p: 2 }}>
+                <Paper
+                    component="form"
+                    onSubmit={handleSearch}
+                    sx={{
+                        p: '2px 4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                    }}
+                >
+                    <InputBase
+                        sx={{ ml: 1, flex: 1 }}
+                        placeholder="Search jobs, companies..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    <IconButton type="submit" sx={{ p: '10px' }} aria-label="search">
+                        <SearchIcon />
+                    </IconButton>
+                </Paper>
+            </Box>
+            <Divider />
+
+            {/* Main Navigation */}
             <List>
                 {mainMenuItems.map((item) => (
-                    <ListItem
-                        button
-                        key={item.label}
-                        component={Link}
-                        href={item.path}
-                        onClick={handleDrawerToggle}
-                        selected={location === item.path}
-                    >
-                        <ListItemIcon>{item.icon}</ListItemIcon>
-                        <ListItemText primary={item.label} />
-                    </ListItem>
+                    <div key={item.label}>
+                        {item.hasMegaMenu ? (
+                            <>
+                                <ListItem>
+                                    <ListItemIcon>{item.icon}</ListItemIcon>
+                                    <ListItemText
+                                        primary={item.label}
+                                        primaryTypographyProps={{
+                                            color: 'primary',
+                                            fontWeight: 'medium',
+                                        }}
+                                    />
+                                </ListItem>
+                                {jobCategories.map((category) => (
+                                    <List key={category.title} component="div" disablePadding>
+                                        <ListItem sx={{ pl: 4 }}>
+                                            <ListItemIcon>{category.icon}</ListItemIcon>
+                                            <ListItemText
+                                                primary={category.title}
+                                                primaryTypographyProps={{
+                                                    variant: 'subtitle2',
+                                                    fontWeight: 'medium',
+                                                }}
+                                            />
+                                        </ListItem>
+                                        {category.subcategories.map((sub) => (
+                                            <ListItem
+                                                button
+                                                key={sub}
+                                                component={Link}
+                                                href={`/jobs?category=${encodeURIComponent(sub)}`}
+                                                onClick={handleDrawerToggle}
+                                                sx={{ pl: 6 }}
+                                            >
+                                                <ListItemText
+                                                    primary={sub}
+                                                    primaryTypographyProps={{
+                                                        variant: 'body2',
+                                                    }}
+                                                />
+                                            </ListItem>
+                                        ))}
+                                    </List>
+                                ))}
+                            </>
+                        ) : (
+                            <ListItem
+                                button
+                                component={Link}
+                                href={item.path}
+                                onClick={handleDrawerToggle}
+                                selected={location === item.path}
+                            >
+                                <ListItemIcon>{item.icon}</ListItemIcon>
+                                <ListItemText primary={item.label} />
+                            </ListItem>
+                        )}
+                    </div>
                 ))}
             </List>
             <Divider />
+
+            {/* Company Info */}
             <List>
                 {companyMenuItems.map((item) => (
                     <ListItem
@@ -199,29 +347,114 @@ const Navigation = () => {
                     </Box>
 
                     {/* Desktop menu */}
-                    <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, ml: 4 }}>
+                    {/* Desktop menu with search */}
+                    <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, ml: 4, alignItems: 'center', gap: 2 }}>
                         {mainMenuItems.map((item) => (
-                            <Button
-                                key={item.label}
-                                component={Link}
-                                href={item.path}
-                                onClick={handleCloseNavMenu}
-                                sx={{
-                                    mx: 1,
-                                    color: location === item.path ? 'primary.main' : 'text.primary',
-                                    bgcolor: location === item.path ? 'primary.50' : 'transparent',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    '&:hover': {
-                                        bgcolor: 'primary.50',
-                                        color: 'primary.main',
-                                    },
-                                }}
-                                startIcon={item.icon}
-                            >
-                                {item.label}
-                            </Button>
+                            <Box key={item.label}>
+                                <Button
+                                    ref={item.ref}
+                                    component={item.hasMegaMenu ? 'button' : Link}
+                                    href={!item.hasMegaMenu ? item.path : undefined}
+                                    onClick={item.onClick || handleCloseNavMenu}
+                                    sx={{
+                                        mx: 1,
+                                        color: location === item.path ? 'primary.main' : 'text.primary',
+                                        bgcolor: location === item.path ? 'primary.50' : 'transparent',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        '&:hover': {
+                                            bgcolor: 'primary.50',
+                                            color: 'primary.main',
+                                        },
+                                    }}
+                                    endIcon={item.hasMegaMenu ? <ExpandMore /> : null}
+                                    startIcon={item.icon}
+                                >
+                                    {item.label}
+                                </Button>
+                                {item.hasMegaMenu && (
+                                    <Popper
+                                        open={openJobMenu}
+                                        anchorEl={jobMenuRef.current}
+                                        transition
+                                        placement="bottom-start"
+                                        style={{ zIndex: 1301 }}
+                                    >
+                                        {({ TransitionProps }) => (
+                                            <Grow {...TransitionProps}>
+                                                <Paper
+                                                    sx={{
+                                                        mt: 1,
+                                                        width: '100%',
+                                                        maxWidth: 900,
+                                                        borderRadius: 2,
+                                                        boxShadow: 3,
+                                                    }}
+                                                >
+                                                    <ClickAwayListener onClickAway={handleJobMenuClose}>
+                                                        <Box sx={{ p: 4 }}>
+                                                            <Grid container spacing={4}>
+                                                                {jobCategories.map((category) => (
+                                                                    <Grid item xs={12} sm={6} md={4} key={category.title}>
+                                                                        <Box>
+                                                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                                                                {category.icon}
+                                                                                <Typography variant="h6" sx={{ ml: 1 }}>
+                                                                                    {category.title}
+                                                                                </Typography>
+                                                                            </Box>
+                                                                            <List dense>
+                                                                                {category.subcategories.map((sub) => (
+                                                                                    <ListItem
+                                                                                        key={sub}
+                                                                                        button
+                                                                                        component={Link}
+                                                                                        href={`/jobs?category=${encodeURIComponent(sub)}`}
+                                                                                        onClick={handleJobMenuClose}
+                                                                                        sx={{ py: 0.5 }}
+                                                                                    >
+                                                                                        <ListItemText primary={sub} />
+                                                                                    </ListItem>
+                                                                                ))}
+                                                                            </List>
+                                                                        </Box>
+                                                                    </Grid>
+                                                                ))}
+                                                            </Grid>
+                                                        </Box>
+                                                    </ClickAwayListener>
+                                                </Paper>
+                                            </Grow>
+                                        )}
+                                    </Popper>
+                                )}
+                            </Box>
                         ))}
+
+                        {/* Search Bar */}
+                        <Paper
+                            component="form"
+                            onSubmit={handleSearch}
+                            sx={{
+                                p: '2px 4px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                width: 400,
+                                ml: 'auto',
+                                border: '1px solid',
+                                borderColor: 'divider',
+                            }}
+                        >
+                            <InputBase
+                                sx={{ ml: 1, flex: 1 }}
+                                placeholder="Search jobs, companies..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                            <IconButton type="submit" sx={{ p: '10px' }} aria-label="search">
+                                <SearchIcon />
+                            </IconButton>
+                        </Paper>
                     </Box>
 
                     {/* User menu */}
