@@ -1,4 +1,5 @@
 import express from 'express';
+import { loginLimiter, otpLimiter, registrationLimiter } from '../middleware/rateLimiter.js';
 import {
   register,
   login,
@@ -18,10 +19,10 @@ import {
 const router = express.Router();
 
 // Register new user
-router.post('/register', register);
+router.post('/register', registrationLimiter, register);
 
 // Login user
-router.post('/login', login);
+router.post('/login', loginLimiter, login);
 
 // Get current user profile
 router.get('/me', authenticateToken, getProfile);
@@ -36,10 +37,10 @@ router.post('/logout', authenticateToken, logout);
 router.put('/change-password', authenticateToken, changePassword);
 
 // OTP verification routes
-router.post('/send-email-otp', sendEmailOTP);
-router.post('/verify-email-otp', verifyEmailOTP);
-router.post('/send-sms-otp', sendSMSOTP);
-router.post('/verify-sms-otp', verifySMSOTP);
+router.post('/send-email-otp', otpLimiter, sendEmailOTP);
+router.post('/verify-email-otp', otpLimiter, verifyEmailOTP);
+router.post('/send-sms-otp', otpLimiter, sendSMSOTP);
+router.post('/verify-sms-otp', otpLimiter, verifySMSOTP);
 
 // Password reset routes
 router.post('/forgot-password', forgotPassword);

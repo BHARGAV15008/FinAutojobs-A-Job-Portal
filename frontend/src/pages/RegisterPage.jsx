@@ -121,6 +121,15 @@ const RegisterPage = () => {
     emailVerified: false,
     phoneVerified: false
   })
+
+  // Password strength state
+  const [passwordStrength, setPasswordStrength] = useState({
+    length: false,
+    hasNumber: false,
+    hasSpecial: false,
+    hasUpper: false,
+    hasLower: false
+  })
   const [selectedSkill, setSelectedSkill] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -164,10 +173,22 @@ const RegisterPage = () => {
   ]
 
   const handleChange = (e) => {
+    const { name, value } = e.target
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
     })
+
+    // Check password strength when password changes
+    if (name === 'password') {
+      setPasswordStrength({
+        length: value.length >= 8,
+        hasNumber: /\d/.test(value),
+        hasSpecial: /[!@#$%^&*(),.?":{}|<>]/.test(value),
+        hasUpper: /[A-Z]/.test(value),
+        hasLower: /[a-z]/.test(value)
+      })
+    }
   }
 
   const handleSkillAdd = () => {
@@ -189,6 +210,12 @@ const RegisterPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    // Prevent multiple submissions
+    if (loading) {
+      console.log('Registration already in progress, ignoring submission')
+      return
+    }
 
     // Validate all required fields
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.password) {
@@ -274,16 +301,15 @@ const RegisterPage = () => {
       })
     }
 
+    console.log('Starting registration with data:', { ...submitData, password: '[HIDDEN]' })
     setLoading(true)
+
     try {
       const result = await signup(submitData)
-      if (result.success) {
-        toast({
-          title: "Success",
-          description: "Account created successfully!",
-        })
-        setLocation('/jobs')
-      } else {
+      console.log('Registration result:', result)
+
+      if (!result.success) {
+        console.error('Registration failed:', result.error)
         toast({
           title: "Error",
           description: result.error || "Failed to create account",
@@ -291,6 +317,7 @@ const RegisterPage = () => {
         })
       }
     } catch (error) {
+      console.error('Registration error:', error)
       toast({
         title: "Error",
         description: error.message || "Failed to create account",
@@ -842,10 +869,35 @@ const RegisterPage = () => {
                       value={formData.confirmPassword}
                       onChange={handleChange}
                       required
+                      error={formData.confirmPassword && formData.password && formData.password !== formData.confirmPassword}
+                      helperText={
+                        formData.confirmPassword && formData.password
+                          ? formData.password === formData.confirmPassword
+                            ? "✓ Passwords match"
+                            : "✗ Passwords do not match"
+                          : ""
+                      }
+                      sx={{
+                        '& .MuiFormHelperText-root': {
+                          color: formData.confirmPassword && formData.password
+                            ? formData.password === formData.confirmPassword
+                              ? 'success.main'
+                              : 'error.main'
+                            : 'text.secondary'
+                        }
+                      }}
                       InputProps={{
                         startAdornment: (
                           <InputAdornment position="start">
-                            <Security color="primary" />
+                            <Security
+                              color={
+                                formData.confirmPassword && formData.password
+                                  ? formData.password === formData.confirmPassword
+                                    ? "success"
+                                    : "error"
+                                  : "primary"
+                              }
+                            />
                           </InputAdornment>
                         ),
                         endAdornment: (

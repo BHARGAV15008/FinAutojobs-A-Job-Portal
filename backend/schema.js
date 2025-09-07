@@ -9,18 +9,13 @@ export const users = sqliteTable('users', {
   password: text('password').notNull(),
   full_name: text('full_name'),
   phone: text('phone'),
-  role: text('role').notNull().default('jobseeker'), // 'jobseeker', 'employer', 'admin'
+  role: text('role').notNull().default('jobseeker'), // 'jobseeker', 'recruiter', 'admin'
   
   // Role-specific fields for applicants
-  skills: text('skills'), // JSON string of skills array
-  qualification: text('qualification'),
+  skills: text('skills'), // JSON string
   experience_years: integer('experience_years'),
+  education: text('education'), // JSON string
   resume_url: text('resume_url'),
-  
-  // Role-specific fields for recruiters/employers
-  company_name: text('company_name'),
-  position: text('position'),
-  company_id: integer('company_id'),
   
   // Profile fields
   bio: text('bio'),
@@ -29,6 +24,9 @@ export const users = sqliteTable('users', {
   linkedin_url: text('linkedin_url'),
   github_url: text('github_url'),
   portfolio_url: text('portfolio_url'),
+  google_id: text('google_id'),
+  microsoft_id: text('microsoft_id'),
+  apple_id: text('apple_id'),
   
   // Status and timestamps
   status: text('status').notNull().default('active'), // 'active', 'inactive', 'suspended'

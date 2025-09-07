@@ -7,7 +7,7 @@ async function throwIfResNotOk(res) {
   }
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE_URL = 'http://localhost:5000';
 
 export async function apiRequest(
   method,
@@ -57,11 +57,11 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
+      staleTime: Infinity,
+      retry: false,
     },
     mutations: {
-      retry: 1,
+      retry: false,
     },
   },
 });

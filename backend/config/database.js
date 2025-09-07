@@ -11,6 +11,7 @@ const __dirname = path.dirname(__filename);
 
 // Schema imports
 import * as schema from '../schema.js';
+import * as dashboardSchema from '../schema/dashboardSchema.js';
 
 // Database file path
 const dbPath = path.join(__dirname, '../data/finautojobs.db');
@@ -222,6 +223,94 @@ const createTables = async () => {
         user_agent TEXT,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         last_used TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    // Create dashboard-specific tables
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS user_preferences (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        theme TEXT DEFAULT 'light',
+        font_size TEXT DEFAULT 'medium',
+        language TEXT DEFAULT 'en',
+        email_notifications INTEGER DEFAULT 1,
+        push_notifications INTEGER DEFAULT 1,
+        job_alerts INTEGER DEFAULT 1,
+        dashboard_layout TEXT DEFAULT 'grid',
+        timezone TEXT DEFAULT 'Asia/Kolkata',
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS job_alerts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        keywords TEXT,
+        location TEXT,
+        salary_min INTEGER,
+        salary_max INTEGER,
+        job_type TEXT,
+        work_mode TEXT,
+        experience_min INTEGER,
+        experience_max INTEGER,
+        skills TEXT,
+        is_active INTEGER DEFAULT 1,
+        frequency TEXT DEFAULT 'daily',
+        last_sent TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS interviews (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        application_id INTEGER NOT NULL,
+        recruiter_id INTEGER NOT NULL,
+        applicant_id INTEGER NOT NULL,
+        job_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT,
+        scheduled_at TEXT NOT NULL,
+        duration INTEGER DEFAULT 60,
+        type TEXT DEFAULT 'video',
+        meeting_link TEXT,
+        location TEXT,
+        status TEXT DEFAULT 'scheduled',
+        feedback TEXT,
+        rating INTEGER,
+        notes TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (application_id) REFERENCES applications(id) ON DELETE CASCADE,
+        FOREIGN KEY (recruiter_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (applicant_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
+      )
+    `);
+
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS notifications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        message TEXT NOT NULL,
+        type TEXT DEFAULT 'info',
+        category TEXT DEFAULT 'general',
+        entity_type TEXT,
+        entity_id INTEGER,
+        is_read INTEGER DEFAULT 0,
+        action_url TEXT,
+        action_text TEXT,
+        expires_at TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       )
     `);

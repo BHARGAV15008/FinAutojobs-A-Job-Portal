@@ -1,0 +1,45 @@
+1. Built and make it All dashboard Advanced, modern and easy to use; Built or modified dashboard like that when user use it then they feel comfort and no trouble in dashboard and they all the content visites from dashboards;
+2. Also we want all dashboard responsive to all devices;
+3. for dashboard reference and template visites below sites:
+	- https://www.andacademy.com/resources/blog/ui-ux-design/dashboard-ui-design/?gad_source=5&gad_campaignid=22972397268&gclid=EAIaIQobChMIrfvVzqHEjwMVdphQBh23AxYOEAAYASAAEgIrc_D_BwE
+	- https://dribbble.com/search/dashboard
+	- https://dribbble.com
+	- https://www.justinmind.com/design-templates
+	- https://www.tableau.com/data-insights/dashboard-showcase
+	- https://www.onething.design/post/dashboard-design
+4. Also you have to combine all the feature of above templates in our dashboard as well;
+5. Here we have 3 Dashboard: RecruiterDashboard, ApplicantDashboard and AdminDashboard;
+6. In Applicant Dashboard:
+	- Settings (show features like theme, font change, etc..)
+	- Profile (Full Name (First name, Surname or lastname), EmailID, Mobile Number, Location, Links (Gituhub, LinkedIn), Highest Qualification (drop down menu), IsExperienced (Yes, No) if Yes then Experience other wise disable it, Resume Upload & update, Bio, Skills (drop down menu));
+	- Recommended (Based on skills and favorite recommanded jobs);
+	- Favorite/Bookmark (Show jobs which is bookmarked and make it favorite)
+	- Applied (Here show all applied job, able to filtered(accepted, rejected, pending, so on), Also able to Withdraw request)
+	- update Resume
+	- Browse Jobs (search jobs based on different filters)
+	- Job Alert (new job arrived related to skills or which is marked by user)
+	- Also analytics and other where show interview schedule fix by recruiter (meetings and assessments time set by recruiter for applicants)
+	- (Above all content Show cards and tabular formats as well);
+7. In Recruiter Dashboard:
+	- - Settings (show features like theme, font change, etc..)
+	- Profile (Full Name (First name, Surname or lastname), EmailID, Mobile Number, Location, Links (LinkedIn), Comapny Name, Role (drop down menu);
+	- Post New Job (Mentioned all required details related job-post)
+	- Alert (when applicant apply for job then show alert here)
+	- Edit post
+	- Manage applicant
+	- Review Applications
+	- Company Analytics 
+	- (Above all content Show cards and tabular formats as well);
+8. In admin Dashboard:
+	- Settings (show features like theme, font change, etc..)
+	- Profile (Full Name (First name, Surname or lastname), EmailID, Mobile Number, Location, Links (Github, LinkedIn), Comapny Name, Role (drop down menu);
+	- Manage Applicants and Recruiter
+	- Applicants (Manageable all things implements here)
+	- recruiter (Manageable all things implements here)
+	- Show Progress and analytical views;
+	- Also show both tabular and non tabular forms;
+	- Able to delete reset, and other things from here database users info, etc..
+	- admin acess all dashboards and manage it;
+7. recruiter can access own same applicant access own dashboard;
+8. Built dashbase or table saperately for all above things and easily manageble;
+9. Also make it separate folder and divide into manageable coponents and cards;

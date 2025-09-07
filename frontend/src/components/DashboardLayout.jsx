@@ -90,9 +90,35 @@ const DashboardLayout = ({ children, title, headerContent }) => {
             </aside>
 
             <main className="flex-1 ml-64">
-                <header className="bg-white border-b border-gray-200 sticky top-0 z-20">
-                    <div className="flex items-center justify-between h-16 px-8">
-                        <Typography variant="h5" className="font-bold text-gray-800">
+                <header
+                    style={{
+                        backgroundColor: 'white',
+                        borderBottom: '1px solid var(--gray-200)',
+                        position: 'sticky',
+                        top: 0,
+                        zIndex: 20
+                    }}
+                >
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            height: '4rem',
+                            padding: '0 clamp(1rem, 5%, 2rem)',
+                            maxWidth: 'var(--max-width)',
+                            margin: '0 auto',
+                            width: '100%'
+                        }}
+                    >
+                        <Typography
+                            variant="h5"
+                            sx={{
+                                fontWeight: 'bold',
+                                color: 'text.primary',
+                                fontSize: { xs: '1.25rem', sm: '1.5rem' }
+                            }}
+                        >
                             {title}
                         </Typography>
                         <div>
@@ -101,7 +127,14 @@ const DashboardLayout = ({ children, title, headerContent }) => {
                     </div>
                 </header>
 
-                <div className="p-8">
+                <div
+                    style={{
+                        padding: 'clamp(1rem, 5%, 2rem)',
+                        maxWidth: 'var(--max-width)',
+                        margin: '0 auto',
+                        width: '100%'
+                    }}
+                >
                     {children}
                 </div>
             </main>

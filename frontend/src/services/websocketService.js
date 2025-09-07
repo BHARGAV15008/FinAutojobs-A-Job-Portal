@@ -16,16 +16,23 @@ class WebSocketService {
       this.disconnect();
     }
 
-    this.socket = io('http://localhost:5000', {
+    const wsUrl = process.env.NODE_ENV === 'production' 
+      ? window.location.origin 
+      : 'http://localhost:5000';
+      
+    this.socket = io(wsUrl, {
       auth: {
         token: token
       },
       transports: ['websocket', 'polling'],
-      timeout: 5000,
+      timeout: 10000,
       reconnection: true,
       reconnectionAttempts: this.maxReconnectAttempts,
       reconnectionDelay: this.reconnectDelay,
-      reconnectionDelayMax: 5000,
+      reconnectionDelayMax: 10000,
+      forceNew: true,
+      upgrade: true,
+      rememberUpgrade: true
     });
 
     this.setupEventHandlers();
@@ -55,8 +62,50 @@ class WebSocketService {
     this.socket.on('connect_error', (error) => {
       console.error('❌ WebSocket connection error:', error);
       this.connected = false;
+      this.reconnectAttempts++;
+      
+      // Emit connection error with retry information
       this.emit('connection_error', {
         error: error.message,
+        reconnectAttempts: this.reconnectAttempts,
+        maxAttempts: this.maxReconnectAttempts,
+        timestamp: new Date().toISOString()
+      });
+      
+      // If max attempts reached, stop trying
+      if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+        console.error('❌ Max reconnection attempts reached. Stopping reconnection.');
+        this.emit('max_reconnect_attempts_reached', {
+          message: 'Unable to connect to real-time services. Please refresh the page.',
+          timestamp: new Date().toISOString()
+        });
+      }
+    });
+
+    this.socket.on('reconnect', (attemptNumber) => {
+      console.log(`✅ Reconnected to WebSocket server after ${attemptNumber} attempts`);
+      this.connected = true;
+      this.reconnectAttempts = 0;
+      this.emit('reconnected', {
+        message: 'Reconnected to real-time services',
+        attemptNumber,
+        timestamp: new Date().toISOString()
+      });
+    });
+
+    this.socket.on('reconnect_error', (error) => {
+      console.error('❌ WebSocket reconnection error:', error);
+      this.emit('reconnect_error', {
+        error: error.message,
+        timestamp: new Date().toISOString()
+      });
+    });
+
+    this.socket.on('reconnect_failed', () => {
+      console.error('❌ WebSocket reconnection failed');
+      this.connected = false;
+      this.emit('reconnect_failed', {
+        message: 'Failed to reconnect to real-time services',
         timestamp: new Date().toISOString()
       });
     });
@@ -206,8 +255,27 @@ class WebSocketService {
     return {
       connected: this.connected,
       reconnectAttempts: this.reconnectAttempts,
-      socketId: this.socket?.id || null
+      maxReconnectAttempts: this.maxReconnectAttempts,
+      socketId: this.socket?.id || null,
+      transport: this.socket?.io?.engine?.transport?.name || null
     };
+  }
+
+  // Manual retry connection
+  retryConnection(token) {
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      console.log('🔄 Manually retrying WebSocket connection...');
+      this.reconnectAttempts = 0; // Reset attempts for manual retry
+      this.connect(token);
+    } else {
+      console.warn('⚠️ Cannot retry: Max reconnection attempts already reached');
+    }
+  }
+
+  // Reset connection state
+  resetConnectionState() {
+    this.reconnectAttempts = 0;
+    this.connected = false;
   }
 }
 

@@ -44,6 +44,59 @@ export const useWebSocket = (token) => {
     const handleConnectionError = (data) => {
       console.error('WebSocket connection error:', data);
       setConnectionStatus(websocketService.getConnectionStatus());
+      
+      // Show user-friendly error notification
+      if (data.reconnectAttempts >= data.maxAttempts) {
+        setNotifications(prev => [
+          {
+            id: Date.now(),
+            type: 'connection_error',
+            title: 'Connection Lost',
+            message: 'Unable to connect to real-time services. Some features may not work properly.',
+            timestamp: data.timestamp,
+            read: false
+          },
+          ...prev
+        ]);
+      }
+    };
+
+    const handleReconnected = (data) => {
+      console.log('WebSocket reconnected:', data);
+      setIsConnected(true);
+      setConnectionStatus(websocketService.getConnectionStatus());
+      
+      // Show reconnection success notification
+      setNotifications(prev => [
+        {
+          id: Date.now(),
+          type: 'reconnected',
+          title: 'Connection Restored',
+          message: 'Real-time services are now working properly.',
+          timestamp: data.timestamp,
+          read: false
+        },
+        ...prev
+      ]);
+    };
+
+    const handleMaxReconnectAttemptsReached = (data) => {
+      console.error('Max reconnect attempts reached:', data);
+      setConnectionStatus(websocketService.getConnectionStatus());
+      
+      // Show persistent error notification
+      setNotifications(prev => [
+        {
+          id: Date.now(),
+          type: 'max_reconnect_reached',
+          title: 'Connection Failed',
+          message: data.message,
+          timestamp: data.timestamp,
+          read: false,
+          persistent: true
+        },
+        ...prev
+      ]);
     };
 
     const handleApplicationStatusUpdated = (data) => {
@@ -146,6 +199,8 @@ export const useWebSocket = (token) => {
     websocketService.on('ws_connected', handleConnected);
     websocketService.on('disconnected', handleDisconnected);
     websocketService.on('connection_error', handleConnectionError);
+    websocketService.on('reconnected', handleReconnected);
+    websocketService.on('max_reconnect_attempts_reached', handleMaxReconnectAttemptsReached);
     websocketService.on('application_status_updated', handleApplicationStatusUpdated);
     websocketService.on('new_job_alert', handleNewJobAlert);
     websocketService.on('new_job_posted_admin', handleNewJobPostedAdmin);
@@ -159,6 +214,8 @@ export const useWebSocket = (token) => {
     eventHandlersRef.current.set('ws_connected', handleConnected);
     eventHandlersRef.current.set('disconnected', handleDisconnected);
     eventHandlersRef.current.set('connection_error', handleConnectionError);
+    eventHandlersRef.current.set('reconnected', handleReconnected);
+    eventHandlersRef.current.set('max_reconnect_attempts_reached', handleMaxReconnectAttemptsReached);
     eventHandlersRef.current.set('application_status_updated', handleApplicationStatusUpdated);
     eventHandlersRef.current.set('new_job_alert', handleNewJobAlert);
     eventHandlersRef.current.set('new_job_posted_admin', handleNewJobPostedAdmin);
@@ -249,6 +306,19 @@ export const useWebSocket = (token) => {
     };
   }, []);
 
+  // Manual retry connection
+  const retryConnection = useCallback(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      websocketService.retryConnection(token);
+    }
+  }, []);
+
+  // Reset connection state
+  const resetConnection = useCallback(() => {
+    websocketService.resetConnectionState();
+  }, []);
+
   return {
     isConnected,
     connectionStatus,
@@ -268,7 +338,9 @@ export const useWebSocket = (token) => {
     markNotificationAsRead,
     clearNotifications,
     clearMessages,
-    addEventListener
+    addEventListener,
+    retryConnection,
+    resetConnection
   };
 };
 

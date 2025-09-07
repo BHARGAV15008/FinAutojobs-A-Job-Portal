@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link } from 'wouter'
 import { useTheme, useMediaQuery, Box, Container, Avatar, Typography, Grid } from '@mui/material'
-import { Business, Calculator, DirectionsCar, TrendingUp, Security } from '@mui/icons-material'
+import { Business, AccountBalance, DirectionsCar, TrendingUp, Security } from '@mui/icons-material'
 import { styled } from '@mui/material/styles'
 
 const BrandingSection = styled(Box)(({ theme }) => ({
@@ -9,6 +9,15 @@ const BrandingSection = styled(Box)(({ theme }) => ({
   color: 'white',
   position: 'relative',
   overflow: 'hidden',
+  minHeight: '100vh',
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  padding: theme.spacing(4),
+  [theme.breakpoints.down('md')]: {
+    padding: theme.spacing(2),
+    minHeight: 'auto'
+  },
   '&::before': {
     content: '""',
     position: 'absolute',
@@ -22,20 +31,35 @@ const BrandingSection = styled(Box)(({ theme }) => ({
 
 const FeatureCard = styled(Box)(({ theme }) => ({
   display: 'flex',
-  alignItems: 'center',
+  alignItems: 'flex-start',
   gap: theme.spacing(2),
+  padding: theme.spacing(2),
+  background: 'rgba(255, 255, 255, 0.1)',
+  borderRadius: theme.shape.borderRadius,
+  backdropFilter: 'blur(10px)',
+  transition: 'transform 0.2s, box-shadow 0.2s',
+  '&:hover': {
+    transform: 'translateY(-2px)',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+  },
+  [theme.breakpoints.down('sm')]: {
+    padding: theme.spacing(1.5),
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center'
+  },
   padding: theme.spacing(2),
   background: 'rgba(255, 255, 255, 0.1)',
   borderRadius: theme.spacing(2),
   backdropFilter: 'blur(10px)',
 }))
 
-const AuthLayout = ({ 
-  children, 
-  title, 
-  subtitle, 
-  linkText, 
-  linkTo, 
+const AuthLayout = ({
+  children,
+  title,
+  subtitle,
+  linkText,
+  linkTo,
   linkLabel,
   showBranding = true,
   brandingWidth = '50%'
@@ -84,7 +108,7 @@ const AuthLayout = ({
               <Grid item xs={6}>
                 <FeatureCard>
                   <Avatar sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)' }}>
-                    <Calculator />
+                    <AccountBalance />
                   </Avatar>
                   <Box>
                     <Typography variant="subtitle1" fontWeight="bold">

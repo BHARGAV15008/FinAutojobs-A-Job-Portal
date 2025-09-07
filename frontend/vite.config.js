@@ -10,7 +10,7 @@ export default defineConfig({
       babel: {
         plugins: ['@emotion/babel-plugin'],
       },
-    })
+    }),
   ],
   resolve: {
     alias: {
@@ -18,12 +18,18 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3001,
+    port: 3002,
+    host: true,
     proxy: {
       '/api': {
         target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+      '/socket.io': {
+        target: 'http://localhost:5000',
+        ws: true,
       },
     },
   },

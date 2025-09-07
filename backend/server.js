@@ -9,6 +9,9 @@ import dotenv from 'dotenv';
 import { createServer } from 'http';
 import WebSocketService from './services/websocketService.js';
 
+// Import enhanced error handling
+import { errorHandler, notFoundHandler, errorMonitor } from './middleware/errorHandler.js';
+
 dotenv.config();
 
 const app = express();
@@ -33,23 +36,21 @@ const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:3001', 
     'http://localhost:3002',
+    'http://localhost:3003',
     'http://localhost:5173',
     'http://localhost:4173',
     'http://127.0.0.1:3000',
     'http://127.0.0.1:3001',
     'http://127.0.0.1:3002',
-    'http://127.0.0.1:5173',
-    'http://localhost:3002'
+    'http://127.0.0.1:3003',
+    'http://127.0.0.1:5173'
 ];
 
 app.use(cors({
-    origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
-            return callback(null, true);
-        }
-        return callback(new Error('Not allowed by CORS'));
-    },
+    origin: true, // Allow all origins temporarily for development
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     optionsSuccessStatus: 200
 }));
 
@@ -76,20 +77,31 @@ app.use(passport.session());
 import { initializeDatabase } from './config/database.js';
 await initializeDatabase();
 
-// Routes
+// Import routes
 import authRoutes from './routes/auth.js';
-import jobsRoutes from './routes/jobs.js';
-import companiesRoutes from './routes/companies.js';
+import jobRoutes from './routes/jobs.js';
+import companyRoutes from './routes/companies.js';
+import applicationRoutes from './routes/applications.js';
+import dashboardRoutes from './routes/dashboard.js';
+import oauthRoutes from './routes/oauth.js';
+import testRoutes from './routes/test.js';
+import notificationsRoutes from './routes/notifications.js';
 import usersRoutes from './routes/users.js';
-import applicationsRoutes from './routes/applications.js';
 import savedJobsRoutes from './routes/savedJobs.js';
+import recruiterRoutes from './routes/recruiters.js';
 
+// Mount routes
 app.use('/api/auth', authRoutes);
-app.use('/api/jobs', jobsRoutes);
-app.use('/api/companies', companiesRoutes);
+app.use('/api/oauth', oauthRoutes);
+app.use('/api/jobs', jobRoutes);
+app.use('/api/companies', companyRoutes);
+app.use('/api/applications', applicationRoutes);
 app.use('/api/users', usersRoutes);
-app.use('/api/applications', applicationsRoutes);
 app.use('/api/saved-jobs', savedJobsRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/notifications', notificationsRoutes);
+app.use('/api/recruiters', recruiterRoutes);
+app.use('/api/test', testRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -100,19 +112,10 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({
-        message: 'Something went wrong!',
-        error: process.env.NODE_ENV === 'development' ? err.message : {}
-    });
-});
-
-// 404 handler
-app.use('*', (req, res) => {
-    res.status(404).json({ message: 'Route not found' });
-});
+// Enhanced error handling middleware
+app.use(errorMonitor);
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 // Initialize WebSocket service
 const webSocketService = new WebSocketService(server);
@@ -122,4 +125,5 @@ server.listen(PORT, () => {
     console.log(`🚀 FinAutoJobs Backend Server running on port ${PORT}`);
     console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
     console.log(`🔌 WebSocket service enabled for real-time features`);
+    console.log(`🛡️ Enhanced error handling enabled`);
 });

@@ -1,0 +1,10 @@
+{
+  "preset": "ts-jest/presets/default-esm",
+  "moduleFileExtensions": ["js", "mjs", "cjs", "json"],
+  "extensionsToTreatAsEsm": [".js"],
+  "transform": {},
+  "testEnvironment": "node",
+  "testMatch": ["**/test/**/*.test.js"],
+  "transformIgnorePatterns": [],
+  "verbose": true
+}

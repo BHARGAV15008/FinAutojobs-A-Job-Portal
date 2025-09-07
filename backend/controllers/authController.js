@@ -60,20 +60,82 @@ export const register = async (req, res) => {
     // Validate required fields
     if (!username || !email || !password) {
       return res.status(400).json({ 
-        message: 'Username, email, and password are required' 
+        message: 'Username, email, and password are required',
+        field: !username ? 'username' : !email ? 'email' : 'password',
+        status: 'error'
       });
     }
 
-    // Check if user already exists
-    const existingUser = await db.select()
+    // Validate email format
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        message: 'Please enter a valid email address',
+        field: 'email',
+        status: 'error'
+      });
+    }
+
+    // Validate password strength
+    if (password.length < 6) {
+      return res.status(400).json({
+        message: 'Password must be at least 6 characters long',
+        field: 'password',
+        status: 'error'
+      });
+    }
+
+    // Validate phone format if provided
+    if (phone) {
+      const phoneRegex = /^\+?[\d\s-()]{10,15}$/;
+      if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
+        return res.status(400).json({
+          message: 'Please enter a valid phone number (10-15 digits)',
+          field: 'phone',
+          status: 'error'
+        });
+      }
+    }
+
+    // Check if user already exists by email
+    const existingEmailUser = await db.select()
       .from(users)
-      .where(or(eq(users.email, email), eq(users.username, username)))
+      .where(eq(users.email, email))
       .limit(1);
 
-    if (existingUser.length > 0) {
+    if (existingEmailUser.length > 0) {
       return res.status(409).json({ 
-        message: 'User with this email or username already exists' 
+        message: 'User with this email already exists',
+        field: 'email'
       });
+    }
+
+    // Check if user already exists by username
+    const existingUsernameUser = await db.select()
+      .from(users)
+      .where(eq(users.username, username))
+      .limit(1);
+
+    if (existingUsernameUser.length > 0) {
+      return res.status(409).json({ 
+        message: 'User with this username already exists',
+        field: 'username'
+      });
+    }
+
+    // Check if phone number already exists (if provided)
+    if (phone) {
+      const existingPhoneUser = await db.select()
+        .from(users)
+        .where(eq(users.phone, phone))
+        .limit(1);
+
+      if (existingPhoneUser.length > 0) {
+        return res.status(409).json({ 
+          message: 'User with this phone number already exists',
+          field: 'phone'
+        });
+      }
     }
 
     // Hash password
@@ -162,9 +224,21 @@ export const login = async (req, res) => {
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(401).json({ 
-        message: 'Invalid credentials' 
+        message: 'Incorrect password',
+        field: 'password',
+        status: 'error'
       });
     }
+
+    // Check if email is verified (disabled for testing)
+    // if (!user.email_verified) {
+    //   return res.status(403).json({
+    //     message: 'Please verify your email address before logging in',
+    //     field: 'email',
+    //     status: 'warning',
+    //     requiresVerification: true
+    //   });
+    // }
 
     // Generate tokens
     const token = generateToken(user);
@@ -365,6 +439,147 @@ export const changePassword = async (req, res) => {
 
   } catch (error) {
     console.error('Change password error:', error);
+    res.status(500).json({ 
+      message: 'Internal server error' 
+    });
+  }
+};
+
+// Forgot Password - Send reset email
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ 
+        message: 'Email is required' 
+      });
+    }
+
+    // Check if user exists
+    const userResult = await db.select()
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+
+    if (userResult.length === 0) {
+      // Don't reveal if email exists or not for security
+      return res.json({ 
+        message: 'If an account with this email exists, a password reset link has been sent.' 
+      });
+    }
+
+    const user = userResult[0];
+
+    // Generate reset token
+    const resetToken = jwt.sign(
+      { userId: user.id, type: 'password_reset' },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '1h' }
+    );
+
+    // Store reset token in database
+    await db.update(users)
+      .set({
+        reset_token: resetToken,
+        reset_token_expires: new Date(Date.now() + 60 * 60 * 1000).toISOString() // 1 hour
+      })
+      .where(eq(users.id, user.id));
+
+    // Send reset email
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3002'}/reset-password?token=${resetToken}`;
+    await sendEmail(
+      email,
+      'FinAutoJobs - Password Reset Request',
+      `Hello ${user.full_name || user.username},
+
+You have requested to reset your password for your FinAutoJobs account.
+
+Click the link below to reset your password:
+${resetUrl}
+
+This link will expire in 1 hour.
+
+If you didn't request this password reset, please ignore this email.
+
+Best regards,
+FinAutoJobs Team`
+    );
+
+    res.json({ 
+      message: 'If an account with this email exists, a password reset link has been sent.' 
+    });
+
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ 
+      message: 'Internal server error' 
+    });
+  }
+};
+
+// Reset Password
+export const resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+      return res.status(400).json({ 
+        message: 'Token and new password are required' 
+      });
+    }
+
+    // Verify reset token
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    } catch (error) {
+      return res.status(400).json({ 
+        message: 'Invalid or expired reset token' 
+      });
+    }
+
+    // Find user with reset token
+    const userResult = await db.select()
+      .from(users)
+      .where(eq(users.reset_token, token))
+      .limit(1);
+
+    if (userResult.length === 0) {
+      return res.status(400).json({ 
+        message: 'Invalid or expired reset token' 
+      });
+    }
+
+    const user = userResult[0];
+
+    // Check if token is expired
+    if (new Date(user.reset_token_expires) < new Date()) {
+      return res.status(400).json({ 
+        message: 'Reset token has expired' 
+      });
+    }
+
+    // Hash new password
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Update password and clear reset token
+    await db.update(users)
+      .set({
+        password: hashedPassword,
+        reset_token: null,
+        reset_token_expires: null,
+        updated_at: new Date().toISOString()
+      })
+      .where(eq(users.id, user.id));
+
+    res.json({ 
+      message: 'Password reset successfully' 
+    });
+
+  } catch (error) {
+    console.error('Reset password error:', error);
     res.status(500).json({ 
       message: 'Internal server error' 
     });
@@ -598,119 +813,6 @@ export const verifySMSOTP = async (req, res) => {
   }
 };
 
-// Forgot Password - Send reset email
-export const forgotPassword = async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({
-        message: 'Email is required'
-      });
-    }
-
-    // Find user by email
-    const userResult = await db.select()
-      .from(users)
-      .where(eq(users.email, email))
-      .limit(1);
-
-    if (userResult.length === 0) {
-      // Don't reveal that user doesn't exist
-      return res.json({
-        message: 'If an account with that email exists, you will receive a password reset email.'
-      });
-    }
-
-    const user = userResult[0];
-
-    // Generate reset token
-    const resetToken = Math.random().toString(36).substr(2, 15) + Math.random().toString(36).substr(2, 15);
-    const resetTokenExpires = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour
-
-    // Update user with reset token
-    await db.update(users)
-      .set({
-        reset_token: resetToken,
-        reset_token_expires: resetTokenExpires
-      })
-      .where(eq(users.id, user.id));
-
-    // Send reset email
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
-    const subject = 'FinAutoJobs - Password Reset Request';
-    const body = `You have requested a password reset for your FinAutoJobs account.\n\nClick the link below to reset your password:\n${resetUrl}\n\nThis link will expire in 1 hour.\n\nIf you didn't request this reset, please ignore this email.`;
-    
-    await sendEmail(email, subject, body);
-
-    res.json({
-      message: 'If an account with that email exists, you will receive a password reset email.'
-    });
-
-  } catch (error) {
-    console.error('Forgot password error:', error);
-    res.status(500).json({
-      message: 'Internal server error'
-    });
-  }
-};
-
-// Reset Password - Reset with token
-export const resetPassword = async (req, res) => {
-  try {
-    const { token, newPassword } = req.body;
-
-    if (!token || !newPassword) {
-      return res.status(400).json({
-        message: 'Reset token and new password are required'
-      });
-    }
-
-    // Find user by reset token
-    const userResult = await db.select()
-      .from(users)
-      .where(eq(users.reset_token, token))
-      .limit(1);
-
-    if (userResult.length === 0) {
-      return res.status(400).json({
-        message: 'Invalid or expired reset token'
-      });
-    }
-
-    const user = userResult[0];
-
-    // Check if token is expired
-    if (new Date(user.reset_token_expires) < new Date()) {
-      return res.status(400).json({
-        message: 'Reset token has expired'
-      });
-    }
-
-    // Hash new password
-    const saltRounds = 12;
-    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
-
-    // Update password and clear reset token
-    await db.update(users)
-      .set({
-        password: hashedPassword,
-        reset_token: null,
-        reset_token_expires: null
-      })
-      .where(eq(users.id, user.id));
-
-    res.json({
-      message: 'Password reset successfully'
-    });
-
-  } catch (error) {
-    console.error('Reset password error:', error);
-    res.status(500).json({
-      message: 'Internal server error'
-    });
-  }
-};
 
 // Middleware to authenticate JWT token
 export const authenticateToken = (req, res, next) => {
