@@ -18,11 +18,28 @@ import {
 
 const router = express.Router();
 
+// Import validation schemas
+import {
+  validateRequest,
+  registrationSchema,
+  loginSchema,
+  passwordChangeSchema,
+  otpSchema
+} from '../middleware/validation.js';
+
 // Register new user
-router.post('/register', registrationLimiter, register);
+router.post('/register', 
+  registrationLimiter, 
+  validateRequest(registrationSchema),
+  register
+);
 
 // Login user
-router.post('/login', loginLimiter, login);
+router.post('/login', 
+  loginLimiter, 
+  validateRequest(loginSchema),
+  login
+);
 
 // Get current user profile
 router.get('/me', authenticateToken, getProfile);

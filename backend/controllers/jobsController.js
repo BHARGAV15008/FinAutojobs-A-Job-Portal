@@ -228,7 +228,7 @@ export const createJob = async (req, res) => {
     // Validate required fields
     if (!title || !description || !location || !job_type || !company_id) {
       return res.status(400).json({ 
-        message: 'Title, description, location, job type, and company are required' 
+        message: 'Title, description, location, job_type, and company_id are required' 
       });
     }
 

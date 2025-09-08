@@ -2,15 +2,20 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
-import rateLimit from 'express-rate-limit';
 import session from 'express-session';
 import passport from 'passport';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
-import WebSocketService from './services/websocketService.js';
 
-// Import enhanced error handling
+// Import configurations
+import corsOptions from './config/cors.js';
+import securityHeaders from './config/security.js';
+
+// Import middleware
 import { errorHandler, notFoundHandler, errorMonitor } from './middleware/errorHandler.js';
+import { xssMiddleware, sqlInjectionMiddleware, sanitizeInputs, payloadSizeMiddleware } from './middleware/security.js';
+import { apiLimiter } from './middleware/rateLimiter.js';
+import { sanitizeRequest, sqlInjectionPrevention, preventNoSqlInjection } from './middleware/sanitization.js';
 
 dotenv.config();
 
@@ -20,43 +25,49 @@ const PORT = process.env.PORT || 5000;
 // Create HTTP server for Socket.IO
 const server = createServer(app);
 
-// Security middleware
-app.use(helmet());
+// Apply security headers
+app.use(helmet(securityHeaders));
 app.use(compression());
 
-// Rate limiting
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100 // limit each IP to 100 requests per windowMs
-});
-app.use('/api/', limiter);
+// Apply security middleware
+app.use(xssMiddleware);
+app.use(sqlInjectionMiddleware);
+app.use(sanitizeInputs);
+app.use(payloadSizeMiddleware);
 
-// CORS configuration
-const allowedOrigins = [
-    'http://localhost:3000',
-    'http://localhost:3001', 
-    'http://localhost:3002',
-    'http://localhost:3003',
-    'http://localhost:5173',
-    'http://localhost:4173',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:3001',
-    'http://127.0.0.1:3002',
-    'http://127.0.0.1:3003',
-    'http://127.0.0.1:5173'
-];
+// Apply request sanitization
+app.use(sanitizeRequest);
+app.use(sqlInjectionPrevention);
+app.use(preventNoSqlInjection);
 
-app.use(cors({
-    origin: true, // Allow all origins temporarily for development
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-    optionsSuccessStatus: 200
+// Apply rate limiting to API routes
+app.use('/api/', apiLimiter);
+
+// Apply single CORS configuration with corsOptions
+app.use(cors(corsOptions));
+
+// Body parsing middleware with enhanced security
+app.use(express.json({ 
+    limit: '10mb',
+    verify: (req, res, buf) => {
+        try {
+            if (buf.length) {
+                JSON.parse(buf);
+            }
+        } catch(e) {
+            res.status(400).json({ 
+                status: 'error',
+                message: 'Invalid JSON payload',
+                error: e.message 
+            });
+            throw e;
+        }
+    }
 }));
-
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ 
+    extended: true,
+    limit: '10mb'
+}));
 
 // Session configuration
 app.use(session({
@@ -90,21 +101,42 @@ import usersRoutes from './routes/users.js';
 import savedJobsRoutes from './routes/savedJobs.js';
 import recruiterRoutes from './routes/recruiters.js';
 
-// Mount routes
-app.use('/api/auth', authRoutes);
-app.use('/api/oauth', oauthRoutes);
-app.use('/api/jobs', jobRoutes);
-app.use('/api/companies', companyRoutes);
-app.use('/api/applications', applicationRoutes);
-app.use('/api/users', usersRoutes);
-app.use('/api/saved-jobs', savedJobsRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/notifications', notificationsRoutes);
-app.use('/api/recruiters', recruiterRoutes);
-app.use('/api/test', testRoutes);
+// Mount routes under /api
+const apiRouter = express.Router();
+apiRouter.use('/auth', authRoutes);
+apiRouter.use('/oauth', oauthRoutes);
+apiRouter.use('/jobs', jobRoutes);
+apiRouter.use('/companies', companyRoutes);
+apiRouter.use('/applications', applicationRoutes);
+apiRouter.use('/users', usersRoutes);
+apiRouter.use('/saved-jobs', savedJobsRoutes);
+apiRouter.use('/dashboard', dashboardRoutes);
+apiRouter.use('/notifications', notificationsRoutes);
+apiRouter.use('/recruiters', recruiterRoutes);
+apiRouter.use('/test', testRoutes);
+
+app.use('/api', apiRouter);
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
+app.get('/health', (req, res) => {
+    res.json({
+        status: 'OK',
+        message: 'FinAutoJobs API is running',
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Add health check endpoint under /api 
+apiRouter.get('/health', (req, res) => {
+    res.json({
+        status: 'OK',
+        message: 'FinAutoJobs API is running',
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Root health check
+app.get('/', (req, res) => {
     res.json({
         status: 'OK',
         message: 'FinAutoJobs API is running',
@@ -117,13 +149,9 @@ app.use(errorMonitor);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-// Initialize WebSocket service
-const webSocketService = new WebSocketService(server);
-
 // Start server
 server.listen(PORT, () => {
     console.log(`🚀 FinAutoJobs Backend Server running on port ${PORT}`);
     console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
-    console.log(`🔌 WebSocket service enabled for real-time features`);
     console.log(`🛡️ Enhanced error handling enabled`);
 });

@@ -1,0 +1,204 @@
+{
+  "timestamp": "2025-09-08T02:29:27.079Z",
+  "summary": {
+    "totalTests": 37,
+    "successful": 5,
+    "failed": 10,
+    "warnings": 3
+  },
+  "results": [
+    {
+      "timestamp": "2025-09-08T02:29:26.298Z",
+      "type": "test",
+      "message": "🏗️ Starting Full Stack Architecture Analysis"
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.417Z",
+      "type": "error",
+      "message": "Backend server health check failed"
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.419Z",
+      "type": "test",
+      "message": "🔐 Starting Authentication & Registration Testing"
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.424Z",
+      "type": "info",
+      "message": "Testing applicant registration..."
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.447Z",
+      "type": "error",
+      "message": "applicant registration failed: request to http://localhost:5001/api/auth/register failed, reason: "
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.450Z",
+      "type": "info",
+      "message": "Testing recruiter registration..."
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.477Z",
+      "type": "error",
+      "message": "recruiter registration failed: request to http://localhost:5001/api/auth/register failed, reason: "
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.482Z",
+      "type": "info",
+      "message": "Testing admin registration..."
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.494Z",
+      "type": "error",
+      "message": "admin registration failed: request to http://localhost:5001/api/auth/register failed, reason: "
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.503Z",
+      "type": "info",
+      "message": "Testing applicant login..."
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.510Z",
+      "type": "error",
+      "message": "applicant login failed: request to http://localhost:5001/api/auth/login failed, reason: "
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.511Z",
+      "type": "info",
+      "message": "Testing recruiter login..."
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.516Z",
+      "type": "error",
+      "message": "recruiter login failed: request to http://localhost:5001/api/auth/login failed, reason: "
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.516Z",
+      "type": "info",
+      "message": "Testing admin login..."
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.521Z",
+      "type": "error",
+      "message": "admin login failed: request to http://localhost:5001/api/auth/login failed, reason: "
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.521Z",
+      "type": "test",
+      "message": "💼 Starting Job Post Management Testing"
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.522Z",
+      "type": "error",
+      "message": "No recruiter token available for job management tests"
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.525Z",
+      "type": "test",
+      "message": "📊 Starting Dashboard Integration Testing"
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.529Z",
+      "type": "test",
+      "message": "👤 Starting Profile Management Testing"
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.535Z",
+      "type": "test",
+      "message": "📝 Starting Application Flow Testing"
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.544Z",
+      "type": "warning",
+      "message": "Missing jobseeker/applicant token or jobs for application testing"
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.551Z",
+      "type": "test",
+      "message": "🔗 Starting OAuth Integration Testing"
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.568Z",
+      "type": "error",
+      "message": "OAuth configuration retrieval failed"
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.580Z",
+      "type": "info",
+      "message": "Testing google OAuth endpoint..."
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.603Z",
+      "type": "success",
+      "message": "google OAuth endpoint is accessible"
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.623Z",
+      "type": "info",
+      "message": "Testing microsoft OAuth endpoint..."
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.647Z",
+      "type": "success",
+      "message": "microsoft OAuth endpoint is accessible"
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.667Z",
+      "type": "info",
+      "message": "Testing apple OAuth endpoint..."
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.683Z",
+      "type": "success",
+      "message": "apple OAuth endpoint is accessible"
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.695Z",
+      "type": "test",
+      "message": "⚡ Starting Load Handling Testing"
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.887Z",
+      "type": "success",
+      "message": "Load test completed: 0/30 requests successful in 43ms"
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.926Z",
+      "type": "error",
+      "message": "Load handling test failed (<80% success rate)"
+    },
+    {
+      "timestamp": "2025-09-08T02:29:26.952Z",
+      "type": "test",
+      "message": "🔄 Starting Frontend-Backend Integration Testing"
+    },
+    {
+      "timestamp": "2025-09-08T02:29:27.010Z",
+      "type": "warning",
+      "message": "CORS configuration may have issues"
+    },
+    {
+      "timestamp": "2025-09-08T02:29:27.034Z",
+      "type": "warning",
+      "message": "API response format inconsistency detected"
+    },
+    {
+      "timestamp": "2025-09-08T02:29:27.040Z",
+      "type": "test",
+      "message": "🧹 Starting Cleanup Process"
+    },
+    {
+      "timestamp": "2025-09-08T02:29:27.065Z",
+      "type": "success",
+      "message": "Cleanup completed"
+    }
+  ],
+  "createdUsers": [
+    "applicant",
+    "recruiter",
+    "admin"
+  ],
+  "authTokensObtained": [],
+  "createdJobs": 0,
+  "createdApplications": 0
+}

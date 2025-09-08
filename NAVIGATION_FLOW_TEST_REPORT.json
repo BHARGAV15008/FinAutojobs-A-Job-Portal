@@ -1,0 +1,260 @@
+{
+  "timestamp": "2025-09-07T23:33:23.514Z",
+  "summary": {
+    "totalTests": 47,
+    "successful": 25,
+    "failed": 0,
+    "warnings": 1
+  },
+  "flows_tested": [
+    "Registration → Login",
+    "Login → Dashboard",
+    "Job Application Flow",
+    "Job Posting Management",
+    "Profile Management",
+    "OAuth Integration",
+    "Notification Flow",
+    "Error Handling"
+  ],
+  "results": [
+    {
+      "timestamp": "2025-09-07T23:33:23.325Z",
+      "type": "test",
+      "message": "🔐 Testing Registration → Login Flow"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.327Z",
+      "type": "info",
+      "message": "Testing applicant registration flow..."
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.396Z",
+      "type": "success",
+      "message": "applicant registration successful"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.403Z",
+      "type": "success",
+      "message": "applicant login after registration successful"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.404Z",
+      "type": "info",
+      "message": "Testing recruiter registration flow..."
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.410Z",
+      "type": "success",
+      "message": "recruiter registration successful"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.415Z",
+      "type": "success",
+      "message": "recruiter login after registration successful"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.416Z",
+      "type": "test",
+      "message": "📊 Testing Login → Dashboard Redirection"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.416Z",
+      "type": "info",
+      "message": "Testing applicant dashboard access..."
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.421Z",
+      "type": "success",
+      "message": "applicant dashboard access successful"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.421Z",
+      "type": "info",
+      "message": "Dashboard data: Jobs: 5, Users: 205"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.421Z",
+      "type": "info",
+      "message": "Testing recruiter dashboard access..."
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.427Z",
+      "type": "success",
+      "message": "recruiter dashboard access successful"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.427Z",
+      "type": "info",
+      "message": "Dashboard data: Jobs: 5, Users: 205"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.427Z",
+      "type": "test",
+      "message": "💼 Testing Job Application Flow"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.431Z",
+      "type": "success",
+      "message": "Found job to apply for: Senior Software Engineer (Updated) at TechCorp Inc"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.437Z",
+      "type": "success",
+      "message": "Job application submitted successfully"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.443Z",
+      "type": "success",
+      "message": "Application retrieval successful (5 applications)"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.444Z",
+      "type": "test",
+      "message": "📝 Testing Job Posting Management Flow"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.451Z",
+      "type": "success",
+      "message": "Job posting created successfully"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.456Z",
+      "type": "success",
+      "message": "Created job appears in job listings"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.461Z",
+      "type": "success",
+      "message": "Job posting updated successfully"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.465Z",
+      "type": "success",
+      "message": "Job posting deleted successfully"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.465Z",
+      "type": "test",
+      "message": "👤 Testing Profile Management Flow"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.465Z",
+      "type": "info",
+      "message": "Testing applicant profile management..."
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.469Z",
+      "type": "success",
+      "message": "applicant profile retrieved successfully"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.473Z",
+      "type": "success",
+      "message": "applicant profile update successful"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.473Z",
+      "type": "info",
+      "message": "Testing recruiter profile management..."
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.477Z",
+      "type": "success",
+      "message": "recruiter profile retrieved successfully"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.481Z",
+      "type": "success",
+      "message": "recruiter profile update successful"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.481Z",
+      "type": "test",
+      "message": "🔗 Testing OAuth Integration Flow"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.484Z",
+      "type": "success",
+      "message": "OAuth configuration retrieved successfully"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.484Z",
+      "type": "info",
+      "message": "Testing google OAuth flow..."
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.488Z",
+      "type": "success",
+      "message": "google OAuth flow successful"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.488Z",
+      "type": "info",
+      "message": "Testing microsoft OAuth flow..."
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.494Z",
+      "type": "success",
+      "message": "microsoft OAuth flow successful"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.494Z",
+      "type": "info",
+      "message": "Testing apple OAuth flow..."
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.498Z",
+      "type": "success",
+      "message": "apple OAuth flow successful"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.499Z",
+      "type": "test",
+      "message": "🔔 Testing Notification Flow"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.499Z",
+      "type": "info",
+      "message": "Testing applicant notifications..."
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.502Z",
+      "type": "success",
+      "message": "applicant notifications retrieved successfully (0 notifications)"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.502Z",
+      "type": "info",
+      "message": "Testing recruiter notifications..."
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.505Z",
+      "type": "success",
+      "message": "recruiter notifications retrieved successfully (0 notifications)"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.505Z",
+      "type": "test",
+      "message": "⚠️ Testing Error Handling and Edge Cases"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.509Z",
+      "type": "success",
+      "message": "Invalid login properly rejected"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.511Z",
+      "type": "warning",
+      "message": "Unauthorized access not properly handled"
+    },
+    {
+      "timestamp": "2025-09-07T23:33:23.514Z",
+      "type": "success",
+      "message": "Non-existent endpoint properly returns 404"
+    }
+  ],
+  "authTokensObtained": [
+    "applicant",
+    "recruiter"
+  ]
+}
