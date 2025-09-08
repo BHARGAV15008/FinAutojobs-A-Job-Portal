@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 
-const BASE_URL = 'http://localhost:5001';
+const BASE_URL = 'http://localhost:5000';
 
 class IndividualEndpointTester {
     constructor() {
@@ -24,6 +24,7 @@ class IndividualEndpointTester {
     async makeRequest(endpoint, options = {}) {
         try {
             const url = `${BASE_URL}${endpoint}`;
+            console.log(`Making request to: ${url}`);
             const response = await fetch(url, {
                 headers: {
                     'Content-Type': 'application/json',
@@ -32,9 +33,18 @@ class IndividualEndpointTester {
                 ...options
             });
             
-            const data = await response.json();
+            let data;
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                console.log(`JSON parse error: ${jsonError.message}`);
+                data = { error: 'Invalid JSON response' };
+            }
+            
+            console.log(`Response status: ${response.status}, data:`, data);
             return { response, data, status: response.status };
         } catch (error) {
+            console.log(`Request error: ${error.message}`);
             return { error: error.message, status: 0 };
         }
     }
@@ -44,7 +54,7 @@ class IndividualEndpointTester {
 
         // 1. Health Check
         this.log('Testing GET /api/health');
-        const { data: health, status: healthStatus } = await this.makeRequest('/health');
+        const { data: health, status: healthStatus } = await this.makeRequest('/api/health');
         if (healthStatus === 200) {
             this.log(`Health check successful: ${health.message}`, 'success');
         } else {
@@ -55,13 +65,15 @@ class IndividualEndpointTester {
         this.log('Testing POST /api/auth/register');
         const registerData = {
             username: 'endpoint_test_' + Date.now(),
-            email: 'endpoint@test.com',
-            password: 'Test123!',
-            full_name: 'Endpoint Test User',
+            email: 'endpoint_test_' + Date.now() + '@test.com',
+            password: 'TestPassword123!',
+            confirmPassword: 'TestPassword123!',
+            fullName: 'Endpoint Test User',
+            phone: '+1234567890',
             role: 'jobseeker'
         };
         
-        const { data: regResult, status: regStatus } = await this.makeRequest('/auth/register', {
+        const { data: regResult, status: regStatus } = await this.makeRequest('/api/auth/register', {
             method: 'POST',
             body: JSON.stringify(registerData)
         });
@@ -75,10 +87,10 @@ class IndividualEndpointTester {
 
         // 3. User Login
         this.log('Testing POST /api/auth/login');
-        const { data: loginResult, status: loginStatus } = await this.makeRequest('/auth/login', {
+        const { data: loginResult, status: loginStatus } = await this.makeRequest('/api/auth/login', {
             method: 'POST',
             body: JSON.stringify({
-                username: registerData.username,
+                email: registerData.email,
                 password: registerData.password
             })
         });
@@ -94,7 +106,7 @@ class IndividualEndpointTester {
 
         // 4. Get Jobs
         this.log('Testing GET /api/jobs');
-        const { data: jobs, status: jobsStatus } = await this.makeRequest('/jobs');
+        const { data: jobs, status: jobsStatus } = await this.makeRequest('/api/jobs');
         if (jobsStatus === 200) {
             this.log(`Jobs retrieved successfully (${jobs.jobs?.length || 0} jobs)`, 'success');
         } else {
@@ -105,29 +117,36 @@ class IndividualEndpointTester {
         this.log('Testing POST /api/jobs');
         const jobData = {
             title: 'Test Job Position',
-            company: 'Test Company',
-            location: 'Test Location',
-            salary: '$50,000',
             description: 'Test job description',
             requirements: 'Test requirements',
-            type: 'full-time',
-            category: 'testing'
+            location: 'Test Location',
+            salary_min: 45000,
+            salary_max: 55000,
+            salary_currency: 'USD',
+            job_type: 'full-time',
+            work_mode: 'remote',
+            experience_min: 1,
+            experience_max: 3,
+            company_id: 1
         };
         
-        const { data: createJob, status: createStatus } = await this.makeRequest('/jobs', {
+        const { data: jobResult, status: jobCreateStatus } = await this.makeRequest('/api/jobs', {
             method: 'POST',
-            body: JSON.stringify(jobData)
+            body: JSON.stringify(jobData),
+            headers: {
+                'Authorization': `Bearer ${this.authToken}`
+            }
         });
         
-        if (createStatus === 201 || createStatus === 200) {
+        if (jobCreateStatus === 201 || jobCreateStatus === 200) {
             this.log('Job creation successful', 'success');
         } else {
-            this.log(`Job creation failed: ${createJob?.message}`, 'error');
+            this.log(`Job creation failed: ${jobResult?.message}`, 'error');
         }
 
         // 6. Get Companies
         this.log('Testing GET /api/companies');
-        const { data: companies, status: companiesStatus } = await this.makeRequest('/companies');
+        const { data: companies, status: companiesStatus } = await this.makeRequest('/api/companies');
         if (companiesStatus === 200) {
             this.log(`Companies retrieved successfully (${companies.companies?.length || 0} companies)`, 'success');
         } else {
@@ -136,9 +155,13 @@ class IndividualEndpointTester {
 
         // 7. Get Applications
         this.log('Testing GET /api/applications');
-        const { data: apps, status: appsStatus } = await this.makeRequest('/applications');
+        const { data: applications, status: appsStatus } = await this.makeRequest('/api/applications', {
+            headers: {
+                'Authorization': `Bearer ${this.authToken}`
+            }
+        });
         if (appsStatus === 200) {
-            this.log(`Applications retrieved successfully (${apps.applications?.length || 0} applications)`, 'success');
+            this.log(`Applications retrieved successfully (${applications.applications?.length || 0} applications)`, 'success');
         } else {
             this.log('Applications retrieval failed', 'error');
         }
@@ -147,14 +170,16 @@ class IndividualEndpointTester {
         this.log('Testing POST /api/applications');
         const appData = {
             job_id: 1,
-            cover_letter: 'Test cover letter',
-            resume_url: 'https://example.com/resume.pdf',
-            applicant_id: 1
+            cover_letter: 'Test cover letter for this position',
+            resume_url: 'https://example.com/resume.pdf'
         };
         
-        const { data: createApp, status: createAppStatus } = await this.makeRequest('/applications', {
+        const { data: createApp, status: createAppStatus } = await this.makeRequest('/api/applications', {
             method: 'POST',
-            body: JSON.stringify(appData)
+            body: JSON.stringify(appData),
+            headers: {
+                'Authorization': `Bearer ${this.authToken}`
+            }
         });
         
         if (createAppStatus === 201 || createAppStatus === 200) {
@@ -166,7 +191,7 @@ class IndividualEndpointTester {
         // 9. Get Profile
         if (this.authToken) {
             this.log('Testing GET /api/users/profile');
-            const { data: profile, status: profileStatus } = await this.makeRequest('/users/profile', {
+            const { data: profile, status: profileStatus } = await this.makeRequest('/api/users/profile', {
                 headers: { 'Authorization': `Bearer ${this.authToken}` }
             });
             if (profileStatus === 200) {
@@ -184,7 +209,7 @@ class IndividualEndpointTester {
                 bio: 'Updated bio for testing'
             };
             
-            const { data: updateProfile, status: updateStatus } = await this.makeRequest('/users/profile', {
+            const { data: updateResult, status: updateStatus } = await this.makeRequest('/api/users/profile', {
                 method: 'PUT',
                 headers: { 'Authorization': `Bearer ${this.authToken}` },
                 body: JSON.stringify(updateData)
@@ -200,7 +225,7 @@ class IndividualEndpointTester {
         // 11. Get Notifications
         if (this.authToken) {
             this.log('Testing GET /api/notifications');
-            const { data: notifications, status: notifStatus } = await this.makeRequest('/notifications', {
+            const { data: notifications, status: notifStatus } = await this.makeRequest('/api/notifications', {
                 headers: { 'Authorization': `Bearer ${this.authToken}` }
             });
             if (notifStatus === 200) {
@@ -213,7 +238,7 @@ class IndividualEndpointTester {
         // 12. Dashboard Stats
         if (this.authToken) {
             this.log('Testing GET /api/dashboard/stats');
-            const { data: stats, status: statsStatus } = await this.makeRequest('/dashboard/stats', {
+            const { data: stats, status: statsStatus } = await this.makeRequest('/api/dashboard/stats', {
                 headers: { 'Authorization': `Bearer ${this.authToken}` }
             });
             if (statsStatus === 200) {
@@ -225,7 +250,7 @@ class IndividualEndpointTester {
 
         // 13. OAuth Config
         this.log('Testing GET /api/oauth/config');
-        const { data: oauthConfig, status: oauthStatus } = await this.makeRequest('/oauth/config');
+        const { data: oauthConfig, status: oauthStatus } = await this.makeRequest('/api/oauth/config');
         if (oauthStatus === 200) {
             this.log(`OAuth config retrieved: Google: ${oauthConfig.google?.enabled}, Microsoft: ${oauthConfig.microsoft?.enabled}, Apple: ${oauthConfig.apple?.enabled}`, 'success');
         } else {
@@ -236,15 +261,15 @@ class IndividualEndpointTester {
         const providers = ['google', 'microsoft', 'apple'];
         for (const provider of providers) {
             this.log(`Testing POST /api/oauth/${provider}`);
-            const { data: oauthResult, status: oauthProviderStatus } = await this.makeRequest(`/oauth/${provider}`, {
+            const { status: providerStatus } = await this.makeRequest(`/api/oauth/${provider}`, {
                 method: 'POST',
                 body: JSON.stringify({ token: `test-${provider}-token` })
             });
             
-            if (oauthProviderStatus === 200) {
+            if (providerStatus === 200) {
                 this.log(`${provider} OAuth successful`, 'success');
             } else {
-                this.log(`${provider} OAuth failed: ${oauthResult?.message}`, 'error');
+                this.log(`${provider} OAuth failed`, 'error');
             }
         }
 
@@ -253,11 +278,12 @@ class IndividualEndpointTester {
         const failed = this.results.filter(r => r.type === 'error').length;
         const total = this.results.filter(r => r.type === 'success' || r.type === 'error').length;
         
-        console.log(`\n📊 Individual Endpoint Testing Complete!`);
-        console.log(`✅ Successful: ${successful}/${total} (${((successful/total)*100).toFixed(1)}%)`);
-        console.log(`❌ Failed: ${failed}/${total} (${((failed/total)*100).toFixed(1)}%)`);
+        console.log('\n📊 Test Summary:');
+        console.log(`✅ Successful: ${successful}`);
+        console.log(`❌ Failed: ${failed}`);
+        console.log(`📈 Success Rate: ${total > 0 ? Math.round((successful / total) * 100) : 0}%`);
         
-        return { successful, failed, total, results: this.results };
+        return { successful, failed, total, successRate: total > 0 ? Math.round((successful / total) * 100) : 0 };
     }
 }
 

@@ -683,24 +683,174 @@ export const verifyEmailOTP = async (req, res) => {
         .set({ email_verified: true })
         .where(eq(users.email, email));
     } catch (dbError) {
-      // User might not exist yet (during registration), that's okay
-      console.log('User not found for email verification update:', email);
+;
+        // User might not exist yet (during registration), that's okay
+        console.log('User not found for email verification update:', email);
     }
 
     res.json({
-      message: 'Email verified successfully',
-      verified: true
+        message: 'Email verified successfully',
+        verified: true
     });
 
   } catch (error) {
     console.error('Verify email OTP error:', error);
     res.status(500).json({ 
-      message: 'Failed to verify email OTP' 
+        message: 'Failed to verify email OTP' 
     });
   }
 };
 
 // Send SMS OTP
+export const sendSMSOTP = async (req, res) => {
+  try {
+    const { phone } = req.body;
+
+    if (!phone) {
+      return res.status(400).json({ 
+        message: 'Phone number is required' 
+      });
+    }
+
+    // Generate OTP
+    const otp = generateOTP();
+    
+    // Store OTP with expiration (5 minutes)
+    const otpKey = `sms_${phone}`;
+    otpStorage.set(otpKey, {
+      otp,
+      expiresAt: Date.now() + 5 * 60 * 1000, // 5 minutes
+      attempts: 0
+    });
+
+    // Send SMS
+    const message = `Your FinAutoJobs verification code is: ${otp}. This code will expire in 5 minutes.`;
+    
+    await sendSMS(phone, message);
+
+    res.json({
+      message: 'OTP sent successfully to your phone',
+      expiresIn: 300 // 5 minutes in seconds
+    });
+
+  } catch (error) {
+    console.error('Send SMS OTP error:', error);
+    res.status(500).json({ 
+      message: 'Failed to send SMS OTP' 
+    });
+  }
+};
+
+// Verify SMS OTP
+export const verifySMSOTP = async (req, res) => {
+  try {
+    const { phone, otp } = req.body;
+
+    if (!phone || !otp) {
+      return res.status(400).json({ 
+        message: 'Phone number and OTP are required' 
+      });
+    }
+
+    const otpKey = `sms_${phone}`;
+    const storedOtpData = otpStorage.get(otpKey);
+
+    if (!storedOtpData) {
+      return res.status(400).json({ 
+        message: 'OTP not found or expired' 
+      });
+    }
+
+    // Check if OTP is expired
+    if (Date.now() > storedOtpData.expiresAt) {
+      otpStorage.delete(otpKey);
+      return res.status(400).json({ 
+        message: 'OTP has expired' 
+      });
+    }
+
+    // Check attempts limit
+    if (storedOtpData.attempts >= 3) {
+      otpStorage.delete(otpKey);
+      return res.status(400).json({ 
+        message: 'Too many failed attempts. Please request a new OTP.' 
+      });
+    }
+
+    // Verify OTP
+    if (storedOtpData.otp !== otp) {
+      storedOtpData.attempts += 1;
+      otpStorage.set(otpKey, storedOtpData);
+      
+      return res.status(400).json({ 
+        message: 'Invalid OTP',
+        attemptsLeft: 3 - storedOtpData.attempts
+      });
+    }
+
+    // OTP is valid, remove from storage
+    otpStorage.delete(otpKey);
+
+    // Update user's phone verification status if user exists
+    try {
+      await db.update(users)
+        .set({ phone_verified: true })
+        .where(eq(users.phone, phone));
+    } catch (dbError) {
+      // User might not exist yet (during registration), that's okay
+      console.log('User not found for phone verification update:', phone);
+    }
+
+    res.json({
+      message: 'Phone number verified successfully',
+      verified: true
+    });
+
+  } catch (error) {
+    console.error('Verify SMS OTP error:', error);
+    res.status(500).json({ 
+      message: 'Failed to verify SMS OTP' 
+    });
+  }
+};
+
+// Middleware to authenticate JWT token
+export const authenticateToken = (req, res, next) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+    if (!token) {
+      return res.status(401).json({ 
+        message: 'Access token required' 
+      });
+    }
+
+    jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key', (err, decoded) => {
+      if (err) {
+        if (err.name === 'TokenExpiredError') {
+          return res.status(401).json({
+            message: 'Token has expired',
+            code: 'TOKEN_EXPIRED'
+          });
+        }
+        return res.status(403).json({ 
+          message: 'Invalid token',
+          code: 'INVALID_TOKEN'
+        });
+      }
+      
+      req.user = decoded;
+      next();
+    });
+  } catch (error) {
+    console.error('Authentication error:', error);
+    res.status(500).json({
+      message: 'Internal server error during authentication',
+      code: 'AUTH_ERROR'
+    });
+  }
+};// Send SMS OTP
 export const sendSMSOTP = async (req, res) => {
   try {
     const { phone } = req.body;

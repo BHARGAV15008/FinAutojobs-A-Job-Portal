@@ -92,8 +92,8 @@ export const payloadSizeMiddleware = (req, res, next) => {
     });
   }
 
-  // Check for valid JSON if Content-Type is application/json
-  if (req.headers['content-type']?.includes('application/json')) {
+  // Check for valid JSON if Content-Type is application/json and there's a body
+  if (req.headers['content-type']?.includes('application/json') && req.body && Object.keys(req.body).length > 0) {
     try {
       JSON.parse(JSON.stringify(req.body));
     } catch (e) {

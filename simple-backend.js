@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const PORT = 5000;
+const PORT = 5001;
 
 // Enhanced CORS middleware with proper preflight handling
 app.use(cors({

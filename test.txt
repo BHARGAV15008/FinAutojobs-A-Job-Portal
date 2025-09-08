@@ -158,3 +158,102 @@ e:\FinAutoJobs > node edge-case-test.js
 ⚠️ Malformed auth header handling could be improved
 🧪 Testing large payload handling
 ⚠️ Large payload handling working (no limits detected)
+
+
+============================
+Admin@DESKTOP-SQVUCUI MINGW64 /e/FinAutoJobs (main)
+$ cd e:/FinAutoJobs/backend && npx cross-env PORT=5001 node server.js
+[dotenv@17.2.2] injecting env (6) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+✅ Connected to SQLite database with Drizzle ORM
+✅ Database tables created successfully
+🚀 FinAutoJobs Backend Server running on port 5001
+📊 Health check: http://localhost:5001/api/health
+🛡️ Enhanced error handling enabled
+
+Admin@DESKTOP-SQVUCUI MINGW64 /e/FinAutoJobs/backend (main)
+$ cd e:/FinAutoJobs && node individual-endpoint-test.js
+� Testing All API Endpoints Individually
+
+� Testing GET /api/health
+❌ Health check failed
+� Testing POST /api/auth/register
+❌ Registration failed: undefined
+� Testing POST /api/auth/login
+❌ Login failed: undefined
+� Testing GET /api/jobs
+❌ Jobs retrieval failed
+� Testing POST /api/jobs
+❌ Job creation failed: undefined
+� Testing GET /api/companies
+❌ Companies retrieval failed
+� Testing GET /api/applications
+❌ Applications retrieval failed
+� Testing POST /api/applications
+❌ Application creation failed: undefined
+� Testing GET /api/oauth/config
+❌ OAuth config retrieval failed
+� Testing POST /api/oauth/google
+❌ google OAuth failed: undefined
+� Testing POST /api/oauth/microsoft
+❌ microsoft OAuth failed: undefined
+� Testing POST /api/oauth/apple
+❌ apple OAuth failed: undefined
+
+� Individual Endpoint Testing Complete!
+✅ Successful: 0/12 (0.0%)
+❌ Failed: 12/12 (100.0%)
+
+Admin@DESKTOP-SQVUCUI MINGW64 /e/FinAutoJobs (main)
+$ cd e:/FinAutoJobs && node comprehensive-full-stack-test.js
+� Starting Comprehensive Full-Stack Testing Suite
+
+� [2025-09-08T02:28:22.121Z] �️ Starting Full Stack Architecture Analysis
+❌ [2025-09-08T02:28:22.159Z] Backend server health check failed
+� [2025-09-08T02:28:22.159Z] � Starting Authentication & Registration Testing
+� [2025-09-08T02:28:22.160Z] Testing applicant registration...
+❌ [2025-09-08T02:28:22.176Z] applicant registration failed: request to http://localhost:5000/api/auth/regist
+er failed, reason:
+� [2025-09-08T02:28:22.176Z] Testing recruiter registration...
+❌ [2025-09-08T02:28:22.182Z] recruiter registration failed: request to http://localhost:5000/api/auth/regist
+er failed, reason:
+� [2025-09-08T02:28:22.182Z] Testing admin registration...
+❌ [2025-09-08T02:28:22.194Z] admin registration failed: request to http://localhost:5000/api/auth/register f
+ailed, reason:
+� [2025-09-08T02:28:22.194Z] Testing applicant login...
+❌ [2025-09-08T02:28:22.198Z] applicant login failed: request to http://localhost:5000/api/auth/login failed,
+ reason:
+� [2025-09-08T02:28:22.198Z] Testing recruiter login...
+❌ [2025-09-08T02:28:22.206Z] recruiter login failed: request to http://localhost:5000/api/auth/login failed,
+ reason:
+� [2025-09-08T02:28:22.206Z] Testing admin login...
+❌ [2025-09-08T02:28:22.210Z] admin login failed: request to http://localhost:5000/api/auth/login failed, rea
+son:
+� [2025-09-08T02:28:22.210Z] � Starting Job Post Management Testing
+❌ [2025-09-08T02:28:22.210Z] No recruiter token available for job management tests
+� [2025-09-08T02:28:22.211Z] � Starting Dashboard Integration Testing
+� [2025-09-08T02:28:22.211Z] � Starting Profile Management Testing
+� [2025-09-08T02:28:22.212Z] � Starting Application Flow Testing
+⚠️ [2025-09-08T02:28:22.212Z] Missing jobseeker/applicant token or jobs for application testing
+� [2025-09-08T02:28:22.212Z] � Starting OAuth Integration Testing
+❌ [2025-09-08T02:28:22.215Z] OAuth configuration retrieval failed
+� [2025-09-08T02:28:22.215Z] Testing google OAuth endpoint...
+✅ [2025-09-08T02:28:22.223Z] google OAuth endpoint is accessible
+� [2025-09-08T02:28:22.224Z] Testing microsoft OAuth endpoint...
+✅ [2025-09-08T02:28:22.228Z] microsoft OAuth endpoint is accessible
+� [2025-09-08T02:28:22.229Z] Testing apple OAuth endpoint...
+✅ [2025-09-08T02:28:22.232Z] apple OAuth endpoint is accessible
+� [2025-09-08T02:28:22.233Z] ⚡ Starting Load Handling Testing
+✅ [2025-09-08T02:28:22.286Z] Load test completed: 0/30 requests successful in 28ms
+❌ [2025-09-08T02:28:22.287Z] Load handling test failed (<80% success rate)
+� [2025-09-08T02:28:22.288Z] � Starting Frontend-Backend Integration Testing
+⚠️ [2025-09-08T02:28:22.291Z] CORS configuration may have issues
+⚠️ [2025-09-08T02:28:22.293Z] API response format inconsistency detected
+� [2025-09-08T02:28:22.294Z] � Starting Cleanup Process
+✅ [2025-09-08T02:28:22.294Z] Cleanup completed
+✅ [2025-09-08T02:28:22.295Z] Test report generated: E:\FinAutoJobs\FULL_STACK_TEST_REPORT.json
+
+� Full-Stack Testing Suite Completed!
+� Results: 5 successful, 10 failed, 3 warnings
+
+Admin@DESKTOP-SQVUCUI MINGW64 /e/FinAutoJobs (main)
+$

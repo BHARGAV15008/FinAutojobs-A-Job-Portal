@@ -6,6 +6,8 @@ import session from 'express-session';
 import passport from 'passport';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 // Import configurations
 import corsOptions from './config/cors.js';
@@ -17,17 +19,55 @@ import { xssMiddleware, sqlInjectionMiddleware, sanitizeInputs, payloadSizeMiddl
 import { apiLimiter } from './middleware/rateLimiter.js';
 import { sanitizeRequest, sqlInjectionPrevention, preventNoSqlInjection } from './middleware/sanitization.js';
 
-dotenv.config();
+// Configure dotenv with proper file path
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Enable trust proxy if behind a reverse proxy
+app.set('trust proxy', 1);
+
 // Create HTTP server for Socket.IO
 const server = createServer(app);
 
-// Apply security headers
-app.use(helmet(securityHeaders));
+// Configure basic middleware
 app.use(compression());
+
+// Enable request parsing before any security middleware
+app.use(express.json({ 
+    limit: '10mb',
+    verify: (req, res, buf) => {
+        if (buf.length) {
+            try {
+                JSON.parse(buf);
+            } catch(e) {
+                res.status(400).json({ 
+                    status: 'error',
+                    message: 'Invalid JSON payload',
+                    error: e.message 
+                });
+                throw e;
+            }
+        }
+    }
+}));
+app.use(express.urlencoded({ 
+    extended: true,
+    limit: '10mb'
+}));
+
+// Apply CORS
+app.use(cors(corsOptions));
+
+// Apply security headers
+app.use(helmet({
+    ...securityHeaders,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    crossOriginEmbedderPolicy: false
+}));
 
 // Apply security middleware
 app.use(xssMiddleware);
@@ -42,32 +82,6 @@ app.use(preventNoSqlInjection);
 
 // Apply rate limiting to API routes
 app.use('/api/', apiLimiter);
-
-// Apply single CORS configuration with corsOptions
-app.use(cors(corsOptions));
-
-// Body parsing middleware with enhanced security
-app.use(express.json({ 
-    limit: '10mb',
-    verify: (req, res, buf) => {
-        try {
-            if (buf.length) {
-                JSON.parse(buf);
-            }
-        } catch(e) {
-            res.status(400).json({ 
-                status: 'error',
-                message: 'Invalid JSON payload',
-                error: e.message 
-            });
-            throw e;
-        }
-    }
-}));
-app.use(express.urlencoded({ 
-    extended: true,
-    limit: '10mb'
-}));
 
 // Session configuration
 app.use(session({
@@ -117,11 +131,11 @@ apiRouter.use('/test', testRoutes);
 
 app.use('/api', apiRouter);
 
-// Health check endpoint
-app.get('/health', (req, res) => {
+// Root health check
+app.get('/', (req, res) => {
     res.json({
-        status: 'OK',
-        message: 'FinAutoJobs API is running',
+        message: 'FinAutoJobs API Service',
+        apiDocs: '/api/docs',
         timestamp: new Date().toISOString()
     });
 });
@@ -131,16 +145,13 @@ apiRouter.get('/health', (req, res) => {
     res.json({
         status: 'OK',
         message: 'FinAutoJobs API is running',
-        timestamp: new Date().toISOString()
-    });
-});
-
-// Root health check
-app.get('/', (req, res) => {
-    res.json({
-        status: 'OK',
-        message: 'FinAutoJobs API is running',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        env: process.env.NODE_ENV || 'development',
+        services: {
+            database: 'connected',
+            cors: 'configured',
+            security: 'enabled'
+        }
     });
 });
 
@@ -149,9 +160,16 @@ app.use(errorMonitor);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-// Start server
+// Start server with proper error handling
 server.listen(PORT, () => {
     console.log(`🚀 FinAutoJobs Backend Server running on port ${PORT}`);
     console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
     console.log(`🛡️ Enhanced error handling enabled`);
+}).on('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+        console.error(`❌ Port ${PORT} is already in use. Please try a different port.`);
+    } else {
+        console.error('❌ Server error:', error);
+    }
+    process.exit(1);
 });

@@ -2,7 +2,7 @@ import fetch from 'node-fetch';
 import fs from 'fs';
 import path from 'path';
 
-const BASE_URL = 'http://localhost:5001';
+const BASE_URL = 'http://localhost:5002';
 const FRONTEND_URL = 'http://localhost:3000';
 
 class FullStackTester {
@@ -10,25 +10,28 @@ class FullStackTester {
         this.testResults = [];
         this.authTokens = {};
         this.testUsers = {
-            applicant: {
+            jobseeker: {
                 username: 'test_applicant_' + Date.now(),
-                email: 'applicant@test.com',
-                password: 'TestPass123!',
+                email: 'test_applicant_' + Date.now() + '@test.com',
+                password: 'TestPassword123!',
                 full_name: 'Test Applicant',
+                phone: '+1234567890',
                 role: 'jobseeker'
             },
             recruiter: {
                 username: 'test_recruiter_' + Date.now(),
-                email: 'recruiter@test.com',
-                password: 'TestPass123!',
+                email: 'test_recruiter_' + Date.now() + '@test.com',
+                password: 'TestPassword123!',
                 full_name: 'Test Recruiter',
+                phone: '+1234567891',
                 role: 'recruiter'
             },
             admin: {
                 username: 'test_admin_' + Date.now(),
-                email: 'admin@test.com',
-                password: 'TestPass123!',
+                email: 'test_admin_' + Date.now() + '@test.com',
+                password: 'TestPassword123!',
                 full_name: 'Test Admin',
+                phone: '+1234567892',
                 role: 'admin'
             }
         };
@@ -73,13 +76,27 @@ class FullStackTester {
                     throw new Error('Invalid JSON payload');
                 }
             }
-            
+
+            // Send the request            
             const response = await fetch(url, requestOptions);
             
-            const data = await response.json();
-            return { response, data, status: response.status };
+            // Only try to parse JSON if we get a success response
+            const data = response.status !== 404 ? await response.json() : null;
+
+            // Return structured response data
+            return { 
+                response, 
+                data, 
+                status: response.status,
+                headers: Object.fromEntries(response.headers)
+            };
         } catch (error) {
-            return { error: error.message, status: 0 };
+            // Return error info but don't throw
+            return { 
+                error: error.message || 'Network error', 
+                status: 0,
+                data: null 
+            };
         }
     }
 
@@ -87,10 +104,24 @@ class FullStackTester {
     async analyzeArchitecture() {
         this.log('🏗️ Starting Full Stack Architecture Analysis', 'test');
         
+        // Check root endpoint first
+        const { data: rootData, status: rootStatus } = await this.makeRequest('/');
+        if (rootStatus === 200) {
+            this.log('API service root is accessible', 'success');
+        } else {
+            this.log('API service root check failed', 'error');
+            return false;
+        }
+
         // Check backend health
         const { data: healthData, status: healthStatus } = await this.makeRequest('/api/health');
         if (healthStatus === 200) {
-            this.log('Backend server is running and healthy', 'success');
+            if (healthData.services) {
+                this.log(`Backend is healthy with services: ${Object.entries(healthData.services)
+                    .map(([key, val]) => `${key}=${val}`).join(', ')}`, 'success');
+            } else {
+                this.log('Backend server is running and healthy', 'success');
+            }
         } else {
             this.log('Backend server health check failed', 'error');
             return false;
@@ -103,11 +134,14 @@ class FullStackTester {
         ];
         
         for (const endpoint of endpoints) {
-            const { status } = await this.makeRequest(endpoint);
+            const { status, data } = await this.makeRequest(endpoint);
             if (status !== 404) {
-                this.log(`Endpoint ${endpoint} is accessible`, 'success');
+                this.log(`Endpoint ${endpoint} is accessible [Status: ${status}]`, 'success');
             } else {
-                this.log(`Endpoint ${endpoint} not found`, 'warning');
+                this.log(`Endpoint ${endpoint} not found [Status: ${status}]`, 'warning');
+            }
+            if (data?.message) {
+                this.log(`  ${endpoint} response: ${data.message}`, 'info');
             }
         }
 
@@ -119,12 +153,15 @@ class FullStackTester {
         this.log('🔐 Starting Authentication & Registration Testing', 'test');
         
         // Test user registration for all roles
-        for (const role of ['applicant', 'recruiter', 'admin']) {
+        for (const role of ['jobseeker', 'recruiter', 'admin']) {
             this.log(`Testing ${role} registration...`);
-            const userData = { ...this.testUsers[role], role };
+            const userData = { ...this.testUsers[role] };
             
-            const { data, status } = await this.makeRequest('/api/auth/register', {
+            const { data, status, error } = await this.makeRequest('/api/auth/register', {
                 method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify(userData)
             });
             
@@ -134,7 +171,7 @@ class FullStackTester {
                     this.authTokens[role] = data.token;
                 }
             } else {
-                this.log(`${role} registration failed: ${error || data?.message}`, 'error');
+                this.log(`${role} registration failed: ${data?.message || error?.message}`, 'error');
             }
         }
 
@@ -144,8 +181,11 @@ class FullStackTester {
             
             const { data, status, error } = await this.makeRequest('/api/auth/login', {
                 method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({
-                    username: userData.username,
+                    email: userData.email,
                     password: userData.password
                 })
             });
@@ -156,7 +196,7 @@ class FullStackTester {
                     this.authTokens[role] = data.token;
                 }
             } else {
-                this.log(`${role} login failed: ${error || data?.message}`, 'error');
+                this.log(`${role} login failed: ${data?.message || error?.message}`, 'error');
             }
         }
 
@@ -375,11 +415,11 @@ class FullStackTester {
         this.log('🔗 Starting OAuth Integration Testing', 'test');
         
         // Test OAuth configuration
-        const { data: oauthConfig } = await this.makeRequest('/api/oauth/config');
+        const { data, status } = await this.makeRequest('/api/oauth/config');
         
-        if (oauthConfig.status === 200) {
+        if (status === 200) {
             this.log('OAuth configuration retrieved successfully', 'success');
-            this.log(`OAuth providers: Google: ${oauthConfig.data.google?.enabled}, Microsoft: ${oauthConfig.data.microsoft?.enabled}, Apple: ${oauthConfig.data.apple?.enabled}`);
+            this.log(`OAuth providers: Google: ${data?.google?.enabled}, Microsoft: ${data?.microsoft?.enabled}, Apple: ${data?.apple?.enabled}`);
         } else {
             this.log('OAuth configuration retrieval failed', 'error');
         }
@@ -389,8 +429,11 @@ class FullStackTester {
         for (const provider of providers) {
             this.log(`Testing ${provider} OAuth endpoint...`);
             
-            const { status: oauthStatus } = await this.makeRequest(`/oauth/${provider}`, {
+            const { status: oauthStatus } = await this.makeRequest(`/api/oauth/${provider}`, {
                 method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({ token: 'test-token' })
             });
             
