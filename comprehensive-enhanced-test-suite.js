@@ -4,7 +4,7 @@
 class ComprehensiveEnhancedTestSuite {
     constructor() {
         this.baseURL = 'http://localhost:5000';
-        this.frontendURL = 'http://localhost:3002';
+        this.frontendURL = 'http://localhost:3000';
         this.results = {
             total: 0,
             passed: 0,

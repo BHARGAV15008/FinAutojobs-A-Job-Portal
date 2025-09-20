@@ -99,10 +99,62 @@ const Navigation = () => {
             href={item.path}
             onClick={handleDrawerToggle}
             selected={location === item.path}
-            sx={{ cursor: 'pointer' }}
+            sx={{ 
+              cursor: 'pointer',
+              position: 'relative',
+              transition: 'all 0.3s ease-in-out',
+              '&:hover': {
+                bgcolor: 'rgba(25, 118, 210, 0.08)',
+                transform: 'translateX(4px)',
+                '& .MuiListItemIcon-root': {
+                  color: 'primary.main',
+                },
+                '& .MuiListItemText-primary': {
+                  color: 'primary.main',
+                  fontWeight: 600,
+                },
+              },
+              '&.Mui-selected': {
+                bgcolor: 'rgba(25, 118, 210, 0.12)',
+                '& .MuiListItemIcon-root': {
+                  color: 'primary.main',
+                },
+                '& .MuiListItemText-primary': {
+                  color: 'primary.main',
+                  fontWeight: 600,
+                },
+                '&::after': {
+                  content: '""',
+                  position: 'absolute',
+                  right: 0,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: 4,
+                  height: '60%',
+                  bgcolor: 'primary.main',
+                  borderRadius: '4px 0 0 4px',
+                },
+              },
+            }}
           >
-            <ListItemIcon>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.label} />
+            <ListItemIcon 
+              sx={{ 
+                transition: 'color 0.3s ease-in-out',
+                color: location === item.path ? 'primary.main' : 'text.secondary',
+              }}
+            >
+              {item.icon}
+            </ListItemIcon>
+            <ListItemText 
+              primary={item.label}
+              sx={{
+                '& .MuiListItemText-primary': {
+                  transition: 'all 0.3s ease-in-out',
+                  fontWeight: location === item.path ? 600 : 400,
+                  color: location === item.path ? 'primary.main' : 'text.primary',
+                },
+              }}
+            />
           </ListItem>
         ))}
       </List>
@@ -115,10 +167,62 @@ const Navigation = () => {
             href={item.path}
             onClick={handleDrawerToggle}
             selected={location === item.path}
-            sx={{ cursor: 'pointer' }}
+            sx={{ 
+              cursor: 'pointer',
+              position: 'relative',
+              transition: 'all 0.3s ease-in-out',
+              '&:hover': {
+                bgcolor: 'rgba(25, 118, 210, 0.08)',
+                transform: 'translateX(4px)',
+                '& .MuiListItemIcon-root': {
+                  color: 'primary.main',
+                },
+                '& .MuiListItemText-primary': {
+                  color: 'primary.main',
+                  fontWeight: 600,
+                },
+              },
+              '&.Mui-selected': {
+                bgcolor: 'rgba(25, 118, 210, 0.12)',
+                '& .MuiListItemIcon-root': {
+                  color: 'primary.main',
+                },
+                '& .MuiListItemText-primary': {
+                  color: 'primary.main',
+                  fontWeight: 600,
+                },
+                '&::after': {
+                  content: '""',
+                  position: 'absolute',
+                  right: 0,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: 4,
+                  height: '60%',
+                  bgcolor: 'primary.main',
+                  borderRadius: '4px 0 0 4px',
+                },
+              },
+            }}
           >
-            <ListItemIcon>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.label} />
+            <ListItemIcon 
+              sx={{ 
+                transition: 'color 0.3s ease-in-out',
+                color: location === item.path ? 'primary.main' : 'text.secondary',
+              }}
+            >
+              {item.icon}
+            </ListItemIcon>
+            <ListItemText 
+              primary={item.label}
+              sx={{
+                '& .MuiListItemText-primary': {
+                  transition: 'all 0.3s ease-in-out',
+                  fontWeight: location === item.path ? 600 : 400,
+                  color: location === item.path ? 'primary.main' : 'text.primary',
+                },
+              }}
+            />
           </ListItem>
         ))}
       </List>
@@ -208,26 +312,78 @@ const Navigation = () => {
           {/* Desktop menu */}
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, ml: 4 }}>
             {mainMenuItems.map((item) => (
-              <Button
+              <Box
                 key={item.label}
-                component={Link}
-                href={item.path}
-                onClick={handleCloseNavMenu}
                 sx={{
+                  position: 'relative',
                   mx: 1,
-                  color: location === item.path ? 'primary.main' : 'text.primary',
-                  bgcolor: location === item.path ? 'primary.50' : 'transparent',
-                  display: 'flex',
-                  alignItems: 'center',
-                  '&:hover': {
-                    bgcolor: 'primary.50',
-                    color: 'primary.main',
+                  '&:hover .nav-underline': {
+                    width: '80%',
+                    opacity: 0.7,
                   },
                 }}
-                startIcon={item.icon}
               >
-                {item.label}
-              </Button>
+                <Button
+                  component={Link}
+                  href={item.path}
+                  onClick={handleCloseNavMenu}
+                  sx={{
+                    color: location === item.path ? 'primary.main' : 'text.primary',
+                    bgcolor: 'transparent',
+                    display: 'flex',
+                    alignItems: 'center',
+                    fontWeight: location === item.path ? 600 : 500,
+                    textTransform: 'none',
+                    fontSize: '1rem',
+                    px: 2,
+                    py: 1,
+                    borderRadius: 1,
+                    transition: 'all 0.3s ease-in-out',
+                    '&:hover': {
+                      bgcolor: 'rgba(25, 118, 210, 0.08)',
+                      color: 'primary.main',
+                      transform: 'translateY(-1px)',
+                      fontWeight: 600,
+                    },
+                  }}
+                  startIcon={item.icon}
+                >
+                  {item.label}
+                </Button>
+                {/* Active underline */}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    bottom: -2,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: location === item.path ? '80%' : '0%',
+                    height: 3,
+                    bgcolor: 'primary.main',
+                    borderRadius: '2px 2px 0 0',
+                    transition: 'width 0.3s ease-in-out',
+                    opacity: location === item.path ? 1 : 0,
+                    zIndex: 2,
+                  }}
+                />
+                {/* Hover underline */}
+                <Box
+                  className="nav-underline"
+                  sx={{
+                    position: 'absolute',
+                    bottom: -2,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: location === item.path ? '0%' : '0%',
+                    height: 3,
+                    bgcolor: 'primary.main',
+                    borderRadius: '2px 2px 0 0',
+                    transition: 'all 0.3s ease-in-out',
+                    opacity: 0,
+                    zIndex: 1,
+                  }}
+                />
+              </Box>
             ))}
           </Box>
 
@@ -242,19 +398,47 @@ const Navigation = () => {
                     variant="contained"
                     color="primary"
                     startIcon={<PostAdd />}
-                    sx={{ mr: 2 }}
+                    sx={{ 
+                      mr: 2,
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      px: 3,
+                      py: 1,
+                      borderRadius: 2,
+                      transition: 'all 0.3s ease-in-out',
+                      boxShadow: '0 2px 8px rgba(25, 118, 210, 0.3)',
+                      '&:hover': {
+                        transform: 'translateY(-1px)',
+                        boxShadow: '0 6px 16px rgba(25, 118, 210, 0.4)',
+                        bgcolor: 'primary.dark',
+                      },
+                    }}
                   >
                     Post Job
                   </Button>
                 )}
                 <Tooltip title="Open settings">
-                  <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+                  <IconButton 
+                    onClick={handleOpenUserMenu} 
+                    sx={{ 
+                      p: 0,
+                      transition: 'transform 0.3s ease-in-out',
+                      '&:hover': {
+                        transform: 'scale(1.1)',
+                      },
+                    }}
+                  >
                     <Avatar
                       alt={user.name}
                       src={user.avatar}
                       sx={{
                         bgcolor: 'primary.main',
                         color: 'white',
+                        transition: 'all 0.3s ease-in-out',
+                        boxShadow: '0 2px 8px rgba(25, 118, 210, 0.3)',
+                        '&:hover': {
+                          boxShadow: '0 4px 16px rgba(25, 118, 210, 0.4)',
+                        },
                       }}
                     >
                       {user.name?.charAt(0)}
@@ -318,6 +502,20 @@ const Navigation = () => {
                   variant="outlined"
                   color="primary"
                   startIcon={<Login />}
+                  sx={{
+                    textTransform: 'none',
+                    fontWeight: 500,
+                    px: 3,
+                    py: 1,
+                    borderRadius: 2,
+                    transition: 'all 0.3s ease-in-out',
+                    '&:hover': {
+                      transform: 'translateY(-1px)',
+                      boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
+                      borderColor: 'primary.main',
+                      bgcolor: 'rgba(25, 118, 210, 0.04)',
+                    },
+                  }}
                 >
                   Login
                 </Button>
@@ -326,6 +524,20 @@ const Navigation = () => {
                   href="/register"
                   variant="contained"
                   color="primary"
+                  sx={{
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    px: 3,
+                    py: 1,
+                    borderRadius: 2,
+                    transition: 'all 0.3s ease-in-out',
+                    boxShadow: '0 2px 8px rgba(25, 118, 210, 0.3)',
+                    '&:hover': {
+                      transform: 'translateY(-1px)',
+                      boxShadow: '0 6px 16px rgba(25, 118, 210, 0.4)',
+                      bgcolor: 'primary.dark',
+                    },
+                  }}
                 >
                   Sign Up
                 </Button>

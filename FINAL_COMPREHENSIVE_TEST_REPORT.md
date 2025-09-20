@@ -182,7 +182,7 @@ Reliability Grade: A+
 ### Active Services
 ```bash
 Backend API: ✅ RUNNING (http://localhost:5000)
-Frontend App: ✅ RUNNING (http://localhost:3002)
+Frontend App: ✅ RUNNING (http://localhost:3000)
 Database: ✅ OPERATIONAL (Mock data)
 Browser Previews: ✅ ACCESSIBLE
 ```

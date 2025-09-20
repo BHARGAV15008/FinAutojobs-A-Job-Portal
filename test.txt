@@ -162,12 +162,12 @@ e:\FinAutoJobs > node edge-case-test.js
 
 ============================
 Admin@DESKTOP-SQVUCUI MINGW64 /e/FinAutoJobs (main)
-$ cd e:/FinAutoJobs/backend && npx cross-env PORT=5001 node server.js
+$ cd e:/FinAutoJobs/backend && npx cross-env PORT=5000 node server.js
 [dotenv@17.2.2] injecting env (6) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
 ✅ Connected to SQLite database with Drizzle ORM
 ✅ Database tables created successfully
-🚀 FinAutoJobs Backend Server running on port 5001
-📊 Health check: http://localhost:5001/api/health
+🚀 FinAutoJobs Backend Server running on port 5000
+📊 Health check: http://localhost:5000/api/health
 🛡️ Enhanced error handling enabled
 
 Admin@DESKTOP-SQVUCUI MINGW64 /e/FinAutoJobs/backend (main)

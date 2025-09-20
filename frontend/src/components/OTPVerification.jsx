@@ -82,7 +82,7 @@ const OTPVerification = ({
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ textAlign: 'center', pb: 1 }}>
         <Verified sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
-        <Typography variant="h5" fontWeight="bold">
+        <Typography component="span" variant="h5" fontWeight="bold">
           {title || 'Verify OTP'}
         </Typography>
       </DialogTitle>

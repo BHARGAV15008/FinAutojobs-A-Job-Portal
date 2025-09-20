@@ -160,7 +160,7 @@ This report documents the **comprehensive backend-frontend integration testing**
 
 ### 1. Frontend Server Accessibility - VALIDATED ✅
 **Achievement**: Frontend development server successfully running and accessible
-- **Server Status**: Running on http://localhost:3002
+- **Server Status**: Running on http://localhost:3000
 - **Framework**: Vite + React with hot reload
 - **Accessibility**: 100% accessible from backend integration tests
 - **Performance**: Fast startup and response times
@@ -210,7 +210,7 @@ This report documents the **comprehensive backend-frontend integration testing**
 
 ### Active Development Environment
 - **Backend API**: http://localhost:5000 ✅ **RUNNING**
-- **Frontend App**: http://localhost:3002 ✅ **ACCESSIBLE**
+- **Frontend App**: http://localhost:3000 ✅ **ACCESSIBLE**
 - **Browser Previews**: Available for interactive testing
 - **Real-time Testing**: Fully functional
 
@@ -292,7 +292,7 @@ The FinAutoJobs application has successfully passed **three comprehensive testin
 
 ### Active Development Environment
 - **Backend API**: http://localhost:5000 ✅ **RUNNING**
-- **Frontend App**: http://localhost:3002 ✅ **ACCESSIBLE**
+- **Frontend App**: http://localhost:3000 ✅ **ACCESSIBLE**
 - **Browser Previews**: Available for interactive testing
 - **Real-time Testing**: Fully functional
 

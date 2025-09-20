@@ -2,7 +2,7 @@ import fetch from 'node-fetch';
 import fs from 'fs';
 import path from 'path';
 
-const BASE_URL = 'http://localhost:5002';
+const BASE_URL = 'http://localhost:5000';
 const FRONTEND_URL = 'http://localhost:3000';
 
 class FullStackTester {

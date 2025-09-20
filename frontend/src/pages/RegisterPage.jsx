@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'wouter'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../components/ui/use-toast'
@@ -140,10 +140,17 @@ const RegisterPage = () => {
   const [showEmailOTP, setShowEmailOTP] = useState(false)
   const [showPhoneOTP, setShowPhoneOTP] = useState(false)
   const [otpLoading, setOtpLoading] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
 
   const { signup, sendEmailOTP, verifyEmailOTP, sendSMSOTP, verifySMSOTP } = useAuth()
   const { toast } = useToast()
   const [, setLocation] = useLocation()
+
+  // Ensure component is mounted before allowing toast calls
+  useEffect(() => {
+    setIsMounted(true)
+    return () => setIsMounted(false)
+  }, [])
 
   const skillOptions = [
     'JavaScript', 'Python', 'Java', 'React', 'Node.js', 'Angular', 'Vue.js',
@@ -219,66 +226,80 @@ const RegisterPage = () => {
 
     // Validate all required fields
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.password) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive"
-      })
+      if (isMounted) {
+        toast({
+          title: "Error",
+          description: "Please fill in all required fields",
+          variant: "destructive"
+        })
+      }
       return
     }
 
     if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Passwords do not match",
-        variant: "destructive"
-      })
+      if (isMounted) {
+        toast({
+          title: "Error",
+          description: "Passwords do not match",
+          variant: "destructive"
+        })
+      }
       return
     }
 
     if (!acceptTerms) {
-      toast({
-        title: "Error",
-        description: "Please accept the terms and conditions",
-        variant: "destructive"
-      })
+      if (isMounted) {
+        toast({
+          title: "Error",
+          description: "Please accept the terms and conditions",
+          variant: "destructive"
+        })
+      }
       return
     }
 
     if (!emailVerified) {
-      toast({
-        title: "Error",
-        description: "Please verify your email address",
-        variant: "destructive"
-      })
+      if (isMounted) {
+        toast({
+          title: "Error",
+          description: "Please verify your email address",
+          variant: "destructive"
+        })
+      }
       return
     }
 
     if (!phoneVerified) {
-      toast({
-        title: "Error",
-        description: "Please verify your phone number",
-        variant: "destructive"
-      })
+      if (isMounted) {
+        toast({
+          title: "Error",
+          description: "Please verify your phone number",
+          variant: "destructive"
+        })
+      }
       return
     }
 
     // Additional role-specific validations
     if (activeTab === 0 && formData.skills.length === 0) {
-      toast({
-        title: "Error",
-        description: "Please add at least one skill",
-        variant: "destructive"
-      })
+      if (isMounted) {
+        toast({
+          title: "Error",
+          description: "Please add at least one skill",
+          variant: "destructive"
+        })
+      }
       return
     }
 
     if (activeTab === 1 && (!formData.companyName || !formData.position)) {
-      toast({
-        title: "Error",
-        description: "Please fill in all company details",
-        variant: "destructive"
-      })
+      if (isMounted) {
+        toast({
+          title: "Error",
+          description: "Please fill in all company details",
+          variant: "destructive"
+        })
+      }
       return
     }
 
@@ -310,19 +331,23 @@ const RegisterPage = () => {
 
       if (!result.success) {
         console.error('Registration failed:', result.error)
-        toast({
-          title: "Error",
-          description: result.error || "Failed to create account",
-          variant: "destructive"
-        })
+        if (isMounted) {
+          toast({
+            title: "Error",
+            description: result.error || "Failed to create account",
+            variant: "destructive"
+          })
+        }
       }
     } catch (error) {
       console.error('Registration error:', error)
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create account",
-        variant: "destructive"
-      })
+      if (isMounted) {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to create account",
+          variant: "destructive"
+        })
+      }
     } finally {
       setLoading(false)
     }
@@ -334,11 +359,13 @@ const RegisterPage = () => {
 
   const handleVerifyEmail = async () => {
     if (!formData.email) {
-      toast({
-        title: "Error",
-        description: "Please enter your email address first",
-        variant: "destructive"
-      })
+      if (isMounted) {
+        toast({
+          title: "Error",
+          description: "Please enter your email address first",
+          variant: "destructive"
+        })
+      }
       return
     }
 
@@ -346,33 +373,41 @@ const RegisterPage = () => {
       const result = await sendEmailOTP(formData.email)
       if (result.success) {
         setShowEmailOTP(true)
-        toast({
-          title: "OTP Sent",
-          description: "Please check your email for the verification code",
-        })
+        if (isMounted) {
+          toast({
+            title: "OTP Sent",
+            description: "Please check your email for the verification code",
+          })
+        }
       } else {
+        if (isMounted) {
+          toast({
+            title: "Error",
+            description: result.error || "Failed to send email OTP",
+            variant: "destructive"
+          })
+        }
+      }
+    } catch (error) {
+      if (isMounted) {
         toast({
           title: "Error",
-          description: result.error || "Failed to send email OTP",
+          description: "Failed to send email OTP",
           variant: "destructive"
         })
       }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to send email OTP",
-        variant: "destructive"
-      })
     }
   }
 
   const handleVerifyPhone = async () => {
     if (!formData.phone) {
-      toast({
-        title: "Error",
-        description: "Please enter your phone number first",
-        variant: "destructive"
-      })
+      if (isMounted) {
+        toast({
+          title: "Error",
+          description: "Please enter your phone number first",
+          variant: "destructive"
+        })
+      }
       return
     }
 
@@ -380,23 +415,29 @@ const RegisterPage = () => {
       const result = await sendSMSOTP(formData.phone)
       if (result.success) {
         setShowPhoneOTP(true)
-        toast({
-          title: "OTP Sent",
-          description: "Please check your phone for the verification code",
-        })
+        if (isMounted) {
+          toast({
+            title: "OTP Sent",
+            description: "Please check your phone for the verification code",
+          })
+        }
       } else {
+        if (isMounted) {
+          toast({
+            title: "Error",
+            description: result.error || "Failed to send SMS OTP",
+            variant: "destructive"
+          })
+        }
+      }
+    } catch (error) {
+      if (isMounted) {
         toast({
           title: "Error",
-          description: result.error || "Failed to send SMS OTP",
+          description: "Failed to send SMS OTP",
           variant: "destructive"
         })
       }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to send SMS OTP",
-        variant: "destructive"
-      })
     }
   }
 
@@ -408,10 +449,12 @@ const RegisterPage = () => {
         setEmailVerified(true)
         setShowEmailOTP(false)
         setFormData(prev => ({ ...prev, emailVerified: true }))
-        toast({
-          title: "Success",
-          description: "Email verified successfully!",
-        })
+        if (isMounted) {
+          toast({
+            title: "Success",
+            description: "Email verified successfully!",
+          })
+        }
       } else {
         throw new Error(result.error || "Invalid OTP")
       }
@@ -430,10 +473,12 @@ const RegisterPage = () => {
         setPhoneVerified(true)
         setShowPhoneOTP(false)
         setFormData(prev => ({ ...prev, phoneVerified: true }))
-        toast({
-          title: "Success",
-          description: "Phone number verified successfully!",
-        })
+        if (isMounted) {
+          toast({
+            title: "Success",
+            description: "Phone number verified successfully!",
+          })
+        }
       } else {
         throw new Error(result.error || "Invalid OTP")
       }

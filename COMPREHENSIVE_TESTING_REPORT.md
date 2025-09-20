@@ -130,7 +130,7 @@ This report documents the complete full-stack testing and enhancement of the Fin
 ## 🌐 Browser Preview Access
 
 ### Active Servers
-- **Frontend Application**: http://localhost:3002 (Proxy: http://127.0.0.1:50907)
+- **Frontend Application**: http://localhost:3000 (Proxy: http://127.0.0.1:50907)
 - **Backend API**: http://localhost:5000 (Proxy: http://127.0.0.1:50916)
 
 ### Available for Testing

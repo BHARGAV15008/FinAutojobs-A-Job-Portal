@@ -92,7 +92,7 @@ apple_id: text('apple_id')
 ## Browser Preview Setup
 - Backend API: http://localhost:5000 (Proxy: http://127.0.0.1:55628)
 - Frontend App: http://localhost:3000 (Proxy: http://127.0.0.1:55866)
-- Test Server: http://localhost:5001 (Proxy: http://127.0.0.1:60617)
+- Test Server: http://localhost:5000 (Proxy: http://127.0.0.1:60617)
 
 ## Next Steps for Completion
 

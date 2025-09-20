@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 
 const BACKEND_URL = 'http://localhost:5000/api';
-const FRONTEND_URL = 'http://localhost:3002';
+const FRONTEND_URL = 'http://localhost:3000';
 
 class FrontendBackendIntegrationTester {
     constructor() {
