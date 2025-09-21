@@ -81,41 +81,41 @@ const ModernDashboardLayout = ({ children, title, headerContent, userRole }) => 
     if (role === 'applicant') {
       return [
         ...baseItems,
-        { text: 'Profile', icon: <Person />, path: '/applicant-dashboard/profile' },
+        { text: 'Profile', icon: <Person />, path: '/profile' },
         { text: 'Browse Jobs', icon: <Work />, path: '/jobs' },
-        { text: 'Applications', icon: <Mail />, path: '/applicant-dashboard/applications' },
-        { text: 'Saved Jobs', icon: <Bookmark />, path: '/applicant-dashboard/saved' },
-        { text: 'Recommended', icon: <TrendingUp />, path: '/applicant-dashboard/recommended' },
-        { text: 'Job Alerts', icon: <Notifications />, path: '/applicant-dashboard/alerts' },
-        { text: 'Interviews', icon: <Calendar />, path: '/applicant-dashboard/interviews' },
-        { text: 'Assessments', icon: <Assessment />, path: '/applicant-dashboard/assessments' },
-        { text: 'Analytics', icon: <Analytics />, path: '/applicant-dashboard/analytics' },
-        { text: 'Settings', icon: <Settings />, path: '/applicant-dashboard/settings' },
+        { text: 'Applications', icon: <Mail />, path: '/applications' },
+        { text: 'Saved Jobs', icon: <Bookmark />, path: '/saved' },
+        { text: 'Recommended', icon: <TrendingUp />, path: '/recommended' },
+        { text: 'Job Alerts', icon: <Notifications />, path: '/alerts' },
+        { text: 'Interviews', icon: <Calendar />, path: '/interviews' },
+        { text: 'Assessments', icon: <Assessment />, path: '/assessments' },
+        { text: 'Analytics', icon: <Analytics />, path: '/analytics' },
+        { text: 'Settings', icon: <Settings />, path: '/settings' },
       ];
     }
 
     if (role === 'recruiter') {
       return [
         ...baseItems,
-        { text: 'Profile', icon: <Person />, path: '/recruiter-dashboard/profile' },
+        { text: 'Profile', icon: <Person />, path: '/profile' },
         { text: 'Post Job', icon: <Work />, path: '/add-job' },
-        { text: 'My Jobs', icon: <Business />, path: '/recruiter-dashboard/jobs' },
-        { text: 'Applications', icon: <Mail />, path: '/recruiter-dashboard/applications' },
-        { text: 'Candidates', icon: <People />, path: '/recruiter-dashboard/candidates' },
-        { text: 'Analytics', icon: <Analytics />, path: '/recruiter-dashboard/analytics' },
-        { text: 'Settings', icon: <Settings />, path: '/recruiter-dashboard/settings' },
+        { text: 'My Jobs', icon: <Business />, path: '/jobs' },
+        { text: 'Applications', icon: <Mail />, path: '/applications' },
+        { text: 'Candidates', icon: <People />, path: '/candidates' },
+        { text: 'Analytics', icon: <Analytics />, path: '/analytics' },
+        { text: 'Settings', icon: <Settings />, path: '/settings' },
       ];
     }
 
     if (role === 'admin') {
       return [
         ...baseItems,
-        { text: 'Users', icon: <People />, path: '/admin-dashboard/users' },
-        { text: 'Companies', icon: <Business />, path: '/admin-dashboard/companies' },
-        { text: 'Jobs', icon: <Work />, path: '/admin-dashboard/jobs' },
-        { text: 'Applications', icon: <Mail />, path: '/admin-dashboard/applications' },
-        { text: 'Analytics', icon: <Analytics />, path: '/admin-dashboard/analytics' },
-        { text: 'Settings', icon: <Settings />, path: '/admin-dashboard/settings' },
+        { text: 'Users', icon: <People />, path: '/users' },
+        { text: 'Companies', icon: <Business />, path: '/companies' },
+        { text: 'Jobs', icon: <Work />, path: '/jobs' },
+        { text: 'Applications', icon: <Mail />, path: '/applications' },
+        { text: 'Analytics', icon: <Analytics />, path: '/analytics' },
+        { text: 'Settings', icon: <Settings />, path: '/settings' },
       ];
     }
 

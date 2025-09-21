@@ -1,28 +1,41 @@
 import React from 'react'
 import { Router as WouterRouter } from 'wouter'
-import { AuthProvider } from './contexts/AuthContext'
-import { NotificationProvider } from './contexts/NotificationContext'
-import { QueryClientProvider } from "@tanstack/react-query"
-import { queryClient } from "./lib/queryClient"
-import { ThemeProvider, CssBaseline } from '@mui/material'
-import { ErrorBoundary } from './components/common'
-import theme from './theme'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { DashboardProvider } from './contexts/DashboardContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { AuthProvider } from './contexts/AuthContext';
+import ErrorBoundary from './components/ui/ErrorBoundary';
+import NotificationSystem from './components/notifications/NotificationSystem';
 import AppRoutes from './routes/AppRoutes'
+
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      cacheTime: 1000 * 60 * 10, // 10 minutes
+    },
+  },
+})
 
 function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider theme={theme}>
-          <CssBaseline />
-          <AuthProvider>
-            <NotificationProvider>
-              <WouterRouter>
-                <AppRoutes />
-              </WouterRouter>
-            </NotificationProvider>
-          </AuthProvider>
-        </ThemeProvider>
+        <WouterRouter>
+          <ThemeProvider>
+            <AuthProvider>
+              <DashboardProvider>
+                <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+                  <AppRoutes />
+                  <NotificationSystem />
+                </div>
+              </DashboardProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </WouterRouter>
+        <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </ErrorBoundary>
   );

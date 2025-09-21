@@ -1,5 +1,4 @@
 import xss from 'xss';
-import validator from 'validator';
 
 /**
  * Sanitize a single value
@@ -14,9 +13,14 @@ const sanitizeValue = (value) => {
         });
         
         // Normalize string
-        value = validator.trim(value);
-        value = validator.stripLow(value);
-        value = validator.normalizeEmail(value);
+        value = value.trim();
+        // Remove control characters (ASCII 0-31 except tab, newline, carriage return)
+        value = value.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+        
+        // Basic email normalization if it looks like an email
+        if (value.includes('@') && value.includes('.')) {
+            value = value.toLowerCase();
+        }
         
         return value;
     }

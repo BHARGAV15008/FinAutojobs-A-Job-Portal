@@ -1,0 +1,313 @@
+// Enhanced Dashboard Styles with Unique Gradients and Animations
+// Modern, attractive card designs with floating effects
+
+// Base card styles
+.dashboard-card {
+  @apply relative bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700;
+  @apply transition-all duration-300 ease-in-out;
+  @apply hover:shadow-xl hover:-translate-y-1;
+  
+  // Floating effect
+  &:hover {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    transform: translateY(-4px);
+  }
+  
+  // Gradient overlays
+  &::before {
+    content: '';
+    @apply absolute inset-0 rounded-xl opacity-0 transition-opacity duration-300;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  }
+  
+  &:hover::before {
+    @apply opacity-100;
+  }
+}
+
+// Unique gradient variations
+.gradient-blue {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  
+  &:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+  }
+}
+
+.gradient-green {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  
+  &:hover {
+    background: linear-gradient(135deg, #0e8478 0%, #2dd868 100%);
+  }
+}
+
+.gradient-purple {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  
+  &:hover {
+    background: linear-gradient(135deg, #96e6e2 0%, #fcc9d9 100%);
+  }
+}
+
+.gradient-orange {
+  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+  
+  &:hover {
+    background: linear-gradient(135deg, #ff8a8f 0%, #fdc2e8 100%);
+  }
+}
+
+.gradient-red {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+  
+  &:hover {
+    background: linear-gradient(135deg, #ff5757 0%, #e04848 100%);
+  }
+}
+
+.gradient-indigo {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  
+  &:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+  }
+}
+
+.gradient-pink {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  
+  &:hover {
+    background: linear-gradient(135deg, #ee82f7 0%, #f14458 100%);
+  }
+}
+
+.gradient-teal {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  
+  &:hover {
+    background: linear-gradient(135deg, #3d96fe 0%, #00e5fe 100%);
+  }
+}
+
+// Enhanced card content
+.card-content {
+  @apply relative z-10 p-6;
+  
+  .card-header {
+    @apply flex items-center justify-between mb-4;
+    
+    .card-title {
+      @apply text-sm font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide;
+    }
+    
+    .card-icon {
+      @apply p-3 rounded-lg text-white shadow-lg;
+      @apply transform transition-transform duration-200;
+      
+      &:hover {
+        @apply scale-110;
+      }
+    }
+  }
+  
+  .card-value {
+    @apply text-3xl font-bold text-gray-900 dark:text-white mb-2;
+    @apply transition-colors duration-200;
+  }
+  
+  .card-change {
+    @apply flex items-center text-sm font-medium;
+    
+    &.positive {
+      @apply text-green-600 dark:text-green-400;
+    }
+    
+    &.negative {
+      @apply text-red-600 dark:text-red-400;
+    }
+    
+    &.neutral {
+      @apply text-gray-600 dark:text-gray-400;
+    }
+  }
+}
+
+// Profile picture and notification enhancements
+.profile-section {
+  @apply flex items-center space-x-4;
+  
+  .profile-picture {
+    @apply w-12 h-12 rounded-full border-2 border-white shadow-lg;
+    @apply transition-all duration-200 cursor-pointer;
+    @apply hover:scale-105 hover:shadow-xl;
+    margin-right: 16px; // Sufficient right margin
+  }
+  
+  .notification-icon {
+    @apply w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700;
+    @apply flex items-center justify-center cursor-pointer;
+    @apply transition-all duration-200 hover:bg-gray-200 dark:hover:bg-gray-600;
+    @apply hover:scale-105;
+    margin-right: 16px; // Sufficient right margin
+  }
+}
+
+// Dashboard layout enhancements
+.dashboard-layout {
+  @apply min-h-screen bg-gradient-to-br from-gray-50 to-gray-100;
+  @apply dark:from-gray-900 dark:to-gray-800;
+  
+  .sidebar {
+    @apply bg-white dark:bg-gray-900 shadow-xl;
+    @apply border-r border-gray-200 dark:border-gray-700;
+    
+    &.floating {
+      @apply rounded-r-2xl shadow-2xl;
+      margin: 8px 0 8px 8px;
+    }
+  }
+  
+  .main-content {
+    @apply bg-transparent;
+    
+    .content-wrapper {
+      @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6;
+    }
+  }
+}
+
+// Tab navigation styles
+.dashboard-tabs {
+  @apply flex space-x-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg;
+  
+  .tab-button {
+    @apply px-4 py-2 text-sm font-medium rounded-md;
+    @apply transition-all duration-200;
+    @apply text-gray-600 dark:text-gray-400;
+    @apply hover:text-gray-900 dark:hover:text-white;
+    
+    &.active {
+      @apply bg-white dark:bg-gray-700 text-gray-900 dark:text-white;
+      @apply shadow-sm;
+    }
+  }
+}
+
+// Welcome section enhancements
+.welcome-section {
+  @apply rounded-xl p-8 text-white mb-8;
+  @apply relative overflow-hidden;
+  
+  &::before {
+    content: '';
+    @apply absolute inset-0 bg-black bg-opacity-10;
+  }
+  
+  .welcome-content {
+    @apply relative z-10;
+    
+    .welcome-title {
+      @apply text-3xl font-bold mb-2;
+    }
+    
+    .welcome-subtitle {
+      @apply text-lg opacity-90;
+    }
+  }
+  
+  .welcome-icon {
+    @apply hidden md:block w-24 h-24 opacity-30;
+  }
+}
+
+// Animation keyframes
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.8);
+  }
+}
+
+.floating-animation {
+  animation: float 3s ease-in-out infinite;
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+// Responsive enhancements
+@media (max-width: 768px) {
+  .dashboard-card {
+    @apply mx-2;
+  }
+  
+  .profile-section {
+    .profile-picture {
+      @apply w-10 h-10;
+    }
+    
+    .notification-icon {
+      @apply w-8 h-8;
+    }
+  }
+  
+  .welcome-section {
+    @apply p-6;
+    
+    .welcome-title {
+      @apply text-2xl;
+    }
+    
+    .welcome-subtitle {
+      @apply text-base;
+    }
+  }
+}
+
+// Dark mode specific enhancements
+.dark {
+  .dashboard-card {
+    @apply bg-gray-800 border-gray-700;
+    
+    &:hover {
+      @apply bg-gray-700;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+    }
+  }
+  
+  .card-content {
+    .card-title {
+      @apply text-gray-300;
+    }
+    
+    .card-value {
+      @apply text-white;
+    }
+  }
+}
+
+// Light mode font visibility
+.light {
+  .card-content {
+    .card-title {
+      @apply text-gray-700;
+    }
+    
+    .card-value {
+      @apply text-gray-900;
+    }
+  }
+}

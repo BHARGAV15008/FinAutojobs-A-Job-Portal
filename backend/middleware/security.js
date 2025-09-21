@@ -1,24 +1,15 @@
-import { z } from 'zod';
 import xss from 'xss';
-import validator from 'validator';
 
-// Enhanced input validation schemas
-export const userSchema = z.object({
-  email: z.string()
-    .email('Invalid email format')
-    .min(5, 'Email must be at least 5 characters')
-    .max(255, 'Email must not exceed 255 characters')
-    .transform(val => validator.normalizeEmail(val)),
-  password: z.string()
-    .min(8, 'Password must be at least 8 characters')
-    .max(100, 'Password must not exceed 100 characters')
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/, 
-      'Password must contain at least one uppercase letter, one lowercase letter, one number and one special character'),
-  name: z.string()
-    .min(2, 'Name must be at least 2 characters')
-    .max(100, 'Name must not exceed 100 characters')
-    .transform(val => xss(val.trim())),
-});
+// Basic email validation
+export const isValidEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email) && email.length >= 5 && email.length <= 255;
+};
+
+// Basic password validation
+export const isValidPassword = (password) => {
+  return typeof password === 'string' && password.length >= 8;
+};
 
 // XSS Middleware
 export const xssMiddleware = (req, res, next) => {
@@ -60,22 +51,12 @@ export const sqlInjectionMiddleware = (req, res, next) => {
   next();
 };
 
-// Input Sanitization Middleware
-export const sanitizeInputs = (req, res, next) => {
-  const sanitize = (obj) => {
-    Object.keys(obj).forEach(key => {
-      if (typeof obj[key] === 'string') {
-        obj[key] = validator.escape(obj[key].trim());
-      } else if (typeof obj[key] === 'object' && obj[key] !== null) {
-        sanitize(obj[key]);
-      }
-    });
-  };
-
-  if (req.body) sanitize(req.body);
-  if (req.query) sanitize(req.query);
-  if (req.params) sanitize(req.params);
-
+// Security headers middleware
+export const securityHeaders = (req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   next();
 };
 

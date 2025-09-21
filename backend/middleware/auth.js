@@ -1,7 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { db } from '../config/database.js';
-import * as schema from '../schema.js';
-import { eq } from 'drizzle-orm';
+import { getUserModel } from '../models/schemas/users/UserFactory.js';
 
 // Middleware to authenticate JWT tokens
 export const authenticateToken = async (req, res, next) => {
@@ -15,20 +13,27 @@ export const authenticateToken = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-jwt-secret-key-change-this-in-production');
     
-    // Get user from database
-    const users = await db.select().from(schema.users).where(eq(schema.users.id, decoded.userId)).limit(1);
+    // Get user from database based on role
+    const UserModel = getUserModel(decoded.userRole);
+    const user = await UserModel.findById(decoded.userId).select('-password');
     
-    if (!users.length) {
+    if (!user) {
       return res.status(401).json({ message: 'User not found' });
     }
-
-    const user = users[0];
     
     if (user.status !== 'active') {
       return res.status(401).json({ message: 'Account is not active' });
     }
 
-    req.user = user;
+    // Add user info to request
+    req.user = {
+      userId: user._id,
+      userRole: user.role,
+      email: user.email,
+      name: user.name,
+      ...user.toObject()
+    };
+    
     next();
   } catch (error) {
     console.error('Authentication error:', error);
@@ -54,16 +59,16 @@ export const requireRole = (allowedRoles) => {
 // Middleware to require admin role
 export const requireAdmin = requireRole(['admin']);
 
-// Middleware to require employer role
-export const requireEmployer = requireRole(['employer', 'admin']);
+// Middleware to require recruiter role
+export const requireRecruiter = requireRole(['recruiter', 'admin']);
 
-// Middleware to require jobseeker role
-export const requireJobseeker = requireRole(['jobseeker', 'admin']);
+// Middleware to require applicant role
+export const requireApplicant = requireRole(['applicant', 'admin']);
 
 export default {
   authenticateToken,
   requireRole,
   requireAdmin,
-  requireEmployer,
-  requireJobseeker
+  requireRecruiter,
+  requireApplicant
 };

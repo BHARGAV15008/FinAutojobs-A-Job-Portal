@@ -24,18 +24,18 @@ const DashboardLayout = ({ children, title, headerContent }) => {
 
     const recruiterNavItems = [
         { text: 'Overview', icon: <Home />, path: '/recruiter-dashboard' },
-        { text: 'Jobs', icon: <Work />, path: '/recruiter-dashboard/jobs' },
-        { text: 'Candidates', icon: <Person />, path: '/recruiter-dashboard/candidates' },
-        { text: 'Analytics', icon: <BarChart />, path: '/recruiter-dashboard/analytics' },
-        { text: 'Settings', icon: <Settings />, path: '/recruiter-dashboard/settings' },
+        { text: 'Jobs', icon: <Work />, path: '/jobs' },
+        { text: 'Candidates', icon: <Person />, path: '/candidates' },
+        { text: 'Analytics', icon: <BarChart />, path: '/analytics' },
+        { text: 'Settings', icon: <Settings />, path: '/settings' },
     ];
 
     const applicantNavItems = [
         { text: 'Overview', icon: <Home />, path: '/applicant-dashboard' },
-        { text: 'My Applications', icon: <Work />, path: '/applicant-dashboard/applications' },
-        { text: 'Profile', icon: <Person />, path: '/applicant-dashboard/profile' },
-        { text: 'Assessments', icon: <BarChart />, path: '/applicant-dashboard/assessments' },
-        { text: 'Settings', icon: <Settings />, path: '/applicant-dashboard/settings' },
+        { text: 'My Applications', icon: <Work />, path: '/applications' },
+        { text: 'Profile', icon: <Person />, path: '/profile' },
+        { text: 'Assessments', icon: <BarChart />, path: '/assessments' },
+        { text: 'Settings', icon: <Settings />, path: '/settings' },
     ];
 
     const navItems = user?.role === 'recruiter' ? recruiterNavItems : applicantNavItems;

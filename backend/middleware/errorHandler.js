@@ -1,4 +1,4 @@
-import { z, ZodError } from 'zod';
+// Error handling middleware for Express applications
 
 // Custom error classes
 export class AppError extends Error {
@@ -55,40 +55,44 @@ export class RateLimitError extends AppError {
   }
 }
 
-// Database error handler
-export const handleDatabaseError = (error) => {
+// MongoDB/Mongoose error handler
+export const handleMongooseError = (error) => {
   console.error('Database Error:', error);
   
-  // SQLite specific error codes
-  if (error.code === 'SQLITE_CONSTRAINT') {
-    if (error.message.includes('UNIQUE constraint failed')) {
-      return new ConflictError('Resource already exists');
-    }
-    if (error.message.includes('FOREIGN KEY constraint failed')) {
-      return new ValidationError('Invalid reference to related resource');
-    }
-    return new ValidationError('Database constraint violation');
+  // MongoDB duplicate key error
+  if (error.code === 11000) {
+    const field = Object.keys(error.keyValue)[0];
+    return new ConflictError(`${field} already exists`);
+  }
+  
+  // Mongoose validation error
+  if (error.name === 'ValidationError') {
+    const details = Object.values(error.errors).map(err => ({
+      field: err.path,
+      message: err.message,
+      value: err.value
+    }));
+    
+    return new ValidationError('Validation failed', details);
+  }
+  
+  // Mongoose cast error (invalid ObjectId, etc.)
+  if (error.name === 'CastError') {
+    return new ValidationError(`Invalid ${error.path}: ${error.value}`);
   }
   
   return new AppError('Database operation failed', 500);
 };
 
-// Zod validation error handler
-export const handleZodError = (error) => {
-  if (error.name === 'ZodError') {
-    const details = error.errors.map(err => ({
-      field: err.path.join('.'),
-      message: err.message,
-      code: err.code
-    }));
-    
-    return new ValidationError(
-      'Validation failed',
-      details
-    );
-  }
+// Express-validator error handler
+export const handleValidationError = (errors) => {
+  const details = errors.map(err => ({
+    field: err.path || err.param,
+    message: err.msg,
+    value: err.value
+  }));
   
-  return new ValidationError('Invalid input data');
+  return new ValidationError('Validation failed', details);
 };
 
 // JWT error handler
@@ -144,12 +148,10 @@ export const errorHandler = (err, req, res, next) => {
   });
 
   // Handle specific error types
-  if (err.name === 'ZodError' || err instanceof ZodError) {
-    error = handleZodError(err);
+  if (err.name === 'ValidationError' || err.name === 'CastError' || err.code === 11000) {
+    error = handleMongooseError(err);
   } else if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
     error = handleJWTError(err);
-  } else if (err.code && err.code.startsWith('SQLITE_')) {
-    error = handleDatabaseError(err);
   } else if (err.code && err.code.startsWith('LIMIT_')) {
     error = handleFileUploadError(err);
   } else if (err.name === 'TooManyRequestsError') {

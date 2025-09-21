@@ -172,7 +172,7 @@ const AdvancedDashboardLayout = ({
       { 
         text: 'Dashboard', 
         icon: <Dashboard />, 
-        path: role === 'admin' ? '/admin-dashboard' : `/${role}-dashboard`,
+        path: role === 'admin' ? '' : `/${role}-dashboard`,
         color: 'primary'
       },
     ];
@@ -186,8 +186,8 @@ const AdvancedDashboardLayout = ({
           color: 'secondary',
           submenu: [
             { text: 'My Profile', icon: <Person />, path: '/profile' },
-            { text: 'Settings', icon: <Settings />, path: '/applicant-dashboard/settings' },
-            { text: 'Resume', icon: <Assessment />, path: '/applicant-dashboard/resume' },
+            { text: 'Settings', icon: <Settings />, path: '/settings' },
+            { text: 'Resume', icon: <Assessment />, path: '/resume' },
           ]
         },
         {
@@ -196,8 +196,8 @@ const AdvancedDashboardLayout = ({
           color: 'info',
           submenu: [
             { text: 'Browse Jobs', icon: <Work />, path: '/jobs' },
-            { text: 'Recommended', icon: <TrendingUp />, path: '/applicant-dashboard/recommended' },
-            { text: 'Job Alerts', icon: <Notifications />, path: '/applicant-dashboard/alerts' },
+            { text: 'Recommended', icon: <TrendingUp />, path: '/recommended' },
+            { text: 'Job Alerts', icon: <Notifications />, path: '/alerts' },
           ]
         },
         {
@@ -205,12 +205,12 @@ const AdvancedDashboardLayout = ({
           icon: <Mail />,
           color: 'warning',
           submenu: [
-            { text: 'My Applications', icon: <Mail />, path: '/applicant-dashboard/applications' },
-            { text: 'Saved Jobs', icon: <Bookmark />, path: '/applicant-dashboard/saved' },
-            { text: 'Interviews', icon: <Calendar />, path: '/applicant-dashboard/interviews' },
+            { text: 'My Applications', icon: <Mail />, path: '/applications' },
+            { text: 'Saved Jobs', icon: <Bookmark />, path: '/saved' },
+            { text: 'Interviews', icon: <Calendar />, path: '/interviews' },
           ]
         },
-        { text: 'Analytics', icon: <Analytics />, path: '/applicant-dashboard/analytics', color: 'success' },
+        { text: 'Analytics', icon: <Analytics />, path: '/analytics', color: 'success' },
       ];
     }
 
@@ -222,9 +222,9 @@ const AdvancedDashboardLayout = ({
           icon: <Business />,
           color: 'secondary',
           submenu: [
-            { text: 'My Profile', icon: <Person />, path: '/recruiter-dashboard/profile' },
-            { text: 'Company Profile', icon: <Business />, path: '/recruiter-dashboard/company' },
-            { text: 'Settings', icon: <Settings />, path: '/recruiter-dashboard/settings' },
+            { text: 'My Profile', icon: <Person />, path: '/profile' },
+            { text: 'Company Profile', icon: <Business />, path: '/company' },
+            { text: 'Settings', icon: <Settings />, path: '/settings' },
           ]
         },
         {
@@ -233,8 +233,8 @@ const AdvancedDashboardLayout = ({
           color: 'info',
           submenu: [
             { text: 'Post New Job', icon: <Add />, path: '/add-job' },
-            { text: 'Manage Jobs', icon: <Work />, path: '/recruiter-dashboard/jobs' },
-            { text: 'Edit Posts', icon: <Settings />, path: '/recruiter-dashboard/edit-jobs' },
+            { text: 'Manage Jobs', icon: <Work />, path: '/jobs' },
+            { text: 'Edit Posts', icon: <Settings />, path: '/edit-jobs' },
           ]
         },
         {
@@ -242,12 +242,12 @@ const AdvancedDashboardLayout = ({
           icon: <People />,
           color: 'warning',
           submenu: [
-            { text: 'Review Applications', icon: <Assessment />, path: '/recruiter-dashboard/applications' },
-            { text: 'Manage Applicants', icon: <People />, path: '/recruiter-dashboard/applicants' },
-            { text: 'Alerts', icon: <Notifications />, path: '/recruiter-dashboard/alerts' },
+            { text: 'Review Applications', icon: <Assessment />, path: '/applications' },
+            { text: 'Manage Applicants', icon: <People />, path: '/applicants' },
+            { text: 'Alerts', icon: <Notifications />, path: '/alerts' },
           ]
         },
-        { text: 'Company Analytics', icon: <Analytics />, path: '/recruiter-dashboard/analytics', color: 'success' },
+        { text: 'Company Analytics', icon: <Analytics />, path: '/analytics', color: 'success' },
       ];
     }
 
@@ -259,9 +259,9 @@ const AdvancedDashboardLayout = ({
           icon: <People />,
           color: 'secondary',
           submenu: [
-            { text: 'Manage Applicants', icon: <Person />, path: '/admin-dashboard/applicants' },
-            { text: 'Manage Recruiters', icon: <Business />, path: '/admin-dashboard/recruiters' },
-            { text: 'User Analytics', icon: <Analytics />, path: '/admin-dashboard/user-analytics' },
+            { text: 'Manage Applicants', icon: <Person />, path: '/applicants' },
+            { text: 'Manage Recruiters', icon: <Business />, path: '/recruiters' },
+            { text: 'User Analytics', icon: <Analytics />, path: '/user-analytics' },
           ]
         },
         {
@@ -269,12 +269,12 @@ const AdvancedDashboardLayout = ({
           icon: <AdminPanelSettings />,
           color: 'error',
           submenu: [
-            { text: 'System Settings', icon: <Settings />, path: '/admin-dashboard/settings' },
-            { text: 'Database Management', icon: <Assessment />, path: '/admin-dashboard/database' },
-            { text: 'Reports', icon: <Analytics />, path: '/admin-dashboard/reports' },
+            { text: 'System Settings', icon: <Settings />, path: '/settings' },
+            { text: 'Database Management', icon: <Assessment />, path: '/database' },
+            { text: 'Reports', icon: <Analytics />, path: '/reports' },
           ]
         },
-        { text: 'Analytics & Progress', icon: <TrendingUp />, path: '/admin-dashboard/analytics', color: 'success' },
+        { text: 'Analytics & Progress', icon: <TrendingUp />, path: '/analytics', color: 'success' },
       ];
     }
 

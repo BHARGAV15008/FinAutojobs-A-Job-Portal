@@ -1,9 +1,14 @@
 import React from 'react';
 import { Route, Switch, useLocation } from 'wouter';
 import { useAuth } from '../contexts/AuthContext';
-import { ProtectedRoute, ApplicantRoute, RecruiterRoute, AdminRoute } from '../components/auth';
+// Authentication imports removed - dashboards are now public
 import { CircularProgress, Box } from '@mui/material';
 import Navigation from '../components/Navigation';
+
+// Direct imports for dashboards
+import ApplicantDashboard from '../pages/ApplicantDashboard';
+import RecruiterDashboard from '../pages/RecruiterDashboard';
+import AdminDashboard from '../pages/AdminDashboard';
 
 // Import existing pages with fallback handling
 const SafeImport = ({ component: Component, fallback, ...props }) => {
@@ -48,17 +53,6 @@ const JobAlertsPage = React.lazy(() => import('../pages/JobAlertsPage').catch(()
   default: () => <div>Job Alerts Page Loading...</div> 
 })));
 
-const ApplicantDashboard = React.lazy(() => import('../pages/ApplicantDashboard').catch(() => ({ 
-  default: () => <div>Applicant Dashboard Loading...</div> 
-})));
-
-const RecruiterDashboard = React.lazy(() => import('../pages/RecruiterDashboard').catch(() => ({ 
-  default: () => <div>Recruiter Dashboard Loading...</div> 
-})));
-
-const AdminDashboard = React.lazy(() => import('../pages/AdminDashboard').catch(() => ({ 
-  default: () => <div>Admin Dashboard Loading...</div> 
-})));
 
 const DashboardDemo = React.lazy(() => import('../pages/DashboardDemo').catch(() => ({ 
   default: () => <div>Dashboard Demo Loading...</div> 
@@ -73,7 +67,8 @@ const AppRoutes = () => {
   const [location] = useLocation();
   const isDashboard = location.includes('-dashboard') || location.includes('/demo');
 
-  if (loading) {
+  // Skip loading screen for dashboard routes since they don't require authentication
+  if (loading && !isDashboard) {
     return (
       <Box
         display="flex"
@@ -109,31 +104,20 @@ const AppRoutes = () => {
             <Route path="/register">{() => <RegisterPage />}</Route>
             <Route path="/demo">{() => <DashboardDemo />}</Route>
 
-            {/* Protected Routes - Applicant */}
-            <Route path="/applicant-dashboard">
-              {() => (
-                <ApplicantRoute>
-                  <ApplicantDashboard />
-                </ApplicantRoute>
-              )}
+            {/* Dashboard Routes - No Authentication Required */}
+            <Route path="/applicant-dashboard" nest>
+              <Route path="/">{() => <ApplicantDashboard />}</Route>
+              <Route path="/:tab">{() => <ApplicantDashboard />}</Route>
             </Route>
 
-            {/* Protected Routes - Recruiter */}
-            <Route path="/recruiter-dashboard">
-              {() => (
-                <RecruiterRoute>
-                  <RecruiterDashboard />
-                </RecruiterRoute>
-              )}
+            <Route path="/recruiter-dashboard" nest>
+              <Route path="/">{() => <RecruiterDashboard />}</Route>
+              <Route path="/:tab">{() => <RecruiterDashboard />}</Route>
             </Route>
 
-            {/* Protected Routes - Admin */}
-            <Route path="/admin-dashboard">
-              {() => (
-                <AdminRoute>
-                  <AdminDashboard />
-                </AdminRoute>
-              )}
+            <Route path="/admin-dashboard" nest>
+              <Route path="/">{() => <AdminDashboard />}</Route>
+              <Route path="/:tab">{() => <AdminDashboard />}</Route>
             </Route>
 
             {/* 404 Route */}
