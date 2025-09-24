@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTheme } from '../../contexts/ThemeContext';
-import { useDashboard } from '../../contexts/DashboardContext';
+import { useTheme } from '../../contexts/IntegratedThemeContext';
+import { useDashboard } from '../../contexts/RealDashboardContext';
 import DashboardSidebar from './DashboardSidebar';
 import DashboardHeader from './DashboardHeader';
 import NotificationPanel from '../notifications/NotificationPanel';
@@ -11,13 +11,16 @@ const ModernDashboardLayout = ({
   title, 
   userRole, 
   user,
+  activeTab,
+  activeJobTab,
   showBreadcrumbs = true,
   breadcrumbs = []
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
   const { darkMode } = useTheme();
-  const { notifications } = useDashboard();
+  const { dashboardData } = useDashboard();
+  const notifications = dashboardData?.notifications || [];
 
   // Close sidebar on mobile when clicking outside
   useEffect(() => {
@@ -67,6 +70,8 @@ const ModernDashboardLayout = ({
           user={user}
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
+          activeTab={activeTab}
+          activeJobTab={activeJobTab}
         />
       </div>
 
@@ -85,6 +90,8 @@ const ModernDashboardLayout = ({
               user={user}
               sidebarOpen={sidebarOpen}
               setSidebarOpen={setSidebarOpen}
+              activeTab={activeTab}
+              activeJobTab={activeJobTab}
             />
           </motion.div>
         )}

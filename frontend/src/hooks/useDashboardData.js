@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext.jsx';
 import dashboardService from '../services/dashboardService';
 
 export const useDashboardData = (userRole) => {

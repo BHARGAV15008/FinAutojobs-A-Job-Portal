@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'wouter'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../components/ui/use-toast'
+import OAuthButton from '../components/auth/OAuthButton'
 import {
   Container,
   Box,
@@ -135,6 +136,25 @@ const LoginPage = () => {
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue)
+  }
+
+  const handleOAuthSuccess = (authResult) => {
+    // Handle successful OAuth authentication
+    console.log('OAuth success:', authResult)
+    // The OAuthButton component already shows success toast
+    // Redirect based on user role
+    const role = authResult.user.role || (activeTab === 0 ? 'applicant' : 'recruiter')
+    if (role === 'recruiter' || role === 'employer') {
+      setLocation('/recruiter-dashboard')
+    } else {
+      setLocation('/applicant-dashboard')
+    }
+  }
+
+  const handleOAuthError = (error) => {
+    // Handle OAuth authentication error
+    console.error('OAuth error:', error)
+    // The OAuthButton component already shows error toast
   }
 
   return (
@@ -460,20 +480,49 @@ const LoginPage = () => {
                 </Divider>
 
                 <Grid container spacing={2}>
-                  <Grid item xs={4}>
-                    <SocialButton fullWidth variant="outlined">
-                      <Google sx={{ color: '#4285F4' }} />
-                    </SocialButton>
+                  <Grid item xs={12}>
+                    <OAuthButton
+                      provider="google"
+                      fullWidth
+                      mode="login"
+                      userRole={activeTab === 0 ? 'applicant' : 'recruiter'}
+                      onSuccess={handleOAuthSuccess}
+                      onError={handleOAuthError}
+                    />
                   </Grid>
-                  <Grid item xs={4}>
-                    <SocialButton fullWidth variant="outlined">
-                      <Microsoft sx={{ color: '#00BCF2' }} />
-                    </SocialButton>
+                  <Grid item xs={6}>
+                    <OAuthButton
+                      provider="microsoft"
+                      fullWidth
+                      mode="login"
+                      userRole={activeTab === 0 ? 'applicant' : 'recruiter'}
+                      onSuccess={handleOAuthSuccess}
+                      onError={handleOAuthError}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Microsoft sx={{ fontSize: 20, mr: 1 }} />
+                        <Typography variant="button" fontWeight="inherit">
+                          Microsoft
+                        </Typography>
+                      </Box>
+                    </OAuthButton>
                   </Grid>
-                  <Grid item xs={4}>
-                    <SocialButton fullWidth variant="outlined">
-                      <Apple sx={{ color: '#000' }} />
-                    </SocialButton>
+                  <Grid item xs={6}>
+                    <OAuthButton
+                      provider="apple"
+                      fullWidth
+                      mode="login"
+                      userRole={activeTab === 0 ? 'applicant' : 'recruiter'}
+                      onSuccess={handleOAuthSuccess}
+                      onError={handleOAuthError}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Apple sx={{ fontSize: 20, mr: 1 }} />
+                        <Typography variant="button" fontWeight="inherit">
+                          Apple
+                        </Typography>
+                      </Box>
+                    </OAuthButton>
                   </Grid>
                 </Grid>
               </Box>

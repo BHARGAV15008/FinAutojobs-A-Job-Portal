@@ -4,10 +4,9 @@ import {
   jobsAPI, 
   applicationsAPI, 
   usersAPI, 
-  analyticsAPI,
-  notificationsAPI 
+  notificationsAPI,
+  authAPI 
 } from '../services/api';
-import { useAuth } from './AuthContext';
 
 const DashboardContext = createContext();
 

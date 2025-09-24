@@ -59,7 +59,7 @@ class ErrorBoundary extends React.Component {
                 'An unexpected error occurred. Please try refreshing the page.'}
             </Typography>
 
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {import.meta.env.DEV && this.state.error && (
               <Alert severity="error" sx={{ mb: 3, textAlign: 'left' }}>
                 <Typography variant="body2" component="pre" sx={{ fontSize: '0.75rem' }}>
                   {this.state.error.toString()}

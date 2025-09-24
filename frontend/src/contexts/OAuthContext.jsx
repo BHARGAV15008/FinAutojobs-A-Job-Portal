@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { useAuth } from './AuthContext';
+import { useAuth } from './AuthContext.jsx';
 
 const OAuthContext = createContext();
 
@@ -29,7 +29,7 @@ export const OAuthProvider = ({ children }) => {
 
       return new Promise((resolve, reject) => {
         window.google.accounts.id.initialize({
-          client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
           callback: async (response) => {
             try {
               // Send the credential to backend
@@ -85,7 +85,7 @@ export const OAuthProvider = ({ children }) => {
 
       const msalInstance = new window.msal.PublicClientApplication({
         auth: {
-          clientId: process.env.REACT_APP_MICROSOFT_CLIENT_ID,
+          clientId: import.meta.env.VITE_MICROSOFT_CLIENT_ID,
           authority: 'https://login.microsoftonline.com/common',
           redirectUri: window.location.origin
         }
@@ -138,7 +138,7 @@ export const OAuthProvider = ({ children }) => {
       }
 
       const response = await window.AppleID.auth.signIn({
-        clientId: process.env.REACT_APP_APPLE_CLIENT_ID,
+        clientId: import.meta.env.VITE_APPLE_CLIENT_ID,
         redirectURI: window.location.origin,
         scope: 'name email',
         responseType: 'code id_token',

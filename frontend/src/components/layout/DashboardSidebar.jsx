@@ -1,18 +1,44 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation } from 'wouter';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useTheme } from '../../contexts/IntegratedThemeContext';
 
-const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen }) => {
+const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeTab, activeJobTab }) => {
   const [location, setLocation] = useLocation();
   const { darkMode } = useTheme();
   const [expandedMenus, setExpandedMenus] = useState({});
 
   // Helper function to check if a path is currently active
-  const isPathActive = (path) => {
-    if (path === `/${userRole}-dashboard`) {
-      return location === `/${userRole}-dashboard` || location === '/';
+  const isPathActive = (path, tabId) => {
+    // Use activeTab prop if available for more accurate detection
+    if (activeTab && tabId) {
+      return activeTab === tabId;
     }
+    
+    if (path === `/${userRole}-dashboard`) {
+      return (location === `/${userRole}-dashboard` || location === '/') && (!activeTab || activeTab === 'dashboard');
+    }
+    
+    // Handle dashboard internal tabs
+    if (path === '/jobs' && userRole === 'recruiter') {
+      return activeTab === 'jobs' || location === `/${userRole}-dashboard/jobs` || location.includes('/jobs');
+    }
+    if (path === '/applicants' && userRole === 'recruiter') {
+      return activeTab === 'applicants' || location === `/${userRole}-dashboard/applicants` || location.includes('/applicants');
+    }
+    if (path === '/analytics' && userRole === 'recruiter') {
+      return activeTab === 'analytics' || location === `/${userRole}-dashboard/analytics` || location.includes('/analytics');
+    }
+    if (path === '/messages' && userRole === 'recruiter') {
+      return activeTab === 'messages' || location === `/${userRole}-dashboard/messages` || location.includes('/messages');
+    }
+    if (path === '/settings' && userRole === 'recruiter') {
+      return activeTab === 'settings' || location === `/${userRole}-dashboard/settings` || location.includes('/settings');
+    }
+    if (path === '/profile' && userRole === 'recruiter') {
+      return activeTab === 'profile' || location === `/${userRole}-dashboard/profile` || location.includes('/profile');
+    }
+    
     return location === path || location.startsWith(path + '/');
   };
 
@@ -24,7 +50,8 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen }) => {
         emoji: '📊',
         icon: 'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z',
         path: `/${userRole}-dashboard`,
-        current: isPathActive(`/${userRole}-dashboard`)
+        tabId: 'dashboard',
+        current: isPathActive(`/${userRole}-dashboard`, 'dashboard')
       }
     ];
 
@@ -95,18 +122,22 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen }) => {
             name: 'Profile',
             emoji: '👤',
             icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
-            path: `/profile`
+            path: `/profile`,
+            tabId: 'profile',
+            current: isPathActive('/profile', 'profile')
           },
           {
             name: 'Job Management',
             emoji: '💼',
             icon: 'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6',
             path: `/jobs`,
+            tabId: 'jobs',
+            current: isPathActive('/jobs', 'jobs'),
             submenu: [
-              { name: 'Post New Job', emoji: '➕', path: `/jobs` },
-              { name: 'Active Jobs', emoji: '🟢', path: `/jobs` },
-              { name: 'Draft Jobs', emoji: '📝', path: `/jobs` },
-              { name: 'Closed Jobs', emoji: '🔒', path: `/jobs` }
+              { name: 'Post New Job', emoji: '➕', path: `/jobs`, tabId: 'jobs', jobTabId: 'post', current: activeTab === 'jobs' && activeJobTab === 'post' },
+              { name: 'Active Jobs', emoji: '🟢', path: `/active-jobs`, tabId: 'jobs', jobTabId: 'active', current: activeTab === 'jobs' && activeJobTab === 'active' },
+              { name: 'Draft Jobs', emoji: '📝', path: `/draft-jobs`, tabId: 'jobs', jobTabId: 'draft', current: activeTab === 'jobs' && activeJobTab === 'draft' },
+              { name: 'Closed Jobs', emoji: '🔒', path: `/closed-jobs`, tabId: 'jobs', jobTabId: 'closed', current: activeTab === 'jobs' && activeJobTab === 'closed' }
             ]
           },
           {
@@ -114,30 +145,38 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen }) => {
             emoji: '👥',
             icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z',
             path: `/applicants`,
+            tabId: 'applicants',
+            current: isPathActive('/applicants', 'applicants'),
             submenu: [
-              { name: 'All Applications', emoji: '📋', path: `/applicants` },
-              { name: 'Candidates', emoji: '🎯', path: `/candidates` },
-              { name: 'Interviews', emoji: '🗣️', path: `/interviews` },
-              { name: 'Reports', emoji: '📊', path: `/reports` }
+              { name: 'All Applications', emoji: '📋', path: `/applicants`, tabId: 'applicants', current: isPathActive('/applicants', 'applicants') },
+              { name: 'Candidates', emoji: '🎯', path: `/candidates`, tabId: 'candidates', current: isPathActive('/candidates', 'candidates') },
+              { name: 'Interviews', emoji: '🗣️', path: `/interviews`, tabId: 'interviews', current: isPathActive('/interviews', 'interviews') },
+              { name: 'Reports', emoji: '📊', path: `/reports`, tabId: 'reports', current: isPathActive('/reports', 'reports') }
             ]
           },
           {
             name: 'Analytics',
             emoji: '📈',
             icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
-            path: `/analytics`
+            path: `/analytics`,
+            tabId: 'analytics',
+            current: isPathActive('/analytics', 'analytics')
           },
           {
             name: 'Messages',
             emoji: '💬',
             icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
-            path: `/messages`
+            path: `/messages`,
+            tabId: 'messages',
+            current: isPathActive('/messages', 'messages')
           },
           {
             name: 'Settings',
             emoji: '⚙️',
             icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z',
-            path: `/settings`
+            path: `/settings`,
+            tabId: 'settings',
+            current: isPathActive('/settings', 'settings')
           }
         ];
 
@@ -220,8 +259,22 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen }) => {
     }));
   };
 
-  const handleNavigation = (path) => {
-    setLocation(path);
+  const handleNavigation = (path, tabId, jobTabId) => {
+    // For dashboard tabs, trigger tab change instead of navigation
+    if (tabId && userRole === 'recruiter') {
+      // Trigger custom event for tab change
+      window.dispatchEvent(new CustomEvent('dashboardTabChange', { 
+        detail: { tabId, jobTabId } 
+      }));
+    } else {
+      // Construct proper path with dashboard prefix
+      let fullPath = path;
+      if (path !== `/${userRole}-dashboard` && !path.startsWith(`/${userRole}-dashboard`)) {
+        fullPath = `/${userRole}-dashboard${path}`;
+      }
+      setLocation(fullPath);
+    }
+    
     if (window.innerWidth < 1024) {
       setSidebarOpen(false);
     }
@@ -286,7 +339,7 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen }) => {
                 if (item.submenu) {
                   toggleSubmenu(item.name);
                 } else {
-                  handleNavigation(item.path);
+                  handleNavigation(item.path, item.tabId);
                 }
               }}
               whileHover={{ scale: 1.02 }}
@@ -322,8 +375,14 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen }) => {
                 {item.submenu.map((subItem) => (
                   <motion.button
                     key={subItem.name}
-                    className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800 rounded-md transition-colors duration-200 flex items-center"
-                    onClick={() => handleNavigation(subItem.path)}
+                    className={`
+                      w-full text-left px-3 py-2 text-sm rounded-md transition-colors duration-200 flex items-center
+                      ${subItem.current || isPathActive(subItem.path)
+                        ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/50 dark:text-blue-200 font-medium' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800'
+                      }
+                    `}
+                    onClick={() => handleNavigation(subItem.path, subItem.tabId, subItem.jobTabId)}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >

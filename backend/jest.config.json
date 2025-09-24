@@ -1,6 +1,0 @@
-{
-  "testEnvironment": "node",
-  "testMatch": ["**/test/**/*.test.js"],
-  "transform": {},
-  "verbose": true
-}

@@ -58,7 +58,9 @@ import { styled } from '@mui/material/styles';
 import { useQuery } from '@tanstack/react-query';
 import api from '../utils/api';
 
-const JobCard = styled(Card)(({ theme, featured }) => ({
+const JobCard = styled(Card, {
+    shouldForwardProp: (prop) => prop !== 'featured'
+})(({ theme, featured }) => ({
     height: '100%',
     display: 'flex',
     flexDirection: 'column',
@@ -277,10 +279,22 @@ const JobsPage = () => {
             try {
                 const response = await api.getJobs({ limit: 50 });
                 const data = await response.json();
-                setJobs(data.jobs || data);
-                setLoading(false);
+                
+                // Ensure we always set an array
+                if (data && data.success && Array.isArray(data.data?.jobs)) {
+                    setJobs(data.data.jobs);
+                } else if (Array.isArray(data)) {
+                    setJobs(data);
+                } else {
+                    // Fallback to mock data if API fails
+                    console.warn('API returned invalid data, using mock data');
+                    setJobs(mockJobs);
+                }
             } catch (error) {
                 console.error('Error fetching jobs:', error);
+                // Use mock data as fallback
+                setJobs(mockJobs);
+            } finally {
                 setLoading(false);
             }
         };
@@ -330,7 +344,7 @@ const JobsPage = () => {
         return `${formatAmount(min)} - ${formatAmount(max)}`;
     };
 
-    const filteredJobs = jobs.filter(job => {
+    const filteredJobs = (Array.isArray(jobs) ? jobs : []).filter(job => {
         const matchesSearch = job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
             job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
             job.skills.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -783,13 +797,17 @@ const JobsPage = () => {
                             workMode: job.work_mode,
                             type: job.job_type,
                             posted: "Recent", // You might want to calculate this from created_at
-                            skills: JSON.parse(job.skills_required),
+                            skills: job.required_skills ? 
+                                (Array.isArray(job.required_skills) ? 
+                                    job.required_skills.map(skill => typeof skill === 'string' ? skill : skill.name) : 
+                                    []) : 
+                                [],
                             views: Math.floor(Math.random() * 2000) + 500, // Random view count for demo
-                            rating: (Math.random() * 1 + 4).toFixed(1), // Random rating between 4.0-5.0
+                            rating: parseFloat((Math.random() * 1 + 4).toFixed(1)), // Random rating between 4.0-5.0
                             applicants: Math.floor(Math.random() * 50) + 10, // Random applicant count
                             featured: job.status === "featured",
                             companySize: "100+", // Add this if available from API
-                            remote: job.work_mode.toLowerCase().includes('remote'),
+                            remote: job.work_mode ? job.work_mode.toLowerCase().includes('remote') : false,
                             urgentHiring: false, // Add this if available from API
                             verified: true, // Add this if available from API
                             company: job.company_name,

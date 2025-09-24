@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useLocation } from 'wouter';
 import ModernDashboardLayout from '../components/layout/ModernDashboardLayout';
 import DashboardCard from '../components/cards/DashboardCard';
-import { useDashboard } from '../contexts/DashboardContext';
+import { useDashboard } from '../contexts/RealDashboardContext';
 import { useTheme } from '../contexts/ThemeContext';
 
 // Import sub-components (we'll create these)

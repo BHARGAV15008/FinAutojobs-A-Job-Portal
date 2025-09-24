@@ -1,29 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useDashboard } from '../../contexts/DashboardContext';
-import { usePolling } from '../../hooks/useApi';
+import { useDashboard } from '../../contexts/RealDashboardContext';
 import { notificationsAPI } from '../../services/api';
 
 const NotificationSystem = () => {
-  const { notifications, markNotificationAsRead } = useDashboard();
+  const { dashboardData, isAuthenticated } = useDashboard();
   const [visibleNotifications, setVisibleNotifications] = useState([]);
   
-  // Poll for new notifications every 30 seconds
-  const { data: newNotifications } = usePolling(
-    () => notificationsAPI.getNotifications({ unread: true, limit: 5 }),
-    30000
-  );
-
+  // Get notifications from dashboard data
+  const notifications = dashboardData?.notifications || [];
+  
+  // Only show notifications if authenticated and there are notifications
   useEffect(() => {
-    if (newNotifications?.length > 0) {
+    if (isAuthenticated && notifications?.length > 0) {
       // Show new notifications as toast
-      newNotifications.forEach(notification => {
+      notifications.forEach(notification => {
         if (!visibleNotifications.find(n => n.id === notification.id)) {
           showNotification(notification);
         }
       });
     }
-  }, [newNotifications]);
+  }, [notifications, isAuthenticated]);
 
   const showNotification = (notification) => {
     setVisibleNotifications(prev => [...prev, notification]);
@@ -39,7 +36,15 @@ const NotificationSystem = () => {
   };
 
   const handleNotificationClick = async (notification) => {
-    await markNotificationAsRead(notification.id);
+    // Mark as read via API if authenticated
+    if (isAuthenticated) {
+      try {
+        await notificationsAPI.markAsRead(notification.id);
+      } catch (error) {
+        console.error('Failed to mark notification as read:', error);
+      }
+    }
+    
     removeNotification(notification.id);
     
     // Handle navigation based on notification type

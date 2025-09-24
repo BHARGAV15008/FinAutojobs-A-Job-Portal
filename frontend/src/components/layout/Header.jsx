@@ -16,8 +16,8 @@ import {
   Type,
   ChevronDown
 } from 'lucide-react';
-import { useTheme } from '../../contexts/ThemeContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/IntegratedThemeContext';
+import { useAuth } from '../../contexts/AuthContext.jsx';
 
 const Header = ({ sidebarOpen, setSidebarOpen }) => {
   const { 

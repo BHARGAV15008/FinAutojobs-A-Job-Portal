@@ -3,23 +3,56 @@ import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import ModernDashboardLayout from "../components/layout/ModernDashboardLayout";
 import DashboardCard from "../components/cards/DashboardCard";
-import { DashboardProvider, useDashboard } from "../contexts/DashboardContext";
+import {
+  DashboardProvider,
+  useDashboard,
+} from "../contexts/RealDashboardContext";
 import { ThemeProvider } from "../contexts/ThemeContext";
 import {
   EnhancedProfileTab,
   EnhancedSettingsTab,
+  EnhancedJobsTab,
 } from "../components/dashboard/EnhancedDashboardTabs";
+import EnhancedJobPostingTab from "../components/dashboard/EnhancedJobPostingTab";
+import EnhancedApplicantsTab from "../components/dashboard/EnhancedApplicantsTab";
+import EnhancedCandidatesTab from "../components/dashboard/EnhancedCandidatesTab";
+import EnhancedInterviewsTab from "../components/dashboard/EnhancedInterviewsTab";
 import JobMetrics from "../components/dashboard/JobMetrics";
 import RecentActivity from "../components/dashboard/RecentActivity";
 import JobChart from "../components/dashboard/JobChart";
 import CandidatesTab from "../components/dashboard/CandidatesTab";
 import InterviewsTab from "../components/dashboard/InterviewsTab";
+import LoginStatusBanner from "../components/dashboard/LoginStatusBanner";
 import MessagesTab from "../components/dashboard/MessagesTab";
 
 const RecruiterDashboardContent = () => {
   const [location] = useLocation();
   const [activeTab, setActiveTab] = useState("dashboard");
-  const { dashboardStats, jobs, applications } = useDashboard();
+  const [activeJobTab, setActiveJobTab] = useState("post");
+  
+  // Try to use dashboard context, but provide fallbacks
+  let dashboardContext;
+  try {
+    dashboardContext = useDashboard();
+  } catch (error) {
+    console.warn('Dashboard context not available, using fallback data');
+    dashboardContext = {
+      currentUser: null,
+      isAuthenticated: false,
+      getStats: () => ({
+        activeJobs: 5,
+        totalApplications: 45,
+        shortlisted: 12,
+        hired: 3
+      }),
+      dashboardData: {
+        applications: []
+      },
+      loading: false
+    };
+  }
+  
+  const { currentUser, isAuthenticated, getStats, dashboardData, loading } = dashboardContext;
 
   // Mock user data - authentication removed
   const user = {
@@ -43,7 +76,7 @@ const RecruiterDashboardContent = () => {
       id: "applicants",
       label: "Applicants",
       icon: "👥",
-      badge: applications.length,
+      badge: dashboardData.applications?.length || 0,
     },
     { id: "candidates", label: "Candidates", icon: "🎯" },
     { id: "interviews", label: "Interviews", icon: "🗣️" },
@@ -65,7 +98,22 @@ const RecruiterDashboardContent = () => {
     }
   }, [location, dashboardTabs]);
 
-  const stats = dashboardStats.recruiter;
+  // Listen for sidebar tab change events
+  useEffect(() => {
+    const handleSidebarTabChange = (event) => {
+      const { tabId, jobTabId } = event.detail;
+      setActiveTab(tabId);
+      if (jobTabId) {
+        setActiveJobTab(jobTabId);
+      }
+      handleTabChange(tabId);
+    };
+
+    window.addEventListener('dashboardTabChange', handleSidebarTabChange);
+    return () => window.removeEventListener('dashboardTabChange', handleSidebarTabChange);
+  }, []);
+
+  const stats = getStats("recruiter");
 
   // Handle tab changes
   const handleTabChange = (tabId) => {
@@ -84,7 +132,7 @@ const RecruiterDashboardContent = () => {
   const overviewCards = [
     {
       title: "Active Jobs",
-      value: stats.activeJobs,
+      value: stats.activeJobs || 0,
       change: "+2 this month",
       changeType: "positive",
       gradient: "blue",
@@ -106,7 +154,7 @@ const RecruiterDashboardContent = () => {
     },
     {
       title: "Total Applications",
-      value: stats.totalApplications,
+      value: stats.totalApplications || 0,
       change: "+12 this week",
       changeType: "positive",
       gradient: "green",
@@ -128,7 +176,7 @@ const RecruiterDashboardContent = () => {
     },
     {
       title: "Shortlisted",
-      value: stats.shortlistedCandidates,
+      value: stats.shortlisted || 0,
       change: "+5 this week",
       changeType: "positive",
       gradient: "purple",
@@ -150,7 +198,7 @@ const RecruiterDashboardContent = () => {
     },
     {
       title: "Hired",
-      value: stats.hiredCandidates,
+      value: stats.hired || 0,
       change: "+1 this month",
       changeType: "positive",
       gradient: "orange",
@@ -176,71 +224,63 @@ const RecruiterDashboardContent = () => {
   const renderTabContent = () => {
     switch (activeTab) {
       case "profile":
-        return <EnhancedProfileTab user={user} onEdit={handleEditProfile} userRole="recruiter" />;
+        return (
+          <EnhancedProfileTab
+            user={user}
+            onEdit={handleEditProfile}
+            userRole="recruiter"
+          />
+        );
       case "settings":
         return <EnhancedSettingsTab />;
       case "jobs":
+        const jobTabs = [
+          { id: "post", label: "Post New Job", icon: "➕" },
+          { id: "active", label: "Active Jobs", icon: "🟢" },
+          { id: "draft", label: "Draft Jobs", icon: "📝" },
+          { id: "closed", label: "Closed Jobs", icon: "🔒" },
+        ];
+
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Job Management
-            </h2>
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm border border-gray-200 dark:border-gray-700 text-center">
-              <div className="text-6xl mb-4">💼</div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                Job Management
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                Create, edit, and manage your job postings.
-              </p>
+            <div className="flex flex-wrap gap-4 mb-6">
+              {jobTabs.map((tab) => (
+                <motion.button
+                  key={tab.id}
+                  className={`px-6 py-3 rounded-lg text-sm font-medium transition-colors duration-200 
+                    ${
+                      activeJobTab === tab.id
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                    }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setActiveJobTab(tab.id)}
+                >
+                  <span className="mr-2">{tab.icon}</span>
+                  {tab.label}
+                </motion.button>
+              ))}
             </div>
+
+            {activeJobTab === "post" && <EnhancedJobPostingTab />}
+            {activeJobTab === "active" && (
+              <EnhancedJobsTab userRole="recruiter" jobType="active" />
+            )}
+            {activeJobTab === "draft" && (
+              <EnhancedJobsTab userRole="recruiter" jobType="draft" />
+            )}
+            {activeJobTab === "closed" && (
+              <EnhancedJobsTab userRole="recruiter" jobType="closed" />
+            )}
           </div>
         );
       case "applicants":
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Applicants
-            </h2>
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-              <div className="space-y-4">
-                {applications.map((app) => (
-                  <div
-                    key={app.id}
-                    className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
-                  >
-                    <div>
-                      <h4 className="font-medium text-gray-900 dark:text-white">
-                        {app.jobTitle}
-                      </h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {app.company}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-500">
-                        Applied: {app.appliedDate}
-                      </p>
-                    </div>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        app.status === "pending"
-                          ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                          : app.status === "shortlisted"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                      }`}
-                    >
-                      {app.status}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        );
+        return <EnhancedApplicantsTab />;
       case "candidates":
-        return <CandidatesTab />;
+        return <EnhancedCandidatesTab />;
       case "interviews":
-        return <InterviewsTab />;
+        return <EnhancedInterviewsTab />;
       case "messages":
         return <MessagesTab userRole="recruiter" />;
       case "analytics":
@@ -266,6 +306,9 @@ const RecruiterDashboardContent = () => {
       default:
         return (
           <div className="space-y-8">
+            {/* Login Status Banner */}
+            <LoginStatusBanner />
+
             {/* Welcome Section */}
             <motion.div
               className="bg-gradient-to-r from-green-600 to-teal-600 rounded-xl p-8 text-white"
@@ -358,7 +401,7 @@ const RecruiterDashboardContent = () => {
                   </button>
                 </div>
                 <div className="space-y-3">
-                  {applications.slice(0, 4).map((app) => (
+                  {(dashboardData.applications || []).slice(0, 4).map((app) => (
                     <div
                       key={app.id}
                       className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
@@ -445,20 +488,9 @@ const RecruiterDashboardContent = () => {
       title="Recruiter Dashboard"
       userRole="recruiter"
       user={user}
-      showBreadcrumbs={activeTab !== "dashboard"}
-      breadcrumbs={
-        activeTab !== "dashboard"
-          ? [
-              { name: "Dashboard", path: "/recruiter-dashboard" },
-              {
-                name:
-                  activeTab.charAt(0).toUpperCase() +
-                  activeTab.slice(1).replace("-", " "),
-                path: `/${activeTab}`,
-              },
-            ]
-          : []
-      }
+      activeTab={activeTab}
+      activeJobTab={activeJobTab}
+      showBreadcrumbs={false}
     >
       <div className="space-y-6">
         {/* Tab Content */}

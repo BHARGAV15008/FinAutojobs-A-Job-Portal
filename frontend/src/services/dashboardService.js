@@ -225,7 +225,7 @@ export const dashboardService = {
 
   // Performance monitoring
   logPerformance: (action, duration) => {
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.log(`Performance: ${action} took ${duration}ms`);
     }
   },

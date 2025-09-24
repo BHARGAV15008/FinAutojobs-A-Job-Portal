@@ -1,19 +1,20 @@
-import React from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { Box, CircularProgress, Typography, Paper } from '@mui/material';
-import { Lock } from '@mui/icons-material';
+import React, { useEffect } from 'react';
+import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useLocation } from 'wouter';
+import { CircularProgress, Box, Paper, Typography, Button } from '@mui/material';
+import { motion } from 'framer-motion';
 
-const ProtectedRoute = ({ 
-  children, 
-  requiredRole = null, 
-  requiredRoles = [], 
-  fallback = null 
-}) => {
+const ProtectedRoute = ({ children, requiredRole = null, allowedRoles = null }) => {
   const { user, loading, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
 
-  // Show loading spinner while checking authentication
+  // Handle redirect in useEffect to avoid setState during render
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      setLocation('/login');
+    }
+  }, [loading, isAuthenticated, setLocation]);
+
   if (loading) {
     return (
       <Box
@@ -21,93 +22,105 @@ const ProtectedRoute = ({
         justifyContent="center"
         alignItems="center"
         minHeight="100vh"
-        flexDirection="column"
-        gap={2}
+        sx={{ backgroundColor: 'background.default' }}
       >
-        <CircularProgress size={60} />
-        <Typography variant="h6" color="text.secondary">
-          Authenticating...
-        </Typography>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <CircularProgress size={60} />
+        </motion.div>
       </Box>
     );
   }
 
-  // Redirect to login if not authenticated
   if (!isAuthenticated) {
-    setLocation('/login');
-    return null;
-  }
-
-  // Check role-based access
-  const allowedRoles = requiredRoles.length > 0 ? requiredRoles : [requiredRole].filter(Boolean);
-  
-  if (allowedRoles.length > 0 && !allowedRoles.includes(user?.role)) {
-    return fallback || (
+    // Show loading while redirect is happening
+    return (
       <Box
         display="flex"
         justifyContent="center"
         alignItems="center"
         minHeight="100vh"
-        p={3}
+        sx={{ backgroundColor: 'background.default' }}
       >
-        <Paper
-          elevation={3}
-          sx={{
-            p: 4,
-            textAlign: 'center',
-            maxWidth: 400,
-            borderRadius: 2,
-          }}
+        <CircularProgress size={60} />
+      </Box>
+    );
+  }
+
+  // Check role-based access
+  const hasRequiredRole = () => {
+    if (!requiredRole && !allowedRoles) return true;
+    if (requiredRole && user?.role === requiredRole) return true;
+    if (allowedRoles && allowedRoles.includes(user?.role)) return true;
+    return false;
+  };
+
+  if (!hasRequiredRole()) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="100vh"
+        sx={{ backgroundColor: 'background.default', p: 3 }}
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
         >
-          <Lock sx={{ fontSize: 64, color: 'error.main', mb: 2 }} />
-          <Typography variant="h5" gutterBottom color="error">
-            Access Denied
-          </Typography>
-          <Typography variant="body1" color="text.secondary" mb={2}>
-            You don't have permission to access this page.
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Required role: {allowedRoles.join(' or ')}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Your role: {user?.role}
-          </Typography>
-        </Paper>
+          <Paper
+            elevation={3}
+            sx={{
+              p: 4,
+              textAlign: 'center',
+              maxWidth: 400,
+              borderRadius: 2
+            }}
+          >
+            <Typography variant="h5" gutterBottom color="error">
+              Access Denied
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+              You don't have permission to access this page. 
+              {requiredRole && ` This page requires ${requiredRole} role.`}
+              {allowedRoles && ` This page requires one of: ${allowedRoles.join(', ')} roles.`}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Your current role: <strong>{user?.role}</strong>
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+              <Button
+                variant="contained"
+                onClick={() => {
+                  // Redirect to appropriate dashboard based on user role
+                  const dashboardPath = user?.role === 'admin' 
+                    ? '/admin-dashboard'
+                    : user?.role === 'recruiter'
+                    ? '/recruiter-dashboard'
+                    : '/applicant-dashboard';
+                  setLocation(dashboardPath);
+                }}
+              >
+                Go to My Dashboard
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={() => setLocation('/')}
+              >
+                Go Home
+              </Button>
+            </Box>
+          </Paper>
+        </motion.div>
       </Box>
     );
   }
 
   return children;
 };
-
-// Higher-order component for route protection
-export const withAuth = (Component, options = {}) => {
-  return function AuthenticatedComponent(props) {
-    return (
-      <ProtectedRoute {...options}>
-        <Component {...props} />
-      </ProtectedRoute>
-    );
-  };
-};
-
-// Specific role-based route components
-export const ApplicantRoute = ({ children }) => (
-  <ProtectedRoute requiredRole="jobseeker">
-    {children}
-  </ProtectedRoute>
-);
-
-export const RecruiterRoute = ({ children }) => (
-  <ProtectedRoute requiredRoles={['recruiter', 'employer']}>
-    {children}
-  </ProtectedRoute>
-);
-
-export const AdminRoute = ({ children }) => (
-  <ProtectedRoute requiredRole="admin">
-    {children}
-  </ProtectedRoute>
-);
 
 export default ProtectedRoute;

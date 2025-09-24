@@ -6,6 +6,10 @@ import rateLimit from 'express-rate-limit';
 import session from 'express-session';
 import passport from 'passport';
 import dotenv from 'dotenv';
+import mongoose from 'mongoose';
+
+// Import routes
+import authRoutes from './routes/auth.js';
 
 dotenv.config();
 
@@ -26,13 +30,11 @@ app.use('/api/', limiter);
 // CORS configuration
 const allowedOrigins = [
     'http://localhost:3000',
-    'http://localhost:3000', 
-    'http://localhost:3000',
+    'http://localhost:3001',
     'http://localhost:5173',
     'http://localhost:4173',
     'http://127.0.0.1:3000',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:3000',
+    'http://127.0.0.1:3001',
     'http://127.0.0.1:5173'
 ];
 
@@ -65,6 +67,45 @@ app.use(session({
 // Passport middleware
 app.use(passport.initialize());
 app.use(passport.session());
+
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/finautojobs')
+  .then(() => {
+    console.log('✅ Database connected successfully');
+  })
+  .catch((error) => {
+    console.error('❌ Database connection failed:', error);
+    process.exit(1);
+  });
+
+// Routes
+app.use('/api/auth', authRoutes);
+
+// Basic job endpoints to prevent 404 errors
+app.get('/api/jobs', (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      jobs: [],
+      total: 0,
+      page: 1,
+      limit: parseInt(req.query.limit) || 10
+    }
+  });
+});
+
+// Basic company endpoints to prevent 404 errors
+app.get('/api/companies', (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      companies: [],
+      total: 0,
+      page: 1,
+      limit: parseInt(req.query.limit) || 10
+    }
+  });
+});
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

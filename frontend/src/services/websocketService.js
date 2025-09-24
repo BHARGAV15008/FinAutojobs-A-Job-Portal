@@ -16,7 +16,7 @@ class WebSocketService {
       this.disconnect();
     }
 
-    const wsUrl = process.env.NODE_ENV === 'production' 
+    const wsUrl = import.meta.env.PROD
       ? window.location.origin 
       : 'http://localhost:5000';
       

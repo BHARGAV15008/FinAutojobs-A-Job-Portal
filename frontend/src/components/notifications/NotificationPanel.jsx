@@ -1,14 +1,13 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useDashboard } from '../../contexts/DashboardContext';
+import { useDashboard } from '../../contexts/RealDashboardContext';
 
 const NotificationPanel = ({ isOpen, onClose, notifications }) => {
-  const { markNotificationAsRead, clearReadNotifications } = useDashboard();
+  const { isAuthenticated } = useDashboard();
 
   const handleNotificationClick = (notification) => {
-    if (!notification.read) {
-      markNotificationAsRead(notification.id);
-    }
+    // Handle notification click - could navigate or perform action
+    console.log('Notification clicked:', notification);
   };
 
   const getNotificationIcon = (type) => {

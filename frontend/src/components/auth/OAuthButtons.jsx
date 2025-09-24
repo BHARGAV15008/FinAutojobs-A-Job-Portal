@@ -28,7 +28,7 @@ const OAuthButtons = ({ onSuccess, onError }) => {
 
             if (response.ok) {
                 // Store the token and user data
-                localStorage.setItem('authToken', data.token);
+                localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data.user));
                 
                 // Update auth context

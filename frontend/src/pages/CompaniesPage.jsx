@@ -319,11 +319,13 @@ const CompaniesPage = () => {
                 {/* Actions */}
                 <Box sx={{ display: 'flex', gap: 1, mt: 'auto' }}>
                     <Button
-                        component={Link}
-                        href={`/company/${company.id}`}
+                        component="a"
+                        href={company.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         variant="contained"
                         fullWidth
-                        startIcon={<Business />}
+                        startIcon={<Language />}
                     >
                         View Company
                     </Button>

@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import ModernDashboardLayout from "../components/layout/ModernDashboardLayout";
 import DashboardCard from "../components/cards/DashboardCard";
-import { DashboardProvider, useDashboard } from "../contexts/DashboardContext";
+import { DashboardProvider, useDashboard } from "../contexts/RealDashboardContext";
 import { ThemeProvider } from "../contexts/ThemeContext";
 import {
   EnhancedProfileTab,
@@ -14,12 +14,19 @@ import UserManagementTab from "../components/dashboard/UserManagementTab";
 import JobManagementTab from "../components/dashboard/JobManagementTab";
 import AnalyticsTab from "../components/dashboard/AnalyticsTab";
 import ModerationTab from "../components/dashboard/ModerationTab";
+import LoginStatusBanner from "../components/dashboard/LoginStatusBanner";
 import MessagesTab from "../components/dashboard/MessagesTab";
 
 const AdminDashboardContent = () => {
   const [location] = useLocation();
   const [activeTab, setActiveTab] = useState("dashboard");
-  const { dashboardStats, jobs, applications, users } = useDashboard();
+  const { 
+    currentUser, 
+    isAuthenticated, 
+    getStats, 
+    dashboardData, 
+    loading 
+  } = useDashboard();
 
   // Mock user data - authentication removed
   const user = {
@@ -74,13 +81,13 @@ const AdminDashboardContent = () => {
     }
   };
 
-  const stats = dashboardStats.admin;
+  const stats = getStats('admin');
 
   // Dashboard overview cards
   const overviewCards = [
     {
       title: "Total Users",
-      value: stats.totalUsers,
+      value: stats.totalUsers || 0,
       change: "+45 this month",
       changeType: "positive",
       gradient: "blue",
@@ -102,7 +109,7 @@ const AdminDashboardContent = () => {
     },
     {
       title: "Active Jobs",
-      value: stats.activeJobs,
+      value: stats.activeJobs || 0,
       change: "+12 this week",
       changeType: "positive",
       gradient: "green",
@@ -124,7 +131,7 @@ const AdminDashboardContent = () => {
     },
     {
       title: "Applications",
-      value: stats.totalApplications,
+      value: stats.totalApplications || 0,
       change: "+89 this week",
       changeType: "positive",
       gradient: "purple",
@@ -146,7 +153,7 @@ const AdminDashboardContent = () => {
     },
     {
       title: "System Health",
-      value: `${stats.systemHealth}%`,
+      value: `${stats.systemHealth || 0}%`,
       change: "All systems operational",
       changeType: "positive",
       gradient: "orange",

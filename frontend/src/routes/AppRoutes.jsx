@@ -1,14 +1,23 @@
 import React from 'react';
 import { Route, Switch, useLocation } from 'wouter';
-import { useAuth } from '../contexts/AuthContext';
-// Authentication imports removed - dashboards are now public
+import { useAuth } from '../contexts/AuthContext.jsx';
 import { CircularProgress, Box } from '@mui/material';
 import Navigation from '../components/Navigation';
+import ProtectedRoute from '../components/auth/ProtectedRoute';
 
 // Direct imports for dashboards
 import ApplicantDashboard from '../pages/ApplicantDashboard';
 import RecruiterDashboard from '../pages/RecruiterDashboard';
 import AdminDashboard from '../pages/AdminDashboard';
+import LoginDemo from '../components/auth/LoginDemo';
+import AdminLoginPage from '../pages/AdminLoginPage';
+import OTPLoginPage from '../pages/OTPLoginPage';
+import OTPSignupPage from '../pages/OTPSignupPage';
+import OTPDebugPage from '../pages/OTPDebugPage';
+import SimpleOTPTest from '../pages/SimpleOTPTest';
+import JobsPageDebug from '../components/debug/JobsPageDebug';
+import RegisterPage from '../pages/RegisterPage';
+import LoginPage from '../pages/LoginPage';
 
 // Import existing pages with fallback handling
 const SafeImport = ({ component: Component, fallback, ...props }) => {
@@ -45,30 +54,30 @@ const ResumeBuilderPage = React.lazy(() => import('../pages/ResumeBuilderPage').
   default: () => <div>Resume Builder Page Loading...</div> 
 })));
 
-const RegisterPage = React.lazy(() => import('../pages/RegisterPage').catch(() => ({ 
-  default: () => <div>Register Page Loading...</div> 
+const SignupPage = React.lazy(() => import('../pages/SignupPage').catch(() => ({ 
+  default: () => <div>Signup Page Loading...</div> 
 })));
 
 const JobAlertsPage = React.lazy(() => import('../pages/JobAlertsPage').catch(() => ({ 
   default: () => <div>Job Alerts Page Loading...</div> 
 })));
 
+const AddJobPage = React.lazy(() => import('../pages/AddJobPage').catch(() => ({ 
+  default: () => <div>Add Job Page Loading...</div> 
+})));
 
 const DashboardDemo = React.lazy(() => import('../pages/DashboardDemo').catch(() => ({ 
   default: () => <div>Dashboard Demo Loading...</div> 
-})));
-
-const LoginPage = React.lazy(() => import('../pages/LoginPage').catch(() => ({ 
-  default: () => <div>Login Page Loading...</div> 
 })));
 
 const AppRoutes = () => {
   const { loading } = useAuth();
   const [location] = useLocation();
   const isDashboard = location.includes('-dashboard') || location.includes('/demo');
+  const isAdminLogin = location === '/admin-login';
 
-  // Skip loading screen for dashboard routes since they don't require authentication
-  if (loading && !isDashboard) {
+  // Show loading screen while auth is initializing
+  if (loading) {
     return (
       <Box
         display="flex"
@@ -83,7 +92,7 @@ const AppRoutes = () => {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#fafafa' }}>
-      {!isDashboard && <Navigation />}
+      {!isDashboard && !isAdminLogin && <Navigation />}
       
       <main style={{ flex: 1 }}>
         <React.Suspense fallback={
@@ -95,29 +104,60 @@ const AppRoutes = () => {
             {/* Public Routes */}
             <Route path="/">{() => <HomePageNew />}</Route>
             <Route path="/jobs">{() => <JobsPage />}</Route>
+            <Route path="/jobs-debug">{() => <JobsPageDebug />}</Route>
             <Route path="/companies">{() => <CompaniesPage />}</Route>
             <Route path="/salary-insights">{() => <SalaryInsightsPage />}</Route>
             <Route path="/skills-assessment">{() => <SkillsAssessmentPage />}</Route>
             <Route path="/resume">{() => <ResumeBuilderPage />}</Route>
             <Route path="/job-alerts">{() => <JobAlertsPage />}</Route>
+            <Route path="/add-job">{() => <AddJobPage />}</Route>
+            <Route path="/post-job">{() => <AddJobPage />}</Route>
             <Route path="/login">{() => <LoginPage />}</Route>
+            <Route path="/otp-login">{() => <OTPLoginPage />}</Route>
             <Route path="/register">{() => <RegisterPage />}</Route>
+            <Route path="/signup">{() => <SignupPage />}</Route>
+            <Route path="/otp-signup">{() => <OTPSignupPage />}</Route>
+            <Route path="/otp-debug">{() => <OTPDebugPage />}</Route>
+            <Route path="/simple-otp-test">{() => <SimpleOTPTest />}</Route>
             <Route path="/demo">{() => <DashboardDemo />}</Route>
 
-            {/* Dashboard Routes - No Authentication Required */}
-            <Route path="/applicant-dashboard" nest>
-              <Route path="/">{() => <ApplicantDashboard />}</Route>
-              <Route path="/:tab">{() => <ApplicantDashboard />}</Route>
-            </Route>
+            {/* Admin Login Route */}
+            <Route path="/admin-login">{() => <AdminLoginPage />}</Route>
 
-            <Route path="/recruiter-dashboard" nest>
-              <Route path="/">{() => <RecruiterDashboard />}</Route>
-              <Route path="/:tab">{() => <RecruiterDashboard />}</Route>
-            </Route>
+            {/* Protected Dashboard Routes */}
+            <Route path="/applicant-dashboard">{() => (
+              <ProtectedRoute allowedRoles={['applicant']}>
+                <ApplicantDashboard />
+              </ProtectedRoute>
+            )}</Route>
+            <Route path="/applicant-dashboard/:tab">{() => (
+              <ProtectedRoute allowedRoles={['applicant']}>
+                <ApplicantDashboard />
+              </ProtectedRoute>
+            )}</Route>
+
+            <Route path="/recruiter-dashboard">{() => (
+              <ProtectedRoute allowedRoles={['recruiter']}>
+                <RecruiterDashboard />
+              </ProtectedRoute>
+            )}</Route>
+            <Route path="/recruiter-dashboard/:tab">{() => (
+              <ProtectedRoute allowedRoles={['recruiter']}>
+                <RecruiterDashboard />
+              </ProtectedRoute>
+            )}</Route>
 
             <Route path="/admin-dashboard" nest>
-              <Route path="/">{() => <AdminDashboard />}</Route>
-              <Route path="/:tab">{() => <AdminDashboard />}</Route>
+              <Route path="/">{() => (
+                <ProtectedRoute requiredRole="admin">
+                  <AdminDashboard />
+                </ProtectedRoute>
+              )}</Route>
+              <Route path="/:tab">{() => (
+                <ProtectedRoute requiredRole="admin">
+                  <AdminDashboard />
+                </ProtectedRoute>
+              )}</Route>
             </Route>
 
             {/* 404 Route */}

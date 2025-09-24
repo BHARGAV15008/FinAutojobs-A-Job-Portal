@@ -2,10 +2,14 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import AdminMetrics from './AdminMetrics';
 import AdminActivity from './AdminActivity';
+import LoginStatusBanner from './LoginStatusBanner';
 
 const AdminDashboardMain = ({ user }) => {
   return (
     <div className="space-y-8">
+      {/* Login Status Banner */}
+      <LoginStatusBanner />
+      
       {/* Welcome Section */}
       <motion.div
         className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl p-8 text-white"

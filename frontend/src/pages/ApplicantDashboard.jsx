@@ -3,8 +3,8 @@ import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import ModernDashboardLayout from "../components/layout/ModernDashboardLayout";
 import DashboardCard from "../components/cards/DashboardCard";
-import { DashboardProvider, useDashboard } from "../contexts/DashboardContext";
-import { ThemeProvider } from "../contexts/ThemeContext";
+import { DashboardProvider, useDashboard } from "../contexts/RealDashboardContext";
+import { IntegratedThemeProvider } from "../contexts/IntegratedThemeContext";
 import {
   EnhancedProfileTab,
   EnhancedSettingsTab,
@@ -15,31 +15,39 @@ import {
 import JobMetrics from "../components/dashboard/JobMetrics";
 import RecentActivity from "../components/dashboard/RecentActivity";
 import JobChart from "../components/dashboard/JobChart";
+import LoginStatusBanner from "../components/dashboard/LoginStatusBanner";
+import EmptyState from "../components/dashboard/EmptyState";
 
 const ApplicantDashboardContent = () => {
   const [location, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("dashboard");
-  const { dashboardStats, jobs, applications } = useDashboard();
+  const { 
+    currentUser, 
+    isAuthenticated, 
+    getStats, 
+    dashboardData, 
+    loading,
+    demoAccounts 
+  } = useDashboard();
 
-  // Mock user data - authentication removed
-  const user = {
+  // Use real user data if authenticated, otherwise use demo data
+  const user = currentUser || {
     id: 1,
-    name: "John Doe",
-    email: "john.doe@example.com",
+    firstName: "Demo",
+    lastName: "User",
+    email: "demo@example.com",
     phone: "+91 9876543210",
     location: "Mumbai, India",
     bio: "Experienced software developer with 5+ years in full-stack development",
     skills: ["JavaScript", "React", "Node.js", "Python", "MongoDB"],
     qualification: "B.Tech Computer Science",
-    experience_years: 5,
-    resume_url: null,
-    profile_picture: null,
-    linkedin_url: "https://linkedin.com/in/johndoe",
-    github_url: "https://github.com/johndoe",
-    portfolio_url: "https://johndoe.dev",
+    experience: 5,
     role: "applicant",
-    profileComplete: 85,
+    profileCompletion: { percentage: 85 }
   };
+
+  // Get role-specific stats
+  const stats = getStats('applicant');
 
   // Define comprehensive dashboard tabs
   const dashboardTabs = [
@@ -52,7 +60,7 @@ const ApplicantDashboardContent = () => {
       id: "applications",
       label: "Applications",
       icon: "📄",
-      badge: applications.length,
+      badge: dashboardData.applications?.length || 0,
     },
     { id: "resume", label: "Resume Builder", icon: "📝" },
     { id: "job-alerts", label: "Job Alerts", icon: "🔔" },
@@ -71,8 +79,6 @@ const ApplicantDashboardContent = () => {
       setActiveTab("dashboard");
     }
   }, [location, dashboardTabs]);
-
-  const stats = dashboardStats.applicant;
 
   // Handle tab changes
   const handleTabChange = (tabId) => {
@@ -102,7 +108,7 @@ const ApplicantDashboardContent = () => {
   const overviewCards = [
     {
       title: "Profile Completion",
-      value: `${stats.profileCompletion}%`,
+      value: `${stats.profileCompletion || 0}%`,
       change: "+5% from last week",
       changeType: "positive",
       gradient: "blue",
@@ -124,7 +130,7 @@ const ApplicantDashboardContent = () => {
     },
     {
       title: "Applied Jobs",
-      value: stats.appliedJobs,
+      value: stats.appliedJobs || 0,
       change: "+3 this week",
       changeType: "positive",
       gradient: "green",
@@ -146,7 +152,7 @@ const ApplicantDashboardContent = () => {
     },
     {
       title: "Shortlisted",
-      value: stats.shortlistedApplications,
+      value: stats.shortlisted || 0,
       change: "+1 this week",
       changeType: "positive",
       gradient: "purple",
@@ -168,7 +174,7 @@ const ApplicantDashboardContent = () => {
     },
     {
       title: "Interviews",
-      value: stats.interviewsScheduled,
+      value: stats.interviews || 0,
       change: "Next: Tomorrow 2 PM",
       changeType: "neutral",
       gradient: "orange",
@@ -265,6 +271,9 @@ const ApplicantDashboardContent = () => {
       default:
         return (
           <div className="space-y-8">
+            {/* Login Status Banner */}
+            <LoginStatusBanner />
+            
             {/* Welcome Section */}
             <motion.div
               className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-8 text-white"
@@ -275,7 +284,7 @@ const ApplicantDashboardContent = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-3xl font-bold mb-2">
-                    Welcome back, {user.name}! 👋
+                    Welcome back, {user.firstName} {user.lastName}! 👋
                   </h2>
                   <p className="text-blue-100 text-lg">
                     Ready to find your next opportunity? Let's get started!
@@ -324,32 +333,42 @@ const ApplicantDashboardContent = () => {
                   </button>
                 </div>
                 <div className="space-y-4">
-                  {applications.slice(0, 3).map((app) => (
-                    <div
-                      key={app.id}
-                      className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
-                    >
-                      <div>
-                        <h4 className="font-medium text-gray-900 dark:text-white">
-                          {app.jobTitle}
-                        </h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {app.company}
-                        </p>
-                      </div>
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          app.status === "pending"
-                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                            : app.status === "shortlisted"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                            : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                        }`}
+                  {dashboardData.applications && dashboardData.applications.length > 0 ? (
+                    dashboardData.applications.slice(0, 3).map((app) => (
+                      <div
+                        key={app.id}
+                        className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
                       >
-                        {app.status}
-                      </span>
+                        <div>
+                          <h4 className="font-medium text-gray-900 dark:text-white">
+                            {app.jobTitle}
+                          </h4>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {app.company}
+                          </p>
+                        </div>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            app.status === "pending"
+                              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                              : app.status === "shortlisted"
+                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                          }`}
+                        >
+                          {app.status}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <div className="text-4xl mb-2">📝</div>
+                      <p className="text-gray-500 dark:text-gray-400">No applications yet</p>
+                      <p className="text-sm text-gray-400 dark:text-gray-500">
+                        {isAuthenticated ? "Start applying to jobs to see them here" : "Login to see your applications"}
+                      </p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
 
@@ -367,32 +386,42 @@ const ApplicantDashboardContent = () => {
                   </button>
                 </div>
                 <div className="space-y-4">
-                  {jobs.slice(0, 3).map((job) => (
-                    <div
-                      key={job.id}
-                      className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors cursor-pointer"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h4 className="font-medium text-gray-900 dark:text-white">
-                            {job.title}
-                          </h4>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {job.company} • {job.location}
-                          </p>
-                          <p className="text-sm text-green-600 dark:text-green-400 font-medium mt-1">
-                            {job.salary}
-                          </p>
+                  {dashboardData.recentJobs && dashboardData.recentJobs.length > 0 ? (
+                    dashboardData.recentJobs.slice(0, 3).map((job) => (
+                      <div
+                        key={job.id}
+                        className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors cursor-pointer"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-gray-900 dark:text-white">
+                              {job.title}
+                            </h4>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              {job.company} • {job.location}
+                            </p>
+                            <p className="text-sm text-green-600 dark:text-green-400 font-medium mt-1">
+                              {job.salary}
+                            </p>
+                          </div>
+                          <button
+                            className="ml-4 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                            onClick={() => handleApplyJob(job.id)}
+                          >
+                            Apply
+                          </button>
                         </div>
-                        <button
-                          className="ml-4 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
-                          onClick={() => handleApplyJob(job.id)}
-                        >
-                          Apply
-                        </button>
                       </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <div className="text-4xl mb-2">💼</div>
+                      <p className="text-gray-500 dark:text-gray-400">No recommended jobs yet</p>
+                      <p className="text-sm text-gray-400 dark:text-gray-500">
+                        {isAuthenticated ? "Check back later for job recommendations" : "Login to see personalized job recommendations"}
+                      </p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -406,9 +435,8 @@ const ApplicantDashboardContent = () => {
       title="Applicant Dashboard"
       userRole="applicant"
       user={user}
-      showBreadcrumbs={activeTab !== "dashboard"}
       breadcrumbs={
-        activeTab !== "dashboard"
+        activeTab !== "overview"
           ? [
               { name: "Dashboard", path: "/applicant-dashboard" },
               {
@@ -438,7 +466,13 @@ const ApplicantDashboardContent = () => {
 };
 
 const ApplicantDashboardPage = () => {
-  return <ApplicantDashboardContent />;
+  return (
+    <IntegratedThemeProvider>
+      <DashboardProvider>
+        <ApplicantDashboardContent />
+      </DashboardProvider>
+    </IntegratedThemeProvider>
+  );
 };
 
 export default ApplicantDashboardPage;

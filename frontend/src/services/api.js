@@ -86,6 +86,22 @@ export const applicationsAPI = {
     api.put('/applications/bulk-update', { applicationIds, status }),
 };
 
+// Candidates API
+export const candidatesAPI = {
+  getCandidates: (params) => api.get('/candidates', { params }),
+  getCandidate: (id) => api.get(`/candidates/${id}`),
+  updateCandidateStatus: (id, status) => api.put(`/candidates/${id}/status`, { status }),
+  sendEmail: (id, emailData) => api.post(`/candidates/${id}/send-email`, emailData),
+  downloadResume: (id) => api.get(`/candidates/${id}/resume/download`, { responseType: 'blob' }),
+  getStats: () => api.get('/candidates/stats'),
+  bulkUpdate: (candidateIds, updateData) => api.put('/candidates/bulk-update', { candidateIds, ...updateData }),
+  searchCandidates: (query, filters) => api.post('/candidates/search', { query, filters }),
+  getCandidateNotes: (id) => api.get(`/candidates/${id}/notes`),
+  addCandidateNote: (id, note) => api.post(`/candidates/${id}/notes`, { note }),
+  updateCandidateNote: (id, noteId, note) => api.put(`/candidates/${id}/notes/${noteId}`, { note }),
+  deleteCandidateNote: (id, noteId) => api.delete(`/candidates/${id}/notes/${noteId}`),
+};
+
 // Users API (Admin)
 export const usersAPI = {
   getUsers: (params) => api.get('/users', { params }),

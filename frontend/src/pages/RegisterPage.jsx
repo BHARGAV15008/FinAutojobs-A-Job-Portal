@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
+// PropType fixes applied - all error props are boolean - Updated: 2025-09-23T22:36:26
 import { Link, useLocation } from 'wouter'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../contexts/AuthContext.jsx'
 import { useToast } from '../components/ui/use-toast'
+import OTPVerification from '../components/auth/OTPVerification'
 import {
   Container,
   Box,
@@ -29,6 +31,10 @@ import {
   Select,
   FormControl,
   InputLabel,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material'
 import {
   Visibility,
@@ -50,10 +56,11 @@ import {
   School,
   Add,
   Close,
+  CheckCircle,
+  Cancel,
   Verified,
 } from '@mui/icons-material'
 import { styled } from '@mui/material/styles'
-import OTPVerification from '../components/OTPVerification'
 
 const StyledCard = styled(Card)(({ theme }) => ({
   background: 'rgba(255, 255, 255, 0.95)',
@@ -122,14 +129,6 @@ const RegisterPage = () => {
     phoneVerified: false
   })
 
-  // Password strength state
-  const [passwordStrength, setPasswordStrength] = useState({
-    length: false,
-    hasNumber: false,
-    hasSpecial: false,
-    hasUpper: false,
-    hasLower: false
-  })
   const [selectedSkill, setSelectedSkill] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -137,20 +136,29 @@ const RegisterPage = () => {
   const [emailVerified, setEmailVerified] = useState(false)
   const [phoneVerified, setPhoneVerified] = useState(false)
   const [acceptTerms, setAcceptTerms] = useState(false)
+  
+  // OTP verification states
   const [showEmailOTP, setShowEmailOTP] = useState(false)
   const [showPhoneOTP, setShowPhoneOTP] = useState(false)
-  const [otpLoading, setOtpLoading] = useState(false)
-  const [isMounted, setIsMounted] = useState(false)
+  const [emailOTPSent, setEmailOTPSent] = useState(false)
+  const [phoneOTPSent, setPhoneOTPSent] = useState(false)
+  
+  // Validation states
+  const [emailError, setEmailError] = useState(false)
+  const [phoneError, setPhoneError] = useState(false)
+  
+  // Password strength state
+  const [passwordStrength, setPasswordStrength] = useState({
+    hasMinLength: false,
+    hasUppercase: false,
+    hasLowercase: false,
+    hasNumber: false,
+    hasSpecialChar: false
+  })
 
-  const { signup, sendEmailOTP, verifyEmailOTP, sendSMSOTP, verifySMSOTP } = useAuth()
+  const { register, sendEmailOTP, verifyEmailOTP, sendSMSOTP, verifySMSOTP } = useAuth()
   const { toast } = useToast()
   const [, setLocation] = useLocation()
-
-  // Ensure component is mounted before allowing toast calls
-  useEffect(() => {
-    setIsMounted(true)
-    return () => setIsMounted(false)
-  }, [])
 
   const skillOptions = [
     'JavaScript', 'Python', 'Java', 'React', 'Node.js', 'Angular', 'Vue.js',
@@ -162,22 +170,28 @@ const RegisterPage = () => {
   ]
 
   const qualificationOptions = [
-    'High School Diploma',
-    'Associate Degree',
+    'High School',
+    'Diploma', 
     'Bachelor\'s Degree',
-    'Bachelor\'s in Computer Science',
-    'Bachelor\'s in Engineering',
-    'Bachelor\'s in Business',
     'Master\'s Degree',
-    'Master\'s in Computer Science',
-    'Master\'s in Engineering',
     'Master\'s in Business Administration (MBA)',
     'PhD',
     'Professional Certification',
-    'Diploma',
     'Trade School Certificate',
     'Other'
   ]
+
+  // Validation functions
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
+  }
+
+  const validatePhoneNumber = (phone) => {
+    // Indian phone number validation: +91 followed by 10 digits or just 10 digits
+    const phoneRegex = /^(\+91[\-\s]?)?[0]?(91)?[6789]\d{9}$/
+    return phoneRegex.test(phone.replace(/[\s\-]/g, ''))
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -186,14 +200,41 @@ const RegisterPage = () => {
       [name]: value
     })
 
+    // Real-time validation
+    if (name === 'email') {
+      if (value && !validateEmail(value)) {
+        setEmailError(true)
+      } else {
+        setEmailError(false)
+        // Reset verification status if email changes
+        if (emailVerified) {
+          setEmailVerified(false)
+          setEmailOTPSent(false)
+        }
+      }
+    }
+
+    if (name === 'phone') {
+      if (value && !validatePhoneNumber(value)) {
+        setPhoneError(true)
+      } else {
+        setPhoneError(false)
+        // Reset verification status if phone changes
+        if (phoneVerified) {
+          setPhoneVerified(false)
+          setPhoneOTPSent(false)
+        }
+      }
+    }
+
     // Check password strength when password changes
     if (name === 'password') {
       setPasswordStrength({
-        length: value.length >= 8,
+        hasMinLength: value.length >= 8,
         hasNumber: /\d/.test(value),
-        hasSpecial: /[!@#$%^&*(),.?":{}|<>]/.test(value),
-        hasUpper: /[A-Z]/.test(value),
-        hasLower: /[a-z]/.test(value)
+        hasSpecialChar: /[@$!%*?&]/.test(value),
+        hasUppercase: /[A-Z]/.test(value),
+        hasLowercase: /[a-z]/.test(value)
       })
     }
   }
@@ -226,98 +267,88 @@ const RegisterPage = () => {
 
     // Validate all required fields
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.password) {
-      if (isMounted) {
-        toast({
-          title: "Error",
-          description: "Please fill in all required fields",
-          variant: "destructive"
-        })
-      }
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields including phone number",
+        variant: "destructive"
+      })
       return
     }
 
-    if (formData.password !== formData.confirmPassword) {
-      if (isMounted) {
-        toast({
-          title: "Error",
-          description: "Passwords do not match",
-          variant: "destructive"
-        })
-      }
+    // Validate email format
+    if (!validateEmail(formData.email)) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid email address",
+        variant: "destructive"
+      })
       return
     }
 
-    if (!acceptTerms) {
-      if (isMounted) {
-        toast({
-          title: "Error",
-          description: "Please accept the terms and conditions",
-          variant: "destructive"
-        })
-      }
+    // Validate phone format
+    if (!validatePhoneNumber(formData.phone)) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid Indian phone number",
+        variant: "destructive"
+      })
       return
     }
 
+    // Validate email and phone verification
     if (!emailVerified) {
-      if (isMounted) {
-        toast({
-          title: "Error",
-          description: "Please verify your email address",
-          variant: "destructive"
-        })
-      }
+      toast({
+        title: "Error",
+        description: "Please verify your email address",
+        variant: "destructive"
+      })
       return
     }
 
     if (!phoneVerified) {
-      if (isMounted) {
-        toast({
-          title: "Error",
-          description: "Please verify your phone number",
-          variant: "destructive"
-        })
-      }
+      toast({
+        title: "Error",
+        description: "Please verify your phone number",
+        variant: "destructive"
+      })
       return
     }
 
-    // Additional role-specific validations
-    if (activeTab === 0 && formData.skills.length === 0) {
-      if (isMounted) {
-        toast({
-          title: "Error",
-          description: "Please add at least one skill",
-          variant: "destructive"
-        })
-      }
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        title: "Error",
+        description: "Passwords do not match",
+        variant: "destructive"
+      })
       return
     }
 
-    if (activeTab === 1 && (!formData.companyName || !formData.position)) {
-      if (isMounted) {
-        toast({
-          title: "Error",
-          description: "Please fill in all company details",
-          variant: "destructive"
-        })
-      }
+    if (!acceptTerms) {
+      toast({
+        title: "Error",
+        description: "Please accept the terms and conditions",
+        variant: "destructive"
+      })
       return
     }
 
     const submitData = {
-      username: `${formData.firstName}${formData.lastName}`.toLowerCase().replace(/\s+/g, ''),
+      firstName: formData.firstName,
+      lastName: formData.lastName,
       email: formData.email,
-      password: formData.password,
-      full_name: `${formData.firstName} ${formData.lastName}`.trim(),
       phone: formData.phone,
-      role: activeTab === 0 ? 'jobseeker' : 'employer',
+      password: formData.password,
+      role: activeTab === 0 ? 'applicant' : 'recruiter',
+      emailVerified: emailVerified,
+      phoneVerified: phoneVerified,
       // Role-specific fields for jobseekers
       ...(activeTab === 0 && {
-        skills: JSON.stringify(formData.skills),
+        skills: formData.skills,
         qualification: formData.qualification
       }),
       // Role-specific fields for employers
       ...(activeTab === 1 && {
-        company_name: formData.companyName,
+        companyName: formData.companyName,
         position: formData.position
       })
     }
@@ -326,30 +357,191 @@ const RegisterPage = () => {
     setLoading(true)
 
     try {
-      const result = await signup(submitData)
+      const result = await register(submitData)
       console.log('Registration result:', result)
 
       if (!result.success) {
         console.error('Registration failed:', result.error)
-        if (isMounted) {
+        
+        // Handle field-specific errors
+        if (result.field === 'email') {
+          setEmailError(result.error)
+        } else if (result.field === 'phone') {
+          setPhoneError(result.error)
+        } else {
+          // General error
           toast({
-            title: "Error",
+            title: "Registration Failed",
             description: result.error || "Failed to create account",
             variant: "destructive"
           })
         }
+      } else {
+        // Registration successful
+        console.log('Registration successful:', result)
+        
+        // Show success message with username if available
+        const username = result.data?.user?.username
+        const usernameInfo = result.data?.usernameGeneration
+        
+        let successMessage = "Account created successfully!"
+        if (username) {
+          successMessage += ` Your username is: ${username}`
+          if (usernameInfo?.method === 'numbered') {
+            successMessage += " (auto-generated)"
+          }
+        }
+        
+        toast({
+          title: "Welcome to FinAutoJobs!",
+          description: successMessage,
+          variant: "default"
+        })
+        
+        // The AuthContext will handle redirection based on role
       }
     } catch (error) {
       console.error('Registration error:', error)
-      if (isMounted) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create account",
+        variant: "destructive"
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // OTP verification functions
+  const handleSendEmailOTP = async () => {
+    if (!formData.email) {
+      toast({
+        title: "Error",
+        description: "Please enter your email address",
+        variant: "destructive"
+      })
+      return
+    }
+
+    if (!validateEmail(formData.email)) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid email address",
+        variant: "destructive"
+      })
+      return
+    }
+
+    try {
+      const result = await sendEmailOTP(formData.email)
+      if (result.success) {
+        setEmailOTPSent(true)
+        setShowEmailOTP(true)
+        toast({
+          title: "Success",
+          description: "OTP sent to your email address",
+          variant: "default"
+        })
+      } else {
         toast({
           title: "Error",
-          description: error.message || "Failed to create account",
+          description: result.error || "Failed to send OTP",
           variant: "destructive"
         })
       }
-    } finally {
-      setLoading(false)
+    } catch (error) {
+      console.error('Email OTP error:', error)
+      toast({
+        title: "Error",
+        description: "Failed to send OTP",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleSendPhoneOTP = async () => {
+    if (!formData.phone) {
+      toast({
+        title: "Error",
+        description: "Please enter your phone number",
+        variant: "destructive"
+      })
+      return
+    }
+
+    if (!validatePhoneNumber(formData.phone)) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid Indian phone number (e.g., +91 9876543210)",
+        variant: "destructive"
+      })
+      return
+    }
+
+    try {
+      const result = await sendSMSOTP(formData.phone)
+      if (result.success) {
+        setPhoneOTPSent(true)
+        setShowPhoneOTP(true)
+        toast({
+          title: "Success",
+          description: "OTP sent to your phone number",
+          variant: "default"
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to send SMS OTP",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error('Phone OTP error:', error)
+      toast({
+        title: "Error",
+        description: "Failed to send SMS OTP",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleEmailOTPVerification = async (data) => {
+    try {
+      setEmailVerified(true)
+      setShowEmailOTP(false)
+      setFormData(prev => ({ ...prev, emailVerified: true }))
+      toast({
+        title: "Success",
+        description: "Email verified successfully",
+        variant: "default"
+      })
+    } catch (error) {
+      console.error('Email OTP verification error:', error)
+      toast({
+        title: "Error",
+        description: "Failed to verify OTP",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handlePhoneOTPVerification = async (data) => {
+    try {
+      setPhoneVerified(true)
+      setShowPhoneOTP(false)
+      setFormData(prev => ({ ...prev, phoneVerified: true }))
+      toast({
+        title: "Success",
+        description: "Phone number verified successfully",
+        variant: "default"
+      })
+    } catch (error) {
+      console.error('Phone OTP verification error:', error)
+      toast({
+        title: "Error",
+        description: "Failed to verify OTP",
+        variant: "destructive"
+      })
     }
   }
 
@@ -357,148 +549,9 @@ const RegisterPage = () => {
     setActiveTab(newValue)
   }
 
-  const handleVerifyEmail = async () => {
-    if (!formData.email) {
-      if (isMounted) {
-        toast({
-          title: "Error",
-          description: "Please enter your email address first",
-          variant: "destructive"
-        })
-      }
-      return
-    }
-
-    try {
-      const result = await sendEmailOTP(formData.email)
-      if (result.success) {
-        setShowEmailOTP(true)
-        if (isMounted) {
-          toast({
-            title: "OTP Sent",
-            description: "Please check your email for the verification code",
-          })
-        }
-      } else {
-        if (isMounted) {
-          toast({
-            title: "Error",
-            description: result.error || "Failed to send email OTP",
-            variant: "destructive"
-          })
-        }
-      }
-    } catch (error) {
-      if (isMounted) {
-        toast({
-          title: "Error",
-          description: "Failed to send email OTP",
-          variant: "destructive"
-        })
-      }
-    }
-  }
-
-  const handleVerifyPhone = async () => {
-    if (!formData.phone) {
-      if (isMounted) {
-        toast({
-          title: "Error",
-          description: "Please enter your phone number first",
-          variant: "destructive"
-        })
-      }
-      return
-    }
-
-    try {
-      const result = await sendSMSOTP(formData.phone)
-      if (result.success) {
-        setShowPhoneOTP(true)
-        if (isMounted) {
-          toast({
-            title: "OTP Sent",
-            description: "Please check your phone for the verification code",
-          })
-        }
-      } else {
-        if (isMounted) {
-          toast({
-            title: "Error",
-            description: result.error || "Failed to send SMS OTP",
-            variant: "destructive"
-          })
-        }
-      }
-    } catch (error) {
-      if (isMounted) {
-        toast({
-          title: "Error",
-          description: "Failed to send SMS OTP",
-          variant: "destructive"
-        })
-      }
-    }
-  }
-
-  const handleEmailOTPVerify = async (otp) => {
-    setOtpLoading(true)
-    try {
-      const result = await verifyEmailOTP(formData.email, otp)
-      if (result.success) {
-        setEmailVerified(true)
-        setShowEmailOTP(false)
-        setFormData(prev => ({ ...prev, emailVerified: true }))
-        if (isMounted) {
-          toast({
-            title: "Success",
-            description: "Email verified successfully!",
-          })
-        }
-      } else {
-        throw new Error(result.error || "Invalid OTP")
-      }
-    } catch (error) {
-      throw error
-    } finally {
-      setOtpLoading(false)
-    }
-  }
-
-  const handlePhoneOTPVerify = async (otp) => {
-    setOtpLoading(true)
-    try {
-      const result = await verifySMSOTP(formData.phone, otp)
-      if (result.success) {
-        setPhoneVerified(true)
-        setShowPhoneOTP(false)
-        setFormData(prev => ({ ...prev, phoneVerified: true }))
-        if (isMounted) {
-          toast({
-            title: "Success",
-            description: "Phone number verified successfully!",
-          })
-        }
-      } else {
-        throw new Error(result.error || "Invalid OTP")
-      }
-    } catch (error) {
-      throw error
-    } finally {
-      setOtpLoading(false)
-    }
-  }
-
-  const handleResendEmailOTP = async () => {
-    return await sendEmailOTP(formData.email)
-  }
-
-  const handleResendPhoneOTP = async () => {
-    return await sendSMSOTP(formData.phone)
-  }
-
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex' }}>
+    <>
+      <Box sx={{ minHeight: '100vh', display: 'flex' }}>
       {/* Left Side - Branding */}
       {!isMobile && (
         <BrandingSection sx={{ width: '40%', display: 'flex', alignItems: 'center', p: 6 }}>
@@ -701,33 +754,111 @@ const RegisterPage = () => {
                   </Grid>
                 </Grid>
 
-                {/* Email Field */}
-                <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
-                  <TextField
-                    fullWidth
-                    name="email"
-                    label="Email Address"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Email color="primary" />
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                  <Button
-                    variant={emailVerified ? "contained" : "outlined"}
-                    color={emailVerified ? "success" : "primary"}
-                    onClick={handleVerifyEmail}
-                    startIcon={emailVerified ? <Verified /> : <Email />}
-                    sx={{ minWidth: 120 }}
-                  >
-                    {emailVerified ? 'Verified' : 'Verify'}
-                  </Button>
+                  {/* Email Field with Verification */}
+                  <Box sx={{ mb: 3 }}>
+                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+                      <TextField
+                        fullWidth
+                        name="email"
+                        label="Email Address"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        required
+                        error={emailError}
+                        helperText={emailError ? "Please enter a valid email address" : ""}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <Email color="primary" />
+                            </InputAdornment>
+                          ),
+                          endAdornment: emailVerified ? (
+                            <InputAdornment position="end">
+                              <CheckCircle color="success" />
+                            </InputAdornment>
+                          ) : null,
+                        }}
+                      />
+                      <Button
+                        variant="outlined"
+                        size="medium"
+                        onClick={handleSendEmailOTP}
+                        disabled={!formData.email || emailVerified || emailOTPSent || emailError}
+                        startIcon={<Email />}
+                        sx={{ 
+                          minWidth: 140,
+                          height: 56, // Match TextField height
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        {emailVerified ? 'Verified' : emailOTPSent ? 'OTP Sent' : 'Verify Email'}
+                      </Button>
+                    </Box>
+                    {emailVerified && (
+                      <Box sx={{ mt: 1 }}>
+                        <Chip
+                          label="Email Verified"
+                          color="success"
+                          size="small"
+                          icon={<CheckCircle />}
+                        />
+                      </Box>
+                    )}
+                  </Box>
+
+                {/* Phone Number Field with Verification */}
+                <Box sx={{ mb: 3 }}>
+                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+                    <TextField
+                      fullWidth
+                      name="phone"
+                      label="Phone Number"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      required
+                      placeholder="+91 9876543210"
+                      error={phoneError}
+                      helperText={phoneError ? "Please enter a valid Indian phone number (e.g., +91 9876543210)" : "Enter Indian mobile number (e.g., +91 9876543210)"}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Phone color="primary" />
+                          </InputAdornment>
+                        ),
+                        endAdornment: phoneVerified ? (
+                          <InputAdornment position="end">
+                            <CheckCircle color="success" />
+                          </InputAdornment>
+                        ) : null,
+                      }}
+                    />
+                    <Button
+                      variant="outlined"
+                      size="medium"
+                      onClick={handleSendPhoneOTP}
+                      disabled={!formData.phone || phoneVerified || phoneOTPSent || phoneError}
+                      startIcon={<Phone />}
+                      sx={{ 
+                        minWidth: 140,
+                        height: 56, // Match TextField height
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {phoneVerified ? 'Verified' : phoneOTPSent ? 'OTP Sent' : 'Verify Phone'}
+                    </Button>
+                  </Box>
+                  {phoneVerified && (
+                    <Box sx={{ mt: 1 }}>
+                      <Chip
+                        label="Phone Verified"
+                        color="success"
+                        size="small"
+                        icon={<CheckCircle />}
+                      />
+                    </Box>
+                  )}
                 </Box>
 
                 {/* Role-specific fields */}
@@ -790,7 +921,6 @@ const RegisterPage = () => {
                         name="qualification"
                         value={formData.qualification}
                         onChange={handleChange}
-                        required
                         startAdornment={
                           <InputAdornment position="start">
                             <School color="primary" />
@@ -846,35 +976,6 @@ const RegisterPage = () => {
                   </>
                 )}
 
-                {/* Phone Field */}
-                <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
-                  <TextField
-                    fullWidth
-                    name="phone"
-                    label="Phone Number"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    required
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Phone color="primary" />
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                  <Button
-                    variant={phoneVerified ? "contained" : "outlined"}
-                    color={phoneVerified ? "success" : "primary"}
-                    onClick={handleVerifyPhone}
-                    startIcon={phoneVerified ? <Verified /> : <Phone />}
-                    sx={{ minWidth: 120 }}
-                  >
-                    {phoneVerified ? 'Verified' : 'Verify'}
-                  </Button>
-                </Box>
-
                 {/* Password Fields */}
                 <Grid container spacing={2} sx={{ mb: 3 }}>
                   <Grid item xs={12} sm={6}>
@@ -904,6 +1005,67 @@ const RegisterPage = () => {
                         ),
                       }}
                     />
+                    
+                    {/* Password Strength Indicator */}
+                    {formData.password && (
+                      <Box sx={{ mt: 1, mb: 2 }}>
+                        <Typography variant="caption" sx={{ mb: 1, display: 'block', fontWeight: 'medium' }}>
+                          Password Requirements:
+                        </Typography>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {passwordStrength.hasMinLength ? (
+                              <CheckCircle sx={{ fontSize: 16, color: 'success.main' }} />
+                            ) : (
+                              <Cancel sx={{ fontSize: 16, color: 'error.main' }} />
+                            )}
+                            <Typography variant="caption" color={passwordStrength.hasMinLength ? 'success.main' : 'error.main'}>
+                              At least 8 characters
+                            </Typography>
+                          </Box>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {passwordStrength.hasUppercase ? (
+                              <CheckCircle sx={{ fontSize: 16, color: 'success.main' }} />
+                            ) : (
+                              <Cancel sx={{ fontSize: 16, color: 'error.main' }} />
+                            )}
+                            <Typography variant="caption" color={passwordStrength.hasUppercase ? 'success.main' : 'error.main'}>
+                              One uppercase letter (A-Z)
+                            </Typography>
+                          </Box>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {passwordStrength.hasLowercase ? (
+                              <CheckCircle sx={{ fontSize: 16, color: 'success.main' }} />
+                            ) : (
+                              <Cancel sx={{ fontSize: 16, color: 'error.main' }} />
+                            )}
+                            <Typography variant="caption" color={passwordStrength.hasLowercase ? 'success.main' : 'error.main'}>
+                              One lowercase letter (a-z)
+                            </Typography>
+                          </Box>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {passwordStrength.hasNumber ? (
+                              <CheckCircle sx={{ fontSize: 16, color: 'success.main' }} />
+                            ) : (
+                              <Cancel sx={{ fontSize: 16, color: 'error.main' }} />
+                            )}
+                            <Typography variant="caption" color={passwordStrength.hasNumber ? 'success.main' : 'error.main'}>
+                              One number (0-9)
+                            </Typography>
+                          </Box>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {passwordStrength.hasSpecialChar ? (
+                              <CheckCircle sx={{ fontSize: 16, color: 'success.main' }} />
+                            ) : (
+                              <Cancel sx={{ fontSize: 16, color: 'error.main' }} />
+                            )}
+                            <Typography variant="caption" color={passwordStrength.hasSpecialChar ? 'success.main' : 'error.main'}>
+                              One special character (@$!%*?&)
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Box>
+                    )}
                   </Grid>
                   <Grid item xs={12} sm={6}>
                     <TextField
@@ -914,7 +1076,7 @@ const RegisterPage = () => {
                       value={formData.confirmPassword}
                       onChange={handleChange}
                       required
-                      error={formData.confirmPassword && formData.password && formData.password !== formData.confirmPassword}
+                      error={!!(formData.confirmPassword && formData.password && formData.password !== formData.confirmPassword)}
                       helperText={
                         formData.confirmPassword && formData.password
                           ? formData.password === formData.confirmPassword
@@ -922,15 +1084,6 @@ const RegisterPage = () => {
                             : "✗ Passwords do not match"
                           : ""
                       }
-                      sx={{
-                        '& .MuiFormHelperText-root': {
-                          color: formData.confirmPassword && formData.password
-                            ? formData.password === formData.confirmPassword
-                              ? 'success.main'
-                              : 'error.main'
-                            : 'text.secondary'
-                        }
-                      }}
                       InputProps={{
                         startAdornment: (
                           <InputAdornment position="start">
@@ -938,10 +1091,17 @@ const RegisterPage = () => {
                               color={
                                 formData.confirmPassword && formData.password
                                   ? formData.password === formData.confirmPassword
-                                    ? "success"
-                                    : "error"
+                                    ? "primary"
+                                    : "secondary"
                                   : "primary"
                               }
+                              sx={{
+                                color: formData.confirmPassword && formData.password
+                                  ? formData.password === formData.confirmPassword
+                                    ? "success.main"
+                                    : "error.main"
+                                  : "primary.main"
+                              }}
                             />
                           </InputAdornment>
                         ),
@@ -1031,28 +1191,56 @@ const RegisterPage = () => {
           </StyledCard>
         </Container>
       </Box>
+      </Box>
 
-      {/* OTP Verification Dialogs */}
-      <OTPVerification
-        open={showEmailOTP}
-        onClose={() => setShowEmailOTP(false)}
-        type="email"
-        contact={formData.email}
-        onVerify={handleEmailOTPVerify}
-        onResend={handleResendEmailOTP}
-        loading={otpLoading}
-      />
+      {/* Email OTP Verification Dialog */}
+      <Dialog open={showEmailOTP} onClose={() => setShowEmailOTP(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Email color="primary" />
+            <Typography variant="h6">Verify Email Address</Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            We've sent a 6-digit verification code to <strong>{formData.email}</strong>
+          </Typography>
+          <OTPVerification
+            identifier={formData.email}
+            type="email"
+            onVerified={handleEmailOTPVerification}
+            onResend={handleSendEmailOTP}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowEmailOTP(false)}>Cancel</Button>
+        </DialogActions>
+      </Dialog>
 
-      <OTPVerification
-        open={showPhoneOTP}
-        onClose={() => setShowPhoneOTP(false)}
-        type="sms"
-        contact={formData.phone}
-        onVerify={handlePhoneOTPVerify}
-        onResend={handleResendPhoneOTP}
-        loading={otpLoading}
-      />
-    </Box>
+      {/* Phone OTP Verification Dialog */}
+      <Dialog open={showPhoneOTP} onClose={() => setShowPhoneOTP(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Phone color="primary" />
+            <Typography variant="h6">Verify Phone Number</Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            We've sent a 6-digit verification code to <strong>{formData.phone}</strong>
+          </Typography>
+          <OTPVerification
+            identifier={formData.phone}
+            type="sms"
+            onVerified={handlePhoneOTPVerification}
+            onResend={handleSendPhoneOTP}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowPhoneOTP(false)}>Cancel</Button>
+        </DialogActions>
+      </Dialog>
+    </>
   )
 }
 

@@ -21,7 +21,7 @@ import {
   ChevronLeft,
   ChevronRight
 } from '@mui/icons-material';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext.jsx';
 
 const drawerWidth = 280;
 

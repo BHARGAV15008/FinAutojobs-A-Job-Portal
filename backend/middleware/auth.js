@@ -1,74 +1,79 @@
 import jwt from 'jsonwebtoken';
-import { getUserModel } from '../models/schemas/users/UserFactory.js';
+import User from '../models/UserMongoose.js';
 
-// Middleware to authenticate JWT tokens
+// Authenticate token middleware
 export const authenticateToken = async (req, res, next) => {
   try {
-    const authHeader = req.headers['authorization'];
+    const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
-
+    
     if (!token) {
-      return res.status(401).json({ message: 'Access token required' });
+      return res.status(401).json({
+        success: false,
+        message: 'Access token required',
+        error: 'NO_TOKEN'
+      });
     }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-jwt-secret-key-change-this-in-production');
     
-    // Get user from database based on role
-    const UserModel = getUserModel(decoded.userRole);
-    const user = await UserModel.findById(decoded.userId).select('-password');
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
+    // Check if user exists
+    const user = await User.findById(decoded.userId);
     if (!user) {
-      return res.status(401).json({ message: 'User not found' });
+      return res.status(401).json({
+        success: false,
+        message: 'User not found',
+        error: 'USER_NOT_FOUND'
+      });
     }
     
-    if (user.status !== 'active') {
-      return res.status(401).json({ message: 'Account is not active' });
+    // Check if session exists (single session enforcement)
+    const sessionExists = user.active_sessions.some(
+      session => session.session_id === decoded.sessionId
+    );
+    
+    if (!sessionExists) {
+      return res.status(401).json({
+        success: false,
+        message: 'Session expired or invalid',
+        error: 'INVALID_SESSION'
+      });
     }
-
+    
     // Add user info to request
     req.user = {
-      userId: user._id,
-      userRole: user.role,
+      userId: user._id.toString(),
       email: user.email,
-      name: user.name,
-      ...user.toObject()
+      role: user.role,
+      sessionId: decoded.sessionId
     };
     
     next();
   } catch (error) {
-    console.error('Authentication error:', error);
-    return res.status(403).json({ message: 'Invalid or expired token' });
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token',
+        error: 'INVALID_TOKEN'
+      });
+    }
+    
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Token expired',
+        error: 'TOKEN_EXPIRED'
+      });
+    }
+    
+    console.error('Auth middleware error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Authentication error',
+      error: 'AUTH_ERROR'
+    });
   }
 };
 
-// Middleware to require specific roles
-export const requireRole = (allowedRoles) => {
-  return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({ message: 'Authentication required' });
-    }
-
-    if (!allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({ message: 'Insufficient permissions' });
-    }
-
-    next();
-  };
-};
-
-// Middleware to require admin role
-export const requireAdmin = requireRole(['admin']);
-
-// Middleware to require recruiter role
-export const requireRecruiter = requireRole(['recruiter', 'admin']);
-
-// Middleware to require applicant role
-export const requireApplicant = requireRole(['applicant', 'admin']);
-
-export default {
-  authenticateToken,
-  requireRole,
-  requireAdmin,
-  requireRecruiter,
-  requireApplicant
-};
+export default authenticateToken;

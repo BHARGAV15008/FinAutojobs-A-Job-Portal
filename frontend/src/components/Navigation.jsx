@@ -38,7 +38,7 @@ import {
   Notifications,
   Psychology,
 } from '@mui/icons-material';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext.jsx';
 
 const Navigation = () => {
   const [location] = useLocation();
@@ -495,7 +495,29 @@ const Navigation = () => {
                 </Menu>
               </>
             ) : (
-              <Box sx={{ display: 'flex', gap: 2 }}>
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                <Button
+                  component={Link}
+                  href="/admin-login"
+                  variant="text"
+                  size="small"
+                  startIcon={<Shield />}
+                  sx={{
+                    textTransform: 'none',
+                    fontWeight: 500,
+                    px: 2,
+                    py: 0.5,
+                    borderRadius: 1,
+                    color: 'text.secondary',
+                    fontSize: '0.875rem',
+                    '&:hover': {
+                      bgcolor: 'rgba(0, 0, 0, 0.04)',
+                      color: 'primary.main',
+                    },
+                  }}
+                >
+                  Admin
+                </Button>
                 <Button
                   component={Link}
                   href="/login"

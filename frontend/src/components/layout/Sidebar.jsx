@@ -29,7 +29,7 @@ import {
   Clock,
   AlertCircle
 } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext.jsx';
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const [location] = useLocation();

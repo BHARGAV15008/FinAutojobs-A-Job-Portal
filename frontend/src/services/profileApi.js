@@ -2,7 +2,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 // Get auth token from localStorage
 const getAuthToken = () => {
-  return localStorage.getItem('authToken');
+  return localStorage.getItem('token');
 };
 
 // Profile API service

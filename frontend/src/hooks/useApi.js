@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext.jsx';
 
 // Custom hook for API calls with loading, error, and success states
 export const useApi = (apiFunction, dependencies = [], options = {}) => {
