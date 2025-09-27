@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation } from 'wouter';
 import { useTheme } from '../../contexts/IntegratedThemeContext';
+import { useAuth } from '../../contexts/AuthContext.jsx';
 
 const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeTab, activeJobTab }) => {
   const [location, setLocation] = useLocation();
   const { darkMode } = useTheme();
+  const { logout } = useAuth();
   const [expandedMenus, setExpandedMenus] = useState({});
 
   // Helper function to check if a path is currently active
@@ -401,8 +403,8 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
         <button
           className="w-full flex items-center px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200"
           onClick={() => {
-            // Handle logout
-            setLocation('/login');
+            // Handle logout properly
+            logout();
           }}
         >
           <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

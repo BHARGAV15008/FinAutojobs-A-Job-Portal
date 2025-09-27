@@ -2,7 +2,7 @@ import express from 'express';
 import passport from 'passport';
 import { body, validationResult } from 'express-validator';
 
-import UsernameGenerator from '../utils/usernameGenerator.js';
+import UsernameGenerator from '../../utils/usernameGenerator.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { 
@@ -17,8 +17,8 @@ import {
   createUserSession,
   invalidateUserSession,
   checkUserSession
-} from '../middleware/auth.js';
-import { sendEmailOTP, sendSMSOTP, verifyOTPCode } from '../controllers/otpController.js';
+} from '../../middleware/Others/auth.js';
+import { sendEmailOTP, sendSMSOTP, verifyOTPCode } from '../../Controllers/Others/otpController.js';
 
 const router = express.Router();
 
@@ -28,7 +28,7 @@ router.post('/register-simple', async (req, res) => {
     const { firstName, lastName, email, password, role = 'applicant' } = req.body;
     
     // Import User model
-    const User = (await import('../models/UserMongoose.js')).default;
+    const User = (await import('../../models/UserMongoose.js')).default;
     
     // Check if user already exists
     const existingUser = await User.findOne({ email: email.toLowerCase() });
@@ -107,7 +107,7 @@ router.get('/profile', authenticateToken, async (req, res) => {
     
     // Try to find user in main User collection first
     try {
-      const User = (await import('../models/UserMongoose.js')).default;
+      const User = (await import('../../models/UserMongoose.js')).default;
       user = await User.findById(userId);
       if (user) {
         role = user.role || userRole;
@@ -339,7 +339,7 @@ router.post('/register', [
     }
 
     // Import User model and check if user already exists
-    const User = (await import('../models/UserMongoose.js')).default;
+    const User = (await import('../../models/UserMongoose.js')).default;
     
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
@@ -529,7 +529,7 @@ router.post('/login',
     // Login attempt for user
     
     // Import the User model
-    const User = (await import('../models/UserMongoose.js')).default;
+    const User = (await import('../../models/UserMongoose.js')).default;
     
     // Find user in the main User collection
     const user = await User.findOne({ email: email.toLowerCase() });
@@ -1015,7 +1015,7 @@ router.put('/profile', authenticateToken, async (req, res) => {
     const updateData = req.body;
     
     // Import User model
-    const User = (await import('../models/UserMongoose.js')).default;
+    const User = (await import('../../models/UserMongoose.js')).default;
     
     // Remove sensitive fields that shouldn't be updated via this endpoint
     delete updateData.password;

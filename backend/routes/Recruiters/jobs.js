@@ -1,5 +1,5 @@
 import express from 'express';
-import { authenticateToken } from '../middleware/auth.js';
+import { authenticateToken } from '../../middleware/Others/auth.js';
 import { 
   getJobs, 
   getJobById, 
@@ -8,7 +8,7 @@ import {
   deleteJob, 
   getJobStats, 
   getRecommendedJobs
-} from '../controllers/jobsController.js';
+} from '../../Controllers/Recruiters/jobsController.js';
 
 const router = express.Router();
 

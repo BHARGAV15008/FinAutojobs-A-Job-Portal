@@ -1,6 +1,6 @@
 import express from 'express';
-import { authenticateToken } from './auth.js';
-import { getSavedJobs, addSavedJob, removeSavedJob } from '../controllers/savedJobsController.js';
+import { authenticateToken } from '../../middleware/Others/auth.js';
+import { getSavedJobs, addSavedJob, removeSavedJob } from '../../Controllers/Applicants/savedJobsController.js';
 
 const router = express.Router();
 

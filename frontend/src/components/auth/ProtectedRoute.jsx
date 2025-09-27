@@ -53,8 +53,16 @@ const ProtectedRoute = ({ children, requiredRole = null, allowedRoles = null }) 
   // Check role-based access
   const hasRequiredRole = () => {
     if (!requiredRole && !allowedRoles) return true;
-    if (requiredRole && user?.role === requiredRole) return true;
-    if (allowedRoles && allowedRoles.includes(user?.role)) return true;
+    
+    // User object should now be the direct user object from backend
+    const userRole = user?.role;
+    
+    console.log('🔍 ProtectedRoute - User Object:', user);
+    console.log('🔍 ProtectedRoute - User Role:', userRole);
+    console.log('🔍 ProtectedRoute - Required:', requiredRole, 'Allowed:', allowedRoles);
+    
+    if (requiredRole && userRole === requiredRole) return true;
+    if (allowedRoles && allowedRoles.includes(userRole)) return true;
     return false;
   };
 

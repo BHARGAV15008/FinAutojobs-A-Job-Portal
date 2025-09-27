@@ -73,7 +73,7 @@ import {
   AttachFile,
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../components/ui/use-toast';
 
 const StyledCard = styled(Card)(({ theme }) => ({

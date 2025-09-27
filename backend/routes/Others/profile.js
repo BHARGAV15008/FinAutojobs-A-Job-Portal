@@ -8,8 +8,8 @@ import {
   changePassword,
   uploadProfilePicture,
   deleteAccount
-} from '../controllers/profileController.js';
-import { authenticateToken } from '../middleware/auth.js';
+} from '../../Controllers/Others/profileController.js';
+import { authenticateToken } from '../../middleware/Others/auth.js';
 
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);

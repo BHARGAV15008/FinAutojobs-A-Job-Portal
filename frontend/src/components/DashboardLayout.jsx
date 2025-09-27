@@ -3,7 +3,7 @@ import React from 'react';
 import { Box, Drawer, List, ListItem, ListItemIcon, ListItemText, Toolbar, Typography, Avatar, Tooltip, IconButton } from '@mui/material';
 import { NavLink, useLocation } from 'wouter';
 import { Home, Work, BarChart, Person, Settings, ExitToApp } from '@mui/icons-material';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext.jsx';
 
 const drawerWidth = 280;
 

@@ -6,18 +6,20 @@ import session from 'express-session';
 import passport from 'passport';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
+import { Server } from 'socket.io';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 // Import configurations
 import corsOptions from './config/cors.js';
 import securityHeaders from './config/security.js';
+import joi from 'joi';
 
 // Import middleware
-import { errorHandler, notFoundHandler, errorMonitor } from './middleware/errorHandler.js';
-import { xssMiddleware, sqlInjectionMiddleware, payloadSizeMiddleware } from './middleware/security.js';
-import { apiLimiter } from './middleware/rateLimiter.js';
-import { sanitizeRequest, sqlInjectionPrevention, preventNoSqlInjection } from './middleware/sanitization.js';
+import { errorHandler, notFoundHandler, errorMonitor } from './middlewares/Others/errorHandler.js';
+import { xssMiddleware, sqlInjectionMiddleware, payloadSizeMiddleware } from './middlewares/Others/security.js';
+import { apiLimiter } from './middlewares/Others/rateLimiter.js';
+import { sanitizeRequest, sqlInjectionPrevention, preventNoSqlInjection } from './middlewares/Others/sanitization.js';
 
 // Configure dotenv with proper file path
 const __filename = fileURLToPath(import.meta.url);
@@ -32,6 +34,81 @@ app.set('trust proxy', 1);
 
 // Create HTTP server for Socket.IO
 const server = createServer(app);
+
+// Initialize Socket.IO with CORS configuration
+const io = new Server(server, {
+  cors: {
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    methods: ["GET", "POST"],
+    credentials: true
+  },
+  transports: ['websocket', 'polling']
+});
+
+// Socket.io connection handling
+io.on('connection', (socket) => {
+  console.log(`🔌 User connected: ${socket.id}`);
+
+  // Join user-specific room for targeted notifications
+  socket.on('join-user-room', (userId) => {
+    socket.join(`user-${userId}`);
+    console.log(`👤 User ${userId} joined their room`);
+  });
+
+  // Join role-specific rooms for role-based notifications
+  socket.on('join-role-room', (role) => {
+    socket.join(`role-${role}`);
+    console.log(`🎭 User joined ${role} room`);
+  });
+
+  // Handle job posting notifications
+  socket.on('job-posted', (jobData) => {
+    // Notify all applicants about new job
+    io.to('role-applicant').emit('new-job-posted', {
+      message: 'New job opportunity available!',
+      job: jobData,
+      timestamp: new Date()
+    });
+  });
+
+  // Handle application notifications
+  socket.on('new-application', (applicationData) => {
+    // Notify recruiter about new application
+    io.to(`user-${applicationData.recruiterId}`).emit('new-application-received', {
+      message: 'New application received for your job posting',
+      application: applicationData,
+      timestamp: new Date()
+    });
+  });
+
+  // Handle application status updates
+  socket.on('application-status-update', (updateData) => {
+    // Notify applicant about status change
+    io.to(`user-${updateData.applicantId}`).emit('application-status-changed', {
+      message: `Your application status has been updated to: ${updateData.status}`,
+      application: updateData,
+      timestamp: new Date()
+    });
+  });
+
+  // Handle admin notifications
+  socket.on('admin-notification', (notificationData) => {
+    // Notify all admins
+    io.to('role-admin').emit('admin-alert', {
+      message: notificationData.message,
+      type: notificationData.type || 'info',
+      timestamp: new Date()
+    });
+  });
+
+  // Handle disconnection
+  socket.on('disconnect', () => {
+    console.log(`🔌 User disconnected: ${socket.id}`);
+  });
+});
+
+// Make io instance available to routes
+app.set('io', io);
 
 // Configure basic middleware
 app.use(compression());
@@ -101,41 +178,48 @@ app.use(passport.session());
 import { initializeDatabase } from './config/database.js';
 await initializeDatabase();
 
-// Import routes (only auth working with MongoDB)
+// Import models to register discriminators
+import { BaseUser, Applicant, Recruiter } from './models/UserModels.js';
+console.log('✅ User models registered successfully');
+
+// Import routes
 import authRoutes from './routes/auth.js';
-import placeholderRoutes from './routes/placeholder.js';
-// Temporarily disable other routes until they're updated for MongoDB
-// import jobRoutes from './routes/jobs.js';
-// import companyRoutes from './routes/companies.js';
-// import applicationRoutes from './routes/applications.js';
-// import dashboardRoutes from './routes/dashboard.js';
-// import oauthRoutes from './routes/oauth.js';
-// import notificationsRoutes from './routes/notifications.js';
-// import usersRoutes from './routes/users.js';
-// import savedJobsRoutes from './routes/savedJobs.js';
-// import recruiterRoutes from './routes/recruiters.js';
-// import candidatesRoutes from './routes/candidates.js';
-// import interviewsRoutes from './routes/interviews.js';
+
+import jobRoutes from './routes/jobs.js';
+import dashboardRoutes from './routes/dashboard.js';
+
+import companyRoutes from './routes/companies.js';
+import applicationRoutes from './routes/applications.js';
+import oauthRoutes from './routes/oauth.js';
+import notificationsRoutes from './routes/notifications.js';
+import usersRoutes from './routes/users.js';
+import savedJobsRoutes from './routes/savedJobs.js';
+import recruiterRoutes from './routes/recruiters.js';
+import candidatesRoutes from './routes/candidates.js';
+import interviewsRoutes from './routes/interviews.js';
 
 // Mount routes under /api
+app.use('/api/auth', authRoutes);
+
 const apiRouter = express.Router();
-apiRouter.use('/auth', authRoutes);
+apiRouter.use('/jobs', jobRoutes);
+apiRouter.use('/dashboard', dashboardRoutes);
 // Add placeholder routes to prevent 404 errors
-apiRouter.use('/', placeholderRoutes);
-// Temporarily disable other routes
-// apiRouter.use('/oauth', oauthRoutes);
-// apiRouter.use('/jobs', jobRoutes);
-// apiRouter.use('/companies', companyRoutes);
-// apiRouter.use('/applications', applicationRoutes);
-// apiRouter.use('/users', usersRoutes);
-// apiRouter.use('/saved-jobs', savedJobsRoutes);
-// apiRouter.use('/dashboard', dashboardRoutes);
-// apiRouter.use('/notifications', notificationsRoutes);
-// apiRouter.use('/recruiters', recruiterRoutes);
-// apiRouter.use('/candidates', candidatesRoutes);
-// apiRouter.use('/interviews', interviewsRoutes);
+
+apiRouter.use('/oauth', oauthRoutes);
+apiRouter.use('/companies', companyRoutes);
+apiRouter.use('/applications', applicationRoutes);
+apiRouter.use('/users', usersRoutes);
+apiRouter.use('/saved-jobs', savedJobsRoutes);
+apiRouter.use('/notifications', notificationsRoutes);
+apiRouter.use('/recruiters', recruiterRoutes);
+apiRouter.use('/candidates', candidatesRoutes);
+apiRouter.use('/interviews', interviewsRoutes);
 
 app.use('/api', apiRouter);
+
+// Serve uploaded files
+app.use('/uploads', express.static('uploads'));
 
 // Root health check
 app.get('/', (req, res) => {

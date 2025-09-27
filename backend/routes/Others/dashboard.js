@@ -1,12 +1,12 @@
 import express from 'express';
-import { authenticateToken, requireRole } from '../middleware/auth.js';
+import { authenticateToken, requireRole } from '../../middleware/Others/auth.js';
 import {
   getApplicantDashboard,
   getRecruiterDashboard,
   getAdminDashboard,
   updateUserPreferences,
   getUserPreferences
-} from '../controllers/dashboardController.js';
+} from '../../Controllers/Others/dashboardController.js';
 
 const router = express.Router();
 

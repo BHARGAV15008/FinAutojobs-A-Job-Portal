@@ -1,6 +1,6 @@
 import express from 'express';
-import { googleOAuth, microsoftOAuth, appleOAuth, getOAuthConfig } from '../controllers/oauthController.js';
-import { loginLimiter as rateLimiter } from '../middleware/rateLimiter.js';
+import { googleOAuth, microsoftOAuth, appleOAuth, getOAuthConfig } from '../../Controllers/Others/oauthController.js';
+import { loginLimiter as rateLimiter } from '../../middlewares/Others/rateLimiter.js';
 
 const router = express.Router();
 

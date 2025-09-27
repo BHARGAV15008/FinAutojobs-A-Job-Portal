@@ -19,49 +19,98 @@ export default class UsernameGenerator {
 
   /**
    * Generate username suggestions based on first name and last name
-   * Following your specific patterns:
-   * - {username}{number}
-   * - {username[0]}{lastname}{number}
-   * - {username}{lastname[0]}{number}
-   * - {username}{lastname}{number}
+   * Following predefined rules with multiple patterns:
+   * - {firstname}{number}
+   * - {firstname[0]}{lastname}{number}
+   * - {firstname}{lastname[0]}{number}
+   * - {firstname}{lastname}{number}
+   * - Role-based prefixes for professional accounts
    * @param {string} firstName - User's first name
    * @param {string} lastName - User's last name
+   * @param {string} role - User role ('applicant' or 'recruiter')
    * @returns {Array<string>} - Array of base username patterns (without numbers)
    */
-  static generateSuggestions(firstName, lastName) {
+  static generateSuggestions(firstName, lastName, role = 'applicant') {
     const cleanFirst = this.cleanString(firstName);
     const cleanLast = this.cleanString(lastName);
     
     const suggestions = [];
     
-    // Pattern 1: {username} (firstname only)
+    // Core Pattern 1: {firstname} (firstname only)
     if (cleanFirst.length >= 3) {
       suggestions.push(cleanFirst);
     }
     
-    // Pattern 2: {username[0]}{lastname} (first initial + lastname)
+    // Core Pattern 2: {firstname[0]}{lastname} (first initial + lastname)
     if (cleanFirst.length > 0 && cleanLast.length > 0) {
       suggestions.push(cleanFirst.charAt(0) + cleanLast);
     }
     
-    // Pattern 3: {username}{lastname[0]} (firstname + last initial)
+    // Core Pattern 3: {firstname}{lastname[0]} (firstname + last initial)
     if (cleanFirst.length > 0 && cleanLast.length > 0) {
       suggestions.push(cleanFirst + cleanLast.charAt(0));
     }
     
-    // Pattern 4: {username}{lastname} (firstname + lastname)
-    suggestions.push(cleanFirst + cleanLast);
+    // Core Pattern 4: {firstname}{lastname} (firstname + lastname)
+    if (cleanFirst.length > 0 && cleanLast.length > 0) {
+      suggestions.push(cleanFirst + cleanLast);
+    }
     
-    // Additional patterns for better variety
     // Pattern 5: lastname only (if unique enough)
     if (cleanLast.length >= 3) {
       suggestions.push(cleanLast);
     }
     
     // Pattern 6: lastname + firstname
-    suggestions.push(cleanLast + cleanFirst);
+    if (cleanFirst.length > 0 && cleanLast.length > 0) {
+      suggestions.push(cleanLast + cleanFirst);
+    }
     
-    return suggestions.filter(s => s.length >= 3); // Minimum 3 characters
+    // Pattern 7: First 3 chars of first + first 3 chars of last
+    if (cleanFirst.length >= 3 && cleanLast.length >= 3) {
+      suggestions.push(cleanFirst.substring(0, 3) + cleanLast.substring(0, 3));
+    }
+    
+    // Pattern 8: Abbreviated forms
+    if (cleanFirst.length >= 2 && cleanLast.length >= 2) {
+      suggestions.push(cleanFirst.substring(0, 2) + cleanLast.substring(0, 2));
+    }
+    
+    // Role-based patterns for professional accounts
+    if (role === 'recruiter') {
+      // Professional recruiter patterns
+      suggestions.push('hr' + cleanFirst);
+      suggestions.push('recruiter' + cleanFirst);
+      suggestions.push(cleanFirst + 'hr');
+      suggestions.push(cleanFirst + 'recruiter');
+      
+      if (cleanLast.length > 0) {
+        suggestions.push('hr' + cleanFirst + cleanLast.charAt(0));
+        suggestions.push(cleanFirst + cleanLast + 'hr');
+      }
+    }
+    
+    // Pattern 9: Vowel removal for shorter usernames
+    const noVowelsFirst = cleanFirst.replace(/[aeiou]/g, '');
+    const noVowelsLast = cleanLast.replace(/[aeiou]/g, '');
+    if (noVowelsFirst.length >= 2 && noVowelsLast.length >= 2) {
+      suggestions.push(noVowelsFirst + noVowelsLast);
+    }
+    
+    // Pattern 10: Alternating characters
+    if (cleanFirst.length >= 2 && cleanLast.length >= 2) {
+      let alternating = '';
+      const maxLen = Math.min(cleanFirst.length, cleanLast.length, 4);
+      for (let i = 0; i < maxLen; i++) {
+        if (i < cleanFirst.length) alternating += cleanFirst.charAt(i);
+        if (i < cleanLast.length) alternating += cleanLast.charAt(i);
+      }
+      if (alternating.length >= 3) {
+        suggestions.push(alternating);
+      }
+    }
+    
+    return suggestions.filter(s => s.length >= 3 && s.length <= 20); // 3-20 characters
   }
 
   /**
@@ -72,8 +121,8 @@ export default class UsernameGenerator {
   static async isUsernameAvailable(username) {
     try {
       // Import User model dynamically
-      const User = (await import('../models/UserMongoose.js')).default;
-      const existingUser = await User.findOne({ username });
+      const { BaseUser } = await import('../models/UserModels.js');
+      const existingUser = await BaseUser.findOne({ username });
       return !existingUser; // Return true if no user found (available)
     } catch (error) {
       console.error('Error checking username availability:', error);
@@ -110,39 +159,70 @@ export default class UsernameGenerator {
   static async generateUniqueUsername(firstName, lastName, options = {}) {
     const {
       maxAttempts = 50,
+      role = 'applicant',
+      returnSuggestions = false
     } = options;
 
     try {
-      // Generate base suggestions
-      const suggestions = this.generateSuggestions(firstName, lastName);
+      // Generate base suggestions with role-specific patterns
+      const suggestions = this.generateSuggestions(firstName, lastName, role);
       let selectedUsername = null;
+      const availableSuggestions = [];
 
       // Check each suggestion for availability
       for (const suggestion of suggestions) {
         if (await this.isUsernameAvailable(suggestion)) {
-          selectedUsername = suggestion;
-          break;
+          if (!selectedUsername) {
+            selectedUsername = suggestion;
+          }
+          if (returnSuggestions) {
+            availableSuggestions.push(suggestion);
+          }
         }
       }
 
       // If we found an available username, return it
       if (selectedUsername) {
-        return {
+        const result = {
           success: true,
           username: selectedUsername,
-          method: 'direct'
+          method: 'direct',
+          pattern: this.identifyPattern(selectedUsername, firstName, lastName, role)
         };
+        
+        if (returnSuggestions) {
+          result.suggestions = availableSuggestions.slice(0, 5); // Return top 5 suggestions
+        }
+        
+        return result;
       }
 
       // No direct matches found, try with numbers
       const baseUsername = suggestions[0] || (this.cleanString(firstName) + this.cleanString(lastName));
       
       selectedUsername = await this.generateWithNumber(baseUsername, maxAttempts);
-      return {
+      
+      const result = {
         success: true,
         username: selectedUsername,
-        method: 'numbered'
+        method: 'numbered',
+        pattern: 'numbered_suffix',
+        basePattern: this.identifyPattern(baseUsername, firstName, lastName, role)
       };
+      
+      if (returnSuggestions) {
+        // Generate numbered suggestions
+        const numberedSuggestions = [];
+        for (let i = 1; i <= 5; i++) {
+          const numberedUsername = baseUsername + i;
+          if (await this.isUsernameAvailable(numberedUsername)) {
+            numberedSuggestions.push(numberedUsername);
+          }
+        }
+        result.suggestions = numberedSuggestions;
+      }
+      
+      return result;
 
     } catch (error) {
       console.error('Error generating username:', error);
@@ -154,9 +234,34 @@ export default class UsernameGenerator {
         success: false,
         username: fallbackUsername,
         method: 'fallback',
+        pattern: 'timestamp_fallback',
         error: error.message
       };
     }
+  }
+
+  /**
+   * Identify the pattern used for a username
+   * @param {string} username - Generated username
+   * @param {string} firstName - Original first name
+   * @param {string} lastName - Original last name
+   * @param {string} role - User role
+   * @returns {string} - Pattern identifier
+   */
+  static identifyPattern(username, firstName, lastName, role) {
+    const cleanFirst = this.cleanString(firstName);
+    const cleanLast = this.cleanString(lastName);
+    
+    if (username === cleanFirst) return 'firstname_only';
+    if (username === cleanFirst.charAt(0) + cleanLast) return 'first_initial_lastname';
+    if (username === cleanFirst + cleanLast.charAt(0)) return 'firstname_last_initial';
+    if (username === cleanFirst + cleanLast) return 'firstname_lastname';
+    if (username === cleanLast) return 'lastname_only';
+    if (username === cleanLast + cleanFirst) return 'lastname_firstname';
+    if (username.startsWith('hr') || username.startsWith('recruiter')) return 'role_prefix';
+    if (username.endsWith('hr') || username.endsWith('recruiter')) return 'role_suffix';
+    
+    return 'custom_pattern';
   }
 
   /**

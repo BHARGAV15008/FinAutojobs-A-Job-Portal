@@ -102,37 +102,96 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
+  const [errors, setErrors] = useState({})
+  const [loginError, setLoginError] = useState('')
 
   const { login } = useAuth()
   const [, setLocation] = useLocation()
   const { toast } = useToast()
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
-    })
+      [name]: value,
+    });
+    
+    // Clear errors when user starts typing
+    if (errors[name]) {
+      setErrors({
+        ...errors,
+        [name]: ''
+      });
+    }
+    
+    // Clear login error when user starts typing
+    if (loginError) {
+      setLoginError('');
+    }
   }
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    // Email validation
+    if (!formData.username.trim()) {
+      newErrors.username = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.username)) {
+      newErrors.username = 'Please enter a valid email address';
+    }
+    
+    // Password validation
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoginError('');
+    
+    // Validate form
+    if (!validateForm()) {
+      return;
+    }
+    
+    setLoading(true);
 
-    const result = await login({
-      email: formData.username, // LoginPage uses 'username' field but should send as 'email' for backend
-      password: formData.password
-    })
+    // STRICT ROLE-BASED LOGIN: Role is now REQUIRED based on tab selection
+    const requiredRole = activeTab === 0 ? 'applicant' : 'recruiter';
+    
+    const loginData = {
+      identifier: formData.username, // Backend expects 'identifier' field for email/username/phone
+      password: formData.password,
+      role: requiredRole // Always include role based on selected tab
+    };
+    
+    const result = await login(loginData);
     
     if (!result.success) {
+      setLoginError(result.error || result.message || 'Login failed');
       toast({
-        title: "Error",
-        description: result.error,
+        title: "Login Failed",
+        description: result.error || result.message || 'Login failed',
         variant: "destructive"
-      })
+      });
+    } else {
+      // Login successful - AuthContext will handle redirection
+      toast({
+        title: "Login Successful",
+        description: "Welcome back!",
+        variant: "default"
+      });
     }
 
-    setLoading(false)
+    setLoading(false);
   }
+
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue)
@@ -361,6 +420,7 @@ const LoginPage = () => {
                 Create one here
               </Link>
             </Typography>
+            
           </Box>
 
           <StyledCard>
@@ -388,18 +448,26 @@ const LoginPage = () => {
 
               {/* Login Form */}
               <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
+                {/* Login Error Alert */}
+                {loginError && (
+                  <Alert severity="error" sx={{ mb: 3 }}>
+                    {loginError}
+                  </Alert>
+                )}
+
                 <TextField
                   fullWidth
                   name="username"
-                  label="Username or Email"
+                  label="Email Address"
                   value={formData.username}
                   onChange={handleChange}
-                  required
+                  error={!!errors.username}
+                  helperText={errors.username}
                   sx={{ mb: 3 }}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <Email color="primary" />
+                        <Email color={errors.username ? "error" : "primary"} />
                       </InputAdornment>
                     ),
                   }}
@@ -412,12 +480,13 @@ const LoginPage = () => {
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
                   onChange={handleChange}
-                  required
+                  error={!!errors.password}
+                  helperText={errors.password}
                   sx={{ mb: 3 }}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <Lock color="primary" />
+                        <Lock color={errors.password ? "error" : "primary"} />
                       </InputAdornment>
                     ),
                     endAdornment: (
@@ -432,6 +501,20 @@ const LoginPage = () => {
                     ),
                   }}
                 />
+
+
+                {/* Role-based login info */}
+                <Alert severity="info" sx={{ mb: 3 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+                    {activeTab === 0 ? '👤 Applicant Login' : '💼 Recruiter/HR Login'}
+                  </Typography>
+                  <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                    {activeTab === 0 
+                      ? 'Login with your applicant account credentials' 
+                      : 'Login with your recruiter/HR account credentials'
+                    }
+                  </Typography>
+                </Alert>
 
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                   <FormControlLabel

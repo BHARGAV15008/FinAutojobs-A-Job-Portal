@@ -1,7 +1,7 @@
 import express from 'express';
-import { authenticateToken as authenticateJWT } from '../middleware/auth.js';
-import { isRecruiter } from '../middleware/roles.js';
-import * as recruiterController from '../controllers/recruiterController.js';
+import { authenticateToken as authenticateJWT } from '../../middleware/Others/auth.js';
+import { isRecruiter } from '../../middlewares/Others/roles.js';
+import * as recruiterController from '../../Controllers/Recruiters/recruiterController.js';
 
 const router = express.Router();
 

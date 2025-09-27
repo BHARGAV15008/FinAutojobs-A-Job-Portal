@@ -13,6 +13,7 @@ import {
   EnhancedSettingsTab,
   EnhancedJobsTab,
 } from "../components/dashboard/EnhancedDashboardTabs";
+import { calculateProfileCompletion } from "../utils/profileCompletion";
 import EnhancedJobPostingTab from "../components/dashboard/EnhancedJobPostingTab";
 import EnhancedApplicantsTab from "../components/dashboard/EnhancedApplicantsTab";
 import EnhancedCandidatesTab from "../components/dashboard/EnhancedCandidatesTab";
@@ -26,46 +27,145 @@ import LoginStatusBanner from "../components/dashboard/LoginStatusBanner";
 import MessagesTab from "../components/dashboard/MessagesTab";
 
 const RecruiterDashboardContent = () => {
+  try {
   const [location] = useLocation();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [activeJobTab, setActiveJobTab] = useState("post");
+  const [editingJob, setEditingJob] = useState(null);
   
-  // Try to use dashboard context, but provide fallbacks
+  // Safe dashboard context with comprehensive error handling
   let dashboardContext;
   try {
     dashboardContext = useDashboard();
+    // Ensure all required properties exist
+    if (!dashboardContext) {
+      throw new Error('Dashboard context is null');
+    }
   } catch (error) {
-    console.warn('Dashboard context not available, using fallback data');
+    console.warn('Dashboard context not available, using fallback data:', error);
     dashboardContext = {
       currentUser: null,
       isAuthenticated: false,
       getStats: () => ({
-        activeJobs: 5,
-        totalApplications: 45,
-        shortlisted: 12,
-        hired: 3
+        activeJobs: 0,
+        totalApplications: 0,
+        shortlisted: 0,
+        hired: 0
       }),
       dashboardData: {
-        applications: []
+        applications: [],
+        stats: {
+          activeJobs: 0,
+          totalApplications: 0,
+          shortlisted: 0,
+          hired: 0
+        }
       },
       loading: false
     };
   }
   
-  const { currentUser, isAuthenticated, getStats, dashboardData, loading } = dashboardContext;
+  const { 
+    currentUser, 
+    isAuthenticated, 
+    getStats, 
+    dashboardData, 
+    loading,
+    refreshData,
+    refreshCurrentUser 
+  } = dashboardContext || {};
 
-  // Mock user data - authentication removed
-  const user = {
-    id: 2,
-    name: "Sarah Johnson",
-    email: "sarah.johnson@techcorp.com",
-    phone: "+91 9876543211",
-    location: "Bangalore, India",
-    company: "TechCorp India",
-    role: "recruiter",
-    linkedin_url: "https://linkedin.com/in/sarahjohnson",
-    profileComplete: 95,
+  // Debug: Log currentUser to see what fields are available
+  console.log('🔍 RecruiterDashboard currentUser:', currentUser);
+  console.log('🔍 RecruiterDashboard currentUser.bio:', currentUser?.bio);
+  console.log('🔍 RecruiterDashboard currentUser.github_url:', currentUser?.github_url);
+  console.log('🔍 RecruiterDashboard currentUser.linkedin_url:', currentUser?.linkedin_url);
+  console.log('🔍 RecruiterDashboard currentUser.portfolio_url:', currentUser?.portfolio_url);
+  console.log('🔍 RecruiterDashboard editingJob state:', editingJob);
+  
+  // Add a state to force re-render when profile updates
+  const [profileUpdateTrigger, setProfileUpdateTrigger] = useState(0);
+
+  // Handle job editing
+  const handleEditJob = (job) => {
+    console.log('🔍 RecruiterDashboard handleEditJob called with:', job);
+    console.log('🔍 Job fields:', Object.keys(job || {}));
+    setEditingJob(job);
+    setActiveTab("jobs");
+    setActiveJobTab("post");
+    console.log('✅ Set editingJob state and switched to post tab');
   };
+
+  // Listen for edit job events
+  useEffect(() => {
+    const handleEditJobEvent = (event) => {
+      handleEditJob(event.detail.job);
+    };
+
+    window.addEventListener('editJob', handleEditJobEvent);
+    return () => {
+      window.removeEventListener('editJob', handleEditJobEvent);
+    };
+  }, []);
+
+  // Use real authenticated user data with proper registration data mapping
+  const user = currentUser ? {
+    id: currentUser._id,
+    name: currentUser.name || currentUser.fullName || `${currentUser.firstName} ${currentUser.lastName}`.trim(),
+    email: currentUser.email,
+    phone: currentUser.phone,
+    location: currentUser.location || currentUser.officeLocation?.city || currentUser.currentLocation?.city || "Not specified",
+    // Enhanced company info mapping - prioritize registration data
+    company: currentUser.companyInfo?.companyName || currentUser.companyName || currentUser.company || "Not specified",
+    department: currentUser.companyInfo?.department || currentUser.department || "Not provided",
+    // Map jobTitle from registration (position field) to job_title
+    job_title: currentUser.companyInfo?.jobTitle || currentUser.companyInfo?.designation || currentUser.position || currentUser.job_title || "Not specified",
+    experience_years: currentUser.yearsOfExperience || currentUser.experience_years || 0,
+    role: currentUser.role,
+    linkedin_url: currentUser.linkedin_url || currentUser.professionalLinks?.linkedin || "",
+    github_url: currentUser.github_url || currentUser.professionalLinks?.github || "",
+    portfolio_url: currentUser.portfolio_url || currentUser.professionalLinks?.personalWebsite || "",
+    bio: currentUser.bio || "",
+    // Dynamic profile completion calculation
+    profileComplete: calculateProfileCompletion(currentUser, "recruiter"),
+    // Include nested objects for proper field mapping
+    companyInfo: currentUser.companyInfo,
+    officeLocation: currentUser.officeLocation,
+    professionalLinks: currentUser.professionalLinks,
+    yearsOfExperience: currentUser.yearsOfExperience,
+    // Include original fields for ProfileEditModal
+    firstName: currentUser.firstName,
+    lastName: currentUser.lastName,
+  } : {
+    // Fallback data when not authenticated
+    id: null,
+    name: "Loading...",
+    email: "",
+    phone: "",
+    location: "",
+    company: "",
+    role: "recruiter",
+    linkedin_url: "",
+    github_url: "",
+    portfolio_url: "",
+    bio: "",
+    profileComplete: 0,
+  };
+
+  // Debug: Log constructed user object
+  console.log('🔍 RecruiterDashboard constructed user:', user);
+  console.log('🔍 RecruiterDashboard constructed user.bio:', user?.bio);
+  console.log('🔍 RecruiterDashboard constructed user.github_url:', user?.github_url);
+  console.log('🔍 RecruiterDashboard constructed user.linkedin_url:', user?.linkedin_url);
+  console.log('🔍 RecruiterDashboard constructed user.portfolio_url:', user?.portfolio_url);
+
+  // Watch for currentUser changes and trigger re-render
+  useEffect(() => {
+    if (currentUser) {
+      console.log('🔍 currentUser changed, triggering re-render');
+      setProfileUpdateTrigger(prev => prev + 1);
+    }
+  }, [currentUser?.updatedAt, currentUser?.name, currentUser?.location, currentUser?.phone]);
 
   // Define comprehensive dashboard tabs for recruiters
   const dashboardTabs = [
@@ -76,7 +176,7 @@ const RecruiterDashboardContent = () => {
       id: "applicants",
       label: "Applicants",
       icon: "👥",
-      badge: dashboardData.applications?.length || 0,
+      badge: dashboardData?.applications?.length || 0,
     },
     { id: "candidates", label: "Candidates", icon: "🎯" },
     { id: "interviews", label: "Interviews", icon: "🗣️" },
@@ -85,6 +185,14 @@ const RecruiterDashboardContent = () => {
     { id: "reports", label: "Reports", icon: "📋" },
     { id: "settings", label: "Settings", icon: "⚙️" },
   ];
+
+  // Handle tab changes - moved before useEffect to avoid hoisting issues
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    const basePath = "/recruiter-dashboard";
+    const newPath = tabId === "dashboard" ? basePath : `${basePath}/${tabId}`;
+    window.history.pushState({}, "", newPath);
+  };
 
   // Extract tab from URL
   useEffect(() => {
@@ -111,21 +219,52 @@ const RecruiterDashboardContent = () => {
 
     window.addEventListener('dashboardTabChange', handleSidebarTabChange);
     return () => window.removeEventListener('dashboardTabChange', handleSidebarTabChange);
-  }, []);
+  }, [handleTabChange]);
 
-  const stats = getStats("recruiter");
+  // Show loading state if dashboard context is not ready
+  if (!dashboardContext || loading === undefined) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
-  // Handle tab changes
-  const handleTabChange = (tabId) => {
-    setActiveTab(tabId);
-    const basePath = "/recruiter-dashboard";
-    const newPath = tabId === "dashboard" ? basePath : `${basePath}/${tabId}`;
-    window.history.pushState({}, "", newPath);
+  const stats = (getStats && getStats("recruiter")) || {
+    activeJobs: 0,
+    totalApplications: 0,
+    shortlisted: 0,
+    hired: 0
   };
 
-  // Mock functions for enhanced components
-  const handleEditProfile = () => {
-    console.log("Editing recruiter profile");
+  // Handle profile edit - refresh the dashboard context user data
+  const handleEditProfile = async (updatedUserData) => {
+    console.log("🔄 Handling profile edit in RecruiterDashboard:", updatedUserData);
+    try {
+      // Force re-render by updating the trigger
+      setProfileUpdateTrigger(prev => prev + 1);
+      
+      // Refresh current user data first
+      if (refreshCurrentUser) {
+        console.log("🔄 Refreshing current user data after profile update");
+        await refreshCurrentUser();
+      }
+      
+      // Then refresh dashboard data to get updated stats
+      if (refreshData) {
+        console.log("🔄 Refreshing dashboard data after profile update");
+        await refreshData();
+      }
+      
+      console.log("✅ Profile updated, user and dashboard data refreshed");
+      
+      // Additional trigger after refresh
+      setTimeout(() => {
+        setProfileUpdateTrigger(prev => prev + 1);
+      }, 200);
+    } catch (error) {
+      console.error("❌ Error handling profile edit:", error);
+    }
   };
 
   // Dashboard overview cards
@@ -226,6 +365,7 @@ const RecruiterDashboardContent = () => {
       case "profile":
         return (
           <EnhancedProfileTab
+            key={`profile-${currentUser?._id}-${profileUpdateTrigger}-${currentUser?.updatedAt}`}
             user={user}
             onEdit={handleEditProfile}
             userRole="recruiter"
@@ -263,15 +403,40 @@ const RecruiterDashboardContent = () => {
               ))}
             </div>
 
-            {activeJobTab === "post" && <EnhancedJobPostingTab />}
+            {activeJobTab === "post" && (
+              <>
+                {console.log('🔍 Rendering EnhancedJobPostingTab with editingJob:', editingJob)}
+                <EnhancedJobPostingTab 
+                  key={editingJob ? `edit-${editingJob.id || editingJob._id}` : 'new-job'}
+                  editingJob={editingJob} 
+                  onJobSaved={() => {
+                    console.log('🔍 Job saved, clearing editingJob and switching to active tab');
+                    setEditingJob(null);
+                    setActiveJobTab("active");
+                  }} 
+                />
+              </>
+            )}
             {activeJobTab === "active" && (
-              <EnhancedJobsTab userRole="recruiter" jobType="active" />
+              <EnhancedJobsTab 
+                userRole="recruiter" 
+                jobType="active" 
+                onEditJob={handleEditJob}
+              />
             )}
             {activeJobTab === "draft" && (
-              <EnhancedJobsTab userRole="recruiter" jobType="draft" />
+              <EnhancedJobsTab 
+                userRole="recruiter" 
+                jobType="draft" 
+                onEditJob={handleEditJob}
+              />
             )}
             {activeJobTab === "closed" && (
-              <EnhancedJobsTab userRole="recruiter" jobType="closed" />
+              <EnhancedJobsTab 
+                userRole="recruiter" 
+                jobType="closed" 
+                onEditJob={handleEditJob}
+              />
             )}
           </div>
         );
@@ -401,7 +566,7 @@ const RecruiterDashboardContent = () => {
                   </button>
                 </div>
                 <div className="space-y-3">
-                  {(dashboardData.applications || []).slice(0, 4).map((app) => (
+                  {(dashboardData?.applications || []).slice(0, 4).map((app) => (
                     <div
                       key={app.id}
                       className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
@@ -464,7 +629,7 @@ const RecruiterDashboardContent = () => {
                       Applications
                     </span>
                     <span className="text-sm font-medium text-gray-900 dark:text-white">
-                      {stats.totalApplications}
+                      {stats.totalApplications || 0}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -506,6 +671,17 @@ const RecruiterDashboardContent = () => {
       </div>
     </ModernDashboardLayout>
   );
+  } catch (error) {
+    console.error('RecruiterDashboard error:', error);
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 };
 
 const RecruiterDashboardPage = () => {

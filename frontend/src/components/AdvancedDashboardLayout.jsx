@@ -67,7 +67,7 @@ import {
   Help,
   KeyboardArrowUp,
 } from '@mui/icons-material';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext.jsx';
 import { useLocation } from 'wouter';
 import { motion, AnimatePresence } from 'framer-motion';
 

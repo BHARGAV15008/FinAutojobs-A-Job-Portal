@@ -46,8 +46,13 @@ const ApplicantDashboardContent = () => {
     profileCompletion: { percentage: 85 }
   };
 
-  // Get role-specific stats
-  const stats = getStats('applicant');
+  // Get role-specific stats with null safety
+  const stats = getStats('applicant') || {
+    profileCompletion: 0,
+    appliedJobs: 0,
+    shortlisted: 0,
+    interviews: 0
+  };
 
   // Define comprehensive dashboard tabs
   const dashboardTabs = [
@@ -60,7 +65,7 @@ const ApplicantDashboardContent = () => {
       id: "applications",
       label: "Applications",
       icon: "📄",
-      badge: dashboardData.applications?.length || 0,
+      badge: dashboardData?.applications?.length || 0,
     },
     { id: "resume", label: "Resume Builder", icon: "📝" },
     { id: "job-alerts", label: "Job Alerts", icon: "🔔" },
@@ -333,7 +338,7 @@ const ApplicantDashboardContent = () => {
                   </button>
                 </div>
                 <div className="space-y-4">
-                  {dashboardData.applications && dashboardData.applications.length > 0 ? (
+                  {dashboardData?.applications && dashboardData.applications.length > 0 ? (
                     dashboardData.applications.slice(0, 3).map((app) => (
                       <div
                         key={app.id}
@@ -386,7 +391,7 @@ const ApplicantDashboardContent = () => {
                   </button>
                 </div>
                 <div className="space-y-4">
-                  {dashboardData.recentJobs && dashboardData.recentJobs.length > 0 ? (
+                  {dashboardData?.recentJobs && dashboardData.recentJobs.length > 0 ? (
                     dashboardData.recentJobs.slice(0, 3).map((job) => (
                       <div
                         key={job.id}

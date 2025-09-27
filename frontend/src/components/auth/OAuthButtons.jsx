@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Box, Typography, Alert, CircularProgress } from '@mui/material';
 import { Google, Microsoft, Apple } from '@mui/icons-material';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext.jsx';
 
 const OAuthButtons = ({ onSuccess, onError }) => {
     const [loading, setLoading] = useState({});

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "../../contexts/IntegratedThemeContext";
 import { useDashboard } from "../../contexts/RealDashboardContext";
+import { useAuth } from "../../contexts/AuthContext.jsx";
 import { useLocation } from "wouter";
 
 const DashboardHeader = ({
@@ -21,6 +22,7 @@ const DashboardHeader = ({
 
   const { darkMode, toggleTheme } = useTheme();
   const { dashboardData, searchJobs } = useDashboard();
+  const { logout } = useAuth();
   const [, setLocation] = useLocation();
 
   const notifications = dashboardData?.notifications || [];
@@ -70,7 +72,7 @@ const DashboardHeader = ({
         setLocation(`/${user?.role || "applicant"}-dashboard/settings`);
         break;
       case "logout":
-        setLocation("/login");
+        logout();
         break;
       default:
         break;
@@ -295,12 +297,12 @@ const DashboardHeader = ({
                     {user?.profile_picture ? (
                       <img
                         src={user.profile_picture}
-                        alt={user.name}
+                        alt={user?.name || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || "User"}
                         className="w-full h-full rounded-full object-cover"
                       />
                     ) : (
                       <span className="text-white text-lg font-bold">
-                        {user?.name?.charAt(0) || "U"}
+                        {(user?.name || `${user?.firstName || ''} ${user?.lastName || ''}`.trim())?.charAt(0) || "U"}
                       </span>
                     )}
                   </div>
@@ -311,7 +313,7 @@ const DashboardHeader = ({
                 {/* User info - hidden on small screens */}
                 <div className="hidden md:block text-left">
                   <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {user?.name || "User"}
+                    {user?.name || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || "User"}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
                     {user?.role || "User"}

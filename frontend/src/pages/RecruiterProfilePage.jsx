@@ -25,28 +25,42 @@ import {
     Save,
     Cancel,
 } from '@mui/icons-material';
-import { useAuth } from '../contexts/AuthContext';
-import { useToast } from '../components/ui/use-toast';
-import api from '../utils/api';
+import { useAuth } from '../contexts/AuthContext.jsx';
 
 const RecruiterProfilePage = () => {
     const { user, updateProfile } = useAuth();
-    const { toast } = useToast();
+    
+    // Simple toast function
+    const showToast = (message, type = 'info') => {
+        alert(`${type.toUpperCase()}: ${message}`);
+    };
     const [isEditing, setIsEditing] = useState(false);
     const [showOtpDialog, setShowOtpDialog] = useState(false);
     const [otpType, setOtpType] = useState(''); // 'email' or 'phone'
     const [otp, setOtp] = useState('');
 
     const [formData, setFormData] = useState({
-        name: user?.name || '',
+        firstName: user?.firstName || '',
+        lastName: user?.lastName || '',
         email: user?.email || '',
         phone: user?.phone || '',
-        company: user?.company || '',
-        role: user?.role || '',
-        skills: user?.skills || [],
-        currentCompany: user?.currentCompany || '',
-        previousCompany: user?.previousCompany || '',
-        isCurrentlyEmployed: user?.isCurrentlyEmployed || false,
+        companyInfo: {
+            companyName: user?.companyInfo?.companyName || '',
+            department: user?.companyInfo?.department || '',
+            designation: user?.companyInfo?.designation || '',
+        },
+        specialization: user?.specialization || [],
+        industryExpertise: user?.industryExpertise || [],
+        yearsOfExperience: user?.yearsOfExperience || 0,
+        professionalLinks: {
+            linkedin: user?.professionalLinks?.linkedin || '',
+            companyWebsite: user?.professionalLinks?.companyWebsite || '',
+        },
+        officeLocation: {
+            city: user?.officeLocation?.city || '',
+            state: user?.officeLocation?.state || '',
+            country: user?.officeLocation?.country || '',
+        }
     });
 
     const handleUpdateContact = async (type) => {
@@ -58,17 +72,10 @@ const RecruiterProfilePage = () => {
             if (response.success) {
                 setOtpType(type);
                 setShowOtpDialog(true);
-                toast({
-                    title: 'OTP Sent',
-                    description: `Please check your ${type} for verification code`,
-                });
+                showToast(`Please check your ${type} for verification code`, 'success');
             }
         } catch (error) {
-            toast({
-                title: 'Error',
-                description: error.message,
-                variant: 'destructive',
-            });
+            showToast(error.message, 'error');
         }
     };
 
@@ -82,38 +89,28 @@ const RecruiterProfilePage = () => {
             if (response.success) {
                 setShowOtpDialog(false);
                 setOtp('');
-                toast({
-                    title: 'Success',
-                    description: `${otpType.charAt(0).toUpperCase() + otpType.slice(1)} updated successfully`,
-                });
+                showToast(`${otpType.charAt(0).toUpperCase() + otpType.slice(1)} updated successfully`, 'success');
             }
         } catch (error) {
-            toast({
-                title: 'Error',
-                description: error.message,
-                variant: 'destructive',
-            });
+            showToast(error.message, 'error');
         }
     };
 
     const handleSave = async () => {
         try {
+            console.log('🔍 Saving profile data:', formData);
             const result = await updateProfile(formData);
+            console.log('✅ Profile update result:', result);
+            
             if (result.success) {
                 setIsEditing(false);
-                toast({
-                    title: 'Success',
-                    description: 'Profile updated successfully',
-                });
+                showToast('Profile updated successfully', 'success');
             } else {
                 throw new Error(result.error);
             }
         } catch (error) {
-            toast({
-                title: 'Error',
-                description: error.message,
-                variant: 'destructive',
-            });
+            console.error('❌ Profile update error:', error);
+            showToast(error.message, 'error');
         }
     };
 
@@ -128,17 +125,17 @@ const RecruiterProfilePage = () => {
                                 src={user?.avatar}
                                 sx={{ width: 120, height: 120, bgcolor: 'primary.main' }}
                             >
-                                {user?.name?.charAt(0)}
+                                {user?.firstName?.charAt(0) || user?.username?.charAt(0) || 'R'}
                             </Avatar>
                             <Box sx={{ flex: 1 }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                     <Box>
                                         <Typography variant="h4" gutterBottom fontWeight="bold">
-                                            {user?.name}
+                                            {user?.firstName} {user?.lastName}
                                         </Typography>
                                         <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                                            <Chip icon={<Business />} label={user?.company || 'Company'} />
-                                            <Chip icon={<Work />} label={user?.role || 'Role'} />
+                                            <Chip icon={<Business />} label={user?.companyInfo?.companyName || 'Company'} />
+                                            <Chip icon={<Work />} label={user?.companyInfo?.designation || 'Role'} />
                                         </Box>
                                     </Box>
                                     <Button
@@ -165,9 +162,18 @@ const RecruiterProfilePage = () => {
                                         <Grid item xs={12} sm={6}>
                                             <TextField
                                                 fullWidth
-                                                label="Full Name"
-                                                value={formData.name}
-                                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                                label="First Name"
+                                                value={formData.firstName}
+                                                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                                                margin="normal"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField
+                                                fullWidth
+                                                label="Last Name"
+                                                value={formData.lastName}
+                                                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                                                 margin="normal"
                                             />
                                         </Grid>
@@ -210,36 +216,134 @@ const RecruiterProfilePage = () => {
                                         <Grid item xs={12} sm={6}>
                                             <TextField
                                                 fullWidth
-                                                label="Company"
-                                                value={formData.company}
-                                                onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                                                label="Company Name"
+                                                value={formData.companyInfo.companyName}
+                                                onChange={(e) => setFormData({ 
+                                                    ...formData, 
+                                                    companyInfo: { ...formData.companyInfo, companyName: e.target.value }
+                                                })}
                                                 margin="normal"
                                             />
                                         </Grid>
                                         <Grid item xs={12} sm={6}>
                                             <TextField
                                                 fullWidth
-                                                label="Role"
-                                                value={formData.role}
-                                                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                                                label="Department"
+                                                value={formData.companyInfo.department}
+                                                onChange={(e) => setFormData({ 
+                                                    ...formData, 
+                                                    companyInfo: { ...formData.companyInfo, department: e.target.value }
+                                                })}
                                                 margin="normal"
                                             />
                                         </Grid>
                                         <Grid item xs={12} sm={6}>
                                             <TextField
                                                 fullWidth
-                                                label="Skills (comma separated)"
-                                                value={formData.skills.join(', ')}
-                                                onChange={(e) => setFormData({ ...formData, skills: e.target.value.split(',').map(s => s.trim()) })}
+                                                label="Designation"
+                                                value={formData.companyInfo.designation}
+                                                onChange={(e) => setFormData({ 
+                                                    ...formData, 
+                                                    companyInfo: { ...formData.companyInfo, designation: e.target.value }
+                                                })}
                                                 margin="normal"
                                             />
                                         </Grid>
                                         <Grid item xs={12} sm={6}>
                                             <TextField
                                                 fullWidth
-                                                label="Previous Company"
-                                                value={formData.previousCompany}
-                                                onChange={(e) => setFormData({ ...formData, previousCompany: e.target.value })}
+                                                label="Years of Experience"
+                                                type="number"
+                                                value={formData.yearsOfExperience}
+                                                onChange={(e) => setFormData({ ...formData, yearsOfExperience: parseInt(e.target.value) || 0 })}
+                                                margin="normal"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField
+                                                fullWidth
+                                                label="Specialization (comma separated)"
+                                                value={formData.specialization.join(', ')}
+                                                onChange={(e) => setFormData({ 
+                                                    ...formData, 
+                                                    specialization: e.target.value.split(',').map(s => s.trim()).filter(s => s)
+                                                })}
+                                                margin="normal"
+                                                placeholder="e.g., Technical Recruiting, Executive Search"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField
+                                                fullWidth
+                                                label="Industry Expertise (comma separated)"
+                                                value={formData.industryExpertise.join(', ')}
+                                                onChange={(e) => setFormData({ 
+                                                    ...formData, 
+                                                    industryExpertise: e.target.value.split(',').map(s => s.trim()).filter(s => s)
+                                                })}
+                                                margin="normal"
+                                                placeholder="e.g., IT, Healthcare, Finance"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField
+                                                fullWidth
+                                                label="LinkedIn Profile"
+                                                value={formData.professionalLinks.linkedin}
+                                                onChange={(e) => setFormData({ 
+                                                    ...formData, 
+                                                    professionalLinks: { ...formData.professionalLinks, linkedin: e.target.value }
+                                                })}
+                                                margin="normal"
+                                                placeholder="https://linkedin.com/in/yourprofile"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField
+                                                fullWidth
+                                                label="Company Website"
+                                                value={formData.professionalLinks.companyWebsite}
+                                                onChange={(e) => setFormData({ 
+                                                    ...formData, 
+                                                    professionalLinks: { ...formData.professionalLinks, companyWebsite: e.target.value }
+                                                })}
+                                                margin="normal"
+                                                placeholder="https://company.com"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={4}>
+                                            <TextField
+                                                fullWidth
+                                                label="City"
+                                                value={formData.officeLocation.city}
+                                                onChange={(e) => setFormData({ 
+                                                    ...formData, 
+                                                    officeLocation: { ...formData.officeLocation, city: e.target.value }
+                                                })}
+                                                margin="normal"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={4}>
+                                            <TextField
+                                                fullWidth
+                                                label="State"
+                                                value={formData.officeLocation.state}
+                                                onChange={(e) => setFormData({ 
+                                                    ...formData, 
+                                                    officeLocation: { ...formData.officeLocation, state: e.target.value }
+                                                })}
+                                                margin="normal"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={4}>
+                                            <TextField
+                                                fullWidth
+                                                label="Country"
+                                                value={formData.officeLocation.country}
+                                                onChange={(e) => setFormData({ 
+                                                    ...formData, 
+                                                    officeLocation: { ...formData.officeLocation, country: e.target.value }
+                                                })}
                                                 margin="normal"
                                             />
                                         </Grid>
@@ -287,38 +391,78 @@ const RecruiterProfilePage = () => {
                                                 Company
                                             </Typography>
                                             <Typography variant="body1" gutterBottom>
-                                                {user?.company}
+                                                {user?.companyInfo?.companyName || 'Not specified'}
                                             </Typography>
                                         </Grid>
                                         <Grid item xs={12} sm={6}>
                                             <Typography variant="subtitle2" color="text.secondary">
-                                                Role
+                                                Department
                                             </Typography>
                                             <Typography variant="body1" gutterBottom>
-                                                {user?.role}
+                                                {user?.companyInfo?.department || 'Not specified'}
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <Typography variant="subtitle2" color="text.secondary">
+                                                Designation
+                                            </Typography>
+                                            <Typography variant="body1" gutterBottom>
+                                                {user?.companyInfo?.designation || 'Not specified'}
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <Typography variant="subtitle2" color="text.secondary">
+                                                Years of Experience
+                                            </Typography>
+                                            <Typography variant="body1" gutterBottom>
+                                                {user?.yearsOfExperience || 0} years
                                             </Typography>
                                         </Grid>
                                         <Grid item xs={12}>
                                             <Typography variant="subtitle2" color="text.secondary">
-                                                Skills
+                                                Specialization
                                             </Typography>
                                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
-                                                {user?.skills?.map((skill) => (
+                                                {user?.specialization?.length > 0 ? user.specialization.map((spec) => (
                                                     <Chip
-                                                        key={skill}
-                                                        label={skill}
+                                                        key={spec}
+                                                        label={spec}
                                                         color="primary"
                                                         variant="outlined"
                                                     />
-                                                ))}
+                                                )) : <Typography variant="body2" color="text.secondary">Not specified</Typography>}
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <Typography variant="subtitle2" color="text.secondary">
+                                                Industry Expertise
+                                            </Typography>
+                                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+                                                {user?.industryExpertise?.length > 0 ? user.industryExpertise.map((industry) => (
+                                                    <Chip
+                                                        key={industry}
+                                                        label={industry}
+                                                        color="secondary"
+                                                        variant="outlined"
+                                                    />
+                                                )) : <Typography variant="body2" color="text.secondary">Not specified</Typography>}
                                             </Box>
                                         </Grid>
                                         <Grid item xs={12} sm={6}>
                                             <Typography variant="subtitle2" color="text.secondary">
-                                                Previous Company
+                                                LinkedIn Profile
                                             </Typography>
                                             <Typography variant="body1" gutterBottom>
-                                                {user?.previousCompany || 'Not specified'}
+                                                {user?.professionalLinks?.linkedin || 'Not specified'}
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <Typography variant="subtitle2" color="text.secondary">
+                                                Office Location
+                                            </Typography>
+                                            <Typography variant="body1" gutterBottom>
+                                                {[user?.officeLocation?.city, user?.officeLocation?.state, user?.officeLocation?.country]
+                                                    .filter(Boolean).join(', ') || 'Not specified'}
                                             </Typography>
                                         </Grid>
                                     </>

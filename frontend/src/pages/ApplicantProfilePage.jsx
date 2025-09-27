@@ -29,7 +29,7 @@ import {
     Upload as UploadIcon,
     Delete as DeleteIcon,
 } from '@mui/icons-material';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../components/ui/use-toast';
 import api from '../utils/api';
 

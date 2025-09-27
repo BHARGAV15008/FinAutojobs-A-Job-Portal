@@ -8,23 +8,50 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
 
   useEffect(() => {
     if (isOpen && user) {
+      console.log('🔍 ProfileEditModal initializing with user:', user);
+      console.log('🔍 ProfileEditModal user type:', typeof user);
+      console.log('🔍 ProfileEditModal user.success:', user.success);
+      console.log('🔍 ProfileEditModal user.data:', user.data);
+      
+      // Handle case where user might be API response object
+      const actualUser = user.data ? user.data : user;
+      console.log('🔍 ProfileEditModal actual user:', actualUser);
+      console.log('🔍 ProfileEditModal actualUser.firstName:', actualUser.firstName);
+      console.log('🔍 ProfileEditModal actualUser.lastName:', actualUser.lastName);
+      console.log('🔍 ProfileEditModal actualUser.email:', actualUser.email);
+      console.log('🔍 ProfileEditModal actualUser.phone:', actualUser.phone);
+      
       setFormData({
-        name: user.name || '',
-        phone: user.phone || '',
-        location: user.location || '',
-        bio: user.bio || '',
-        linkedin_url: user.linkedin_url || '',
-        github_url: user.github_url || '',
-        portfolio_url: user.portfolio_url || '',
+        name: `${actualUser.firstName || ''} ${actualUser.lastName || ''}`.trim() || '',
+        phone: actualUser.phone || '',
+        location: actualUser.currentLocation?.city || actualUser.location || '',
+        bio: actualUser.bio || '',
+        linkedin_url: actualUser.linkedin_url || actualUser.professionalLinks?.linkedin || '',
+        github_url: actualUser.github_url || actualUser.professionalLinks?.github || '',
+        portfolio_url: actualUser.portfolio_url || actualUser.professionalLinks?.personalWebsite || '',
         ...(userRole === 'applicant' && {
-          skills: user.skills || [],
-          experience_years: user.experience_years || 0,
-          qualification: user.qualification || ''
+          skills: (() => {
+            // Handle different skill formats from registration
+            if (Array.isArray(actualUser.skills)) {
+              return actualUser.skills;
+            } else if (actualUser.skills?.technical && Array.isArray(actualUser.skills.technical)) {
+              return actualUser.skills.technical;
+            } else if (actualUser.skills?.soft && Array.isArray(actualUser.skills.soft)) {
+              return actualUser.skills.soft;
+            } else if (typeof actualUser.skills === 'string') {
+              return actualUser.skills.split(',').map(s => s.trim()).filter(s => s);
+            }
+            return [];
+          })(),
+          experience_years: actualUser.experience_years || actualUser.yearsOfExperience || 0,
+          qualification: actualUser.qualification || '',
+          resume_url: actualUser.resume_url || ''
         }),
         ...(userRole === 'recruiter' && {
-          company: user.company || '',
-          department: user.department || '',
-          job_title: user.job_title || ''
+          company: actualUser.companyInfo?.companyName || actualUser.companyName || actualUser.company || '',
+          department: actualUser.companyInfo?.department || actualUser.department || '',
+          job_title: actualUser.companyInfo?.jobTitle || actualUser.companyInfo?.designation || actualUser.position || actualUser.job_title || '',
+          experience_years: actualUser.yearsOfExperience || actualUser.experience_years || 0
         })
       });
     }
@@ -34,7 +61,28 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await onSave(formData);
+      // If there's a resume file, we need to handle it specially
+      if (formData.resumeFile) {
+        const formDataWithFile = new FormData();
+        
+        // Add all form fields
+        Object.keys(formData).forEach(key => {
+          if (key !== 'resumeFile' && formData[key] !== null && formData[key] !== undefined) {
+            if (Array.isArray(formData[key])) {
+              formDataWithFile.append(key, JSON.stringify(formData[key]));
+            } else {
+              formDataWithFile.append(key, formData[key]);
+            }
+          }
+        });
+        
+        // Add the resume file
+        formDataWithFile.append('resume', formData.resumeFile);
+        
+        await onSave(formDataWithFile, true); // true indicates file upload
+      } else {
+        await onSave(formData);
+      }
       onClose();
     } catch (error) {
       setErrors({ general: 'Failed to save profile' });
@@ -116,9 +164,23 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
                     <label className="block text-sm font-medium mb-1">Skills (comma-separated)</label>
                     <input
                       type="text"
-                      value={formData.skills?.join(', ') || ''}
-                      onChange={(e) => setFormData({...formData, skills: e.target.value.split(',').map(s => s.trim())})}
+                      value={Array.isArray(formData.skills) ? formData.skills.join(', ') : (formData.skills || '')}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        // Allow typing commas and other characters
+                        setFormData({
+                          ...formData, 
+                          skills: value // Store as string while typing, will be converted to array on save
+                        });
+                      }}
+                      onBlur={(e) => {
+                        // Convert to array when field loses focus
+                        const value = e.target.value;
+                        const skillsArray = value.split(',').map(s => s.trim()).filter(s => s);
+                        setFormData({...formData, skills: skillsArray});
+                      }}
                       className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      placeholder="e.g. JavaScript, React, Node.js"
                     />
                   </div>
                   <div>
@@ -129,6 +191,27 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
                       onChange={(e) => setFormData({...formData, qualification: e.target.value})}
                       className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Resume</label>
+                    <div className="space-y-2">
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            setFormData({...formData, resumeFile: file});
+                          }
+                        }}
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                      />
+                      {formData.resume_url && (
+                        <div className="text-sm text-gray-600">
+                          Current: <a href={formData.resume_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">View Resume</a>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
@@ -153,6 +236,46 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
                       onChange={(e) => setFormData({...formData, department: e.target.value})}
                       className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Job Title</label>
+                    <input
+                      type="text"
+                      value={formData.job_title || ''}
+                      onChange={(e) => setFormData({...formData, job_title: e.target.value})}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Years of Experience</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.experience_years || 0}
+                      onChange={(e) => setFormData({...formData, experience_years: parseInt(e.target.value) || 0})}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Resume</label>
+                    <div className="space-y-2">
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            setFormData({...formData, resumeFile: file});
+                          }
+                        }}
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                      />
+                      {formData.resume_url && (
+                        <div className="text-sm text-gray-600">
+                          Current: <a href={formData.resume_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">View Resume</a>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
@@ -179,6 +302,15 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
                       className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Portfolio</label>
+                  <input
+                    type="url"
+                    value={formData.portfolio_url || ''}
+                    onChange={(e) => setFormData({...formData, portfolio_url: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
                 </div>
               </div>
 

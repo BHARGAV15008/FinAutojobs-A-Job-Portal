@@ -2,7 +2,9 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 // Get auth token from localStorage
 const getAuthToken = () => {
-  return localStorage.getItem('token');
+  const token = localStorage.getItem('token');
+  console.log('🔍 ProfileAPI getAuthToken:', token ? 'exists' : 'not found');
+  return token;
 };
 
 // Profile API service
@@ -14,7 +16,7 @@ export const profileApi = {
       throw new Error('No authentication token found');
     }
 
-    const response = await fetch(`${API_BASE_URL}/profile`, {
+    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -37,7 +39,7 @@ export const profileApi = {
       throw new Error('No authentication token found');
     }
 
-    const response = await fetch(`${API_BASE_URL}/profile`, {
+    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -61,7 +63,7 @@ export const profileApi = {
       throw new Error('No authentication token found');
     }
 
-    const response = await fetch(`${API_BASE_URL}/profile/change-password`, {
+    const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -88,7 +90,7 @@ export const profileApi = {
     const formData = new FormData();
     formData.append('profilePicture', file);
 
-    const response = await fetch(`${API_BASE_URL}/profile/upload-picture`, {
+    const response = await fetch(`${API_BASE_URL}/auth/upload-picture`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -111,7 +113,7 @@ export const profileApi = {
       throw new Error('No authentication token found');
     }
 
-    const response = await fetch(`${API_BASE_URL}/profile`, {
+    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,

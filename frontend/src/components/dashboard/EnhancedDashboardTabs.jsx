@@ -1,5 +1,128 @@
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import EditJobModal from '../modals/EditJobModal';
+import { 
+  User, 
+  MapPin, 
+  Phone, 
+  Mail, 
+  Edit3, 
+  Save, 
+  X,
+  Briefcase,
+  Calendar,
+  Award,
+  Target,
+  TrendingUp,
+  Users,
+  FileText,
+  Settings,
+  Bell,
+  Shield,
+  Palette,
+  Globe,
+  Download,
+  Upload,
+  Camera,
+  Link as LinkIcon,
+  Github,
+  Linkedin,
+  ExternalLink,
+  Building,
+  GraduationCap,
+  Clock,
+  Star,
+  CheckCircle,
+  AlertCircle,
+  Info,
+  Plus,
+  Minus,
+  Search,
+  Filter,
+  MoreVertical,
+  Eye,
+  EyeOff,
+  Lock,
+  Unlock,
+  Trash2,
+  RefreshCw,
+  ArrowRight,
+  ArrowLeft,
+  ChevronDown,
+  ChevronUp,
+  Heart,
+  Share,
+  Bookmark,
+  MessageSquare,
+  ThumbsUp,
+  Flag,
+  Zap,
+  Layers,
+  Grid,
+  List,
+  BarChart3,
+  PieChart,
+  Activity,
+  Cpu,
+  Database,
+  Server,
+  Cloud,
+  Wifi,
+  Battery,
+  Signal,
+  Volume2,
+  VolumeX,
+  Play,
+  Pause,
+  Square as Stop,
+  SkipBack,
+  SkipForward,
+  Repeat,
+  Shuffle,
+  Maximize2 as Maximize,
+  Minimize2 as Minimize,
+  Copy,
+  Clipboard,
+  Scissors,
+  Paperclip,
+  Image,
+  Video,
+  Music,
+  File,
+  Folder,
+  FolderOpen,
+  Archive,
+  Package,
+  Box,
+  Truck,
+  Plane,
+  Car,
+  Bike,
+  Truck as Bus,
+  Truck as Train,
+  Anchor as Ship,
+  Anchor,
+  Compass,
+  Map,
+  Navigation2,
+  MapPin as Route,
+  Home,
+  Building2,
+  Store,
+  ShoppingCart,
+  ShoppingBag,
+  CreditCard,
+  DollarSign,
+  Coins,
+  Wallet,
+  Receipt,
+  Calculator,
+  Wallet as PiggyBank,
+  TrendingDown
+} from 'lucide-react';
+import ProfileEditModal from '../profile/ProfileEditModal';
+import { useAuth } from '../../contexts/AuthContext.jsx';
+import { calculateProfileCompletion } from '../../utils/profileCompletion';
 import { useTheme } from "../../contexts/IntegratedThemeContext";
 import { useDashboard } from "../../contexts/RealDashboardContext";
 import {
@@ -7,8 +130,6 @@ import {
   ApplicationsFilter,
   AnalyticsFilter,
 } from "./DashboardFilters";
-import ProfileEditModal from "../profile/ProfileEditModal";
-import { profileApi } from "../../services/profileApi";
 
 // Enhanced Tab Navigation Component
 export const DashboardTabNavigation = ({
@@ -94,10 +215,22 @@ export const EnhancedProfileTab = ({
   onEdit,
   userRole = "applicant",
 }) => {
+  const { updateProfile, updateProfileWithFile } = useAuth();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(user);
   const [loading, setLoading] = useState(false);
-  const profileCompletion = currentUser?.profileComplete || 85;
+  
+  // Calculate dynamic profile completion
+  const actualUser = currentUser?.data ? currentUser.data : currentUser;
+  const profileCompletion = calculateProfileCompletion(actualUser, userRole);
+
+  // Sync local state with prop changes
+  useEffect(() => {
+    if (user) {
+      console.log('🔍 EnhancedProfileTab user prop changed:', user);
+      setCurrentUser(user);
+    }
+  }, [user]);
 
   // Helper function to safely convert values to strings
   const safeStringValue = (value) => {
@@ -105,8 +238,18 @@ export const EnhancedProfileTab = ({
     if (typeof value === "string") return value;
     if (typeof value === "object") {
       // Handle location object
-      if (value.country) return value.country;
-      if (value.city && value.country) return `${value.city}, ${value.country}`;
+      if (value.city && value.state && value.country) {
+        return `${value.city}, ${value.state}, ${value.country}`;
+      }
+      if (value.city && value.country) {
+        return `${value.city}, ${value.country}`;
+      }
+      if (value.city) {
+        return value.city;
+      }
+      if (value.country) {
+        return value.country;
+      }
       // Handle other objects by converting to JSON
       return JSON.stringify(value);
     }
@@ -119,12 +262,22 @@ export const EnhancedProfileTab = ({
       title: "Personal Information",
       icon: "👤",
       fields: [
-        { label: "Full Name", value: safeStringValue(user?.name), icon: "📝" },
+        { 
+          label: "Full Name", 
+          value: safeStringValue(
+            user?.name || `${user?.firstName || ''} ${user?.lastName || ''}`.trim()
+          ), 
+          icon: "👤" 
+        },
         { label: "Email", value: safeStringValue(user?.email), icon: "📧" },
         { label: "Phone", value: safeStringValue(user?.phone), icon: "📱" },
         {
           label: "Location",
-          value: safeStringValue(user?.location),
+          value: safeStringValue(
+            userRole === 'recruiter' 
+              ? user?.officeLocation || user?.location
+              : user?.currentLocation || user?.location
+          ) || "Not specified",
           icon: "📍",
         },
       ],
@@ -136,17 +289,29 @@ export const EnhancedProfileTab = ({
       fields: [
         {
           label: "LinkedIn",
-          value: safeStringValue(user?.linkedin_url),
+          value: safeStringValue(
+            userRole === 'recruiter' 
+              ? user?.professionalLinks?.linkedin || user?.linkedin_url
+              : user?.linkedin_url
+          ),
           icon: "💼",
         },
         {
           label: "GitHub",
-          value: safeStringValue(user?.github_url),
+          value: safeStringValue(
+            userRole === 'recruiter' 
+              ? user?.professionalLinks?.github || user?.github_url
+              : user?.github_url
+          ),
           icon: "💻",
         },
         {
           label: "Portfolio",
-          value: safeStringValue(user?.portfolio_url),
+          value: safeStringValue(
+            userRole === 'recruiter' 
+              ? user?.professionalLinks?.personalWebsite || user?.portfolio_url
+              : user?.portfolio_url
+          ),
           icon: "🌐",
         },
       ],
@@ -168,9 +333,18 @@ export const EnhancedProfileTab = ({
           },
           {
             label: "Skills",
-            value: Array.isArray(user?.skills)
-              ? user.skills.join(", ")
-              : safeStringValue(user?.skills),
+            value: (() => {
+              if (Array.isArray(user?.skills)) {
+                return user.skills.join(", ");
+              } else if (user?.skills?.technical && Array.isArray(user.skills.technical)) {
+                return user.skills.technical.join(", ");
+              } else if (user?.skills?.soft && Array.isArray(user.skills.soft)) {
+                return user.skills.soft.join(", ");
+              } else if (typeof user?.skills === 'string') {
+                return user.skills;
+              }
+              return "Not specified";
+            })(),
             icon: "🛠️",
           },
           {
@@ -183,9 +357,38 @@ export const EnhancedProfileTab = ({
             value: safeStringValue(user?.qualification),
             icon: "🎓",
           },
+          {
+            label: "Resume",
+            value: (() => {
+              console.log('🔍 Resume debug - user.resume_url:', user?.resume_url);
+              console.log('🔍 Resume debug - full user object:', user);
+              return user?.resume_url ? (
+                <a 
+                  href={`http://localhost:5000${user.resume_url}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
+                >
+                  📄 View Resume
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              ) : "Not uploaded";
+            })(),
+            icon: "📄",
+          },
         ],
       };
     } else if (userRole === "recruiter") {
+      console.log('🔍 Recruiter profile debug - user object:', typeof user);
+      console.log('🔍 Recruiter profile debug - companyInfo:', user?.companyInfo);
+      console.log('🔍 Recruiter profile debug - yearsOfExperience:', user?.yearsOfExperience);
+      console.log('🔍 Recruiter profile debug - resume_url:', user?.resume_url);
+      console.log('🔍 Recruiter profile debug - location:', user?.location);
+      console.log('🔍 Recruiter profile debug - officeLocation:', user?.officeLocation);
+      console.log('🔍 Recruiter profile debug - linkedin_url:', user?.linkedin_url);
+      console.log('🔍 Recruiter profile debug - github_url:', user?.github_url);
+      console.log('🔍 Recruiter profile debug - portfolio_url:', user?.portfolio_url);
+      
       professionalDetails = {
         title: "Professional Details",
         icon: "💼",
@@ -198,18 +401,47 @@ export const EnhancedProfileTab = ({
           },
           {
             label: "Company",
-            value: safeStringValue(user?.company),
+            value: safeStringValue(user?.companyInfo?.companyName || user?.companyName || user?.company || "Not specified"),
             icon: "🏢",
           },
           {
             label: "Department",
-            value: safeStringValue(user?.department),
+            value: (() => {
+              console.log('🔍 Department debug - companyInfo.department:', user?.companyInfo?.department);
+              console.log('🔍 Department debug - flat department:', user?.department);
+              return safeStringValue(user?.companyInfo?.department || user?.department || "Not provided");
+            })(),
             icon: "🏛️",
           },
           {
+            label: "Job Title",
+            value: safeStringValue(user?.companyInfo?.designation || user?.position || user?.job_title || "Not specified"),
+            icon: "💼",
+          },
+          {
             label: "Experience",
-            value: `${user?.experience_years || user?.experience || 0} years`,
+            value: `${user?.yearsOfExperience || user?.experience_years || user?.experience || 0} years`,
             icon: "⏱️",
+          },
+          {
+            label: "Resume",
+            value: (() => {
+              console.log('🔍 Resume debug (recruiter) - user.resume_url:', user?.resume_url);
+              console.log('🔍 Resume debug (recruiter) - user keys:', Object.keys(user || {}));
+              console.log('🔍 Resume debug (recruiter) - full user object:', user);
+              return user?.resume_url ? (
+                <a 
+                  href={`http://localhost:5000${user.resume_url}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
+                >
+                  📄 View Resume
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              ) : "Not uploaded";
+            })(),
+            icon: "📄",
           },
         ],
       };
@@ -236,7 +468,7 @@ export const EnhancedProfileTab = ({
           },
           {
             label: "Experience",
-            value: `${user?.experience_years || user?.experience || 0} years`,
+            value: `${user?.experience_years || user?.yearsOfExperience || 0} years`,
             icon: "⏱️",
           },
         ],
@@ -249,19 +481,190 @@ export const EnhancedProfileTab = ({
   const profileSections = getProfileSections();
 
   // Handle profile save
-  const handleProfileSave = async (formData) => {
+  const handleProfileSave = async (formData, isFileUpload = false) => {
     setLoading(true);
     try {
-      const response = await profileApi.updateProfile(formData);
+      console.log('🔍 EnhancedProfileTab handleProfileSave called with:', formData, 'isFileUpload:', isFileUpload);
+      
+      // Handle file upload differently
+      if (isFileUpload) {
+        // For file uploads, send FormData directly to backend
+        const response = await updateProfileWithFile(formData);
+        console.log('✅ Profile with file update response:', response);
+        
+        if (response.success) {
+          // Update local state immediately for UI responsiveness
+          setCurrentUser(response.data);
+          console.log('🔄 Profile update completed, contexts should be synced');
+        } else {
+          throw new Error(response.error || 'Failed to update profile');
+        }
+        return;
+      }
+      
+      // Transform form data to match backend expectations (for regular updates)
+      const transformedData = { ...formData };
+      
+      // Handle name field - split into firstName and lastName
+      if (formData.name) {
+        const nameParts = formData.name.split(' ');
+        transformedData.firstName = nameParts[0] || '';
+        transformedData.lastName = nameParts.slice(1).join(' ') || '';
+        delete transformedData.name; // Remove the name field
+      }
+      
+      // Handle recruiter-specific fields
+      if (userRole === 'recruiter') {
+        // Map company info to nested structure
+        if (formData.company || formData.department || formData.job_title) {
+          transformedData.companyInfo = {
+            ...(formData.company && { companyName: formData.company }),
+            ...(formData.department && { department: formData.department }),
+            ...(formData.job_title && { designation: formData.job_title })
+          };
+          // Remove flat fields
+          delete transformedData.company;
+          delete transformedData.department;
+          delete transformedData.job_title;
+        }
+        
+        // Handle years of experience
+        if (formData.experience_years !== undefined) {
+          transformedData.yearsOfExperience = parseInt(formData.experience_years) || 0;
+          delete transformedData.experience_years;
+        }
+        
+        // Handle location field - map to officeLocation.city
+        if (formData.location) {
+          transformedData.officeLocation = {
+            city: formData.location,
+            state: 'Maharashtra', // Default state
+            country: 'India' // Default country
+          };
+          delete transformedData.location; // Remove the location field
+        }
+        
+        // Handle professional links for recruiters - store in both places
+        const professionalLinks = {};
+        if (formData.linkedin_url) {
+          professionalLinks.linkedin = formData.linkedin_url;
+          // Keep linkedin_url in BaseUser for backward compatibility - don't delete
+        }
+        if (formData.github_url) {
+          professionalLinks.github = formData.github_url;
+          // Keep github_url in BaseUser for backward compatibility - don't delete
+        }
+        if (formData.portfolio_url) {
+          professionalLinks.personalWebsite = formData.portfolio_url;
+          // Keep portfolio_url in BaseUser for backward compatibility - don't delete
+        }
+        
+        // Only set professionalLinks if we have any links
+        if (Object.keys(professionalLinks).length > 0) {
+          transformedData.professionalLinks = professionalLinks;
+        }
+        
+        // Ensure bio is preserved (it's a BaseUser field)
+        // Bio should already be in transformedData, no special handling needed
+      }
+      
+      // Handle applicant-specific fields
+      if (userRole === 'applicant') {
+        // Handle skills array for applicants
+        if (formData.skills) {
+          transformedData.skills = Array.isArray(formData.skills) 
+            ? formData.skills 
+            : formData.skills.split(',').map(skill => skill.trim()).filter(skill => skill);
+        }
+        
+        // Handle location for applicants
+        if (formData.location) {
+          transformedData.currentLocation = {
+            city: formData.location,
+            state: 'Maharashtra',
+            country: 'India'
+          };
+          delete transformedData.location;
+        }
+      }
+      
+      // Handle common social links for all user types (if not handled above)
+      if (userRole !== 'recruiter') {
+        // For applicants and admins, keep social links as direct fields
+        // These are already in the correct format, no transformation needed
+        // Just ensure they're included: linkedin_url, github_url, portfolio_url
+      }
+      
+      // Validate and sanitize data before sending
+      if (transformedData.bio && (
+        transformedData.bio.includes('chunk-') || 
+        transformedData.bio.includes('console.log') || 
+        transformedData.bio.includes('Download the React DevTools')
+      )) {
+        console.log('🚫 Detected corrupted bio data, clearing it');
+        transformedData.bio = '';
+      }
+      
+      const sanitizedData = { ...transformedData };
+
+      const isCorruptedUrl = (url) => {
+        if (!url || url.trim() === '') return false;
+        // Check if URL contains localhost with current page path (indicates corruption)
+        return url.includes('localhost:3000') && (
+          url.includes('/dashboard/profile') || 
+          url.includes('/recruiter-dashboard/profile') ||
+          url.includes('/applicant-dashboard/profile') ||
+          url === window.location.href
+        );
+      };
+
+      // Clean corrupted URLs (temporarily disabled for debugging)
+      // ['linkedin_url', 'github_url', 'portfolio_url'].forEach(field => {
+      //   if (sanitizedData[field] && isCorruptedUrl(sanitizedData[field])) {
+      //     console.log(`🚫 Detected corrupted ${field}, clearing it`);
+      //     sanitizedData[field] = '';
+      //   }
+      // });
+      
+      // Validate bio for repeated content
+      if (sanitizedData.bio && sanitizedData.bio.length > 100) {
+        const words = sanitizedData.bio.split(' ');
+        const uniqueWords = [...new Set(words)];
+        // If more than 80% of words are repeated, likely corrupted
+        if (uniqueWords.length / words.length < 0.2) {
+          console.log('🚫 Detected corrupted bio with repeated content, clearing it');
+          transformedData.bio = '';
+        }
+      }
+      
+      console.log('🔍 Sanitized data for backend:', transformedData);
+      
+      const response = await updateProfile(transformedData);
+      console.log('✅ Profile update response:', response);
+      console.log('✅ Profile update response.data:', response.data);
+      console.log('✅ Profile update response.data.bio:', response.data?.bio);
+      console.log('✅ Profile update response.data.github_url:', response.data?.github_url);
+      
       if (response.success) {
+        // Update local state immediately for UI responsiveness
         setCurrentUser(response.data);
-        // Call parent onEdit if provided
+        
+        // Call parent onEdit to trigger dashboard refresh
         if (onEdit) {
           onEdit(response.data);
         }
+        
+        // Force a small delay to ensure all contexts sync
+        setTimeout(() => {
+          console.log('🔄 Profile update completed, contexts should be synced');
+        }, 100);
+        
+        return response;
+      } else {
+        throw new Error(response.error || 'Profile update failed');
       }
     } catch (error) {
-      console.error("Failed to update profile:", error);
+      console.error("❌ Failed to update profile:", error);
       throw error; // Re-throw to let modal handle the error
     } finally {
       setLoading(false);
@@ -316,11 +719,11 @@ export const EnhancedProfileTab = ({
       </motion.div>
 
       {/* Profile Sections */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full max-w-full items-start">
         {profileSections.map((section, index) => (
           <motion.div
             key={section.title}
-            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow duration-300"
+            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow duration-300 overflow-hidden min-w-0 h-fit max-h-96 flex flex-col"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -333,11 +736,11 @@ export const EnhancedProfileTab = ({
               </h4>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4 flex-1 overflow-y-auto">
               {section.fields.map((field, fieldIndex) => (
                 <div
                   key={fieldIndex}
-                  className="border-l-4 border-blue-200 dark:border-blue-700 pl-4"
+                  className="border-l-4 border-blue-200 dark:border-blue-700 pl-4 overflow-hidden min-w-0"
                 >
                   <div className="flex items-center space-x-2 mb-1">
                     <span>{field.icon}</span>
@@ -345,15 +748,16 @@ export const EnhancedProfileTab = ({
                       {field.label}
                     </span>
                   </div>
-                  <p
+                  <div
                     className={`text-sm ${
                       field.value
                         ? "text-gray-900 dark:text-white"
                         : "text-gray-400 dark:text-gray-500 italic"
-                    } ${field.multiline ? "whitespace-pre-wrap" : "truncate"}`}
+                    } ${field.multiline ? "whitespace-pre-wrap" : "break-words overflow-wrap-anywhere"} leading-relaxed max-w-full`}
+                    style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
                   >
-                    {field.value || "Not provided"}
-                  </p>
+                    {typeof field.value === 'string' ? (field.value || "Not provided") : (field.value || "Not provided")}
+                  </div>
                 </div>
               ))}
             </div>
@@ -633,15 +1037,68 @@ export const EnhancedSettingsTab = () => {
   );
 };
 
+
 // Enhanced Jobs Tab Component
 export const EnhancedJobsTab = ({
   userRole = "applicant",
   jobType = "all",
+  onEditJob = null,
 }) => {
-  const { dashboardData, loading, error } = useDashboard();
+  const { dashboardData, loading, error, currentUser } = useDashboard();
+  const [recruiterJobs, setRecruiterJobs] = useState([]);
+  const [jobsLoading, setJobsLoading] = useState(false);
 
   // Get jobs from dashboard data with fallback
-  const jobs = dashboardData?.recentJobs || [];
+  let jobs = dashboardData?.recentJobs || [];
+
+  // For recruiters, fetch their specific jobs
+  useEffect(() => {
+    const fetchRecruiterJobs = async () => {
+      if (userRole === "recruiter" && currentUser?._id) {
+        try {
+          setJobsLoading(true);
+          console.log('🔍 Fetching jobs for recruiter:', currentUser._id);
+          
+          // Import jobsAPI dynamically to avoid circular imports
+          const { jobsAPI } = await import("../../services/api");
+          const response = await jobsAPI.getJobs({ 
+            recruiterId: currentUser._id,
+            limit: 100 // Get more jobs for recruiter's own jobs
+          });
+          
+          const fetchedJobs = response.data.data?.jobs || response.data.jobs || [];
+          console.log(`✅ Fetched recruiter jobs: ${fetchedJobs.length} for jobType: ${jobType}`);
+          console.log('🔍 Sample job data:', fetchedJobs[0]);
+          if (fetchedJobs[0]) {
+            console.log('🔍 Job fields:', Object.keys(fetchedJobs[0]));
+            console.log('🔍 Experience field value:', fetchedJobs[0].experience);
+            console.log('🔍 Job title field:', fetchedJobs[0].jobTitle || fetchedJobs[0].title);
+            console.log('🔍 Company field:', fetchedJobs[0].companyName || fetchedJobs[0].company);
+            console.log('🔍 Skills field:', fetchedJobs[0].requiredSkills || fetchedJobs[0].skills);
+            console.log('🔍 Salary field:', fetchedJobs[0].salaryRange);
+          }
+          setRecruiterJobs(fetchedJobs);
+        } catch (error) {
+          console.error('Error fetching recruiter jobs:', error);
+          setRecruiterJobs([]);
+        } finally {
+          setJobsLoading(false);
+        }
+      }
+    };
+
+    fetchRecruiterJobs();
+    
+    // Set up interval to refresh jobs every 30 seconds
+    const refreshInterval = setInterval(fetchRecruiterJobs, 30000);
+    
+    return () => clearInterval(refreshInterval);
+  }, [userRole, currentUser?._id, jobType]);
+
+  // Use recruiter-specific jobs if available
+  if (userRole === "recruiter" && recruiterJobs.length > 0) {
+    jobs = recruiterJobs;
+  }
 
   // Placeholder functions for job actions (will be implemented later)
   const applyToJob = async (jobId) => {
@@ -671,6 +1128,8 @@ export const EnhancedJobsTab = ({
   const [saving, setSaving] = useState({});
   const [deleting, setDeleting] = useState({});
   const [updating, setUpdating] = useState({});
+  const [editModal, setEditModal] = useState({ isOpen: false, job: null });
+  const [applicationsModal, setApplicationsModal] = useState({ isOpen: false, job: null, applications: [] });
 
   // Filter jobs based on job type and current filters
   const getJobsByType = () => {
@@ -679,6 +1138,24 @@ export const EnhancedJobsTab = ({
     let filteredJobs = safeJobs;
 
     switch (jobType) {
+      case "active":
+        // Filter active jobs - Fixed case sensitivity
+        filteredJobs = safeJobs.filter((job) => 
+          job.status?.toLowerCase() === "active" || job.status === "Active"
+        );
+        break;
+      case "draft":
+        // Filter draft jobs - Fixed case sensitivity
+        filteredJobs = safeJobs.filter((job) => 
+          job.status?.toLowerCase() === "draft" || job.status === "Draft"
+        );
+        break;
+      case "closed":
+        // Filter closed jobs - Fixed case sensitivity
+        filteredJobs = safeJobs.filter((job) => 
+          job.status?.toLowerCase() === "closed" || job.status === "Closed"
+        );
+        break;
       case "recommended":
         // Filter recommended jobs (jobs that match user skills or preferences)
         filteredJobs = safeJobs.filter(
@@ -774,59 +1251,141 @@ export const EnhancedJobsTab = ({
     
     setDeleting((prev) => ({ ...prev, [jobId]: true }));
     try {
-      // API call to delete job would go here
-      console.log('Deleting job:', jobId);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Import jobsAPI dynamically to avoid circular imports
+      const { jobsAPI } = await import("../../services/api");
+      const response = await jobsAPI.deleteJob(jobId);
       
-      // Show success message or update UI
-      alert('Job posting deleted successfully!');
-      
-      // Optionally refresh the jobs list or remove from local state
-      // This would typically trigger a re-fetch of jobs
+      if (response.data.success) {
+        alert(`Job has been deleted successfully!`);
+        // Refresh the jobs list
+        window.location.reload();
+      } else {
+        throw new Error(response.data.message || 'Failed to delete job');
+      }
       
     } catch (error) {
-      console.error("Failed to delete job:", error);
-      alert('Failed to delete job posting. Please try again.');
+      console.error('Error deleting job:', error);
+      alert('Failed to delete job. Please try again.');
     } finally {
       setDeleting((prev) => ({ ...prev, [jobId]: false }));
     }
   };
 
-  // Handle job update
+  // Handle job update (toggle status)
   const handleUpdate = async (jobId) => {
     setUpdating((prev) => ({ ...prev, [jobId]: true }));
     try {
-      // API call to update job would go here
-      console.log('Updating job:', jobId);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Get current job to toggle its status
+      const currentJob = jobs.find(job => job.id === jobId || job._id === jobId);
+      if (!currentJob) {
+        throw new Error('Job not found');
+      }
       
-      // Show success message
-      alert('Job posting updated successfully!');
+      // Toggle between active and draft status
+      const newStatus = currentJob.status === 'active' ? 'draft' : 'active';
       
-      // Optionally refresh the jobs list
+      // Import jobsAPI dynamically to avoid circular imports
+      const { jobsAPI } = await import("../../services/api");
+      const response = await jobsAPI.updateJob(jobId, { status: newStatus });
+      
+      if (response.data.success) {
+        alert(`Job status updated to ${newStatus} successfully!`);
+        // Refresh the jobs list
+        window.location.reload();
+      } else {
+        throw new Error(response.data.message || 'Failed to update job');
+      }
       
     } catch (error) {
-      console.error("Failed to update job:", error);
-      alert('Failed to update job posting. Please try again.');
+      console.error('Error updating job:', error);
+      alert('Failed to update job. Please try again.');
     } finally {
       setUpdating((prev) => ({ ...prev, [jobId]: false }));
     }
   };
 
-  // Handle edit job (navigate to edit form)
+  // Handle edit job (open modal instead of redirecting)
   const handleEdit = (jobId) => {
-    console.log('Edit job:', jobId);
-    // This would typically navigate to an edit form or open a modal
-    alert(`Edit functionality for job ${jobId} - This would open the job editing form.`);
+    console.log('🔍 Edit job clicked, jobId:', jobId);
+    const currentJob = jobs.find(job => job.id === jobId || job._id === jobId);
+    console.log('🔍 Found job for editing:', currentJob);
+    
+    if (currentJob) {
+      console.log('✅ Opening edit modal with job data');
+      setEditModal({ isOpen: true, job: currentJob });
+    } else {
+      console.error('❌ Job not found for ID:', jobId);
+      alert('Job not found. Please refresh the page and try again.');
+    }
+  };
+
+  // Handle update job
+  const handleUpdateJob = async (jobId, updateData) => {
+    console.log('🔍 Updating job:', jobId, updateData);
+    
+    try {
+      setUpdating(prev => ({ ...prev, [jobId]: true }));
+      
+      // Call API to update job
+      const response = await fetch(`http://localhost:5000/api/jobs/${jobId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(updateData)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('✅ Job updated successfully:', result);
+      
+      // Update local jobs list
+      setRecruiterJobs(prevJobs => 
+        prevJobs.map(job => 
+          (job.id === jobId || job._id === jobId) 
+            ? { ...job, ...updateData, id: job.id || job._id }
+            : job
+        )
+      );
+      
+      // Close modal
+      setEditModal({ isOpen: false, job: null });
+      
+      return result;
+    } catch (error) {
+      console.error('❌ Error updating job:', error);
+      throw error;
+    } finally {
+      setUpdating(prev => ({ ...prev, [jobId]: false }));
+    }
   };
 
   // Handle view applications
-  const handleViewApplications = (jobId) => {
+  const handleViewApplications = async (jobId) => {
     console.log('View applications for job:', jobId);
-    // This would typically navigate to applications view or open a modal
-    alert(`View applications for job ${jobId} - This would show all applications for this job.`);
+    try {
+      // Import applicationsAPI dynamically to avoid circular imports
+      const { applicationsAPI } = await import("../../services/api");
+      const response = await applicationsAPI.getApplicationsByJob(jobId);
+      
+      const applications = response.data.data || response.data.applications || [];
+      const currentJob = jobs.find(job => job.id === jobId || job._id === jobId);
+      
+      // Open the applications modal with job and applications data
+      setApplicationsModal({
+        isOpen: true,
+        job: currentJob,
+        applications: applications
+      });
+      
+    } catch (error) {
+      console.error('Error fetching applications:', error);
+      alert('Failed to fetch applications. Please try again.');
+    }
   };
 
   return (
@@ -958,6 +1517,15 @@ export const EnhancedJobsTab = ({
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Experience
                       </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Industry
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Work Mode
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Urgency
+                      </th>
                       {userRole === "applicant" && (
                         <>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -985,10 +1553,10 @@ export const EnhancedJobsTab = ({
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
                             <div className="text-sm font-medium text-gray-900 dark:text-white">
-                              {job.title}
+                              {job.jobTitle || job.title}
                             </div>
                             <div className="flex flex-wrap gap-1 mt-1">
-                              {job.skills
+                              {(job.requiredSkills || job.skills || [])
                                 ?.slice(0, 2)
                                 .map((skill, skillIndex) => (
                                   <span
@@ -998,9 +1566,9 @@ export const EnhancedJobsTab = ({
                                     {skill}
                                   </span>
                                 ))}
-                              {job.skills?.length > 2 && (
+                              {(job.requiredSkills || job.skills || [])?.length > 2 && (
                                 <span className="text-xs text-gray-500 dark:text-gray-400">
-                                  +{job.skills.length - 2}
+                                  +{(job.requiredSkills || job.skills || []).length - 2}
                                 </span>
                               )}
                             </div>
@@ -1008,7 +1576,7 @@ export const EnhancedJobsTab = ({
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900 dark:text-white">
-                            {job.company}
+                            {job.companyName || job.company || job.companyInfo?.companyName || 'Not specified'}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -1020,18 +1588,67 @@ export const EnhancedJobsTab = ({
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900 dark:text-white flex items-center">
                             <span className="mr-1">💰</span>
-                            {job.salary}
+                            {job.salary || job.formattedSalary || 
+                             (job.salaryRange?.min && job.salaryRange?.max ? 
+                              `₹${(job.salaryRange.min / 100000).toFixed(1)}L - ₹${(job.salaryRange.max / 100000).toFixed(1)}L ${job.salaryRange.period || 'Yearly'}` :
+                              job.salaryRange?.min ? 
+                              `₹${(job.salaryRange.min / 100000).toFixed(1)}L+ ${job.salaryRange.period || 'Yearly'}` : 
+                              (job.salaryMin && job.salaryMax ? `₹${job.salaryMin}-${job.salaryMax} ${job.salaryPeriod || 'yearly'}` : 
+                               job.salaryMin ? `₹${job.salaryMin}+ ${job.salaryPeriod || 'yearly'}` : 'Negotiable'))}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                            {job.type}
+                            {job.jobType || job.type}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900 dark:text-white">
-                            {job.experience}
+                            {(() => {
+                              if (!job.experience) return 'Not specified';
+                              if (typeof job.experience === 'object') {
+                                if (job.experience.min !== undefined && job.experience.max !== undefined) {
+                                  return `${job.experience.min}-${job.experience.max} years`;
+                                } else if (job.experience.min !== undefined) {
+                                  return `${job.experience.min}+ years`;
+                                }
+                                return 'Not specified';
+                              }
+                              return job.experience;
+                            })()}
                           </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900 dark:text-white">
+                            {job.industry || 'Not specified'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            job.workArrangement === 'remote' 
+                              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' 
+                              : job.workArrangement === 'hybrid'
+                              ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+                              : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                          }`}>
+                            {job.workArrangement === 'remote' ? '🏠 Remote' : 
+                             job.workArrangement === 'hybrid' ? '🏢 Hybrid' : 
+                             job.workArrangement === 'onsite' ? '🏢 Onsite' : 
+                             job.workArrangement || 'Onsite'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            job.urgency === 'high-priority' 
+                              ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' 
+                              : job.urgency === 'urgent'
+                              ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                              : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                          }`}>
+                            {job.urgency === 'high-priority' ? '🔴 High Priority' : 
+                             job.urgency === 'urgent' ? '🟡 Urgent' : 
+                             '🟢 Normal'}
+                          </span>
                         </td>
                         {userRole === "applicant" && (
                           <>
@@ -1089,18 +1706,6 @@ export const EnhancedJobsTab = ({
                                 ✏️ Edit
                               </motion.button>
                               <motion.button
-                                className={`px-2 py-1 bg-orange-600 text-white rounded hover:bg-orange-700 transition-colors duration-200 text-xs ${
-                                  updating[job.id] ? 'opacity-50 cursor-not-allowed' : ''
-                                }`}
-                                whileHover={{ scale: updating[job.id] ? 1 : 1.05 }}
-                                whileTap={{ scale: updating[job.id] ? 1 : 0.95 }}
-                                title="Update Job"
-                                onClick={() => handleUpdate(job.id)}
-                                disabled={updating[job.id]}
-                              >
-                                {updating[job.id] ? '⏳ Updating...' : '🔄 Update'}
-                              </motion.button>
-                              <motion.button
                                 className={`px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors duration-200 text-xs ${
                                   deleting[job.id] ? 'opacity-50 cursor-not-allowed' : ''
                                 }`}
@@ -1149,53 +1754,165 @@ export const EnhancedJobsTab = ({
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                   whileHover={{ y: -2 }}
                 >
+                  {/* Header with Title and Status */}
                   <div className="flex justify-between items-start mb-4">
-                    <div>
+                    <div className="flex-1">
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                        {job.title}
+                        {job.jobTitle || job.title}
                       </h3>
-                      <p className="text-gray-600 dark:text-gray-400">
-                        {job.company}
+                      <p className="text-gray-600 dark:text-gray-400 mb-2">
+                        {job.companyName || job.company || job.companyInfo?.companyName || 'Company not specified'}
                       </p>
+                      <div className="flex items-center space-x-2">
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          job.status === 'active' 
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                            : job.status === 'draft'
+                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                            : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                        }`}>
+                          {job.status || 'Active'}
+                        </span>
+                        {job.urgency && (
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            job.urgency === 'high-priority' 
+                              ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' 
+                              : job.urgency === 'urgent'
+                              ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+                              : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                          }`}>
+                            {job.urgency === 'high-priority' ? '🔴 High Priority' : 
+                             job.urgency === 'urgent' ? '🟡 Urgent' : 
+                             '🟢 Normal'}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex space-x-2">
-                      <motion.button
-                        className={`p-2 rounded-lg transition-colors duration-200 ${
-                          job.saved
-                            ? "bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-400"
-                            : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
-                        }`}
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => handleSave(job.id, job.saved)}
-                        disabled={saving[job.id]}
-                      >
-                        {saving[job.id] ? "⏳" : job.saved ? "⭐" : "☆"}
-                      </motion.button>
-                    </div>
+                    {userRole === "applicant" && (
+                      <div className="flex space-x-2">
+                        <motion.button
+                          className={`p-2 rounded-lg transition-colors duration-200 ${
+                            job.saved
+                              ? "bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-400"
+                              : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
+                          }`}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => handleSave(job.id, job.saved)}
+                          disabled={saving[job.id]}
+                        >
+                          {saving[job.id] ? "⏳" : job.saved ? "⭐" : "☆"}
+                        </motion.button>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="space-y-2 mb-4">
+                  {/* Job Details */}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
                     <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                       <span className="mr-2">📍</span>
-                      {job.location}
+                      <span className="truncate">{job.location}</span>
                     </div>
                     <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                       <span className="mr-2">💰</span>
-                      {job.salary}
+                      <span className="truncate">
+                        {job.salary || job.formattedSalary || 
+                         (job.salaryRange?.min && job.salaryRange?.max ? 
+                          `₹${(job.salaryRange.min / 100000).toFixed(1)}L - ₹${(job.salaryRange.max / 100000).toFixed(1)}L` :
+                          job.salaryRange?.min ? 
+                          `₹${(job.salaryRange.min / 100000).toFixed(1)}L+` : 
+                          (job.salaryMin && job.salaryMax ? `₹${job.salaryMin}-${job.salaryMax} ${job.salaryPeriod || 'yearly'}` : 
+                           job.salaryMin ? `₹${job.salaryMin}+ ${job.salaryPeriod || 'yearly'}` : 'Negotiable'))}
+                      </span>
                     </div>
                     <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                       <span className="mr-2">⏱️</span>
-                      {job.experience}
+                      <span className="truncate">
+                        {(() => {
+                          if (!job.experience) return 'Not specified';
+                          if (typeof job.experience === 'object') {
+                            if (job.experience.min !== undefined && job.experience.max !== undefined) {
+                              return `${job.experience.min}-${job.experience.max} years`;
+                            } else if (job.experience.min !== undefined) {
+                              return `${job.experience.min}+ years`;
+                            }
+                            return 'Not specified';
+                          }
+                          return job.experience;
+                        })()}
+                      </span>
                     </div>
                     <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                       <span className="mr-2">💼</span>
-                      {job.type}
+                      <span className="truncate">{job.jobType || job.type}</span>
+                    </div>
+                    <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                      <span className="mr-2">🏭</span>
+                      <span className="truncate">{job.industry || 'Not specified'}</span>
+                    </div>
+                    <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                      <span className="mr-2">🏠</span>
+                      <span className="truncate">
+                        {job.workArrangement === 'remote' ? 'Remote' : 
+                         job.workArrangement === 'hybrid' ? 'Hybrid' : 
+                         job.workArrangement === 'onsite' ? 'Onsite' : 
+                         job.workArrangement || 'Onsite'}
+                      </span>
                     </div>
                   </div>
 
+                  {/* Job Description */}
+                  {job.description && (
+                    <div className="mb-4">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                        {job.description}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Requirements */}
+                  {job.requirements && job.requirements.length > 0 && (
+                    <div className="mb-4">
+                      <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Requirements:</h4>
+                      <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                        {job.requirements.slice(0, 3).map((req, index) => (
+                          <li key={index} className="flex items-start">
+                            <span className="mr-2 text-blue-500">•</span>
+                            <span className="line-clamp-1">{req}</span>
+                          </li>
+                        ))}
+                        {job.requirements.length > 3 && (
+                          <li className="text-xs text-gray-500">
+                            +{job.requirements.length - 3} more requirements
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Responsibilities */}
+                  {job.responsibilities && job.responsibilities.length > 0 && (
+                    <div className="mb-4">
+                      <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Responsibilities:</h4>
+                      <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                        {job.responsibilities.slice(0, 3).map((resp, index) => (
+                          <li key={index} className="flex items-start">
+                            <span className="mr-2 text-green-500">•</span>
+                            <span className="line-clamp-1">{resp}</span>
+                          </li>
+                        ))}
+                        {job.responsibilities.length > 3 && (
+                          <li className="text-xs text-gray-500">
+                            +{job.responsibilities.length - 3} more responsibilities
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Skills */}
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {job.skills?.slice(0, 3).map((skill, skillIndex) => (
+                    {job.skills?.slice(0, 4).map((skill, skillIndex) => (
                       <span
                         key={skillIndex}
                         className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs rounded-full"
@@ -1203,30 +1920,68 @@ export const EnhancedJobsTab = ({
                         {skill}
                       </span>
                     ))}
-                    {job.skills?.length > 3 && (
+                    {job.skills?.length > 4 && (
                       <span className="px-2 py-1 bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 text-xs rounded-full">
-                        +{job.skills.length - 3} more
+                        +{job.skills.length - 4} more
                       </span>
                     )}
                   </div>
 
-                  <div className="flex space-x-3">
-                    <motion.button
-                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handleApply(job.id)}
-                      disabled={applying[job.id]}
-                    >
-                      {applying[job.id] ? "⏳ Applying..." : "📝 Apply Now"}
-                    </motion.button>
-                    <motion.button
-                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 text-sm font-medium"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      👁️ View Details
-                    </motion.button>
+                  {/* Action Buttons */}
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                    {userRole === "recruiter" ? (
+                      <div className="flex flex-wrap gap-2">
+                        <motion.button
+                          className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 text-xs font-medium"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          title="View Applications"
+                          onClick={() => handleViewApplications(job.id)}
+                        >
+                          👥 Applications
+                        </motion.button>
+                        <motion.button
+                          className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-xs font-medium"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          title="Edit Job"
+                          onClick={() => handleEdit(job.id)}
+                        >
+                          ✏️ Edit
+                        </motion.button>
+                        <motion.button
+                          className={`px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 text-xs font-medium ${
+                            deleting[job.id] ? 'opacity-50 cursor-not-allowed' : ''
+                          }`}
+                          whileHover={{ scale: deleting[job.id] ? 1 : 1.05 }}
+                          whileTap={{ scale: deleting[job.id] ? 1 : 0.95 }}
+                          title="Delete Job"
+                          onClick={() => handleDelete(job.id)}
+                          disabled={deleting[job.id]}
+                        >
+                          {deleting[job.id] ? '⏳ Deleting...' : '🗑️ Delete'}
+                        </motion.button>
+                      </div>
+                    ) : (
+                      <div className="flex space-x-3">
+                        <motion.button
+                          className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium"
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleApply(job.id)}
+                          disabled={applying[job.id]}
+                        >
+                          {applying[job.id] ? "⏳ Applying..." : "📝 Apply Now"}
+                        </motion.button>
+                        <motion.button
+                          className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 text-sm font-medium"
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          👁️ View Details
+                        </motion.button>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               ))}
@@ -1234,7 +1989,537 @@ export const EnhancedJobsTab = ({
           )}
         </div>
       </div>
+
+      {/* Job Edit Modal */}
+      <EditJobModal
+        open={editModal.isOpen}
+        onClose={() => setEditModal({ isOpen: false, job: null })}
+        job={editModal.job}
+        onUpdate={handleUpdateJob}
+      />
+
+      {/* Applications Modal */}
+      <ApplicationsModal
+        isOpen={applicationsModal.isOpen}
+        job={applicationsModal.job}
+        applications={applicationsModal.applications}
+        onClose={() => setApplicationsModal({ isOpen: false, job: null, applications: [] })}
+      />
     </motion.div>
+  );
+};
+
+// Comprehensive Job Edit Modal Component
+const JobEditModal = ({ isOpen, job, onClose, onSave }) => {
+  const [formData, setFormData] = useState({
+    // Basic Information
+    title: "",
+    company: "",
+    location: "",
+    industry: "",
+    category: "",
+    type: "full-time",
+    workArrangement: "onsite",
+    applicationDeadline: "",
+    
+    // Experience & Skills
+    experienceMin: 0,
+    experienceMax: 10,
+    skills: [],
+    
+    // Salary & Compensation
+    salaryMin: "",
+    salaryMax: "",
+    salaryPeriod: "yearly",
+    currency: "INR",
+    salary: "",
+    
+    // Job Description & Details
+    description: "",
+    responsibilities: [],
+    requirements: [],
+    qualifications: [],
+    benefits: [],
+    
+    // Contact Information
+    contactEmail: "",
+    urgency: "normal",
+    
+    // AI Enhancement
+    keywordsForAI: "",
+    
+    // Legacy fields for compatibility
+    experience: "",
+    sector: "automobile",
+    jobFunction: "",
+    shift: "",
+    preferredQualification: "",
+    certificationsRequired: [],
+    toolsAndTechnologies: [],
+  });
+  const [loading, setLoading] = useState(false);
+
+  // Populate form when job data is provided
+  useEffect(() => {
+    console.log('🔍 JobEditModal useEffect triggered, job:', job);
+    if (job) {
+      console.log('🔍 JobEditModal received job data:', job);
+      console.log('🔍 Job fields available:', Object.keys(job));
+      
+      const populatedData = {
+        // Basic Information
+        title: job.title || "",
+        company: job.company || "",
+        location: job.location || "",
+        industry: job.industry || "",
+        category: job.category || "",
+        type: job.type || "full-time",
+        workArrangement: job.workArrangement || "onsite",
+        applicationDeadline: job.applicationDeadline ? new Date(job.applicationDeadline).toISOString().split('T')[0] : "",
+        
+        // Experience & Skills
+        experienceMin: job.experienceMin || 0,
+        experienceMax: job.experienceMax || 10,
+        skills: Array.isArray(job.skills) ? job.skills : [],
+        
+        // Salary & Compensation
+        salaryMin: job.salaryMin || "",
+        salaryMax: job.salaryMax || "",
+        salaryPeriod: job.salaryPeriod || "yearly",
+        currency: job.currency || "INR",
+        salary: job.salary || "",
+        
+        // Job Description & Details
+        description: job.description || "",
+        responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities : [],
+        requirements: Array.isArray(job.requirements) ? job.requirements : [],
+        qualifications: Array.isArray(job.qualifications) ? job.qualifications : [],
+        benefits: Array.isArray(job.benefits) ? job.benefits : [],
+        
+        // Contact Information
+        contactEmail: job.contactEmail || "",
+        urgency: job.urgency || "normal",
+        
+        // AI Enhancement
+        keywordsForAI: job.keywordsForAI || "",
+        
+        // Legacy fields for compatibility
+        experience: job.experience || "",
+        sector: job.sector || job.industry || "automobile",
+        jobFunction: job.jobFunction || "",
+        shift: job.shift || "",
+        preferredQualification: job.preferredQualification || "",
+        certificationsRequired: Array.isArray(job.certificationsRequired) ? job.certificationsRequired : [],
+        toolsAndTechnologies: Array.isArray(job.toolsAndTechnologies) ? job.toolsAndTechnologies : [],
+      };
+      
+      console.log('🔍 Setting formData with populated data:', populatedData);
+      setFormData(populatedData);
+      console.log('✅ JobEditModal formData set successfully');
+    } else {
+      console.log('🔍 No job data provided to JobEditModal');
+    }
+  }, [job]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleArrayInput = (name, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: value.split(',').map(item => item.trim()).filter(item => item)
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log('🔍 JobEditModal handleSubmit called');
+    console.log('🔍 Current formData being saved:', formData);
+    setLoading(true);
+    try {
+      console.log('🔍 Calling onSave with formData...');
+      await onSave(formData);
+      console.log('✅ JobEditModal onSave completed successfully');
+    } catch (error) {
+      console.error('❌ JobEditModal onSave failed:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Edit Job
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400">
+                Edit "{job?.title || 'Job'}" details
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            >
+              <span className="text-2xl">×</span>
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Basic Information Section */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <span className="mr-2">📋</span> Basic Information
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Job Title *
+                  </label>
+                  <input
+                    type="text"
+                    name="title"
+                    value={formData.title}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Company *
+                  </label>
+                  <input
+                    type="text"
+                    name="company"
+                    value={formData.company}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Location *
+                  </label>
+                  <input
+                    type="text"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Industry *
+                  </label>
+                  <select
+                    name="industry"
+                    value={formData.industry}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="">Select Industry</option>
+                    <option value="finance">Finance & Banking</option>
+                    <option value="automobile">Automobile</option>
+                    <option value="technology">Technology</option>
+                    <option value="healthcare">Healthcare</option>
+                    <option value="education">Education</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Job Type *
+                  </label>
+                  <select
+                    name="type"
+                    value={formData.type}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="full-time">Full Time</option>
+                    <option value="part-time">Part Time</option>
+                    <option value="shift-based">Shift Based</option>
+                    <option value="internship">Internship</option>
+                    <option value="remote">Remote</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Job Function *
+                  </label>
+                  <select
+                    name="jobFunction"
+                    value={formData.jobFunction}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    {formData.sector === "automobile" ? (
+                      <>
+                        <option value="">Select Job Function</option>
+                        <option value="mechanic">Mechanic</option>
+                        <option value="technician">Technician</option>
+                        <option value="engineer">Engineer</option>
+                        <option value="designer">Designer</option>
+                        <option value="sales">Sales</option>
+                        <option value="service">Service</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="">Select Job Function</option>
+                        <option value="analyst">Financial Analyst</option>
+                        <option value="accountant">Accountant</option>
+                        <option value="consultant">Financial Consultant</option>
+                        <option value="banker">Banker</option>
+                        <option value="insurance">Insurance Professional</option>
+                        <option value="trader">Trader</option>
+                      </>
+                    )}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Experience Required *
+                  </label>
+                  <input
+                    type="text"
+                    name="experience"
+                    value={formData.experience}
+                    onChange={handleInputChange}
+                    placeholder="e.g., 2-4 years"
+                    required
+                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Salary Range *
+                  </label>
+                  <input
+                    type="text"
+                    name="salary"
+                    value={formData.salary}
+                    onChange={handleInputChange}
+                    placeholder="e.g., $60,000 - $80,000"
+                    required
+                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Job Description *
+                </label>
+                <div className="space-y-4">
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    required
+                    rows={4}
+                    placeholder={
+                      formData.sector === "automobile"
+                        ? "Describe the role, required expertise in automotive systems, and specific responsibilities..."
+                        : "Describe the role, financial expertise required, and key responsibilities..."
+                    }
+                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                  <div className="flex items-center gap-2">
+                    <motion.button
+                      type="button"
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 text-sm"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        console.log("Enhance description with AI");
+                      }}
+                    >
+                      🤖 Enhance with AI
+                    </motion.button>
+                    <span className="text-sm text-gray-500">
+                      Let AI help improve your job description
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Required Skills * (comma-separated)
+                </label>
+                <div className="space-y-4">
+                  <input
+                    type="text"
+                    value={formData.skills.join(", ")}
+                    onChange={(e) => handleArrayInput("skills", e.target.value)}
+                    placeholder={
+                      formData.sector === "automobile"
+                        ? "e.g., Automotive Repair, Engine Diagnostics, Vehicle Maintenance"
+                        : "e.g., Financial Analysis, Risk Management, Investment Planning"
+                    }
+                    required
+                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                  <div className="flex flex-wrap gap-2">
+                    {formData.sector === "automobile"
+                      ? [
+                          "Engine Repair",
+                          "Diagnostics",
+                          "Electrical Systems",
+                          "Brake Systems",
+                          "Transmission",
+                        ].map((skill) => (
+                          <motion.button
+                            key={skill}
+                            type="button"
+                            className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm hover:bg-blue-200"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() =>
+                              handleArrayInput(
+                                "skills",
+                                formData.skills.concat(skill).join(", ")
+                              )
+                            }
+                          >
+                            + {skill}
+                          </motion.button>
+                        ))
+                      : [
+                          "Financial Planning",
+                          "Risk Analysis",
+                          "Banking",
+                          "Investment",
+                          "Accounting",
+                        ].map((skill) => (
+                          <motion.button
+                            key={skill}
+                            type="button"
+                            className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm hover:bg-blue-200"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() =>
+                              handleArrayInput(
+                                "skills",
+                                formData.skills.concat(skill).join(", ")
+                              )
+                            }
+                          >
+                            + {skill}
+                          </motion.button>
+                        ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Requirements * (comma-separated)
+                </label>
+                <div className="space-y-4">
+                  <input
+                    type="text"
+                    value={formData.requirements.join(", ")}
+                    onChange={(e) =>
+                      handleArrayInput("requirements", e.target.value)
+                    }
+                    placeholder={
+                      formData.sector === "automobile"
+                        ? "e.g., Automotive certification, Valid driver's license, Technical diploma"
+                        : "e.g., Bachelor's in Finance, CFA certification, Banking experience"
+                    }
+                    required
+                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                  <div className="flex flex-wrap gap-2">
+                    {formData.sector === "automobile"
+                      ? [
+                          "ASE Certification",
+                          "Valid Driver's License",
+                          "Technical Diploma",
+                          "Physical Fitness",
+                        ].map((req) => (
+                          <motion.button
+                            key={req}
+                            type="button"
+                            className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm hover:bg-green-200"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() =>
+                              handleArrayInput(
+                                "requirements",
+                                formData.requirements.concat(req).join(", ")
+                              )
+                            }
+                          >
+                            + {req}
+                          </motion.button>
+                        ))
+                      : [
+                          "Bachelor's Degree",
+                          "CFA Certification",
+                          "Banking Experience",
+                          "Financial Analysis",
+                        ].map((req) => (
+                          <motion.button
+                            key={req}
+                            type="button"
+                            className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm hover:bg-green-200"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() =>
+                              handleArrayInput(
+                                "requirements",
+                                formData.requirements.concat(req).join(", ")
+                              )
+                            }
+                          >
+                            + {req}
+                          </motion.button>
+                        ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end">
+                <motion.button
+                  type="submit"
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  disabled={loading}
+                >
+                  {loading ? "⏳ Saving..." : "💾 Update Job"}
+                </motion.button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -1575,7 +2860,7 @@ export const EnhancedAnalyticsTab = ({ userRole = "applicant" }) => {
 };
 
 // Enhanced Job Posting Tab Component
-export const EnhancedJobPostingTab = () => {
+export const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
   const { dashboardData, loading, postJob } = useDashboard();
   const [formData, setFormData] = useState({
     title: "",
@@ -1597,11 +2882,45 @@ export const EnhancedJobPostingTab = () => {
     toolsAndTechnologies: [],
   });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await postJob(formData);
-      // Show success message and reset form
+  // Populate form when editing a job
+  useEffect(() => {
+    console.log('🔍 EnhancedJobPostingTab useEffect triggered, editingJob:', editingJob);
+    
+    if (editingJob) {
+      console.log('🔍 EnhancedJobPostingTab received editingJob:', editingJob);
+      console.log('🔍 Job fields available:', Object.keys(editingJob));
+      
+      // Handle different possible data structures
+      const jobData = {
+        title: editingJob.title || editingJob.jobTitle || "",
+        description: editingJob.description || editingJob.jobDescription || "",
+        company: editingJob.company || editingJob.companyName || "",
+        location: editingJob.location || editingJob.jobLocation || "",
+        type: editingJob.type || editingJob.jobType || "full-time",
+        experience: editingJob.experience || editingJob.experienceRequired || "",
+        salary: editingJob.salary || editingJob.salaryRange || "",
+        skills: Array.isArray(editingJob.skills) ? editingJob.skills : 
+                (typeof editingJob.skills === 'string' ? editingJob.skills.split(',').map(s => s.trim()) : []),
+        requirements: Array.isArray(editingJob.requirements) ? editingJob.requirements : 
+                     (typeof editingJob.requirements === 'string' ? editingJob.requirements.split('\n').filter(r => r.trim()) : []),
+        responsibilities: Array.isArray(editingJob.responsibilities) ? editingJob.responsibilities : 
+                         (typeof editingJob.responsibilities === 'string' ? editingJob.responsibilities.split('\n').filter(r => r.trim()) : []),
+        sector: editingJob.sector || editingJob.industry || "automobile",
+        jobFunction: editingJob.jobFunction || editingJob.function || "",
+        shift: editingJob.shift || editingJob.workShift || "",
+        preferredQualification: editingJob.preferredQualification || editingJob.qualifications || "",
+        certificationsRequired: Array.isArray(editingJob.certificationsRequired) ? editingJob.certificationsRequired : [],
+        benefits: Array.isArray(editingJob.benefits) ? editingJob.benefits : [],
+        toolsAndTechnologies: Array.isArray(editingJob.toolsAndTechnologies) ? editingJob.toolsAndTechnologies : [],
+      };
+      
+      console.log('🔍 Processed job data for form:', jobData);
+      console.log('🔍 Setting form data...');
+      setFormData(jobData);
+      console.log('✅ Form data set successfully');
+    } else {
+      console.log('🔍 No editingJob provided, resetting to empty form');
+      // Reset to empty form when no job is being edited
       setFormData({
         title: "",
         description: "",
@@ -1613,18 +2932,84 @@ export const EnhancedJobPostingTab = () => {
         skills: [],
         requirements: [],
         responsibilities: [],
+        sector: "automobile",
+        jobFunction: "",
+        shift: "",
+        preferredQualification: "",
+        certificationsRequired: [],
+        benefits: [],
+        toolsAndTechnologies: [],
+      });
+    }
+  }, [editingJob]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log('🔍 EnhancedJobPostingTab handleSubmit called');
+    console.log('🔍 Current formData being submitted:', formData);
+    console.log('🔍 Experience field value:', formData.experience);
+    
+    try {
+      if (editingJob) {
+        // Update existing job
+        console.log('🔍 Updating existing job with formData:', formData);
+        const { jobsAPI } = await import("../../services/api");
+        const response = await jobsAPI.updateJob(editingJob.id || editingJob._id, formData);
+        
+        if (response.data.success) {
+          alert('Job updated successfully!');
+          if (onJobSaved) {
+            onJobSaved();
+          }
+        } else {
+          throw new Error(response.data.message || 'Failed to update job');
+        }
+      } else {
+        // Create new job
+        console.log('🔍 Creating new job with formData:', formData);
+        console.log('🔍 Calling postJob function...');
+        await postJob(formData);
+        console.log('✅ postJob completed successfully');
+        alert('Job posted successfully!');
+      }
+      
+      // Reset form
+      setFormData({
+        title: "",
+        description: "",
+        company: "",
+        location: "",
+        type: "full-time",
+        experience: "",
+        salary: "",
+        skills: [],
+        requirements: [],
+        responsibilities: [],
+        sector: "automobile",
+        jobFunction: "",
+        shift: "",
+        preferredQualification: "",
+        certificationsRequired: [],
+        benefits: [],
+        toolsAndTechnologies: [],
       });
     } catch (error) {
-      console.error("Failed to post job:", error);
+      console.error("Failed to save job:", error);
+      alert('Failed to save job. Please try again.');
     }
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    console.log('🔍 EnhancedJobPostingTab handleInputChange:', { name, value });
+    setFormData((prev) => {
+      const newFormData = {
+        ...prev,
+        [name]: value,
+      };
+      console.log('🔍 Updated formData:', newFormData);
+      return newFormData;
+    });
   };
 
   const handleArrayInput = (field, value) => {
@@ -1633,6 +3018,10 @@ export const EnhancedJobPostingTab = () => {
       [field]: value.split(",").map((item) => item.trim()),
     }));
   };
+
+  // Debug: Log current formData
+  console.log('🔍 EnhancedJobPostingTab current formData:', formData);
+  console.log('🔍 EnhancedJobPostingTab experience value:', formData.experience);
 
   return (
     <motion.div
@@ -1644,11 +3033,21 @@ export const EnhancedJobPostingTab = () => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Post New Job
+            {editingJob ? 'Edit Job' : 'Post New Job'}
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
-            Create a new job posting
+            {editingJob ? `Edit "${editingJob.title || 'Job'}"` : 'Create a new job posting'}
           </p>
+          {editingJob && (
+            <div className="mt-2 p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                📝 Editing Mode: Form should be pre-filled with job data
+              </p>
+              <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">
+                Current form title: "{formData.title || 'Not loaded'}"
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -2127,7 +3526,7 @@ export const EnhancedJobPostingTab = () => {
               whileTap={{ scale: 0.95 }}
               disabled={loading}
             >
-              {loading ? "⏳ Posting..." : "📝 Post Job"}
+              {loading ? "⏳ Saving..." : editingJob ? "💾 Update Job" : "📝 Post Job"}
             </motion.button>
           </div>
         </div>
@@ -2294,5 +3693,135 @@ export const EnhancedActiveJobsTab = () => {
         )}
       </div>
     </motion.div>
+  );
+};
+
+// Applications Modal Component
+const ApplicationsModal = ({ isOpen, job, applications, onClose }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Job Applications
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400">
+                {job?.title || 'Job'} - {applications?.length || 0} applications
+              </p>
+            </div>
+            <button onClick={onClose} className="text-2xl">×</button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Job Details */}
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+              <h3 className="text-lg font-semibold mb-4">💼 Job Details</h3>
+              {job && (
+                <div className="space-y-3 text-sm">
+                  <div><strong>Title:</strong> {job.title}</div>
+                  <div><strong>Company:</strong> {job.company}</div>
+                  <div><strong>Location:</strong> {job.location}</div>
+                  <div><strong>Industry:</strong> {job.industry || 'Not specified'}</div>
+                  <div><strong>Type:</strong> {job.type}</div>
+                  <div><strong>Work Mode:</strong> {job.workArrangement || 'Onsite'}</div>
+                  <div><strong>Salary:</strong> {job.salary || 'Negotiable'}</div>
+                  <div><strong>Experience:</strong> {
+                    job.experienceMin !== undefined && job.experienceMax !== undefined 
+                      ? `${job.experienceMin}-${job.experienceMax} years`
+                      : 'Not specified'
+                  }</div>
+                  {job.description && (
+                    <div><strong>Description:</strong> 
+                      <p className="text-sm mt-1 max-h-20 overflow-y-auto bg-white dark:bg-gray-600 p-2 rounded">{job.description}</p>
+                    </div>
+                  )}
+                  {job.skills && job.skills.length > 0 && (
+                    <div><strong>Skills:</strong> 
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {job.skills.slice(0, 5).map((skill, index) => (
+                          <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                            {skill}
+                          </span>
+                        ))}
+                        {job.skills.length > 5 && <span className="text-xs text-gray-500">+{job.skills.length - 5} more</span>}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Applications List */}
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+              <h3 className="text-lg font-semibold mb-4">👥 Applications ({applications?.length || 0})</h3>
+              <div className="space-y-3 max-h-80 overflow-y-auto">
+                {applications && applications.length > 0 ? (
+                  applications.map((app, index) => (
+                    <div key={index} className="bg-white dark:bg-gray-600 p-3 rounded border">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h4 className="font-medium text-gray-900 dark:text-white">
+                            {app.applicantName || app.name || 'Unknown Applicant'}
+                          </h4>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {app.email || 'No email provided'}
+                          </p>
+                        </div>
+                        <span className={`px-2 py-1 text-xs font-medium rounded ${
+                          app.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                          app.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                          app.status === 'interviewed' ? 'bg-blue-100 text-blue-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {app.status || 'Pending'}
+                        </span>
+                      </div>
+                      {app.appliedDate && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Applied: {new Date(app.appliedDate).toLocaleDateString()}
+                        </p>
+                      )}
+                      {app.coverLetter && (
+                        <div className="mt-2">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Cover Letter:</p>
+                          <p className="text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 p-2 rounded text-xs max-h-16 overflow-y-auto">
+                            {app.coverLetter}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="text-4xl mb-2">📋</div>
+                    <p className="text-gray-500 dark:text-gray-400">No applications yet</p>
+                    <p className="text-sm text-gray-400 dark:text-gray-500">Applications will appear here once candidates apply</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
+            <div className="flex justify-between items-center">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Total Applications: {applications?.length || 0}
+              </p>
+              <button
+                onClick={onClose}
+                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };

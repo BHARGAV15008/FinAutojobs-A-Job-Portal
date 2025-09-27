@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'wouter';
+import JobDetailsModal from '../components/modals/JobDetailsModal';
+import AuthModal from '../components/modals/AuthModal';
+import { useAuth } from '../contexts/AuthContext.jsx';
 import {
     Container,
     Box,
@@ -30,6 +33,16 @@ import {
     Alert,
     useTheme,
     useMediaQuery,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
 } from '@mui/material';
 import {
     Search as SearchIcon,
@@ -53,10 +66,10 @@ import {
     Groups,
     Visibility,
     Close,
+    CalendarToday,
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
-import { useQuery } from '@tanstack/react-query';
-import api from '../utils/api';
+import { jobsAPI } from '../services/api';
 
 const JobCard = styled(Card, {
     shouldForwardProp: (prop) => prop !== 'featured'
@@ -84,6 +97,7 @@ const FilterDrawer = styled(Drawer)(({ theme }) => ({
 }));
 
 const JobsPage = () => {
+    const { user, login } = useAuth();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -100,8 +114,154 @@ const JobsPage = () => {
     const [favorites, setFavorites] = useState(new Set());
     const [bookmarks, setBookmarks] = useState(new Set());
     const [page, setPage] = useState(1);
+    const [viewFormat, setViewFormat] = useState('list'); // 'table', 'list', 'grid'
 
-    // Mock jobs data with enhanced features
+    // Modal state
+    const [selectedJob, setSelectedJob] = useState(null);
+    const [modalOpen, setModalOpen] = useState(false);
+    const [viewDetailsModal, setViewDetailsModal] = useState({ isOpen: false, job: null });
+    
+    // Authentication modal state
+    const [authModalOpen, setAuthModalOpen] = useState(false);
+    const [pendingApplication, setPendingApplication] = useState(null);
+
+    // Fetch jobs from API
+    useEffect(() => {
+        const fetchJobs = async () => {
+            try {
+                setLoading(true);
+                console.log('🔍 Fetching jobs from comprehensive API...');
+                
+                // Use fetch directly to call our comprehensive job API
+                const response = await fetch(`http://localhost:5000/api/jobs?${new URLSearchParams({
+                    search: searchQuery || '',
+                    location: selectedLocation || '',
+                    jobType: selectedJobType || '',
+                    page: page.toString(),
+                    limit: '20'
+                })}`);
+                
+                const data = await response.json();
+                console.log('🔍 Comprehensive API Response:', data);
+                
+                // Handle the new API response format
+                let jobsData = [];
+                if (data.success && Array.isArray(data.data?.jobs)) {
+                    jobsData = data.data.jobs;
+                    console.log('✅ Found jobs from comprehensive API:', jobsData.length);
+                } else {
+                    console.log('🔍 No jobs found, using empty array');
+                    jobsData = [];
+                }
+                
+                // Transform comprehensive API data to match component expectations
+                const transformedJobs = jobsData.map(job => ({
+                    // Basic job info
+                    id: job.id || job._id,
+                    title: job.jobTitle || job.title,
+                    company: job.companyName || job.company,
+                    companyLogo: (job.companyName || job.company)?.substring(0, 2).toUpperCase(),
+                    location: job.location,
+                    
+                    // Job details from comprehensive schema
+                    department: job.jobCategory || job.category || job.industry || 'General',
+                    type: job.jobType || job.type,
+                    workMode: job.workArrangement || 'On-site',
+                    workArrangement: job.workArrangement || 'On-site',
+                    
+                    // Salary information - Fixed to properly format salary display
+                    salary: job.formattedSalary || 
+                           (job.salaryRange?.min && job.salaryRange?.max ? 
+                            `₹${(job.salaryRange.min / 100000).toFixed(1)}L - ₹${(job.salaryRange.max / 100000).toFixed(1)}L ${job.salaryRange.period || 'Yearly'}` :
+                            job.salaryRange?.min ? 
+                            `₹${(job.salaryRange.min / 100000).toFixed(1)}L+ ${job.salaryRange.period || 'Yearly'}` : 
+                            'Negotiable'),
+                    formattedSalary: job.formattedSalary || 
+                                   (job.salaryRange?.min && job.salaryRange?.max ? 
+                                    `₹${(job.salaryRange.min / 100000).toFixed(1)}L - ₹${(job.salaryRange.max / 100000).toFixed(1)}L` :
+                                    job.salaryRange?.min ? 
+                                    `₹${(job.salaryRange.min / 100000).toFixed(1)}L+` : 
+                                    'Negotiable'),
+                    salaryRange: job.salaryRange,
+                    
+                    // Dates and timing
+                    posted: job.createdAt ? new Date(job.createdAt).toLocaleDateString() : 'Recently',
+                    postedDate: job.createdAt,
+                    createdAt: job.createdAt,
+                    applicationDeadline: job.applicationDeadline,
+                    daysSincePosted: job.daysSincePosted,
+                    daysUntilDeadline: job.daysUntilDeadline,
+                    
+                    // Experience and skills
+                    experience: job.experience ? 
+                        `${job.experience.min || 0}-${job.experience.max || 0} years` : 
+                        'Not specified',
+                    experienceMin: job.experience?.min,
+                    experienceMax: job.experience?.max,
+                    
+                    // Job content
+                    description: job.jobDescription || job.description,
+                    jobDescription: job.jobDescription,
+                    skills: job.requiredSkills || job.skills || [],
+                    requiredSkills: job.requiredSkills,
+                    requirements: job.requirements || [],
+                    responsibilities: job.keyResponsibilities || job.responsibilities || [],
+                    keyResponsibilities: job.keyResponsibilities,
+                    
+                    // Company and recruiter info
+                    industry: job.industry,
+                    jobCategory: job.jobCategory,
+                    category: job.jobCategory || job.category,
+                    recruiterInfo: job.recruiterInfo,
+                    postedBy: job.postedBy,
+                    
+                    // Job status and priority
+                    status: job.status,
+                    urgency: job.jobUrgency || job.urgency || 'Normal Priority',
+                    jobUrgency: job.jobUrgency,
+                    
+                    // AI and metadata
+                    aiKeywords: job.aiKeywords,
+                    isAiEnhanced: job.isAiEnhanced,
+                    tags: job.tags,
+                    slug: job.slug,
+                    
+                    // Analytics
+                    views: job.views || 0,
+                    applicationsCount: job.applicationsCount || 0,
+                    applicants: job.applicationsCount || 0,
+                    
+                    // Contact
+                    contactEmail: job.contactEmail,
+                    
+                    // Legacy compatibility
+                    currency: job.salaryRange?.currency || 'INR',
+                    salaryPeriod: job.salaryRange?.period || 'Yearly',
+                    featured: job.status === 'Active' && job.jobUrgency === 'High Priority',
+                    urgentHiring: job.jobUrgency === 'Urgent' || job.jobUrgency === 'High Priority',
+                    verified: true,
+                    rating: 4.5,
+                    remote: job.workArrangement === 'Remote',
+                    companySize: '1000+'
+                }));
+                
+                console.log('🔍 Transformed jobs sample:', transformedJobs[0]);
+                console.log('🔍 Total transformed jobs:', transformedJobs.length);
+                console.log('🔍 Sample job fields:', Object.keys(transformedJobs[0] || {}));
+                setJobs(transformedJobs);
+            } catch (error) {
+                console.error('Error fetching jobs from comprehensive API:', error);
+                // Show empty array instead of mock data to show real jobs only
+                setJobs([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchJobs();
+    }, [searchQuery, selectedLocation, selectedJobType, page]);
+
+    // Mock jobs data as fallback
     const mockJobs = [
         {
             id: 1,
@@ -274,32 +434,6 @@ const JobsPage = () => {
         '₹0-5L', '₹5-10L', '₹10-15L', '₹15-20L', '₹20-30L', '₹30L+'
     ];
 
-    useEffect(() => {
-        const fetchJobs = async () => {
-            try {
-                const response = await api.getJobs({ limit: 50 });
-                const data = await response.json();
-                
-                // Ensure we always set an array
-                if (data && data.success && Array.isArray(data.data?.jobs)) {
-                    setJobs(data.data.jobs);
-                } else if (Array.isArray(data)) {
-                    setJobs(data);
-                } else {
-                    // Fallback to mock data if API fails
-                    console.warn('API returned invalid data, using mock data');
-                    setJobs(mockJobs);
-                }
-            } catch (error) {
-                console.error('Error fetching jobs:', error);
-                // Use mock data as fallback
-                setJobs(mockJobs);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchJobs();
-    }, []);
 
     const handleSearch = () => {
         setLoading(true);
@@ -344,6 +478,79 @@ const JobsPage = () => {
         return `${formatAmount(min)} - ${formatAmount(max)}`;
     };
 
+    // Modal handlers
+    const handleViewDetails = (job) => {
+        setViewDetailsModal({ isOpen: true, job });
+    };
+
+    const handleViewDetailsOld = (job) => {
+        setSelectedJob(job);
+        setModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setModalOpen(false);
+        setSelectedJob(null);
+    };
+
+    const handleApply = (job) => {
+        // Check if user is authenticated
+        if (!user) {
+            setPendingApplication(job);
+            setAuthModalOpen(true);
+            return;
+        }
+        
+        // User is authenticated, proceed with application
+        submitApplication(job);
+    };
+
+    const submitApplication = async (job) => {
+        try {
+            console.log('Submitting application for:', job.title, 'by user:', user.email);
+            
+            // TODO: Implement actual API call to submit application
+            const applicationData = {
+                jobId: job.id,
+                userId: user.id,
+                appliedAt: new Date().toISOString(),
+                status: 'pending',
+                jobTitle: job.title,
+                company: job.company,
+                location: job.location,
+            };
+            
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Show success message
+            alert(`Application submitted successfully for ${job.title} at ${job.company}!`);
+            
+            // Close modals
+            handleCloseModal();
+            
+        } catch (error) {
+            console.error('Error submitting application:', error);
+            alert('Failed to submit application. Please try again.');
+        }
+    };
+
+    const handleAuthSuccess = async (userData) => {
+        try {
+            // Use AuthContext login function
+            await login(userData.email, userData.password || 'temp');
+            setAuthModalOpen(false);
+            
+            // If there was a pending application, submit it now
+            if (pendingApplication) {
+                submitApplication(pendingApplication);
+                setPendingApplication(null);
+            }
+        } catch (error) {
+            console.error('Login failed:', error);
+        }
+    };
+
     const filteredJobs = (Array.isArray(jobs) ? jobs : []).filter(job => {
         const matchesSearch = job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
             job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -362,40 +569,69 @@ const JobsPage = () => {
     });
 
     const JobCardComponent = ({ job }) => (
-        <JobCard featured={job.featured}>
-            <CardContent sx={{ flexGrow: 1 }}>
-                {/* Header */}
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
+        <JobCard 
+            featured={job.featured}
+            sx={{ 
+                width: '100%',
+                minHeight: '200px',
+                display: 'flex',
+                flexDirection: 'column'
+            }}
+        >
+            <CardContent sx={{ flexGrow: 1, p: 3 }}>
+                {/* Header - Horizontal Layout */}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+                    <Box sx={{ display: 'flex', gap: 3, minWidth: 0, flexGrow: 1 }}>
                         <Avatar
                             sx={{
                                 bgcolor: 'primary.main',
                                 color: 'white',
-                                width: 56,
-                                height: 56,
-                                fontSize: '1.2rem',
+                                width: 64,
+                                height: 64,
+                                fontSize: '1.5rem',
                                 fontWeight: 'bold'
                             }}
                         >
                             {job.companyLogo}
                         </Avatar>
                         <Box sx={{ minWidth: 0, flexGrow: 1 }}>
-                            <Typography variant="h6" fontWeight="bold" gutterBottom>
+                            <Typography variant="h5" fontWeight="bold" gutterBottom>
                                 {job.title}
                             </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                                <Typography variant="subtitle1" color="primary" fontWeight="bold">
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                                <Typography variant="h6" color="primary" fontWeight="bold">
                                     {job.company}
                                 </Typography>
                                 {job.verified && (
-                                    <Verified sx={{ fontSize: 16, color: 'success.main' }} />
+                                    <Verified sx={{ fontSize: 20, color: 'success.main' }} />
                                 )}
                             </Box>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 2 }}>
                                 <Rating value={job.rating} precision={0.1} size="small" readOnly />
                                 <Typography variant="body2" color="text.secondary">
                                     {job.rating} • {job.applicants}+ applied
                                 </Typography>
+                            </Box>
+                        </Box>
+                        
+                        {/* Salary - Right side */}
+                        <Box sx={{ textAlign: 'right', minWidth: '200px' }}>
+                            <Typography variant="h5" color="primary" fontWeight="bold" gutterBottom>
+                                {job.salary || formatSalary(job.salaryMin, job.salaryMax)}
+                            </Typography>
+                            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mb: 1 }}>
+                                <Chip
+                                    label={job.status || "active"}
+                                    size="small"
+                                    color="success"
+                                    variant="filled"
+                                />
+                                <Chip
+                                    label={job.urgency || "Normal"}
+                                    size="small"
+                                    color={job.urgency === 'urgent' || job.urgency === 'high-priority' ? 'warning' : 'default'}
+                                    variant="outlined"
+                                />
                             </Box>
                         </Box>
                     </Box>
@@ -424,55 +660,79 @@ const JobsPage = () => {
                     </Box>
                 </Box>
 
-                {/* Job Details */}
-                <Grid container spacing={1} sx={{ mb: 2 }}>
-                    <Grid item xs={6}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <LocationOn sx={{ fontSize: 16, color: 'text.secondary' }} />
-                            <Typography variant="body2" color="text.secondary">
-                                {job.location.split(',')[0]}
-                            </Typography>
-                        </Box>
-                    </Grid>
-                    <Grid item xs={6}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Work sx={{ fontSize: 16, color: 'text.secondary' }} />
-                            <Typography variant="body2" color="text.secondary">
-                                {job.experience}
-                            </Typography>
-                        </Box>
-                    </Grid>
-                    <Grid item xs={6}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Schedule sx={{ fontSize: 16, color: 'text.secondary' }} />
-                            <Typography variant="body2" color="text.secondary">
-                                {job.type}
-                            </Typography>
-                        </Box>
-                    </Grid>
-                    <Grid item xs={6}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Groups sx={{ fontSize: 16, color: 'text.secondary' }} />
-                            <Typography variant="body2" color="text.secondary">
-                                {job.companySize}
-                            </Typography>
-                        </Box>
-                    </Grid>
-                </Grid>
+                {/* Job Details - Horizontal Layout */}
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 4, mb: 3 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <LocationOn sx={{ fontSize: 18, color: 'text.secondary' }} />
+                        <Typography variant="body1" color="text.secondary" fontWeight="500">
+                            {job.location}
+                        </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Work sx={{ fontSize: 18, color: 'text.secondary' }} />
+                        <Typography variant="body1" color="text.secondary" fontWeight="500">
+                            {job.experience}
+                        </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Schedule sx={{ fontSize: 18, color: 'text.secondary' }} />
+                        <Typography variant="body1" color="text.secondary" fontWeight="500">
+                            {job.type}
+                        </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <CalendarToday sx={{ fontSize: 18, color: 'text.secondary' }} />
+                        <Typography variant="body1" color="text.secondary" fontWeight="500">
+                            {job.posted}
+                        </Typography>
+                    </Box>
+                </Box>
 
-                {/* Salary */}
-                <Typography variant="h6" color="primary" fontWeight="bold" gutterBottom>
-                    {formatSalary(job.salaryMin, job.salaryMax)}
-                </Typography>
+                {/* Job Description */}
+                {job.description && (
+                    <Box sx={{ mb: 3 }}>
+                        <Typography variant="body1" color="text.secondary" sx={{
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                            lineHeight: 1.5
+                        }}>
+                            {job.description}
+                        </Typography>
+                    </Box>
+                )}
 
-                {/* Tags and Badges */}
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                    <Chip
-                        label={job.workMode}
-                        size="small"
-                        color={job.workMode === 'Remote' ? 'success' : job.workMode === 'Hybrid' ? 'warning' : 'default'}
-                        icon={job.workMode === 'Remote' ? <Home /> : undefined}
-                    />
+                {/* Skills Section */}
+                <Box sx={{ mb: 3 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                        <Typography variant="subtitle2" color="text.secondary">
+                            Skills:
+                        </Typography>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                            {(job.skills || []).slice(0, 6).map((skill, index) => (
+                                <Chip
+                                    key={index}
+                                    label={skill}
+                                    size="small"
+                                    variant="outlined"
+                                    color="primary"
+                                />
+                            ))}
+                            {job.skills && job.skills.length > 6 && (
+                                <Chip
+                                    label={`+${job.skills.length - 6} more`}
+                                    size="small"
+                                    variant="outlined"
+                                    color="default"
+                                />
+                            )}
+                        </Box>
+                    </Box>
+                </Box>
+
+                {/* Tags and Status */}
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
                     {job.featured && (
                         <Chip
                             label="Featured"
@@ -490,73 +750,46 @@ const JobsPage = () => {
                         />
                     )}
                     <Chip
-                        label={job.posted}
+                        label={job.workMode || job.type}
                         size="small"
-                        variant="outlined"
+                        color={job.workMode === 'Remote' ? 'success' : job.workMode === 'Hybrid' ? 'warning' : 'default'}
+                        icon={job.workMode === 'Remote' ? <Home /> : undefined}
                     />
-                </Box>
-
-                {/* Skills */}
-                <Box sx={{ mb: 2 }}>
-                    <Typography variant="subtitle2" gutterBottom>
-                        Required Skills:
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {job.skills.slice(0, 4).map((skill, index) => (
-                            <Chip
-                                key={index}
-                                label={skill}
-                                size="small"
-                                variant="outlined"
-                                color="primary"
-                            />
-                        ))}
-                        {job.skills.length > 4 && (
-                            <Chip
-                                label={`+${job.skills.length - 4} more`}
-                                size="small"
-                                variant="outlined"
-                            />
-                        )}
-                    </Box>
-                </Box>
-
-                {/* Description */}
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    {job.description.substring(0, 120)}...
-                </Typography>
-
-                {/* Job Stats */}
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Visibility sx={{ fontSize: 16, color: 'text.secondary' }} />
-                        <Typography variant="caption" color="text.secondary">
-                            {job.views} views
-                        </Typography>
-                    </Box>
-                    <Typography variant="caption" color="text.secondary">
-                        {job.industry}
-                    </Typography>
                 </Box>
             </CardContent>
 
-            <CardActions sx={{ p: 2, pt: 0 }}>
-                <Button
-                    component={Link}
-                    href={`/job/${job.id}`}
-                    variant="outlined"
-                    size="small"
-                    sx={{ mr: 1 }}
-                >
-                    View Details
-                </Button>
-                <Button
-                    variant="contained"
-                    size="small"
-                    fullWidth
-                >
-                    Apply Now
-                </Button>
+            <CardActions sx={{ p: 3, pt: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                    <Button
+                        onClick={() => handleViewDetails(job)}
+                        variant="outlined"
+                        size="large"
+                        sx={{ minWidth: '140px' }}
+                    >
+                        View Details
+                    </Button>
+                    <Button
+                        onClick={() => handleApply(job)}
+                        variant="contained"
+                        size="large"
+                        sx={{ minWidth: '120px' }}
+                    >
+                        Apply Now
+                    </Button>
+                </Box>
+                
+                {/* Right side - Job Stats */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, color: 'text.secondary' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Visibility sx={{ fontSize: 16 }} />
+                        <Typography variant="body2">
+                            {job.views} views
+                        </Typography>
+                    </Box>
+                    <Typography variant="body2" fontWeight="500">
+                        Posted {job.posted}
+                    </Typography>
+                </Box>
             </CardActions>
 
             {/* Featured Badge */}
@@ -665,7 +898,7 @@ const JobsPage = () => {
                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
                     <Box sx={{ textAlign: 'center' }}>
                         <LinearProgress sx={{ mb: 2 }} />
-                        <Typography>Loading jobs...</Typography>
+                        <Typography>Loading recruiter jobs...</Typography>
                     </Box>
                 </Box>
             </Container>
@@ -768,63 +1001,329 @@ const JobsPage = () => {
                 <Typography variant="h6">
                     {filteredJobs.length} jobs found
                 </Typography>
-                <FormControl size="small" sx={{ minWidth: 120 }}>
-                    <InputLabel>Sort by</InputLabel>
-                    <Select
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value)}
-                        label="Sort by"
-                    >
-                        <MenuItem value="relevance">Relevance</MenuItem>
-                        <MenuItem value="date">Date Posted</MenuItem>
-                        <MenuItem value="salary">Salary</MenuItem>
-                        <MenuItem value="company">Company</MenuItem>
-                    </Select>
-                </FormControl>
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                    {/* View Format Toggle */}
+                    <Box sx={{ display: 'flex', border: '1px solid #e0e0e0', borderRadius: 1, overflow: 'hidden' }}>
+                        <Button
+                            size="small"
+                            variant={viewFormat === 'table' ? 'contained' : 'text'}
+                            onClick={() => setViewFormat('table')}
+                            sx={{ minWidth: 'auto', px: 2 }}
+                        >
+                            📊 Table
+                        </Button>
+                        <Button
+                            size="small"
+                            variant={viewFormat === 'list' ? 'contained' : 'text'}
+                            onClick={() => setViewFormat('list')}
+                            sx={{ minWidth: 'auto', px: 2 }}
+                        >
+                            📋 List
+                        </Button>
+                        <Button
+                            size="small"
+                            variant={viewFormat === 'grid' ? 'contained' : 'text'}
+                            onClick={() => setViewFormat('grid')}
+                            sx={{ minWidth: 'auto', px: 2 }}
+                        >
+                            🔲 Grid
+                        </Button>
+                    </Box>
+                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                        <InputLabel>Sort by</InputLabel>
+                        <Select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                            label="Sort by"
+                        >
+                            <MenuItem value="relevance">Relevance</MenuItem>
+                            <MenuItem value="date">Date Posted</MenuItem>
+                            <MenuItem value="salary">Salary</MenuItem>
+                            <MenuItem value="company">Company</MenuItem>
+                        </Select>
+                    </FormControl>
+                </Box>
             </Box>
 
-            {/* Jobs Grid */}
-            <Grid container spacing={3} sx={{ mb: 4 }}>
-                {filteredJobs.map((job) => (
-                    <Grid item xs={12} md={6} lg={4} key={job.id}>
-                        <JobCardComponent job={{
-                            ...job,
-                            companyLogo: job.company_logo || job.company_name?.charAt(0),
-                            salaryMin: job.salary_min,
-                            salaryMax: job.salary_max,
-                            experience: `${job.experience_min}-${job.experience_max} years`,
-                            department: job.company_industry,
-                            workMode: job.work_mode,
-                            type: job.job_type,
-                            posted: "Recent", // You might want to calculate this from created_at
-                            skills: job.required_skills ? 
-                                (Array.isArray(job.required_skills) ? 
-                                    job.required_skills.map(skill => typeof skill === 'string' ? skill : skill.name) : 
-                                    []) : 
-                                [],
-                            views: Math.floor(Math.random() * 2000) + 500, // Random view count for demo
-                            rating: parseFloat((Math.random() * 1 + 4).toFixed(1)), // Random rating between 4.0-5.0
-                            applicants: Math.floor(Math.random() * 50) + 10, // Random applicant count
-                            featured: job.status === "featured",
-                            companySize: "100+", // Add this if available from API
-                            remote: job.work_mode ? job.work_mode.toLowerCase().includes('remote') : false,
-                            urgentHiring: false, // Add this if available from API
-                            verified: true, // Add this if available from API
-                            company: job.company_name,
-                            location: job.location
-                        }} />
-                    </Grid>
-                ))}
-            </Grid>
+            {/* Empty State */}
+            {filteredJobs.length === 0 && (
+                <Paper sx={{ p: 6, textAlign: 'center', mb: 4 }}>
+                    <Box sx={{ mb: 3 }}>
+                        <Work sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+                        <Typography variant="h5" gutterBottom>
+                            No Jobs Found
+                        </Typography>
+                        <Typography variant="body1" color="text.secondary" paragraph>
+                            We couldn't find any jobs matching your criteria. Try adjusting your search filters or check back later for new opportunities.
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+                            <Button 
+                                variant="contained" 
+                                onClick={() => {
+                                    setSearchQuery('');
+                                    setSelectedLocation('');
+                                    setSelectedExperience('');
+                                    setSelectedJobType('');
+                                    setSelectedSalaryRange('');
+                                    handleSearch();
+                                }}
+                            >
+                                Clear All Filters
+                            </Button>
+                            <Button 
+                                variant="outlined" 
+                                onClick={async () => {
+                                    try {
+                                        // Create sample jobs for testing
+                                        const sampleJobs = [
+                                            {
+                                                title: "Senior Software Engineer",
+                                                company: "TechCorp",
+                                                location: "Mumbai, India",
+                                                type: "Full-time",
+                                                salary: "₹15-25 LPA",
+                                                experience: "3-5 years",
+                                                description: "We are looking for a skilled software engineer to join our team.",
+                                                skills: ["React", "Node.js", "MongoDB"],
+                                                requirements: ["Bachelor's degree in CS", "3+ years experience"],
+                                                responsibilities: ["Develop web applications", "Code review"],
+                                                category: "Technology"
+                                            },
+                                            {
+                                                title: "Financial Analyst",
+                                                company: "FinanceHub",
+                                                location: "Delhi, India",
+                                                type: "Full-time",
+                                                salary: "₹8-12 LPA",
+                                                experience: "2-4 years",
+                                                description: "Join our finance team as a financial analyst.",
+                                                skills: ["Excel", "Financial Modeling", "SQL"],
+                                                requirements: ["MBA in Finance", "2+ years experience"],
+                                                responsibilities: ["Financial analysis", "Report generation"],
+                                                category: "Finance"
+                                            }
+                                        ];
+                                        
+                                        for (const job of sampleJobs) {
+                                            await jobsAPI.createJob(job);
+                                        }
+                                        
+                                        // Refresh jobs list
+                                        handleSearch();
+                                        console.log('Sample jobs created successfully');
+                                    } catch (error) {
+                                        console.error('Error creating sample jobs:', error);
+                                    }
+                                }}
+                            >
+                                Add Sample Jobs (Dev)
+                            </Button>
+                        </Box>
+                    </Box>
+                </Paper>
+            )}
+
+            {/* Jobs Display - Multiple View Formats */}
+            {filteredJobs.length > 0 && viewFormat === 'table' && (
+                <TableContainer component={Paper} sx={{ mb: 4 }}>
+                    <Table>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Job</TableCell>
+                                <TableCell>Company</TableCell>
+                                <TableCell>Location</TableCell>
+                                <TableCell>Salary</TableCell>
+                                <TableCell>Type</TableCell>
+                                <TableCell>Experience</TableCell>
+                                <TableCell>Actions</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {filteredJobs.map((job) => (
+                                <TableRow key={job.id} hover>
+                                    <TableCell>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            <Avatar sx={{ width: 40, height: 40, bgcolor: 'primary.main' }}>
+                                                {job.company?.charAt(0) || 'C'}
+                                            </Avatar>
+                                            <Box>
+                                                <Typography variant="subtitle2">{job.title}</Typography>
+                                                <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+                                                    {job.featured && <Chip label="Featured" size="small" color="primary" />}
+                                                    {job.urgentHiring && <Chip label="Urgent" size="small" color="error" />}
+                                                </Box>
+                                            </Box>
+                                        </Box>
+                                    </TableCell>
+                                    <TableCell>{job.company}</TableCell>
+                                    <TableCell>{job.location}</TableCell>
+                                    <TableCell>{job.salary || 'Negotiable'}</TableCell>
+                                    <TableCell>
+                                        <Chip label={job.type} size="small" />
+                                    </TableCell>
+                                    <TableCell>{job.experience}</TableCell>
+                                    <TableCell>
+                                        <Box sx={{ display: 'flex', gap: 1 }}>
+                                            <Button size="small" onClick={() => handleViewDetails(job)}>
+                                                View Details
+                                            </Button>
+                                            <Button size="small" variant="contained" onClick={() => handleApply(job)}>
+                                                Apply
+                                            </Button>
+                                        </Box>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            )}
+
+            {filteredJobs.length > 0 && viewFormat === 'list' && (
+                <Box sx={{ mb: 4, maxHeight: '70vh', overflowY: 'auto', pr: 1 }}>
+                    {filteredJobs.map((job) => (
+                        <Card key={job.id} sx={{ mb: 3, p: 3 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                                <Box sx={{ display: 'flex', gap: 3, flex: 1 }}>
+                                    <Avatar sx={{ width: 60, height: 60, bgcolor: 'primary.main', fontSize: '1.5rem' }}>
+                                        {job.company?.charAt(0) || 'C'}
+                                    </Avatar>
+                                    <Box sx={{ flex: 1 }}>
+                                        <Typography variant="h6" gutterBottom>{job.title}</Typography>
+                                        <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+                                            {job.company} ✓
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                            <Rating value={4.5} size="small" readOnly />
+                                            <Typography variant="body2" color="text.secondary">
+                                                4.5 • {job.applicants || 0}+ applied
+                                            </Typography>
+                                        </Box>
+                                        <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+                                            <Chip icon={<LocationOn />} label={job.location} size="small" />
+                                            <Chip icon={<Work />} label={job.experience} size="small" />
+                                            <Chip icon={<Schedule />} label={job.type} size="small" />
+                                            <Chip label={`Posted ${job.posted || 'recently'}`} size="small" />
+                                        </Box>
+                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                            {job.description?.substring(0, 150)}...
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+                                            <Typography variant="body2" sx={{ mr: 1 }}>Skills:</Typography>
+                                            {job.skills?.slice(0, 4).map((skill, index) => (
+                                                <Chip key={index} label={skill} size="small" variant="outlined" />
+                                            ))}
+                                            {job.skills?.length > 4 && (
+                                                <Typography variant="body2" color="text.secondary">
+                                                    +{job.skills.length - 4} more
+                                                </Typography>
+                                            )}
+                                        </Box>
+                                        <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                                            {job.featured && <Chip label="Featured" size="small" color="primary" />}
+                                            {job.urgentHiring && <Chip label="Urgent" size="small" color="error" />}
+                                            {job.remote && <Chip label="Remote" size="small" color="success" />}
+                                        </Box>
+                                    </Box>
+                                </Box>
+                                <Box sx={{ textAlign: 'right' }}>
+                                    <Typography variant="h6" color="primary" gutterBottom>
+                                        {job.salary || 'Negotiable'}
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                                        <IconButton size="small">❤️</IconButton>
+                                        <IconButton size="small">📑</IconButton>
+                                        <IconButton size="small">📤</IconButton>
+                                    </Box>
+                                </Box>
+                            </Box>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Box sx={{ display: 'flex', gap: 2 }}>
+                                    <Button variant="outlined" onClick={() => handleViewDetails(job)}>
+                                        View Details
+                                    </Button>
+                                    <Button variant="contained" onClick={() => handleApply(job)}>
+                                        Apply Now
+                                    </Button>
+                                </Box>
+                                <Typography variant="body2" color="text.secondary">
+                                    👁️ {job.views || 150} views • Posted {job.posted || '2d'}
+                                </Typography>
+                            </Box>
+                        </Card>
+                    ))}
+                </Box>
+            )}
+
+            {filteredJobs.length > 0 && viewFormat === 'grid' && (
+                <Grid container spacing={3} sx={{ mb: 4 }}>
+                    {filteredJobs.map((job) => (
+                        <Grid item xs={12} md={6} lg={4} key={job.id}>
+                            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                                <CardContent sx={{ flexGrow: 1, p: 3 }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                                        <Avatar sx={{ width: 50, height: 50, bgcolor: 'primary.main' }}>
+                                            {job.company?.charAt(0) || 'C'}
+                                        </Avatar>
+                                        <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                            <IconButton size="small">❤️</IconButton>
+                                            <IconButton size="small">📑</IconButton>
+                                            <IconButton size="small">📤</IconButton>
+                                        </Box>
+                                    </Box>
+                                    <Typography variant="h6" gutterBottom>{job.title}</Typography>
+                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                        {job.company} ✓
+                                    </Typography>
+                                    <Typography variant="h6" color="primary" gutterBottom>
+                                        {job.salary || 'Negotiable'}
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+                                        <Chip label={job.location} size="small" />
+                                        <Chip label={job.experience} size="small" />
+                                        <Chip label={job.type} size="small" />
+                                    </Box>
+                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                        {job.description?.substring(0, 100)}...
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+                                        {job.skills?.slice(0, 3).map((skill, index) => (
+                                            <Chip key={index} label={skill} size="small" variant="outlined" />
+                                        ))}
+                                        {job.skills?.length > 3 && (
+                                            <Typography variant="body2" color="text.secondary">
+                                                +{job.skills.length - 3}
+                                            </Typography>
+                                        )}
+                                    </Box>
+                                    <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                                        {job.featured && <Chip label="Featured" size="small" color="primary" />}
+                                        {job.urgentHiring && <Chip label="Urgent" size="small" color="error" />}
+                                        {job.remote && <Chip label="Remote" size="small" color="success" />}
+                                    </Box>
+                                </CardContent>
+                                <CardActions sx={{ p: 2, pt: 0 }}>
+                                    <Button size="small" onClick={() => handleViewDetails(job)}>
+                                        View Details
+                                    </Button>
+                                    <Button size="small" variant="contained" onClick={() => handleApply(job)}>
+                                        Apply Now
+                                    </Button>
+                                </CardActions>
+                            </Card>
+                        </Grid>
+                    ))}
+                </Grid>
+            )}
 
             {filteredJobs.length === 0 && (
                 <Paper sx={{ p: 6, textAlign: 'center' }}>
                     <SearchIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
                     <Typography variant="h6" color="text.secondary" gutterBottom>
-                        No jobs found
+                        No recruiter jobs found
                     </Typography>
                     <Typography variant="body2" color="text.secondary" paragraph>
-                        Try adjusting your search criteria or filters
+                        No jobs have been posted by recruiters yet. Try adjusting your search criteria or check back later.
                     </Typography>
                     <Button variant="outlined" onClick={() => {
                         setSearchQuery('');
@@ -903,6 +1402,200 @@ const JobsPage = () => {
                     </Grid>
                 </Grid>
             </Box>
+
+            {/* Comprehensive View Details Modal */}
+            <Dialog
+                open={viewDetailsModal.isOpen}
+                onClose={() => setViewDetailsModal({ isOpen: false, job: null })}
+                maxWidth="md"
+                fullWidth
+            >
+                <DialogTitle>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography variant="h5">Job Details</Typography>
+                        <IconButton onClick={() => setViewDetailsModal({ isOpen: false, job: null })}>
+                            ✕
+                        </IconButton>
+                    </Box>
+                </DialogTitle>
+                <DialogContent>
+                    {viewDetailsModal.job && (
+                        <Box sx={{ py: 2 }}>
+                            {/* Header Section */}
+                            <Box sx={{ display: 'flex', gap: 3, mb: 4 }}>
+                                <Avatar sx={{ width: 80, height: 80, bgcolor: 'primary.main', fontSize: '2rem' }}>
+                                    {viewDetailsModal.job.company?.charAt(0) || 'C'}
+                                </Avatar>
+                                <Box sx={{ flex: 1 }}>
+                                    <Typography variant="h4" gutterBottom>{viewDetailsModal.job.title}</Typography>
+                                    <Typography variant="h6" color="text.secondary" gutterBottom>
+                                        {viewDetailsModal.job.company} ✓
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                                        <Rating value={4.5} readOnly />
+                                        <Typography variant="body2" color="text.secondary">
+                                            4.5 • {viewDetailsModal.job.applicants || 0}+ applied
+                                        </Typography>
+                                    </Box>
+                                    <Typography variant="h5" color="primary">
+                                        {viewDetailsModal.job.salary || 'Negotiable'}
+                                    </Typography>
+                                </Box>
+                            </Box>
+
+                            {/* Key Information */}
+                            <Grid container spacing={3} sx={{ mb: 4 }}>
+                                <Grid item xs={6} md={3}>
+                                    <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
+                                        <LocationOn color="primary" sx={{ mb: 1 }} />
+                                        <Typography variant="body2" color="text.secondary">Location</Typography>
+                                        <Typography variant="body1" fontWeight="bold">{viewDetailsModal.job.location}</Typography>
+                                    </Box>
+                                </Grid>
+                                <Grid item xs={6} md={3}>
+                                    <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
+                                        <Work color="primary" sx={{ mb: 1 }} />
+                                        <Typography variant="body2" color="text.secondary">Experience</Typography>
+                                        <Typography variant="body1" fontWeight="bold">{viewDetailsModal.job.experience}</Typography>
+                                    </Box>
+                                </Grid>
+                                <Grid item xs={6} md={3}>
+                                    <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
+                                        <Schedule color="primary" sx={{ mb: 1 }} />
+                                        <Typography variant="body2" color="text.secondary">Job Type</Typography>
+                                        <Typography variant="body1" fontWeight="bold">{viewDetailsModal.job.type}</Typography>
+                                    </Box>
+                                </Grid>
+                                <Grid item xs={6} md={3}>
+                                    <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
+                                        <Business color="primary" sx={{ mb: 1 }} />
+                                        <Typography variant="body2" color="text.secondary">Work Mode</Typography>
+                                        <Typography variant="body1" fontWeight="bold">{viewDetailsModal.job.workMode || 'Onsite'}</Typography>
+                                    </Box>
+                                </Grid>
+                            </Grid>
+
+                            {/* Job Description */}
+                            <Box sx={{ mb: 4 }}>
+                                <Typography variant="h6" gutterBottom>Job Description</Typography>
+                                <Typography variant="body1" paragraph>
+                                    {viewDetailsModal.job.description || 'No description available.'}
+                                </Typography>
+                            </Box>
+
+                            {/* Skills Required */}
+                            {viewDetailsModal.job.skills && viewDetailsModal.job.skills.length > 0 && (
+                                <Box sx={{ mb: 4 }}>
+                                    <Typography variant="h6" gutterBottom>Skills Required</Typography>
+                                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                        {viewDetailsModal.job.skills.map((skill, index) => (
+                                            <Chip key={index} label={skill} variant="outlined" />
+                                        ))}
+                                    </Box>
+                                </Box>
+                            )}
+
+                            {/* Benefits */}
+                            {viewDetailsModal.job.benefits && viewDetailsModal.job.benefits.length > 0 && (
+                                <Box sx={{ mb: 4 }}>
+                                    <Typography variant="h6" gutterBottom>Benefits</Typography>
+                                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                        {viewDetailsModal.job.benefits.map((benefit, index) => (
+                                            <Chip key={index} label={benefit} color="success" variant="outlined" />
+                                        ))}
+                                    </Box>
+                                </Box>
+                            )}
+
+                            {/* Company Information */}
+                            <Box sx={{ mb: 4, p: 3, bgcolor: 'grey.50', borderRadius: 2 }}>
+                                <Typography variant="h6" gutterBottom>About the Company</Typography>
+                                <Grid container spacing={2}>
+                                    <Grid item xs={6}>
+                                        <Typography variant="body2" color="text.secondary">Company</Typography>
+                                        <Typography variant="body1" fontWeight="bold">{viewDetailsModal.job.company}</Typography>
+                                    </Grid>
+                                    <Grid item xs={6}>
+                                        <Typography variant="body2" color="text.secondary">Industry</Typography>
+                                        <Typography variant="body1" fontWeight="bold">{viewDetailsModal.job.industry || 'Not specified'}</Typography>
+                                    </Grid>
+                                    <Grid item xs={6}>
+                                        <Typography variant="body2" color="text.secondary">Company Size</Typography>
+                                        <Typography variant="body1" fontWeight="bold">{viewDetailsModal.job.companySize || 'Not specified'}</Typography>
+                                    </Grid>
+                                    <Grid item xs={6}>
+                                        <Typography variant="body2" color="text.secondary">Posted</Typography>
+                                        <Typography variant="body1" fontWeight="bold">{viewDetailsModal.job.posted || 'Recently'}</Typography>
+                                    </Grid>
+                                </Grid>
+                            </Box>
+
+                            {/* Job Stats */}
+                            <Box sx={{ display: 'flex', gap: 4, mb: 4 }}>
+                                <Box sx={{ textAlign: 'center' }}>
+                                    <Typography variant="h6" color="primary">{viewDetailsModal.job.views || 150}</Typography>
+                                    <Typography variant="body2" color="text.secondary">Views</Typography>
+                                </Box>
+                                <Box sx={{ textAlign: 'center' }}>
+                                    <Typography variant="h6" color="primary">{viewDetailsModal.job.applicants || 0}</Typography>
+                                    <Typography variant="body2" color="text.secondary">Applicants</Typography>
+                                </Box>
+                                <Box sx={{ textAlign: 'center' }}>
+                                    <Typography variant="h6" color="success.main">Active</Typography>
+                                    <Typography variant="body2" color="text.secondary">Status</Typography>
+                                </Box>
+                            </Box>
+
+                            {/* Tags */}
+                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                {viewDetailsModal.job.featured && <Chip label="Featured" color="primary" />}
+                                {viewDetailsModal.job.urgentHiring && <Chip label="Urgent Hiring" color="error" />}
+                                {viewDetailsModal.job.remote && <Chip label="Remote" color="success" />}
+                                {viewDetailsModal.job.verified && <Chip label="Verified Company" color="info" />}
+                            </Box>
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions sx={{ p: 3, gap: 2 }}>
+                    <Button 
+                        variant="outlined" 
+                        onClick={() => setViewDetailsModal({ isOpen: false, job: null })}
+                        size="large"
+                    >
+                        Close
+                    </Button>
+                    <Button 
+                        variant="contained" 
+                        onClick={() => {
+                            handleApply(viewDetailsModal.job);
+                            setViewDetailsModal({ isOpen: false, job: null });
+                        }}
+                        size="large"
+                        sx={{ minWidth: 120 }}
+                    >
+                        Apply Now
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Job Details Modal */}
+            <JobDetailsModal
+                open={modalOpen}
+                onClose={handleCloseModal}
+                job={selectedJob}
+                onApply={handleApply}
+            />
+
+            {/* Authentication Modal */}
+            <AuthModal
+                open={authModalOpen}
+                onClose={() => {
+                    setAuthModalOpen(false);
+                    setPendingApplication(null);
+                }}
+                onSuccess={handleAuthSuccess}
+                defaultTab={0}
+            />
         </Container>
     );
 };

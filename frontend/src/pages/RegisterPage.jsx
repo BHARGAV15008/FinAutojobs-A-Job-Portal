@@ -116,6 +116,7 @@ const RegisterPage = () => {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
+    username: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -124,7 +125,7 @@ const RegisterPage = () => {
     qualification: '',
     companyName: '',
     position: '',
-    role: 'jobseeker',
+    role: 'applicant',
     emailVerified: false,
     phoneVerified: false
   })
@@ -146,6 +147,8 @@ const RegisterPage = () => {
   // Validation states
   const [emailError, setEmailError] = useState(false)
   const [phoneError, setPhoneError] = useState(false)
+  const [emailErrorMessage, setEmailErrorMessage] = useState('')
+  const [phoneErrorMessage, setPhoneErrorMessage] = useState('')
   
   // Password strength state
   const [passwordStrength, setPasswordStrength] = useState({
@@ -206,6 +209,7 @@ const RegisterPage = () => {
         setEmailError(true)
       } else {
         setEmailError(false)
+        setEmailErrorMessage('') // Clear error message
         // Reset verification status if email changes
         if (emailVerified) {
           setEmailVerified(false)
@@ -219,6 +223,7 @@ const RegisterPage = () => {
         setPhoneError(true)
       } else {
         setPhoneError(false)
+        setPhoneErrorMessage('') // Clear error message
         // Reset verification status if phone changes
         if (phoneVerified) {
           setPhoneVerified(false)
@@ -365,9 +370,11 @@ const RegisterPage = () => {
         
         // Handle field-specific errors
         if (result.field === 'email') {
-          setEmailError(result.error)
+          setEmailError(true)
+          setEmailErrorMessage(result.error)
         } else if (result.field === 'phone') {
-          setPhoneError(result.error)
+          setPhoneError(true)
+          setPhoneErrorMessage(result.error)
         } else {
           // General error
           toast({
@@ -547,6 +554,60 @@ const RegisterPage = () => {
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue)
+  }
+
+  const handleGenerateUsername = async () => {
+    if (!formData.firstName || !formData.lastName) {
+      toast({
+        title: "Error",
+        description: "Please enter your first and last name first",
+        variant: "destructive"
+      })
+      return
+    }
+
+    try {
+      const role = activeTab === 0 ? 'applicant' : 'recruiter'
+      const response = await fetch('/api/auth/generate-username', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          role: role
+        }),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setFormData({
+          ...formData,
+          username: result.data.recommended
+        })
+        
+        toast({
+          title: "Username Generated",
+          description: `Generated "${result.data.recommended}" using ${result.data.pattern} pattern`,
+          variant: "default"
+        })
+      } else {
+        toast({
+          title: "Generation Failed",
+          description: result.message || "Failed to generate username",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error('Username generation error:', error)
+      toast({
+        title: "Error",
+        description: "Failed to generate username. Please try again.",
+        variant: "destructive"
+      })
+    }
   }
 
   return (
@@ -754,6 +815,46 @@ const RegisterPage = () => {
                   </Grid>
                 </Grid>
 
+                {/* Username Field - Optional with Auto-Generation */}
+                <Box sx={{ mb: 3 }}>
+                  <TextField
+                    fullWidth
+                    name="username"
+                    label="Username (Optional)"
+                    value={formData.username}
+                    onChange={handleChange}
+                    helperText={formData.username ? "Username will be validated" : "Leave empty to auto-generate based on your name"}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Person color="primary" />
+                        </InputAdornment>
+                      ),
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <Button
+                            size="small"
+                            onClick={handleGenerateUsername}
+                            disabled={!formData.firstName || !formData.lastName}
+                            sx={{ 
+                              minWidth: 'auto',
+                              px: 1,
+                              fontSize: '0.75rem'
+                            }}
+                          >
+                            Generate
+                          </Button>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                  {formData.username && (
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                      💡 Tip: Username will be auto-generated if left empty
+                    </Typography>
+                  )}
+                </Box>
+
                   {/* Email Field with Verification */}
                   <Box sx={{ mb: 3 }}>
                     <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
@@ -766,7 +867,7 @@ const RegisterPage = () => {
                         onChange={handleChange}
                         required
                         error={emailError}
-                        helperText={emailError ? "Please enter a valid email address" : ""}
+                        helperText={emailErrorMessage || (emailError ? "Please enter a valid email address" : "")}
                         InputProps={{
                           startAdornment: (
                             <InputAdornment position="start">
@@ -820,7 +921,7 @@ const RegisterPage = () => {
                       required
                       placeholder="+91 9876543210"
                       error={phoneError}
-                      helperText={phoneError ? "Please enter a valid Indian phone number (e.g., +91 9876543210)" : "Enter Indian mobile number (e.g., +91 9876543210)"}
+                      helperText={phoneErrorMessage || (phoneError ? "Please enter a valid Indian phone number (e.g., +91 9876543210)" : "Enter Indian mobile number (e.g., +91 9876543210)")}
                       InputProps={{
                         startAdornment: (
                           <InputAdornment position="start">

@@ -1,0 +1,57 @@
+Arrange Folder Structure like:
+Backend:
+    1. Databases
+        - Applicants
+            - 
+        - Recruiters
+            - 
+        - Admins
+            - 
+        - Others
+            - 
+    2. Controllers
+        - Applicants
+            - 
+        - Recruiters
+            - 
+        - Admins
+            - 
+        - Others
+            - 
+    3. models
+        - Applicants
+            - 
+        - Recruiters
+            - 
+        - Admins
+            - 
+        - Others
+            - 
+    4. middlewares
+        - Applicants
+            - 
+        - Recruiters
+            - 
+        - Admins
+            - 
+        - Others
+            - 
+    5. routes
+        - Applicants
+            - 
+        - Recruiters
+            - 
+        - Admins
+            - 
+        - Others
+            - 
+    6. services
+        - Applicants
+            - 
+        - Recruiters
+            - 
+        - Admins
+            - 
+        - Others
+            - 
+    7. utils

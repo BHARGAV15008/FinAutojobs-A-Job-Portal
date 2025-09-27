@@ -1,12 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import {
-  dashboardAPI,
-  jobsAPI,
-  applicationsAPI,
-  usersAPI,
-  notificationsAPI,
-  authAPI,
-} from "../services/api";
+import { useAuth } from "./AuthContext.jsx";
+import * as authAPI from "../api/auth";
+import * as applicationsAPI from "../api/applications";
+import * as jobsAPI from "../api/jobs";
+import * as notificationsAPI from "../api/notifications";
+import { calculateProfileCompletion } from "../utils/profileCompletion";
 
 const DashboardContext = createContext();
 
@@ -19,18 +17,11 @@ export const useDashboard = () => {
 };
 
 export const DashboardProvider = ({ children }) => {
+  const { user: authUser, isAuthenticated: authIsAuthenticated } = useAuth();
+  const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
-  const [dashboardData, setDashboardData] = useState({
-    stats: {},
-    recentJobs: [],
-    applications: [],
-    notifications: [],
-    users: [],
-  });
-
-  // Authentication state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState(null);
 
@@ -39,25 +30,42 @@ export const DashboardProvider = ({ children }) => {
     checkAuthStatus();
   }, []);
 
+  // Sync with AuthContext user changes
+  useEffect(() => {
+    if (authUser) {
+      console.log('🔍 RealDashboardContext syncing with AuthContext user:', authUser);
+      
+      // Handle case where authUser might be API response object
+      const actualUser = authUser.data ? authUser.data : authUser;
+      console.log('🔍 Extracted actual user:', actualUser);
+      
+      setCurrentUser(actualUser);
+      setUserRole(actualUser.role);
+      setIsAuthenticated(true);
+    } else {
+      setCurrentUser(null);
+      setUserRole(null);
+      setIsAuthenticated(false);
+    }
+  }, [authUser, authIsAuthenticated]);
+
   const checkAuthStatus = async () => {
     const token = localStorage.getItem("token");
+    console.log('🔍 RealDashboardContext checkAuthStatus, token:', token ? 'exists' : 'not found');
     if (token) {
       try {
         const response = await authAPI.getProfile();
-        const userData = response.data.data.user;
-        setCurrentUser(userData);
-        setUserRole(userData.role);
+        const user = response.data.data?.user || response.data.user || response.data;
+        setCurrentUser(user);
+        setUserRole(user.role);
         setIsAuthenticated(true);
-        await loadDashboardData(userData.role);
+        await loadDashboardData(user.role);
       } catch (error) {
-        console.warn("Auth check failed, using fallback mode:", error);
-        // Don't remove token immediately, might be network issue
+        console.error("Auth check failed:", error);
         setIsAuthenticated(false);
-        loadEmptyData(); // Show empty data when not authenticated
       }
     } else {
       setIsAuthenticated(false);
-      loadEmptyData(); // Show empty data when not authenticated
     }
     setLoading(false);
   };
@@ -69,7 +77,7 @@ export const DashboardProvider = ({ children }) => {
       // Fetch data based on user role
       const [jobsResponse, applicationsResponse, notificationsResponse] =
         await Promise.all([
-          jobsAPI.getJobs({ limit: 10 }).catch(() => ({ data: { data: [] } })),
+          jobsAPI.getJobs({ limit: 50 }).catch(() => ({ data: { data: [] } })),
           applicationsAPI
             .getApplications({ limit: 10 })
             .catch(() => ({ data: { data: [] } })),
@@ -127,14 +135,15 @@ export const DashboardProvider = ({ children }) => {
     switch (role) {
       case "applicant":
         return {
-          profileCompletion: currentUser?.profileCompletion?.percentage || 0,
+          profileCompletion: calculateProfileCompletion(currentUser, "applicant"),
           appliedJobs: applicationsArray.filter((app) => app.status === "applied")
             .length,
           shortlisted: applicationsArray.filter(
             (app) => app.status === "shortlisted"
           ).length,
-          interviews: applicationsArray.filter((app) => app.status === "interview")
-            .length,
+          interviews: applicationsArray.filter(
+            (app) => app.status === "interview"
+          ).length,
           totalApplications: applicationsArray.length,
           savedJobs: 0, // Will be fetched from API later
           viewedJobs: 0, // Will be fetched from API later
@@ -142,6 +151,7 @@ export const DashboardProvider = ({ children }) => {
 
       case "recruiter":
         return {
+          profileCompletion: calculateProfileCompletion(currentUser, "recruiter"),
           activeJobs: jobs.filter((job) => job.status === "active").length,
           totalApplications: applicationsArray.length,
           shortlisted: applicationsArray.filter(
@@ -257,6 +267,26 @@ export const DashboardProvider = ({ children }) => {
   const getStats = (role = userRole) => {
     if (!role) return {};
 
+    // Add null safety check for dashboardData.stats
+    if (!dashboardData || !dashboardData.stats) {
+      // Return role-specific default stats with dynamic profile completion
+      if (role === 'applicant') {
+        return {
+          profileCompletion: calculateProfileCompletion(currentUser, "applicant"),
+          appliedJobs: 0,
+          shortlisted: 0,
+          interviews: 0
+        };
+      }
+      return {
+        profileCompletion: calculateProfileCompletion(currentUser, "recruiter"),
+        activeJobs: 0,
+        totalApplications: 0,
+        shortlisted: 0,
+        hired: 0
+      };
+    }
+
     if (typeof dashboardData.stats === "object" && dashboardData.stats[role]) {
       return dashboardData.stats[role];
     }
@@ -272,12 +302,37 @@ export const DashboardProvider = ({ children }) => {
     }
   };
 
+  // Refresh current user data from server
+  const refreshCurrentUser = async () => {
+    try {
+      const response = await authAPI.getProfile();
+      const user = response.data.data?.user || response.data.user || response.data;
+      console.log('🔄 Refreshed current user:', user);
+      setCurrentUser(user);
+      return user;
+    } catch (error) {
+      console.error('❌ Failed to refresh current user:', error);
+      throw error;
+    }
+  };
+
   // Job management functions
   const postJob = async (jobData) => {
     try {
       setLoading(true);
       const response = await jobsAPI.createJob(jobData);
-      await loadDashboardData(userRole); // Refresh data after posting
+      
+      // Immediately add the new job to local state for instant feedback
+      const newJob = response.data.data?.job || response.data.job || response.data;
+      if (newJob) {
+        setDashboardData(prevData => ({
+          ...prevData,
+          recentJobs: [newJob, ...(prevData.recentJobs || [])]
+        }));
+      }
+      
+      // Also refresh all data from server
+      await loadDashboardData(userRole);
       return response.data;
     } catch (error) {
       console.error("Failed to post job:", error);
@@ -331,6 +386,7 @@ export const DashboardProvider = ({ children }) => {
     login,
     logout,
     refreshData,
+    refreshCurrentUser,
     checkAuthStatus,
 
     // Job management

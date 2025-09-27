@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useToast } from '../ui/use-toast';
 import { Link, useLocation } from 'wouter';
 import api from '../../utils/api';

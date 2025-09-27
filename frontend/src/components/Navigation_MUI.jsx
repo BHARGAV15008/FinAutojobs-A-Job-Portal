@@ -50,7 +50,7 @@ import {
     Store,
     ExpandMore,
 } from '@mui/icons-material';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext.jsx';
 
 const Navigation = () => {
     const theme = useTheme();

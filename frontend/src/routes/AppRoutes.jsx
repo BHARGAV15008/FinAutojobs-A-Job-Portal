@@ -9,15 +9,12 @@ import ProtectedRoute from '../components/auth/ProtectedRoute';
 import ApplicantDashboard from '../pages/ApplicantDashboard';
 import RecruiterDashboard from '../pages/RecruiterDashboard';
 import AdminDashboard from '../pages/AdminDashboard';
-import LoginDemo from '../components/auth/LoginDemo';
 import AdminLoginPage from '../pages/AdminLoginPage';
 import OTPLoginPage from '../pages/OTPLoginPage';
 import OTPSignupPage from '../pages/OTPSignupPage';
-import OTPDebugPage from '../pages/OTPDebugPage';
-import SimpleOTPTest from '../pages/SimpleOTPTest';
-import JobsPageDebug from '../components/debug/JobsPageDebug';
 import RegisterPage from '../pages/RegisterPage';
 import LoginPage from '../pages/LoginPage';
+import JobsPage from '../pages/JobsPage';
 
 // Import existing pages with fallback handling
 const SafeImport = ({ component: Component, fallback, ...props }) => {
@@ -34,9 +31,7 @@ const HomePageNew = React.lazy(() => import('../pages/HomePageNew').catch(() => 
   default: () => <div>Home Page Loading...</div> 
 })));
 
-const JobsPage = React.lazy(() => import('../pages/JobsPage').catch(() => ({ 
-  default: () => <div>Jobs Page Loading...</div> 
-})));
+// JobsPage now imported directly above
 
 const CompaniesPage = React.lazy(() => import('../pages/CompaniesPage').catch(() => ({ 
   default: () => <div>Companies Page Loading...</div> 
@@ -66,9 +61,6 @@ const AddJobPage = React.lazy(() => import('../pages/AddJobPage').catch(() => ({
   default: () => <div>Add Job Page Loading...</div> 
 })));
 
-const DashboardDemo = React.lazy(() => import('../pages/DashboardDemo').catch(() => ({ 
-  default: () => <div>Dashboard Demo Loading...</div> 
-})));
 
 const AppRoutes = () => {
   const { loading } = useAuth();
@@ -104,7 +96,6 @@ const AppRoutes = () => {
             {/* Public Routes */}
             <Route path="/">{() => <HomePageNew />}</Route>
             <Route path="/jobs">{() => <JobsPage />}</Route>
-            <Route path="/jobs-debug">{() => <JobsPageDebug />}</Route>
             <Route path="/companies">{() => <CompaniesPage />}</Route>
             <Route path="/salary-insights">{() => <SalaryInsightsPage />}</Route>
             <Route path="/skills-assessment">{() => <SkillsAssessmentPage />}</Route>
@@ -117,12 +108,50 @@ const AppRoutes = () => {
             <Route path="/register">{() => <RegisterPage />}</Route>
             <Route path="/signup">{() => <SignupPage />}</Route>
             <Route path="/otp-signup">{() => <OTPSignupPage />}</Route>
-            <Route path="/otp-debug">{() => <OTPDebugPage />}</Route>
-            <Route path="/simple-otp-test">{() => <SimpleOTPTest />}</Route>
-            <Route path="/demo">{() => <DashboardDemo />}</Route>
 
             {/* Admin Login Route */}
             <Route path="/admin-login">{() => <AdminLoginPage />}</Route>
+
+            {/* General Dashboard Route - Redirects based on user role */}
+            <Route path="/dashboard">{() => {
+              const { user } = useAuth();
+              if (!user) {
+                return <LoginPage />;
+              }
+              
+              // User object should now be the direct user object from backend
+              const userRole = user?.role;
+              
+              console.log('🔍 Dashboard redirect - User:', user);
+              console.log('🔍 Dashboard redirect - Role:', userRole);
+              
+              if (userRole === 'recruiter') {
+                return (
+                  <ProtectedRoute allowedRoles={['recruiter']}>
+                    <RecruiterDashboard />
+                  </ProtectedRoute>
+                );
+              } else if (userRole === 'applicant') {
+                return (
+                  <ProtectedRoute allowedRoles={['applicant']}>
+                    <ApplicantDashboard />
+                  </ProtectedRoute>
+                );
+              } else if (userRole === 'admin') {
+                return (
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                );
+              } else {
+                // Default to applicant dashboard if role is unclear
+                return (
+                  <ProtectedRoute allowedRoles={['applicant', 'recruiter']}>
+                    <ApplicantDashboard />
+                  </ProtectedRoute>
+                );
+              }
+            }}</Route>
 
             {/* Protected Dashboard Routes */}
             <Route path="/applicant-dashboard">{() => (
@@ -172,9 +201,9 @@ const AppRoutes = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-neutral-900 text-white py-12">
+      <footer className="bg-neutral-900 text-white py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div>
               <h3 className="text-xl font-bold text-primary-500 mb-4">FinAutoJobs</h3>
               <p className="text-neutral-400 mb-4">India's #1 job platform connecting millions of job seekers with top employers.</p>
@@ -201,7 +230,7 @@ const AppRoutes = () => {
               </ul>
             </div>
           </div>
-          <div className="border-t border-neutral-800 mt-8 pt-8 text-center text-neutral-400">
+          <div className="border-t border-neutral-800 mt-6 pt-4 text-center text-neutral-400">
             <p>&copy; 2025 FinAutoJobs. All rights reserved.</p>
           </div>
         </div>

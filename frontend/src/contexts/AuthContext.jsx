@@ -16,9 +16,13 @@ export const AuthProvider = ({ children }) => {
           console.log('🔍 Calling profile endpoint...');
           const response = await apiClient.get('/auth/profile');
           console.log('✅ Profile response:', response.data);
-          const user = response.data.data?.user || response.data.user || response.data;
+          
+          // Backend returns { success: true, data: userObject }
+          // So response.data.data is the actual user object
+          const user = response.data.data;
           setUser(user);
           console.log('✅ User set:', user);
+          console.log('✅ User role:', user?.role);
         } catch (error) {
           console.error('❌ Failed to load user', error);
           
@@ -80,9 +84,55 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Login error:', error);
+      console.log('🔍 Error response data:', error.response?.data);
+      
+      // Handle different types of errors with specific messages
+      let errorMessage = 'Login failed. Please try again.';
+      
+      if (error.response) {
+        // Server responded with error status
+        const status = error.response.status;
+        const serverMessage = error.response.data?.message;
+        
+        switch (status) {
+          case 400:
+            // Handle multiple accounts case
+            if (error.response.data?.requiresRole) {
+              return {
+                success: false,
+                error: serverMessage,
+                requiresRole: true,
+                availableRoles: error.response.data.availableRoles
+              };
+            }
+            errorMessage = serverMessage || 'Bad request. Please check your input.';
+            break;
+          case 401:
+            errorMessage = serverMessage || 'Invalid email or password. Please check your credentials.';
+            break;
+          case 403:
+            errorMessage = 'Account access denied. Please contact support.';
+            break;
+          case 404:
+            errorMessage = 'Account not found. Please check your email address.';
+            break;
+          case 429:
+            errorMessage = 'Too many login attempts. Please try again later.';
+            break;
+          case 500:
+            errorMessage = 'Server error. Please try again later.';
+            break;
+          default:
+            errorMessage = serverMessage || `Login failed (Error ${status}). Please try again.`;
+        }
+      } else if (error.request) {
+        // Network error
+        errorMessage = 'Unable to connect to server. Please check your internet connection.';
+      }
+      
       return { 
         success: false, 
-        error: error.response?.data?.message || 'Login failed. Please try again.' 
+        error: errorMessage 
       };
     }
   };
@@ -193,6 +243,64 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateProfile = async (profileData) => {
+    try {
+      console.log('🔍 Updating profile with data:', profileData);
+      const response = await apiClient.put('/auth/profile', profileData);
+      console.log('✅ Profile update response:', response.data);
+      
+      // Update the user state with the new profile data
+      const updatedUser = response.data.data; // Backend returns user data in response.data.data
+      setUser(updatedUser);
+      
+      // Also update localStorage if needed
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      
+      return { 
+        success: true, 
+        message: response.data.message || 'Profile updated successfully',
+        data: updatedUser
+      };
+    } catch (error) {
+      console.error('❌ Profile update failed:', error);
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to update profile' 
+      };
+    }
+  };
+
+  const updateProfileWithFile = async (formData) => {
+    try {
+      console.log('🔍 Updating profile with file upload');
+      const response = await apiClient.put('/auth/profile', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      console.log('✅ Profile with file update response:', response.data);
+      
+      // Update the user state with the new profile data
+      const updatedUser = response.data.data;
+      setUser(updatedUser);
+      
+      // Also update localStorage if needed
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      
+      return { 
+        success: true, 
+        message: response.data.message || 'Profile updated successfully',
+        data: updatedUser
+      };
+    } catch (error) {
+      console.error('❌ Profile with file update failed:', error);
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to update profile' 
+      };
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -200,6 +308,8 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    updateProfile,
+    updateProfileWithFile,
     sendEmailOTP,
     verifyEmailOTP,
     sendSMSOTP,

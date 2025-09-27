@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useToast } from '../ui/use-toast';
 import { Link, useLocation } from 'wouter';
 import api from '../../utils/api';
@@ -242,7 +242,7 @@ const ApplicantDashboardNew = () => {
 
   const updateProfile = async () => {
     try {
-      await api.put('/users/profile', profileForm);
+      await api.put('/auth/profile', profileForm);
       await loadDashboardData();
       setProfileDialogOpen(false);
       toast({

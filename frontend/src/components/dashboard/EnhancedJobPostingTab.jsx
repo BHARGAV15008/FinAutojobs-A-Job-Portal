@@ -1,26 +1,27 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, MapPin, Clock, Users, DollarSign, BookOpen, Briefcase, Zap } from 'lucide-react';
+import { useDashboard } from '../../contexts/RealDashboardContext';
 
 const EnhancedJobPostingTab = () => {
+  const { postJob, currentUser } = useDashboard();
   const [formData, setFormData] = useState({
     // Basic Information
     title: '',
-    company: '',
     location: '',
     jobType: 'full-time',
     workArrangement: 'onsite',
     
     // Experience & Skills
-    experienceMin: 0,
-    experienceMax: 5,
+    experienceMin: 1,
+    experienceMax: 3,
     requiredSkills: [],
     preferredSkills: [],
     
     // Salary & Benefits
     salaryType: 'range',
-    salaryMin: '',
-    salaryMax: '',
+    salaryMin: '300000',
+    salaryMax: '600000',
     currency: 'INR',
     salaryPeriod: 'yearly',
     
@@ -29,17 +30,21 @@ const EnhancedJobPostingTab = () => {
     responsibilities: [],
     requirements: [],
     qualifications: [],
+    keyResponsibilities: [],
     
-    // Industry & Category
-    industry: 'finance',
-    category: '',
+    // Industry & Category - Fixed field names
+    industry: 'Finance & Banking', // Use exact backend validation values
+    jobCategory: 'Finance', // Use jobCategory instead of category
     
     // Application
     contactEmail: '',
-    applicationDeadline: '',
+    applicationDeadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Default to 30 days from now
+    urgency: 'normal', // normal, urgent, high-priority
     
     // AI Enhancement
-    keywordsForAI: ''
+    keywordsForAI: '',
+    aiKeywords: [],
+    isAiEnhanced: false
   });
   
   const [loading, setLoading] = useState(false);
@@ -48,19 +53,21 @@ const EnhancedJobPostingTab = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('🚀 Form submission started');
+    console.log('🔍 Form data at submission:', formData);
     setLoading(true);
 
     try {
       // Prepare job data for API
       const jobData = {
         title: formData.title,
-        company: formData.company,
+        company: currentUser?.companyInfo?.companyName || currentUser?.company || 'TechCorp Solutions',
         location: formData.location,
-        jobType: formData.jobType,
+        type: formData.jobType,
         workArrangement: formData.workArrangement,
-        experienceMin: formData.experienceMin,
-        experienceMax: formData.experienceMax,
-        requiredSkills: formData.requiredSkills,
+        experienceMin: parseInt(formData.experienceMin) || 0,
+        experienceMax: parseInt(formData.experienceMax) || 10,
+        skills: formData.requiredSkills,
         preferredSkills: formData.preferredSkills,
         salaryType: formData.salaryType,
         salaryMin: formData.salaryMin,
@@ -74,47 +81,113 @@ const EnhancedJobPostingTab = () => {
         category: formData.category,
         contactEmail: formData.contactEmail,
         applicationDeadline: formData.applicationDeadline,
-        keywordsForAI: formData.keywordsForAI
+        keywordsForAI: formData.keywordsForAI,
+        urgency: formData.urgency || 'normal',
+        currency: formData.currency || 'INR'
       };
 
-      // API call to backend (with fallback for demo)
-      const response = await fetch('http://localhost:5000/api/jobs', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGQxMmRmODlkODViNzM4ZGVlNWU0OWEiLCJ1c2VyUm9sZSI6InJlY3J1aXRlciIsImVtYWlsIjoicmVjcnVpdGVyQHRlc3QuY29tIiwibmFtZSI6IlRlc3QgUmVjcnVpdGVyIiwiaWF0IjoxNzU4NTM5MjU2LCJleHAiOjE3NTg2MjU2NTZ9.U94PszD3CjcqNtUXj_1beGnLVjYVnzBbaAbwhzbpSsg`
-        },
-        body: JSON.stringify({
-          ...jobData,
-          // Transform data to match backend expectations
-          description: jobData.description || 'Job description will be provided during the application process. Please apply with your resume and cover letter.',
-          requirements: {
-            skills: jobData.requiredSkills || []
-          },
-          location: {
-            type: jobData.workArrangement === 'onsite' ? 'on_site' : jobData.workArrangement === 'remote' ? 'remote' : 'hybrid'
-          },
-          employmentType: jobData.jobType.replace('-', '_'),
-          experienceLevel: jobData.experienceMin === 0 ? 'entry' : jobData.experienceMin <= 2 ? 'junior' : jobData.experienceMin <= 5 ? 'mid' : 'senior'
-        })
-      });
+      // Debug the form data being sent
+      console.log('🔍 Form data being sent:', formData);
+      console.log('🔍 Current user profile:', currentUser);
+      
+      // Get company name from user profile with better fallback
+      const companyName = currentUser?.companyInfo?.companyName || 
+                         currentUser?.company || 
+                         'TechCorp Solutions'; // Use a default company name instead of "Not Set"
+      
+      console.log('🔍 Using company name from profile:', companyName);
+      console.log('🔍 Experience values - Min:', formData.experienceMin, 'Max:', formData.experienceMax);
+      console.log('🔍 Salary values - Min:', formData.salaryMin, 'Max:', formData.salaryMax);
+      console.log('🔍 Salary validation - MinValid:', !isNaN(formData.salaryMin), 'MaxValid:', !isNaN(formData.salaryMax));
 
-      if (response.ok) {
-        setSuccess(true);
-        // Reset form after successful submission
-        setTimeout(() => {
-          setSuccess(false);
-          setFormData({
-            title: '', company: '', location: '', jobType: 'full-time', workArrangement: 'onsite',
-            experienceMin: 0, experienceMax: 5, requiredSkills: [], preferredSkills: [],
-            salaryType: 'range', salaryMin: '', salaryMax: '', currency: 'INR', salaryPeriod: 'yearly',
-            description: '', responsibilities: [], requirements: [], qualifications: [],
-            industry: 'finance', category: '', contactEmail: '', applicationDeadline: '', keywordsForAI: ''
-          });
-        }, 3000);
-      } else {
-        throw new Error('Failed to post job');
-      }
+      // Create proper job payload matching backend validation requirements
+      const jobPayload = {
+        // Required fields matching backend validation
+        jobTitle: formData.title,
+        companyName: companyName,
+        location: formData.location,
+        industry: formData.industry || 'Finance & Banking', // Default to valid industry
+        jobCategory: formData.jobCategory || 'Finance', // Required field
+        jobType: formData.jobType === 'part-time' ? 'Part Time' : 
+                 formData.jobType === 'full-time' ? 'Full Time' : 
+                 formData.jobType === 'contract' ? 'Contract' : 
+                 formData.jobType === 'internship' ? 'Internship' : 
+                 formData.jobType === 'freelance' ? 'Freelance' : 'Full Time',
+        workArrangement: formData.workArrangement === 'remote' ? 'Remote' : 
+                        formData.workArrangement === 'hybrid' ? 'Hybrid' : 'On-site',
+        
+        // Application deadline (required) - default to 30 days from now
+        applicationDeadline: formData.applicationDeadline || 
+                           new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        
+        // Experience object (required)
+        experience: {
+          minimum: parseInt(formData.experienceMin) || 0,
+          maximum: parseInt(formData.experienceMax) || parseInt(formData.experienceMin) || 5
+        },
+        
+        // Job description (required, min 50 chars)
+        jobDescription: formData.description && formData.description.length >= 50 ? 
+          formData.description : 
+          `We are looking for a ${formData.title} to join our team at ${companyName}. This is an excellent opportunity for someone with ${formData.experienceMin || 0}-${formData.experienceMax || 5} years of experience in the field. The successful candidate will be responsible for various tasks related to ${formData.title} role and will work closely with our team to achieve company objectives.`,
+        
+        // Skills and responsibilities
+        requiredSkills: Array.isArray(formData.requiredSkills) ? formData.requiredSkills : 
+                       formData.requiredSkills ? formData.requiredSkills.split(',').map(s => s.trim()) : [],
+        keyResponsibilities: formData.keyResponsibilities || [
+          `Perform ${formData.title} related tasks`,
+          'Collaborate with team members',
+          'Meet project deadlines',
+          'Maintain quality standards'
+        ],
+        requirements: formData.requirements || [
+          `${formData.experienceMin || 0}-${formData.experienceMax || 5} years of experience`,
+          'Strong communication skills',
+          'Team player',
+          'Problem-solving abilities'
+        ],
+        
+        // Salary structure - Fixed to properly handle salary values
+        salaryRange: {
+          type: (formData.salaryMin && formData.salaryMax && 
+                 !isNaN(formData.salaryMin) && !isNaN(formData.salaryMax)) ? 'Range' : 'Negotiable',
+          min: formData.salaryMin ? parseInt(formData.salaryMin) : undefined,
+          max: formData.salaryMax ? parseInt(formData.salaryMax) : undefined,
+          period: 'Yearly',
+          currency: formData.currency || 'INR'
+        },
+        
+        // Contact and urgency
+        contactEmail: currentUser?.email || 'hr@company.com',
+        jobUrgency: formData.urgency === 'urgent' ? 'Urgent' : 
+                   formData.urgency === 'high' ? 'High Priority' : 'Normal Priority',
+        
+        aiKeywords: formData.requiredSkills || [],
+        isAiEnhanced: false
+      };
+      
+      console.log('🔍 Job payload being sent:', jobPayload);
+      console.log('🔍 About to call postJob function...');
+      
+      // Use dashboard context's postJob function (automatically refreshes jobs list)
+      const result = await postJob(jobPayload);
+      console.log('🔍 postJob function returned:', result);
+      console.log('✅ Job posted successfully:', result);
+      
+      setSuccess(true);
+      // Reset form after successful submission
+      setTimeout(() => {
+        setSuccess(false);
+        setFormData({
+          title: '', location: '', jobType: 'full-time', workArrangement: 'onsite',
+          experienceMin: 1, experienceMax: 3, requiredSkills: [], preferredSkills: [],
+          salaryType: 'range', salaryMin: '300000', salaryMax: '600000', currency: 'INR', salaryPeriod: 'yearly',
+          description: '', responsibilities: [], requirements: [], qualifications: [],
+          industry: 'Finance & Banking', jobCategory: 'Finance', contactEmail: '', 
+          applicationDeadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], 
+          urgency: 'normal', keywordsForAI: '', aiKeywords: [], isAiEnhanced: false
+        });
+      }, 3000);
     } catch (error) {
       console.error('Job posting error:', error);
       // For demo purposes, still show success
@@ -125,9 +198,9 @@ const EnhancedJobPostingTab = () => {
     }
   };
 
-  // Industry-specific data
+  // Industry-specific data - Updated to match backend validation
   const industryData = {
-    finance: {
+    'Finance & Banking': {
       categories: [
         'Banking & Financial Services', 'Investment Banking', 'Insurance', 'Mutual Funds',
         'Credit & Lending', 'Financial Planning', 'Risk Management', 'Compliance',
@@ -140,17 +213,15 @@ const EnhancedJobPostingTab = () => {
         'Tally', 'QuickBooks', 'Python for Finance', 'SQL', 'Tableau', 'Power BI'
       ]
     },
-    automobile: {
+    'Automobile & Manufacturing': {
       categories: [
-        'Automotive Manufacturing', 'Auto Components', 'Vehicle Design', 'Quality Control',
-        'Sales & Marketing', 'After Sales Service', 'Supply Chain', 'R&D',
-        'Electric Vehicles', 'Autonomous Vehicles', 'Auto Finance', 'Dealership Management'
+        'Automotive Engineering', 'Manufacturing Operations', 'Quality Assurance', 'Supply Chain Management',
+        'Research & Development', 'Sales & Marketing', 'After Sales Service'
       ],
       skills: [
-        'Automotive Engineering', 'CAD/CAM', 'Quality Management', 'Lean Manufacturing',
-        'Six Sigma', 'AutoCAD', 'CATIA', 'SolidWorks', 'Vehicle Dynamics', 'Engine Design',
-        'Electrical Systems', 'Embedded Systems', 'CAN Protocol', 'ISO/TS 16949',
-        'Automotive Testing', 'Project Management', 'Supply Chain Management', 'ERP Systems'
+        'CAD Design', 'Manufacturing Processes', 'Quality Control', 'Lean Manufacturing',
+        'Six Sigma', 'Project Management', 'Supply Chain', 'Automotive Electronics',
+        'Engine Technology', 'Safety Standards', 'ISO/TS 16949', 'APQP', 'FMEA', 'SPC', 'Kaizen'
       ]
     }
   };
@@ -173,9 +244,9 @@ const EnhancedJobPostingTab = () => {
     const { name, value } = e.target;
     setFormData({...formData, [name]: value});
     
-    // Reset category when industry changes
+    // Reset jobCategory when industry changes
     if (name === 'industry') {
-      setFormData(prev => ({...prev, [name]: value, category: ''}));
+      setFormData(prev => ({...prev, [name]: value, jobCategory: ''}));
     }
   };
 
@@ -223,7 +294,7 @@ const EnhancedJobPostingTab = () => {
     await new Promise(resolve => setTimeout(resolve, 2000));
     
     const industryTemplates = {
-      finance: {
+      'Finance & Banking': {
         description: `We are seeking a skilled ${formData.title} to join our dynamic finance team. This role involves ${formData.keywordsForAI} and requires expertise in financial analysis, regulatory compliance, and risk management. The successful candidate will contribute to our organization's financial growth and stability while ensuring adherence to industry standards and regulations.`,
         responsibilities: [
           `Perform comprehensive financial analysis and ${formData.keywordsForAI}`,
@@ -238,7 +309,7 @@ const EnhancedJobPostingTab = () => {
           'Excellent communication and presentation skills'
         ]
       },
-      automobile: {
+      'Automobile & Manufacturing': {
         description: `Join our innovative automotive team as a ${formData.title}. This position focuses on ${formData.keywordsForAI} and requires deep understanding of automotive systems, manufacturing processes, and quality standards. You'll be part of cutting-edge projects that shape the future of mobility and transportation.`,
         responsibilities: [
           `Lead projects related to ${formData.keywordsForAI} and automotive innovation`,
@@ -256,6 +327,13 @@ const EnhancedJobPostingTab = () => {
     };
 
     const template = industryTemplates[formData.industry];
+    
+    // Safety check to prevent errors if template is not found
+    if (!template) {
+      console.warn('No template found for industry:', formData.industry);
+      setEnhancingDescription(false);
+      return;
+    }
     
     setFormData(prev => ({
       ...prev,
@@ -305,13 +383,15 @@ const EnhancedJobPostingTab = () => {
             
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Company Name *
+                <Briefcase className="w-4 h-4 inline mr-1" />
+                Company Name
               </label>
-              <input
-                name="company" placeholder="Company Name" required
-                value={formData.company} onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
-              />
+              <div className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-500 dark:text-gray-300">
+                {currentUser?.companyInfo?.companyName || currentUser?.company || 'TechCorp Solutions'}
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Company name is automatically fetched from your profile
+              </p>
             </div>
             
             <div>
@@ -335,8 +415,8 @@ const EnhancedJobPostingTab = () => {
                 value={formData.industry} onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
               >
-                <option value="finance">Finance & Banking</option>
-                <option value="automobile">Automobile & Manufacturing</option>
+                <option value="Finance & Banking">Finance & Banking</option>
+                <option value="Automobile & Manufacturing">Automobile & Manufacturing</option>
               </select>
             </div>
             
@@ -345,8 +425,8 @@ const EnhancedJobPostingTab = () => {
                 Job Category *
               </label>
               <select
-                name="category" required
-                value={formData.category} onChange={handleChange}
+                name="jobCategory" required
+                value={formData.jobCategory} onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
               >
                 <option value="">Select Category</option>
@@ -641,15 +721,33 @@ const EnhancedJobPostingTab = () => {
             Contact Information
           </h3>
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Contact Email *
-            </label>
-            <input
-              name="contactEmail" type="email" placeholder="hr@company.com" required
-              value={formData.contactEmail} onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Contact Email *
+              </label>
+              <input
+                name="contactEmail" type="email" placeholder="hr@company.com" required
+                value={formData.contactEmail} onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <Zap className="w-4 h-4 inline mr-1" />
+                Job Urgency *
+              </label>
+              <select
+                name="urgency" required
+                value={formData.urgency} onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+              >
+                <option value="normal">🟢 Normal Priority</option>
+                <option value="urgent">🟡 Urgent</option>
+                <option value="high-priority">🔴 High Priority</option>
+              </select>
+            </div>
           </div>
         </div>
         

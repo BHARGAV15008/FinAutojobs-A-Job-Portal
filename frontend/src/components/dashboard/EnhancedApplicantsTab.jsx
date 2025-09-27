@@ -1,13 +1,15 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTheme } from '../../contexts/ThemeContext';
 import { applicationsAPI, candidatesAPI, interviewsAPI } from '../../services/api';
 import CandidateProfileModal from '../modals/CandidateProfileModal';
 import ContactModal from '../modals/ContactModal';
 import ScheduleModal from '../modals/ScheduleModal';
 
 const EnhancedApplicantsTab = () => {
-  const { darkMode } = useTheme();
+  // Use CSS classes for dark mode detection instead of theme context
+  const [darkMode] = useState(() => {
+    return document.documentElement.classList.contains('dark');
+  });
   const [viewMode, setViewMode] = useState('table'); // 'table' or 'cards'
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');

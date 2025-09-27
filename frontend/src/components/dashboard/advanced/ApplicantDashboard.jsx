@@ -69,7 +69,7 @@ import {
   Schedule as ScheduleIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '../../../contexts/AuthContext.jsx';
 import AdvancedDashboardLayout from '../../AdvancedDashboardLayout';
 
 // Import tab components
