@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import ModernDashboardLayout from "../components/layout/ModernDashboardLayout";
@@ -16,6 +16,7 @@ import {
 import { calculateProfileCompletion } from "../utils/profileCompletion";
 import EnhancedJobPostingTab from "../components/dashboard/EnhancedJobPostingTab";
 import EnhancedApplicantsTab from "../components/dashboard/EnhancedApplicantsTab";
+import RealApplicationsTab from "../components/dashboard/RealApplicationsTab";
 import EnhancedCandidatesTab from "../components/dashboard/EnhancedCandidatesTab";
 import EnhancedInterviewsTab from "../components/dashboard/EnhancedInterviewsTab";
 import JobMetrics from "../components/dashboard/JobMetrics";
@@ -75,13 +76,11 @@ const RecruiterDashboardContent = () => {
     refreshCurrentUser 
   } = dashboardContext || {};
 
-  // Debug: Log currentUser to see what fields are available
-  console.log('🔍 RecruiterDashboard currentUser:', currentUser);
-  console.log('🔍 RecruiterDashboard currentUser.bio:', currentUser?.bio);
-  console.log('🔍 RecruiterDashboard currentUser.github_url:', currentUser?.github_url);
-  console.log('🔍 RecruiterDashboard currentUser.linkedin_url:', currentUser?.linkedin_url);
-  console.log('🔍 RecruiterDashboard currentUser.portfolio_url:', currentUser?.portfolio_url);
-  console.log('🔍 RecruiterDashboard editingJob state:', editingJob);
+  // Debug: Log currentUser to see what fields are available (reduced logging)
+  if (currentUser && Math.random() < 0.1) { // Only log 10% of the time to reduce spam
+    console.log('🔍 RecruiterDashboard currentUser:', currentUser?._id);
+    console.log('🔍 RecruiterDashboard editingJob state:', editingJob);
+  }
   
   // Add a state to force re-render when profile updates
   const [profileUpdateTrigger, setProfileUpdateTrigger] = useState(0);
@@ -152,20 +151,21 @@ const RecruiterDashboardContent = () => {
     profileComplete: 0,
   };
 
-  // Debug: Log constructed user object
-  console.log('🔍 RecruiterDashboard constructed user:', user);
-  console.log('🔍 RecruiterDashboard constructed user.bio:', user?.bio);
-  console.log('🔍 RecruiterDashboard constructed user.github_url:', user?.github_url);
-  console.log('🔍 RecruiterDashboard constructed user.linkedin_url:', user?.linkedin_url);
-  console.log('🔍 RecruiterDashboard constructed user.portfolio_url:', user?.portfolio_url);
+  // Debug: Log constructed user object (reduced logging)
+  if (user && Math.random() < 0.05) { // Only log 5% of the time
+    console.log('🔍 RecruiterDashboard constructed user:', user?.id);
+  }
 
   // Watch for currentUser changes and trigger re-render
   useEffect(() => {
     if (currentUser) {
-      console.log('🔍 currentUser changed, triggering re-render');
+      // Reduced logging to prevent spam
+      if (Math.random() < 0.1) {
+        console.log('🔍 currentUser changed, triggering re-render');
+      }
       setProfileUpdateTrigger(prev => prev + 1);
     }
-  }, [currentUser?.updatedAt, currentUser?.name, currentUser?.location, currentUser?.phone]);
+  }, [currentUser?._id, currentUser?.updatedAt]); // Only watch for ID and updatedAt to prevent infinite loops
 
   // Define comprehensive dashboard tabs for recruiters
   const dashboardTabs = [
@@ -187,12 +187,12 @@ const RecruiterDashboardContent = () => {
   ];
 
   // Handle tab changes - moved before useEffect to avoid hoisting issues
-  const handleTabChange = (tabId) => {
+  const handleTabChange = useCallback((tabId) => {
     setActiveTab(tabId);
     const basePath = "/recruiter-dashboard";
     const newPath = tabId === "dashboard" ? basePath : `${basePath}/${tabId}`;
     window.history.pushState({}, "", newPath);
-  };
+  }, []);
 
   // Extract tab from URL
   useEffect(() => {
@@ -441,7 +441,7 @@ const RecruiterDashboardContent = () => {
           </div>
         );
       case "applicants":
-        return <EnhancedApplicantsTab />;
+        return <RealApplicationsTab />;
       case "candidates":
         return <EnhancedCandidatesTab />;
       case "interviews":
@@ -574,15 +574,15 @@ const RecruiterDashboardContent = () => {
                       <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
                           <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                            {app.jobTitle.charAt(0)}
+                            {((app.jobTitle || app.jobId?.title || app.job?.title || 'N/A') || 'N').charAt(0).toUpperCase()}
                           </span>
                         </div>
                         <div>
                           <p className="text-sm font-medium text-gray-900 dark:text-white">
-                            {app.jobTitle}
+                            {app.jobTitle || app.jobId?.title || app.job?.title || 'Unknown Position'}
                           </p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {app.company}
+                            {app.company || app.jobId?.company || app.job?.company || 'Unknown Company'}
                           </p>
                         </div>
                       </div>
@@ -595,7 +595,7 @@ const RecruiterDashboardContent = () => {
                             : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                         }`}
                       >
-                        {app.status}
+                        {app.status || 'Pending'}
                       </span>
                     </div>
                   ))}

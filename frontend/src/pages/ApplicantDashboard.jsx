@@ -12,11 +12,17 @@ import {
   EnhancedApplicationsTab,
   EnhancedAnalyticsTab,
 } from "../components/dashboard/EnhancedDashboardTabs";
+import MyApplicationsTab from "../components/dashboard/applicant/MyApplicationsTab";
 import JobMetrics from "../components/dashboard/JobMetrics";
 import RecentActivity from "../components/dashboard/RecentActivity";
 import JobChart from "../components/dashboard/JobChart";
 import LoginStatusBanner from "../components/dashboard/LoginStatusBanner";
 import EmptyState from "../components/dashboard/EmptyState";
+import { useAuth } from "../contexts/AuthContext";
+import { useFavorites } from "../contexts/FavoritesContext";
+import JobApplicationModal from "../components/modals/JobApplicationModal";
+import AuthModal from "../components/modals/AuthModal";
+import { applicationService } from "../services/applicationService";
 
 const ApplicantDashboardContent = () => {
   const [location, setLocation] = useLocation();
@@ -29,9 +35,23 @@ const ApplicantDashboardContent = () => {
     loading,
     demoAccounts 
   } = useDashboard();
+  
+  // Auth and application state
+  const { user: authUser } = useAuth();
+  const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
+  
+  // Modal states
+  const [applicationModalOpen, setApplicationModalOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [selectedJobForApplication, setSelectedJobForApplication] = useState(null);
+  const [pendingApplication, setPendingApplication] = useState(null);
+  const [applicationLoading, setApplicationLoading] = useState(false);
+  
+  // Applied jobs tracking
+  const [appliedJobs, setAppliedJobs] = useState(new Set());
 
   // Use real user data if authenticated, otherwise use demo data
-  const user = currentUser || {
+  const user = authUser || currentUser || {
     id: 1,
     firstName: "Demo",
     lastName: "User",
@@ -93,15 +113,91 @@ const ApplicantDashboardContent = () => {
     setLocation(newPath);
   };
 
-  // Mock functions for enhanced components
-  const handleApplyJob = (jobId) => {
-    console.log("Applying to job:", jobId);
-    // TODO: Implement job application logic
+  // Job application functions
+  const handleApplyJob = (job) => {
+    console.log('🔍 Apply button clicked for job:', job.title || job.jobTitle);
+
+    // Check if user is authenticated
+    if (!user || !(user.id || user._id || user.userId)) {
+      console.log('❌ User not authenticated, showing login modal');
+      setPendingApplication(job);
+      setAuthModalOpen(true);
+      return;
+    }
+
+    // Check if user is recruiter (recruiters can't apply to jobs)
+    if (user.role === 'recruiter') {
+      alert('Recruiters cannot apply to jobs. Please switch to an applicant account.');
+      return;
+    }
+
+    // Check if already applied (handle different ID formats)
+    const jobId = job.id || job._id;
+    if (appliedJobs.has(jobId)) {
+      alert('You have already applied to this job!');
+      return;
+    }
+
+    console.log('✅ Opening application modal for job:', jobId);
+
+    // Open application modal
+    setSelectedJobForApplication(job);
+    setApplicationModalOpen(true);
   };
 
-  const handleSaveJob = (jobId) => {
-    console.log("Saving job:", jobId);
-    // TODO: Implement job saving logic
+  const handleSaveJob = (job) => {
+    console.log('🔍 Save/Favorite button clicked for job:', job);
+    const jobId = job.id || job._id;
+    
+    if (isFavorite(jobId)) {
+      removeFromFavorites(jobId);
+      console.log('✅ Job removed from favorites:', jobId);
+    } else {
+      addToFavorites(job);
+      console.log('✅ Job added to favorites:', jobId);
+    }
+  };
+
+  // Handle application submission
+  const handleSubmitApplication = async (applicationData) => {
+    try {
+      setApplicationLoading(true);
+      console.log('🔍 Submitting application with data:', applicationData);
+
+      // Log FormData contents for debugging
+      for (let [key, value] of applicationData.entries()) {
+        console.log(`🔍 FormData field: ${key} = ${value}`);
+      }
+
+      const response = await applicationService.submitApplication(applicationData);
+
+      // Update applied jobs state
+      const jobId = applicationData.get('jobId');
+      setAppliedJobs(prev => new Set([...prev, jobId]));
+
+      console.log('✅ Application submitted successfully:', response);
+      alert(`Application submitted successfully for ${selectedJobForApplication?.title || selectedJobForApplication?.jobTitle}!`);
+
+      // Close modal
+      setApplicationModalOpen(false);
+      setSelectedJobForApplication(null);
+
+    } catch (error) {
+      console.error('❌ Error submitting application:', error);
+      alert('Error submitting application. Please try again.');
+    } finally {
+      setApplicationLoading(false);
+    }
+  };
+
+  // Handle successful authentication
+  const handleAuthSuccess = () => {
+    setAuthModalOpen(false);
+    if (pendingApplication) {
+      // Retry the application after successful auth
+      handleApplyJob(pendingApplication);
+      setPendingApplication(null);
+    }
   };
 
   const handleEditProfile = () => {
@@ -236,7 +332,7 @@ const ApplicantDashboardContent = () => {
           />
         );
       case "applications":
-        return <EnhancedApplicationsTab userRole="applicant" />;
+        return <MyApplicationsTab />;
       case "resume":
         return (
           <div className="space-y-6">
@@ -466,6 +562,29 @@ const ApplicantDashboardContent = () => {
           {renderTabContent()}
         </motion.div>
       </div>
+
+      {/* Job Application Modal */}
+      <JobApplicationModal
+        open={applicationModalOpen}
+        onClose={() => {
+          setApplicationModalOpen(false);
+          setSelectedJobForApplication(null);
+        }}
+        job={selectedJobForApplication}
+        user={user}
+        onSubmit={handleSubmitApplication}
+        loading={applicationLoading}
+      />
+
+      {/* Authentication Modal */}
+      <AuthModal
+        open={authModalOpen}
+        onClose={() => {
+          setAuthModalOpen(false);
+          setPendingApplication(null);
+        }}
+        onSuccess={handleAuthSuccess}
+      />
     </ModernDashboardLayout>
   );
 };

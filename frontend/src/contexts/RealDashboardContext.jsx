@@ -74,17 +74,31 @@ export const DashboardProvider = ({ children }) => {
     try {
       setLoading(true);
 
-      // Fetch data based on user role
-      const [jobsResponse, applicationsResponse, notificationsResponse] =
-        await Promise.all([
-          jobsAPI.getJobs({ limit: 50 }).catch(() => ({ data: { data: [] } })),
-          applicationsAPI
-            .getApplications({ limit: 10 })
-            .catch(() => ({ data: { data: [] } })),
-          notificationsAPI
-            .getNotifications({ limit: 5 })
-            .catch(() => ({ data: { data: [] } })),
-        ]);
+      // Fetch data based on user role with delays to avoid rate limiting
+      const jobsResponse = await jobsAPI.getJobs({ limit: 50 }).catch((error) => {
+        console.error('🔍 Jobs API error:', error.response?.status, error.message);
+        return { data: { data: [] } };
+      });
+      
+      console.log('🔍 Jobs API response:', {
+        status: jobsResponse?.status,
+        dataLength: jobsResponse?.data?.data?.length || 0,
+        jobsLength: jobsResponse?.data?.jobs?.length || 0
+      });
+      
+      // Add small delay between requests
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      const applicationsResponse = await applicationsAPI
+        .getApplications({ limit: 10 })
+        .catch(() => ({ data: { data: [] } }));
+      
+      // Add small delay between requests
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      const notificationsResponse = await notificationsAPI
+        .getNotifications({ limit: 5 })
+        .catch(() => ({ data: { data: [] } }));
 
       let usersResponse = { data: { data: [] } };
       if (role === "admin") {
@@ -93,11 +107,16 @@ export const DashboardProvider = ({ children }) => {
           .catch(() => ({ data: { data: [] } }));
       }
 
+      // Extract jobs from the correct path - API returns {data: {jobs: [...], total: X}}
+      const extractedJobs = jobsResponse.data?.jobs || jobsResponse.data?.data?.jobs || jobsResponse.data?.data || [];
+      const extractedApplications = applicationsResponse.data?.applications || applicationsResponse.data?.data?.applications || applicationsResponse.data?.data || [];
+      const extractedUsers = usersResponse.data?.users || usersResponse.data?.data?.users || usersResponse.data?.data || [];
+
       // Calculate stats based on real data
       const stats = calculateStats(role, {
-        jobs: jobsResponse.data.data?.jobs || jobsResponse.data.data || [],
-        applications: applicationsResponse.data.data?.applications || applicationsResponse.data.data || [],
-        users: usersResponse.data.data?.users || usersResponse.data.data || [],
+        jobs: extractedJobs,
+        applications: extractedApplications,
+        users: extractedUsers,
       });
 
       // Debug logging
@@ -107,12 +126,18 @@ export const DashboardProvider = ({ children }) => {
         notifications: notificationsResponse.data
       });
 
+      console.log('🔍 Extracted data:', {
+        jobs: extractedJobs.length,
+        applications: extractedApplications.length,
+        users: extractedUsers.length
+      });
+
       const dashboardDataToSet = {
         stats,
-        recentJobs: jobsResponse.data.data?.jobs || jobsResponse.data.data || [],
-        applications: applicationsResponse.data.data?.applications || applicationsResponse.data.data || [],
-        notifications: notificationsResponse.data.data?.notifications || notificationsResponse.data.data || [],
-        users: usersResponse.data.data?.users || usersResponse.data.data || [],
+        recentJobs: extractedJobs,
+        applications: extractedApplications,
+        notifications: notificationsResponse.data?.notifications || notificationsResponse.data?.data?.notifications || notificationsResponse.data?.data || [],
+        users: extractedUsers,
       };
 
       console.log('📊 Setting dashboard data:', dashboardDataToSet);

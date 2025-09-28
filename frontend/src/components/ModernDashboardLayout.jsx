@@ -97,8 +97,8 @@ const ModernDashboardLayout = ({ children, title, headerContent, userRole }) => 
     if (role === 'recruiter') {
       return [
         ...baseItems,
-        { text: 'Profile', icon: <Person />, path: '/profile' },
-        { text: 'Post Job', icon: <Work />, path: '/add-job' },
+        { text: 'Profile', icon: <Person />, path: '/recruiter-dashboard/profile' },
+        { text: 'Post Job', icon: <Work />, path: '/recruiter-dashboard/jobs' },
         { text: 'My Jobs', icon: <Business />, path: '/jobs' },
         { text: 'Applications', icon: <Mail />, path: '/applications' },
         { text: 'Candidates', icon: <People />, path: '/candidates' },

@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useFavorites } from '../../contexts/FavoritesContext';
 
 const FavoritesTab = () => {
-  const [favorites, setFavorites] = useState([
+  const { favoriteJobs, removeFromFavorites } = useFavorites();
+  const [selectedJob, setSelectedJob] = useState(null);
+
+  // Use real favorites data instead of mock data
+  const favorites = favoriteJobs || [
     {
       id: 1,
       title: 'Senior Frontend Developer',

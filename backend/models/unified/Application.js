@@ -19,9 +19,17 @@ const applicationSchema = new mongoose.Schema({
   
   // Application Data
   applicationData: {
-    resumeUrl: { type: String, required: true },
-    coverLetterUrl: { type: String },
+    resumeUrl: { type: String }, // Made optional since users might not always upload
+    coverLetter: { type: String }, // Added for cover letter text
+    coverLetterUrl: { type: String }, // For uploaded cover letter files
     portfolioUrl: { type: String },
+    linkedinUrl: { type: String },
+    expectedSalary: { type: String },
+    noticePeriod: { type: String },
+    willingToRelocate: { type: Boolean, default: false },
+    remoteWorkPreference: { type: Boolean, default: false },
+    additionalInfo: { type: String },
+    referralSource: { type: String },
     customAnswers: [{
       question: { type: String },
       answer: { type: String }
@@ -32,26 +40,30 @@ const applicationSchema = new mongoose.Schema({
   applicantSnapshot: {
     fullName: { type: String, required: true },
     email: { type: String, required: true },
-    phone: { type: String, required: true },
+    phone: { type: String },
+    location: { type: String },
     currentJobTitle: { type: String },
-    yearsOfExperience: { type: Number },
-    expectedSalary: { type: Number },
-    noticePeriod: { type: String }
+    currentCompany: { type: String },
+    experience: { type: String },
+    skills: [{ type: String }],
+    education: [{
+      degree: { type: String },
+      institution: { type: String },
+      fieldOfStudy: { type: String }
+    }],
+    workExperience: [{
+      jobTitle: { type: String },
+      companyName: { type: String },
+      description: { type: String }
+    }]
   },
   
   // Job Snapshot (for historical data)
   jobSnapshot: {
     jobTitle: { type: String, required: true },
     companyName: { type: String, required: true },
-    jobLocation: {
-      city: { type: String },
-      state: { type: String },
-      country: { type: String }
-    },
-    salaryRange: {
-      minSalary: { type: Number },
-      maxSalary: { type: Number }
-    }
+    location: { type: String },
+    jobType: { type: String }
   },
   
   // Application Timeline

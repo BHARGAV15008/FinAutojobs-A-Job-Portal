@@ -4,18 +4,22 @@ import axios from 'axios';
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
   timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  // Don't set default Content-Type - let browser set it based on data type
 });
 
-// Request interceptor to add auth token
+// Request interceptor to add auth token and set content type
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Set Content-Type for JSON data, but let browser set it for FormData
+    if (config.data && !(config.data instanceof FormData)) {
+      config.headers['Content-Type'] = 'application/json';
+    }
+    
     return config;
   },
   (error) => {

@@ -1,5 +1,11 @@
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -17,6 +23,717 @@ class EmailService {
 
     this.fromEmail = process.env.FROM_EMAIL || process.env.SMTP_USER || 'noreply@finautojobs.com';
     this.fromName = process.env.FROM_NAME || 'FinAutoJobs Team';
+    this.baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    
+    // Initialize email templates
+    this.templates = this.loadEmailTemplates();
+  }
+
+  // Load email templates
+  loadEmailTemplates() {
+    const templatesDir = path.join(__dirname, '../templates/emails');
+    const templates = {};
+
+    try {
+      // Create templates directory if it doesn't exist
+      if (!fs.existsSync(templatesDir)) {
+        fs.mkdirSync(templatesDir, { recursive: true });
+        this.createDefaultTemplates(templatesDir);
+      }
+
+      // Load existing templates
+      const templateFiles = fs.readdirSync(templatesDir).filter(file => file.endsWith('.html'));
+      templateFiles.forEach(file => {
+        const templateName = path.basename(file, '.html');
+        templates[templateName] = fs.readFileSync(path.join(templatesDir, file), 'utf8');
+      });
+
+      console.log(`✅ Loaded ${Object.keys(templates).length} email templates`);
+      return templates;
+    } catch (error) {
+      console.warn('⚠️ Could not load email templates, using defaults:', error.message);
+      return this.getDefaultTemplates();
+    }
+  }
+
+  // Create default email templates
+  createDefaultTemplates(templatesDir) {
+    const defaultTemplates = this.getDefaultTemplates();
+    
+    Object.keys(defaultTemplates).forEach(templateName => {
+      const filePath = path.join(templatesDir, `${templateName}.html`);
+      fs.writeFileSync(filePath, defaultTemplates[templateName]);
+    });
+    
+    console.log('✅ Created default email templates');
+  }
+
+  // Get default email templates
+  getDefaultTemplates() {
+    return {
+      applicationConfirmation: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Application Confirmation</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: #2196F3; color: white; padding: 20px; text-align: center; }
+            .content { padding: 20px; background: #f9f9f9; }
+            .footer { padding: 20px; text-align: center; color: #666; }
+            .button { display: inline-block; padding: 12px 24px; background: #2196F3; color: white; text-decoration: none; border-radius: 4px; }
+            .status-badge { display: inline-block; padding: 4px 12px; background: #4CAF50; color: white; border-radius: 12px; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Application Received!</h1>
+            </div>
+            <div class="content">
+              <h2>Dear {{applicantName}},</h2>
+              <p>Thank you for applying to the <strong>{{jobTitle}}</strong> position at <strong>{{companyName}}</strong>.</p>
+              
+              <div style="background: white; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <h3>Application Details:</h3>
+                <p><strong>Application ID:</strong> {{applicationId}}</p>
+                <p><strong>Position:</strong> {{jobTitle}}</p>
+                <p><strong>Company:</strong> {{companyName}}</p>
+                <p><strong>Applied Date:</strong> {{appliedDate}}</p>
+                <p><strong>Status:</strong> <span class="status-badge">{{status}}</span></p>
+              </div>
+
+              <h3>What's Next?</h3>
+              <ul>
+                <li>Our HR team will review your application within 5-7 business days</li>
+                <li>You'll receive an email update if your profile matches our requirements</li>
+                <li>Track your application status in your dashboard</li>
+                <li>We may contact you for additional information if needed</li>
+              </ul>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="{{dashboardUrl}}" class="button">Track Application Status</a>
+              </div>
+
+              <p>If you have any questions, feel free to contact us at <a href="mailto:{{contactEmail}}">{{contactEmail}}</a></p>
+            </div>
+            <div class="footer">
+              <p>&copy; 2024 FinAutoJobs. All rights reserved.</p>
+              <p><a href="{{unsubscribeUrl}}">Unsubscribe</a> | <a href="{{baseUrl}}">Visit Website</a></p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+
+      statusUpdate: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Application Status Update</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: #2196F3; color: white; padding: 20px; text-align: center; }
+            .content { padding: 20px; background: #f9f9f9; }
+            .footer { padding: 20px; text-align: center; color: #666; }
+            .button { display: inline-block; padding: 12px 24px; background: #2196F3; color: white; text-decoration: none; border-radius: 4px; }
+            .status-update { background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #4CAF50; margin: 20px 0; }
+            .timeline { background: white; padding: 15px; border-radius: 8px; margin: 20px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Application Status Update</h1>
+            </div>
+            <div class="content">
+              <h2>Dear {{applicantName}},</h2>
+              <p>We have an update regarding your application for the <strong>{{jobTitle}}</strong> position at <strong>{{companyName}}</strong>.</p>
+              
+              <div class="status-update">
+                <h3>🎉 Status Update</h3>
+                <p><strong>New Status:</strong> {{newStatus}}</p>
+                <p><strong>Updated On:</strong> {{updatedDate}}</p>
+                {{#if note}}
+                <p><strong>Note:</strong> {{note}}</p>
+                {{/if}}
+              </div>
+
+              {{#if nextSteps}}
+              <div class="timeline">
+                <h3>Next Steps:</h3>
+                <ul>
+                  {{#each nextSteps}}
+                  <li>{{this}}</li>
+                  {{/each}}
+                </ul>
+              </div>
+              {{/if}}
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="{{dashboardUrl}}" class="button">View Full Details</a>
+              </div>
+
+              <p>Thank you for your interest in joining our team!</p>
+            </div>
+            <div class="footer">
+              <p>&copy; 2024 FinAutoJobs. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+
+      newApplicationNotification: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>New Application Received</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: #FF9800; color: white; padding: 20px; text-align: center; }
+            .content { padding: 20px; background: #f9f9f9; }
+            .footer { padding: 20px; text-align: center; color: #666; }
+            .button { display: inline-block; padding: 12px 24px; background: #FF9800; color: white; text-decoration: none; border-radius: 4px; }
+            .applicant-info { background: white; padding: 15px; border-radius: 8px; margin: 20px 0; }
+            .highlight { background: #FFF3E0; padding: 15px; border-radius: 8px; border-left: 4px solid #FF9800; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>New Application Received</h1>
+            </div>
+            <div class="content">
+              <h2>Dear {{recruiterName}},</h2>
+              <p>You have received a new application for your job posting.</p>
+              
+              <div class="highlight">
+                <h3>Job Details:</h3>
+                <p><strong>Position:</strong> {{jobTitle}}</p>
+                <p><strong>Application ID:</strong> {{applicationId}}</p>
+                <p><strong>Applied Date:</strong> {{appliedDate}}</p>
+              </div>
+
+              <div class="applicant-info">
+                <h3>Applicant Information:</h3>
+                <p><strong>Name:</strong> {{applicantName}}</p>
+                <p><strong>Email:</strong> {{applicantEmail}}</p>
+                <p><strong>Experience:</strong> {{experience}} years</p>
+                <p><strong>Expected Salary:</strong> ₹{{expectedSalary}}</p>
+                {{#if matchScore}}
+                <p><strong>AI Match Score:</strong> {{matchScore}}%</p>
+                {{/if}}
+              </div>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="{{applicationUrl}}" class="button">Review Application</a>
+              </div>
+
+              <p>Please review the application and update the status accordingly.</p>
+            </div>
+            <div class="footer">
+              <p>&copy; 2024 FinAutoJobs. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+
+      interviewScheduled: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Interview Scheduled</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: #9C27B0; color: white; padding: 20px; text-align: center; }
+            .content { padding: 20px; background: #f9f9f9; }
+            .footer { padding: 20px; text-align: center; color: #666; }
+            .button { display: inline-block; padding: 12px 24px; background: #9C27B0; color: white; text-decoration: none; border-radius: 4px; }
+            .interview-details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #9C27B0; }
+            .calendar-link { background: #E1BEE7; padding: 10px; border-radius: 4px; text-align: center; margin: 15px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Interview Scheduled!</h1>
+            </div>
+            <div class="content">
+              <h2>Dear {{applicantName}},</h2>
+              <p>Congratulations! We would like to invite you for an interview for the <strong>{{jobTitle}}</strong> position at <strong>{{companyName}}</strong>.</p>
+              
+              <div class="interview-details">
+                <h3>📅 Interview Details:</h3>
+                <p><strong>Date:</strong> {{interviewDate}}</p>
+                <p><strong>Time:</strong> {{interviewTime}}</p>
+                <p><strong>Duration:</strong> {{duration}} minutes</p>
+                <p><strong>Type:</strong> {{interviewType}}</p>
+                {{#if location}}
+                <p><strong>Location:</strong> {{location}}</p>
+                {{/if}}
+                {{#if meetingLink}}
+                <p><strong>Meeting Link:</strong> <a href="{{meetingLink}}">{{meetingLink}}</a></p>
+                {{/if}}
+                <p><strong>Interviewer(s):</strong> {{interviewers}}</p>
+              </div>
+
+              <div class="calendar-link">
+                <a href="{{calendarLink}}" class="button">Add to Calendar</a>
+              </div>
+
+              <h3>What to Prepare:</h3>
+              <ul>
+                <li>Review the job description and company information</li>
+                <li>Prepare examples of your relevant experience</li>
+                <li>Have questions ready about the role and company</li>
+                <li>Test your technology setup (for virtual interviews)</li>
+                <li>Bring copies of your resume and any relevant documents</li>
+              </ul>
+
+              <p>If you need to reschedule or have any questions, please contact us at <a href="mailto:{{contactEmail}}">{{contactEmail}}</a></p>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="{{dashboardUrl}}" class="button">View Application Status</a>
+              </div>
+            </div>
+            <div class="footer">
+              <p>&copy; 2024 FinAutoJobs. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+
+      offerExtended: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Job Offer - Congratulations!</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: #4CAF50; color: white; padding: 20px; text-align: center; }
+            .content { padding: 20px; background: #f9f9f9; }
+            .footer { padding: 20px; text-align: center; color: #666; }
+            .button { display: inline-block; padding: 12px 24px; background: #4CAF50; color: white; text-decoration: none; border-radius: 4px; margin: 5px; }
+            .offer-details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4CAF50; }
+            .celebration { text-align: center; font-size: 48px; margin: 20px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🎉 Congratulations!</h1>
+              <h2>Job Offer Extended</h2>
+            </div>
+            <div class="content">
+              <div class="celebration">🎊 🎉 🎊</div>
+              
+              <h2>Dear {{applicantName}},</h2>
+              <p>We are delighted to extend an offer for the <strong>{{jobTitle}}</strong> position at <strong>{{companyName}}</strong>!</p>
+              
+              <div class="offer-details">
+                <h3>Offer Details:</h3>
+                <p><strong>Position:</strong> {{jobTitle}}</p>
+                <p><strong>Department:</strong> {{department}}</p>
+                <p><strong>Start Date:</strong> {{startDate}}</p>
+                <p><strong>Salary:</strong> ₹{{salary}} {{salaryFrequency}}</p>
+                <p><strong>Work Arrangement:</strong> {{workArrangement}}</p>
+                {{#if probationPeriod}}
+                <p><strong>Probation Period:</strong> {{probationPeriod}} months</p>
+                {{/if}}
+                <p><strong>Notice Period:</strong> {{noticePeriod}} days</p>
+              </div>
+
+              {{#if benefits}}
+              <div class="offer-details">
+                <h3>Benefits Package:</h3>
+                <ul>
+                  {{#each benefits}}
+                  <li>{{this}}</li>
+                  {{/each}}
+                </ul>
+              </div>
+              {{/if}}
+
+              <p><strong>Offer Validity:</strong> This offer is valid until {{expiryDate}}.</p>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="{{acceptUrl}}" class="button" style="background: #4CAF50;">Accept Offer</a>
+                <a href="{{negotiateUrl}}" class="button" style="background: #FF9800;">Negotiate</a>
+                <a href="{{declineUrl}}" class="button" style="background: #f44336;">Decline</a>
+              </div>
+
+              <p>We are excited about the possibility of you joining our team and look forward to your response!</p>
+            </div>
+            <div class="footer">
+              <p>&copy; 2024 FinAutoJobs. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    };
+  }
+
+  // Template rendering helper
+  renderTemplate(templateName, data) {
+    let template = this.templates[templateName];
+    if (!template) {
+      console.warn(`Template ${templateName} not found, using fallback`);
+      return `<p>Email content for ${templateName}</p>`;
+    }
+
+    // Simple template replacement (you can use handlebars for more complex templating)
+    Object.keys(data).forEach(key => {
+      const regex = new RegExp(`{{${key}}}`, 'g');
+      template = template.replace(regex, data[key] || '');
+    });
+
+    // Handle conditional blocks (basic implementation)
+    template = template.replace(/{{#if\s+(\w+)}}([\s\S]*?){{\/if}}/g, (match, condition, content) => {
+      return data[condition] ? content : '';
+    });
+
+    // Handle each blocks (basic implementation)
+    template = template.replace(/{{#each\s+(\w+)}}([\s\S]*?){{\/each}}/g, (match, arrayName, content) => {
+      const array = data[arrayName];
+      if (Array.isArray(array)) {
+        return array.map(item => content.replace(/{{this}}/g, item)).join('');
+      }
+      return '';
+    });
+
+    return template;
+  }
+
+  // Send application confirmation email
+  async sendApplicationConfirmation(applicationData) {
+    try {
+      const {
+        applicantEmail,
+        applicantName,
+        jobTitle,
+        companyName,
+        applicationId,
+        appliedDate,
+        status,
+        contactEmail
+      } = applicationData;
+
+      const templateData = {
+        applicantName,
+        jobTitle,
+        companyName,
+        applicationId,
+        appliedDate: new Date(appliedDate).toLocaleDateString(),
+        status: status.charAt(0).toUpperCase() + status.slice(1),
+        contactEmail,
+        dashboardUrl: `${this.baseUrl}/applicant-dashboard`,
+        unsubscribeUrl: `${this.baseUrl}/unsubscribe`,
+        baseUrl: this.baseUrl
+      };
+
+      const html = this.renderTemplate('applicationConfirmation', templateData);
+
+      await this.transporter.sendMail({
+        from: `"${this.fromName}" <${this.fromEmail}>`,
+        to: applicantEmail,
+        subject: `Application Received - ${jobTitle} at ${companyName}`,
+        html: html
+      });
+
+      console.log(`✅ Application confirmation email sent to ${applicantEmail}`);
+      return { success: true };
+
+    } catch (error) {
+      console.error('❌ Error sending application confirmation email:', error);
+      throw error;
+    }
+  }
+
+  // Send status update email
+  async sendStatusUpdateEmail(updateData) {
+    try {
+      const {
+        applicantEmail,
+        applicantName,
+        jobTitle,
+        companyName,
+        newStatus,
+        updatedDate,
+        note,
+        nextSteps
+      } = updateData;
+
+      const templateData = {
+        applicantName,
+        jobTitle,
+        companyName,
+        newStatus: newStatus.charAt(0).toUpperCase() + newStatus.slice(1).replace('_', ' '),
+        updatedDate: new Date(updatedDate).toLocaleDateString(),
+        note,
+        nextSteps,
+        dashboardUrl: `${this.baseUrl}/applicant-dashboard`
+      };
+
+      const html = this.renderTemplate('statusUpdate', templateData);
+
+      await this.transporter.sendMail({
+        from: `"${this.fromName}" <${this.fromEmail}>`,
+        to: applicantEmail,
+        subject: `Application Update - ${jobTitle} at ${companyName}`,
+        html: html
+      });
+
+      console.log(`✅ Status update email sent to ${applicantEmail}`);
+      return { success: true };
+
+    } catch (error) {
+      console.error('❌ Error sending status update email:', error);
+      throw error;
+    }
+  }
+
+  // Send new application notification to recruiter
+  async sendNewApplicationNotification(notificationData) {
+    try {
+      const {
+        recruiterEmail,
+        recruiterName,
+        jobTitle,
+        applicationId,
+        appliedDate,
+        applicantName,
+        applicantEmail,
+        experience,
+        expectedSalary,
+        matchScore,
+        applicationUrl
+      } = notificationData;
+
+      const templateData = {
+        recruiterName,
+        jobTitle,
+        applicationId,
+        appliedDate: new Date(appliedDate).toLocaleDateString(),
+        applicantName,
+        applicantEmail,
+        experience,
+        expectedSalary,
+        matchScore,
+        applicationUrl: applicationUrl || `${this.baseUrl}/recruiter-dashboard`
+      };
+
+      const html = this.renderTemplate('newApplicationNotification', templateData);
+
+      await this.transporter.sendMail({
+        from: `"${this.fromName}" <${this.fromEmail}>`,
+        to: recruiterEmail,
+        subject: `New Application Received - ${jobTitle}`,
+        html: html,
+        priority: 'high'
+      });
+
+      console.log(`✅ New application notification sent to ${recruiterEmail}`);
+      return { success: true };
+
+    } catch (error) {
+      console.error('❌ Error sending new application notification:', error);
+      throw error;
+    }
+  }
+
+  // Send interview scheduled email
+  async sendInterviewScheduledEmail(interviewData) {
+    try {
+      const {
+        applicantEmail,
+        applicantName,
+        jobTitle,
+        companyName,
+        interviewDate,
+        interviewTime,
+        duration,
+        interviewType,
+        location,
+        meetingLink,
+        interviewers,
+        contactEmail,
+        calendarLink
+      } = interviewData;
+
+      const templateData = {
+        applicantName,
+        jobTitle,
+        companyName,
+        interviewDate: new Date(interviewDate).toLocaleDateString(),
+        interviewTime,
+        duration,
+        interviewType,
+        location,
+        meetingLink,
+        interviewers: Array.isArray(interviewers) ? interviewers.join(', ') : interviewers,
+        contactEmail,
+        calendarLink,
+        dashboardUrl: `${this.baseUrl}/applicant-dashboard`
+      };
+
+      const html = this.renderTemplate('interviewScheduled', templateData);
+
+      await this.transporter.sendMail({
+        from: `"${this.fromName}" <${this.fromEmail}>`,
+        to: applicantEmail,
+        subject: `Interview Scheduled - ${jobTitle} at ${companyName}`,
+        html: html,
+        priority: 'high'
+      });
+
+      console.log(`✅ Interview scheduled email sent to ${applicantEmail}`);
+      return { success: true };
+
+    } catch (error) {
+      console.error('❌ Error sending interview scheduled email:', error);
+      throw error;
+    }
+  }
+
+  // Send job offer email
+  async sendJobOfferEmail(offerData) {
+    try {
+      const {
+        applicantEmail,
+        applicantName,
+        jobTitle,
+        companyName,
+        department,
+        startDate,
+        salary,
+        salaryFrequency,
+        workArrangement,
+        probationPeriod,
+        noticePeriod,
+        benefits,
+        expiryDate,
+        acceptUrl,
+        negotiateUrl,
+        declineUrl
+      } = offerData;
+
+      const templateData = {
+        applicantName,
+        jobTitle,
+        companyName,
+        department,
+        startDate: new Date(startDate).toLocaleDateString(),
+        salary,
+        salaryFrequency,
+        workArrangement,
+        probationPeriod,
+        noticePeriod,
+        benefits,
+        expiryDate: new Date(expiryDate).toLocaleDateString(),
+        acceptUrl: acceptUrl || `${this.baseUrl}/offer/accept`,
+        negotiateUrl: negotiateUrl || `${this.baseUrl}/offer/negotiate`,
+        declineUrl: declineUrl || `${this.baseUrl}/offer/decline`
+      };
+
+      const html = this.renderTemplate('offerExtended', templateData);
+
+      await this.transporter.sendMail({
+        from: `"${this.fromName}" <${this.fromEmail}>`,
+        to: applicantEmail,
+        subject: `🎉 Job Offer - ${jobTitle} at ${companyName}`,
+        html: html,
+        priority: 'high'
+      });
+
+      console.log(`✅ Job offer email sent to ${applicantEmail}`);
+      return { success: true };
+
+    } catch (error) {
+      console.error('❌ Error sending job offer email:', error);
+      throw error;
+    }
+  }
+
+  // Send bulk emails (for notifications, newsletters, etc.)
+  async sendBulkEmails(recipients, subject, templateName, templateData) {
+    try {
+      const emailPromises = recipients.map(async (recipient) => {
+        const personalizedData = {
+          ...templateData,
+          ...recipient.data
+        };
+
+        const html = this.renderTemplate(templateName, personalizedData);
+
+        return this.transporter.sendMail({
+          from: `"${this.fromName}" <${this.fromEmail}>`,
+          to: recipient.email,
+          subject: subject,
+          html: html
+        });
+      });
+
+      const results = await Promise.allSettled(emailPromises);
+      const successful = results.filter(result => result.status === 'fulfilled').length;
+      const failed = results.filter(result => result.status === 'rejected').length;
+
+      console.log(`✅ Bulk email sent: ${successful} successful, ${failed} failed`);
+      return { successful, failed, total: recipients.length };
+
+    } catch (error) {
+      console.error('❌ Error sending bulk emails:', error);
+      throw error;
+    }
+  }
+
+  // Test email configuration
+  async testEmailConfiguration() {
+    try {
+      await this.transporter.verify();
+      console.log('✅ Email configuration is valid');
+      return { success: true, message: 'Email configuration is valid' };
+    } catch (error) {
+      console.error('❌ Email configuration test failed:', error);
+      return { success: false, message: error.message };
+    }
+  }
+
+  // Send test email
+  async sendTestEmail(recipientEmail) {
+    try {
+      await this.transporter.sendMail({
+        from: `"${this.fromName}" <${this.fromEmail}>`,
+        to: recipientEmail,
+        subject: 'Test Email from FinAutoJobs',
+        html: `
+          <h2>Email Configuration Test</h2>
+          <p>This is a test email to verify that the email service is working correctly.</p>
+          <p>Sent at: ${new Date().toLocaleString()}</p>
+          <p>From: FinAutoJobs Email Service</p>
+        `
+      });
+
+      console.log(`✅ Test email sent to ${recipientEmail}`);
+      return { success: true };
+
+    } catch (error) {
+      console.error('❌ Error sending test email:', error);
+      throw error;
+    }
   }
 
   /**

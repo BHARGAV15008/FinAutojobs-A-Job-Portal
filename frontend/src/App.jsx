@@ -6,6 +6,7 @@ import { DashboardProvider } from './contexts/RealDashboardContext';
 import { IntegratedThemeProvider } from './contexts/IntegratedThemeContext';
 import { AuthProvider } from './contexts/AuthContext.jsx';
 import { OAuthProvider } from './contexts/OAuthContext.jsx';
+import { FavoritesProvider } from './contexts/FavoritesContext.jsx';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import NotificationSystem from './components/notifications/NotificationSystem';
 import AppRoutes from './routes/AppRoutes'
@@ -27,14 +28,16 @@ function App() {
         <WouterRouter>
           <IntegratedThemeProvider>
             <AuthProvider>
-              <OAuthProvider>
-                <DashboardProvider>
-                  <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-                    <AppRoutes />
-                    <NotificationSystem />
-                  </div>
-                </DashboardProvider>
-              </OAuthProvider>
+              <FavoritesProvider>
+                <OAuthProvider>
+                  <DashboardProvider>
+                    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+                      <AppRoutes />
+                      <NotificationSystem />
+                    </div>
+                  </DashboardProvider>
+                </OAuthProvider>
+              </FavoritesProvider>
             </AuthProvider>
           </IntegratedThemeProvider>
         </WouterRouter>

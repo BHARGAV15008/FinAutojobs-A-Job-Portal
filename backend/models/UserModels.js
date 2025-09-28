@@ -158,17 +158,64 @@ export const findUserByIdAndRole = async (userId, role) => {
  */
 export const updateUserProfile = async (userId, updateData, role) => {
   try {
+    console.log('🔍 updateUserProfile called with:', {
+      userId,
+      role,
+      updateDataKeys: Object.keys(updateData),
+      updateData
+    });
+    
     // Remove sensitive fields that shouldn't be updated directly
     const { password, role: userRole, _id, userId: uid, ...safeUpdateData } = updateData;
+    
+    console.log('🔍 Safe update data:', {
+      safeUpdateDataKeys: Object.keys(safeUpdateData),
+      safeUpdateData
+    });
+    
+    // For nested object updates, we need to use $set with dot notation
+    const updateQuery = {};
+    
+    // Handle nested objects properly
+    for (const [key, value] of Object.entries(safeUpdateData)) {
+      if (key === 'companyInfo' && typeof value === 'object' && value !== null) {
+        // Handle companyInfo nested updates
+        for (const [nestedKey, nestedValue] of Object.entries(value)) {
+          updateQuery[`companyInfo.${nestedKey}`] = nestedValue;
+        }
+      } else if (key === 'professionalLinks' && typeof value === 'object' && value !== null) {
+        // Handle professionalLinks nested updates
+        for (const [nestedKey, nestedValue] of Object.entries(value)) {
+          updateQuery[`professionalLinks.${nestedKey}`] = nestedValue;
+        }
+      } else if (key === 'officeLocation' && typeof value === 'object' && value !== null) {
+        // Handle officeLocation nested updates
+        for (const [nestedKey, nestedValue] of Object.entries(value)) {
+          updateQuery[`officeLocation.${nestedKey}`] = nestedValue;
+        }
+      } else if (key === 'currentLocation' && typeof value === 'object' && value !== null) {
+        // Handle currentLocation nested updates for applicants
+        for (const [nestedKey, nestedValue] of Object.entries(value)) {
+          updateQuery[`currentLocation.${nestedKey}`] = nestedValue;
+        }
+      } else {
+        // Handle flat fields normally
+        updateQuery[key] = value;
+      }
+    }
+    
+    console.log('🔍 Final update query:', updateQuery);
     
     const user = await BaseUser.findOneAndUpdate(
       { 
         $or: [{ _id: userId }, { userId: userId }],
         role: role 
       },
-      safeUpdateData,
+      { $set: updateQuery },
       { new: true, runValidators: true }
     );
+    
+    console.log('🔍 User found and updated:', user ? 'Yes' : 'No');
     
     if (!user) {
       throw new Error(`${role} not found`);

@@ -1,97 +1,95 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { getRecommendedJobs, getRecommendationStats } from '../../api/recommendations';
+import { useAuth } from '../../contexts/AuthContext';
 
 const RecommendedTab = () => {
-  const [recommendations, setRecommendations] = useState([
-    {
-      id: 1,
-      title: 'Senior React Developer',
-      company: 'TechVision Solutions',
-      location: 'Mumbai, India',
-      salary: '₹15-22 LPA',
-      type: 'Full-time',
-      remote: true,
-      postedDate: '2024-03-21',
-      description: 'Join our innovative team to build next-generation web applications using React and modern JavaScript...',
-      requirements: ['React', 'JavaScript', 'TypeScript', 'Redux', 'Node.js'],
-      benefits: ['Health Insurance', 'Stock Options', 'Flexible Hours', 'Learning Budget'],
-      matchScore: 95,
-      matchReasons: ['React expertise', 'JavaScript skills', 'Remote work preference', 'Salary range match'],
-      companyRating: 4.5,
-      applicants: 23,
-      isApplied: false,
-      isFavorite: false,
-      urgency: 'high',
-      applicationDeadline: '2024-04-15'
-    },
-    {
-      id: 2,
-      title: 'Full Stack JavaScript Developer',
-      company: 'InnovateLabs',
-      location: 'Bangalore, India',
-      salary: '₹12-18 LPA',
-      type: 'Full-time',
-      remote: false,
-      postedDate: '2024-03-20',
-      description: 'We are seeking a talented Full Stack Developer to work on cutting-edge projects...',
-      requirements: ['JavaScript', 'React', 'Node.js', 'MongoDB', 'Express'],
-      benefits: ['Health Insurance', 'Team Outings', 'Professional Development'],
-      matchScore: 92,
-      matchReasons: ['Full stack experience', 'JavaScript proficiency', 'Location preference'],
-      companyRating: 4.2,
-      applicants: 45,
-      isApplied: false,
-      isFavorite: true,
-      urgency: 'medium',
-      applicationDeadline: '2024-04-20'
-    },
-    {
-      id: 3,
-      title: 'Frontend Developer',
-      company: 'DigitalCraft',
-      location: 'Remote',
-      salary: '₹10-16 LPA',
-      type: 'Full-time',
-      remote: true,
-      postedDate: '2024-03-19',
-      description: 'Looking for a passionate Frontend Developer to create amazing user experiences...',
-      requirements: ['React', 'CSS', 'JavaScript', 'HTML', 'Responsive Design'],
-      benefits: ['Remote Work', 'Flexible Schedule', 'Health Insurance'],
-      matchScore: 88,
-      matchReasons: ['Frontend specialization', 'Remote work', 'Technology stack match'],
-      companyRating: 4.0,
-      applicants: 67,
-      isApplied: true,
-      isFavorite: false,
-      urgency: 'low',
-      applicationDeadline: '2024-04-10'
-    },
-    {
-      id: 4,
-      title: 'React Native Developer',
-      company: 'MobileFirst Tech',
-      location: 'Hyderabad, India',
-      salary: '₹14-20 LPA',
-      type: 'Full-time',
-      remote: true,
-      postedDate: '2024-03-18',
-      description: 'Join our mobile development team to build cross-platform applications...',
-      requirements: ['React Native', 'JavaScript', 'Mobile Development', 'Redux'],
-      benefits: ['Stock Options', 'Health Insurance', 'Remote Work', 'Learning Budget'],
-      matchScore: 85,
-      matchReasons: ['React experience', 'Mobile development interest', 'Remote preference'],
-      companyRating: 4.3,
-      applicants: 34,
-      isApplied: false,
-      isFavorite: false,
-      urgency: 'medium',
-      applicationDeadline: '2024-04-25'
-    }
-  ]);
+  const { user } = useAuth();
+  const [recommendations, setRecommendations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [stats, setStats] = useState(null);
 
   const [filterBy, setFilterBy] = useState('all');
   const [sortBy, setSortBy] = useState('matchScore');
   const [selectedJob, setSelectedJob] = useState(null);
+
+  // Fetch recommended jobs on component mount
+  useEffect(() => {
+    const fetchRecommendations = async () => {
+      if (!user || user.role !== 'applicant') {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch both recommendations and stats
+        const [recommendationsResponse, statsResponse] = await Promise.all([
+          getRecommendedJobs({ limit: 20, minMatchPercentage: 10 }),
+          getRecommendationStats()
+        ]);
+
+        if (recommendationsResponse.success) {
+          // Transform the data to match the component's expected format
+          const transformedJobs = recommendationsResponse.data.jobs.map(job => ({
+            id: job.id,
+            title: job.jobTitle,
+            company: job.companyName,
+            location: job.location,
+            salary: formatSalary(job.salary),
+            type: job.workArrangement || 'Full-time',
+            remote: job.workArrangement === 'Remote',
+            postedDate: new Date(job.postedDate).toISOString().split('T')[0],
+            description: job.description || 'No description available',
+            requirements: job.requiredSkills || [],
+            benefits: [], // Could be added to job schema later
+            matchScore: job.matchScore.overall,
+            matchReasons: job.recommendationReasons || [],
+            companyRating: 4.0, // Default rating, could be added to company schema
+            applicants: 0, // Could be calculated from applications
+            isApplied: false, // Could be checked against user's applications
+            isFavorite: false, // Could be checked against user's saved jobs
+            urgency: job.matchScore.overall >= 80 ? 'high' : job.matchScore.overall >= 50 ? 'medium' : 'low',
+            applicationDeadline: job.applicationDeadline ? new Date(job.applicationDeadline).toISOString().split('T')[0] : null,
+            // Additional match data
+            skillsMatch: job.matchScore.skills,
+            locationMatch: job.matchScore.location,
+            experienceMatch: job.matchScore.experience
+          }));
+
+          setRecommendations(transformedJobs);
+        }
+
+        if (statsResponse.success) {
+          setStats(statsResponse.data);
+        }
+
+      } catch (err) {
+        console.error('Error fetching recommendations:', err);
+        setError('Failed to load job recommendations. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRecommendations();
+  }, [user]);
+
+  // Helper function to format salary
+  const formatSalary = (salary) => {
+    if (!salary) return 'Salary not specified';
+    
+    if (salary.type === 'Negotiable') return 'Negotiable';
+    if (salary.type === 'Fixed') return `₹${(salary.minimum / 100000).toFixed(1)}L ${salary.period}`;
+    if (salary.type === 'Range') {
+      return `₹${(salary.minimum / 100000).toFixed(1)}-${(salary.maximum / 100000).toFixed(1)}L ${salary.period}`;
+    }
+    
+    return 'Salary not specified';
+  };
 
   const toggleFavorite = (jobId) => {
     setRecommendations(recommendations.map(job => 
@@ -176,13 +174,91 @@ const RecommendedTab = () => {
     return stars;
   };
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Recommended Jobs</h2>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              Loading personalized job recommendations...
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+          <span className="ml-3 text-gray-600 dark:text-gray-400">Finding jobs that match your skills...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Recommended Jobs</h2>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              Unable to load recommendations
+            </p>
+          </div>
+        </div>
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+          <div className="flex items-center">
+            <span className="text-2xl mr-3">⚠️</span>
+            <div>
+              <h3 className="text-lg font-semibold text-red-800 dark:text-red-200">Error Loading Recommendations</h3>
+              <p className="text-red-600 dark:text-red-400 mt-1">{error}</p>
+              <button 
+                onClick={() => window.location.reload()} 
+                className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show empty state if no recommendations
+  if (recommendations.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Recommended Jobs</h2>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              No matching jobs found
+            </p>
+          </div>
+        </div>
+        <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
+          <span className="text-6xl mb-4 block">🔍</span>
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Recommendations Yet</h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            We couldn't find jobs matching your current skills. Try updating your profile with more skills or check back later for new opportunities.
+          </p>
+          <div className="space-y-2 text-sm text-gray-500 dark:text-gray-400">
+            <p>💡 <strong>Tip:</strong> Add more skills to your profile to get better recommendations</p>
+            <p>📈 <strong>Tip:</strong> Update your experience level and location preferences</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Recommended Jobs</h2>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Jobs tailored specifically for your profile and preferences
+            {recommendations.length} jobs matched with your skills and preferences
           </p>
         </div>
         <div className="flex space-x-3">
@@ -233,8 +309,9 @@ const RecommendedTab = () => {
             <div className="ml-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">High Match</h3>
               <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-                {recommendations.filter(job => job.matchScore >= 90).length}
+                {recommendations.filter(job => job.matchScore >= 70).length}
               </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">70%+ match</p>
             </div>
           </div>
         </div>
@@ -242,13 +319,14 @@ const RecommendedTab = () => {
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center">
             <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
-              <span className="text-2xl">🏠</span>
+              <span className="text-2xl">🎯</span>
             </div>
             <div className="ml-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Remote</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Skill Matches</h3>
               <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                {recommendations.filter(job => job.remote).length}
+                {recommendations.reduce((total, job) => total + (job.skillsMatch?.totalMatched || 0), 0)}
               </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Total skills matched</p>
             </div>
           </div>
         </div>

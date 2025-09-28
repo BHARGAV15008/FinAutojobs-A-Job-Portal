@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import EditJobModal from '../modals/EditJobModal';
+import JobDetailsModal from '../modals/JobDetailsModal';
 import { 
   User, 
   MapPin, 
@@ -334,16 +335,27 @@ export const EnhancedProfileTab = ({
           {
             label: "Skills",
             value: (() => {
-              if (Array.isArray(user?.skills)) {
+              console.log('🔍 Skills display debug - user.skills:', user?.skills);
+              console.log('🔍 Skills display debug - user.skills_array:', user?.skills_array);
+              console.log('🔍 Skills display debug - user.primary_skills:', user?.primary_skills);
+              
+              // Try multiple sources for skills display
+              if (Array.isArray(user?.skills_array) && user.skills_array.length > 0) {
+                return user.skills_array.join(", ");
+              } else if (Array.isArray(user?.primary_skills) && user.primary_skills.length > 0) {
+                return user.primary_skills.join(", ");
+              } else if (Array.isArray(user?.skills)) {
                 return user.skills.join(", ");
-              } else if (user?.skills?.technical && Array.isArray(user.skills.technical)) {
+              } else if (user?.skills?.primary && Array.isArray(user.skills.primary) && user.skills.primary.length > 0) {
+                return user.skills.primary.join(", ");
+              } else if (user?.skills?.technical && Array.isArray(user.skills.technical) && user.skills.technical.length > 0) {
                 return user.skills.technical.join(", ");
-              } else if (user?.skills?.soft && Array.isArray(user.skills.soft)) {
+              } else if (user?.skills?.soft && Array.isArray(user.skills.soft) && user.skills.soft.length > 0) {
                 return user.skills.soft.join(", ");
-              } else if (typeof user?.skills === 'string') {
+              } else if (typeof user?.skills === 'string' && user.skills.trim()) {
                 return user.skills;
               }
-              return "Not specified";
+              return "Not provided";
             })(),
             icon: "🛠️",
           },
@@ -572,9 +584,19 @@ export const EnhancedProfileTab = ({
       if (userRole === 'applicant') {
         // Handle skills array for applicants
         if (formData.skills) {
-          transformedData.skills = Array.isArray(formData.skills) 
-            ? formData.skills 
-            : formData.skills.split(',').map(skill => skill.trim()).filter(skill => skill);
+          if (Array.isArray(formData.skills)) {
+            transformedData.skills = {
+              primary: formData.skills,
+              technical: formData.technical_skills || [],
+              soft: formData.soft_skills || []
+            };
+          } else if (typeof formData.skills === 'string') {
+            transformedData.skills = {
+              primary: formData.skills.split(',').map(skill => skill.trim()).filter(skill => skill),
+              technical: [],
+              soft: []
+            };
+          }
         }
         
         // Handle location for applicants
@@ -585,6 +607,85 @@ export const EnhancedProfileTab = ({
             country: 'India'
           };
           delete transformedData.location;
+        }
+        
+        // Handle career information for applicants
+        if (formData.current_job_title || formData.current_company || formData.expected_salary || formData.experience_level) {
+          transformedData.careerInfo = {
+            ...(formData.current_job_title && { currentJobTitle: formData.current_job_title }),
+            ...(formData.current_company && { currentCompany: formData.current_company }),
+            ...(formData.expected_salary && { expectedSalary: parseInt(formData.expected_salary) || 0 }),
+            ...(formData.experience_level && { experienceLevel: formData.experience_level })
+          };
+          // Clean up flat fields
+          delete transformedData.current_job_title;
+          delete transformedData.current_company;
+          delete transformedData.expected_salary;
+          delete transformedData.experience_level;
+        }
+        
+        // Handle education for applicants
+        if (formData.education) {
+          transformedData.education = Array.isArray(formData.education) ? formData.education : [];
+        } else if (formData.qualification) {
+          // Convert simple qualification string to education array
+          transformedData.education = [{
+            institution: 'Not specified',
+            degree: formData.qualification,
+            fieldOfStudy: 'Not specified',
+            startDate: null,
+            endDate: null,
+            grade: '',
+            isCurrentlyStudying: false
+          }];
+          delete transformedData.qualification;
+        }
+        
+        // Handle work experience for applicants
+        if (formData.workExperience) {
+          transformedData.workExperience = Array.isArray(formData.workExperience) ? formData.workExperience : [];
+        } else if (formData.experience_years) {
+          // Convert experience years to basic work experience structure
+          transformedData.workExperience = [{
+            companyName: formData.current_company || 'Not specified',
+            jobTitle: formData.current_job_title || 'Not specified',
+            startDate: null,
+            endDate: null,
+            isCurrentJob: true,
+            description: `${formData.experience_years} years of experience`,
+            achievements: []
+          }];
+        }
+        
+        // Handle documents for applicants
+        if (formData.resume_url || formData.cover_letter_url || formData.portfolio_url) {
+          transformedData.documents = {
+            ...(formData.resume_url && { resumeUrl: formData.resume_url }),
+            ...(formData.cover_letter_url && { coverLetterUrl: formData.cover_letter_url }),
+            ...(formData.portfolio_url && { portfolioUrl: formData.portfolio_url }),
+            certificates: []
+          };
+        }
+        
+        // Handle job preferences for applicants
+        if (formData.willing_to_relocate !== undefined || formData.remote_work_preference !== undefined || formData.preferred_job_types || formData.preferred_locations) {
+          transformedData.jobPreferences = {
+            ...(formData.willing_to_relocate !== undefined && { willingToRelocate: formData.willing_to_relocate }),
+            ...(formData.remote_work_preference !== undefined && { remoteWorkPreference: formData.remote_work_preference }),
+            ...(formData.preferred_job_types && { preferredJobTypes: Array.isArray(formData.preferred_job_types) ? formData.preferred_job_types : [formData.preferred_job_types] }),
+            ...(formData.preferred_locations && { preferredLocations: Array.isArray(formData.preferred_locations) ? formData.preferred_locations : [formData.preferred_locations] })
+          };
+          // Clean up flat fields
+          delete transformedData.willing_to_relocate;
+          delete transformedData.remote_work_preference;
+          delete transformedData.preferred_job_types;
+          delete transformedData.preferred_locations;
+        }
+        
+        // Handle years of experience for applicants
+        if (formData.experience_years !== undefined) {
+          transformedData.yearsOfExperience = parseInt(formData.experience_years) || 0;
+          delete transformedData.experience_years;
         }
       }
       
@@ -1043,13 +1144,132 @@ export const EnhancedJobsTab = ({
   userRole = "applicant",
   jobType = "all",
   onEditJob = null,
+  onApply = null,
+  onSave = null,
 }) => {
   const { dashboardData, loading, error, currentUser } = useDashboard();
   const [recruiterJobs, setRecruiterJobs] = useState([]);
+  const [recommendedJobs, setRecommendedJobs] = useState([]);
   const [jobsLoading, setJobsLoading] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [isJobDetailsModalOpen, setIsJobDetailsModalOpen] = useState(false);
 
   // Get jobs from dashboard data with fallback
   let jobs = dashboardData?.recentJobs || [];
+  
+  console.log('🔍 Dashboard jobs available:', {
+    dashboardData: !!dashboardData,
+    recentJobs: dashboardData?.recentJobs?.length || 0,
+    jobType: jobType,
+    userRole: userRole
+  });
+
+  // Debug experience field in regular jobs
+  if (dashboardData?.recentJobs?.length > 0) {
+    console.log('🔍 First regular job experience field:', {
+      job: dashboardData.recentJobs[0]?.jobTitle,
+      experience: dashboardData.recentJobs[0]?.experience,
+      experienceType: typeof dashboardData.recentJobs[0]?.experience
+    });
+  }
+
+  // For applicants, fetch recommended jobs when jobType is "recommended" or "all"
+  useEffect(() => {
+    const fetchRecommendedJobs = async () => {
+      if (userRole === "applicant" && (jobType === "recommended" || jobType === "all") && currentUser?._id) {
+        try {
+          setJobsLoading(true);
+          console.log('🔍 Fetching recommended jobs for applicant:', currentUser._id);
+          
+          // Import recommendations API
+          const { getRecommendedJobs } = await import("../../api/recommendations");
+          const response = await getRecommendedJobs({ 
+            limit: 20, 
+            minMatchPercentage: 20 // Minimum 20% overall match (but skill match is mandatory)
+          });
+          
+          console.log('🔍 Recommendation API response:', response);
+          
+          if (response.success) {
+            // Transform the data to match the component's expected format
+            const transformedJobs = response.data.jobs.map(job => {
+              // Format salary properly
+              const formatSalary = (salaryObj) => {
+                if (!salaryObj) return 'Negotiable';
+                if (typeof salaryObj === 'string') return salaryObj;
+                
+                const { minimum, maximum, type, period, currency } = salaryObj;
+                const currencySymbol = currency === 'INR' ? '₹' : '$';
+                
+                if (minimum && maximum) {
+                  if (minimum >= 100000) {
+                    return `${currencySymbol}${(minimum / 100000).toFixed(1)}L - ${currencySymbol}${(maximum / 100000).toFixed(1)}L ${period || 'Yearly'}`;
+                  } else {
+                    return `${currencySymbol}${minimum.toLocaleString()} - ${currencySymbol}${maximum.toLocaleString()} ${period || 'Yearly'}`;
+                  }
+                } else if (minimum) {
+                  if (minimum >= 100000) {
+                    return `${currencySymbol}${(minimum / 100000).toFixed(1)}L+ ${period || 'Yearly'}`;
+                  } else {
+                    return `${currencySymbol}${minimum.toLocaleString()}+ ${period || 'Yearly'}`;
+                  }
+                }
+                
+                return 'Negotiable';
+              };
+
+              return {
+                id: job.id,
+                _id: job.id,
+                jobTitle: job.jobTitle,
+                title: job.jobTitle,
+                companyName: job.companyName,
+                company: job.companyName,
+                location: job.location,
+                salary: formatSalary(job.salary), // Format salary as string
+                salaryRange: job.salary, // Keep original object for other uses
+                formattedSalary: formatSalary(job.salary), // Explicit formatted version
+                workArrangement: job.workArrangement,
+                type: job.workArrangement || 'Full-time',
+                experience: job.experience ? 
+                  (typeof job.experience === 'object' ? 
+                    `${job.experience.min || 0}-${job.experience.max || job.experience.min || 0} years` : 
+                    job.experience) : 
+                  'Not specified', // Map experience field
+                industry: job.industry || 'Not specified', // Map industry field
+                jobCategory: job.jobCategory || 'Not specified', // Map job category
+                requiredSkills: job.requiredSkills,
+                skills: job.requiredSkills,
+                description: job.description,
+                jobDescription: job.description,
+                postedDate: job.postedDate,
+                createdAt: job.postedDate,
+                applicationDeadline: job.applicationDeadline,
+                matchScore: job.matchScore?.overall || 0,
+                matchReasons: job.recommendationReasons || [],
+                recommended: true,
+                saved: false, // Default to not saved
+                status: 'Active'
+              };
+            });
+            
+            console.log('✅ Transformed recommended jobs:', transformedJobs.length);
+            setRecommendedJobs(transformedJobs);
+          } else {
+            console.log('❌ Failed to fetch recommendations:', response.message);
+            setRecommendedJobs([]);
+          }
+        } catch (error) {
+          console.error('❌ Error fetching recommended jobs:', error);
+          setRecommendedJobs([]);
+        } finally {
+          setJobsLoading(false);
+        }
+      }
+    };
+
+    fetchRecommendedJobs();
+  }, [userRole, jobType, currentUser?._id]);
 
   // For recruiters, fetch their specific jobs
   useEffect(() => {
@@ -1088,16 +1308,27 @@ export const EnhancedJobsTab = ({
     };
 
     fetchRecruiterJobs();
-    
-    // Set up interval to refresh jobs every 30 seconds
-    const refreshInterval = setInterval(fetchRecruiterJobs, 30000);
-    
-    return () => clearInterval(refreshInterval);
-  }, [userRole, currentUser?._id, jobType]);
+  }, [userRole, currentUser?._id]);
 
-  // Use recruiter-specific jobs if available
+  // Handle view job details
+  const handleViewJobDetails = (job) => {
+    console.log('Opening job details for:', job.jobTitle);
+    setSelectedJob(job);
+    setIsJobDetailsModalOpen(true);
+  };
+
+  // Handle close job details modal
+  const handleCloseJobDetails = () => {
+    setIsJobDetailsModalOpen(false);
+    setSelectedJob(null);
+  };
+
+  // Use role and type-specific jobs
   if (userRole === "recruiter" && recruiterJobs.length > 0) {
     jobs = recruiterJobs;
+  } else if (userRole === "applicant" && jobType === "recommended") {
+    jobs = recommendedJobs;
+    console.log('🔍 Using recommended jobs:', jobs.length);
   }
 
   // Placeholder functions for job actions (will be implemented later)
@@ -1172,7 +1403,47 @@ export const EnhancedJobsTab = ({
         break;
       case "all":
       default:
-        filteredJobs = safeJobs;
+        // Combine regular jobs, recommended jobs, and favorites using object instead of Map
+        const jobsById = {};
+        
+        // Add regular jobs
+        safeJobs.forEach(job => {
+          const jobId = job.id || job._id;
+          if (jobId) {
+            jobsById[jobId] = job;
+          }
+        });
+        
+        // Add recommended jobs if available
+        if (userRole === "applicant" && recommendedJobs.length > 0) {
+          recommendedJobs.forEach(job => {
+            const jobId = job.id || job._id;
+            if (jobId) {
+              const existingJob = jobsById[jobId];
+              if (existingJob) {
+                // Merge properties - mark as recommended
+                jobsById[jobId] = {
+                  ...existingJob,
+                  recommended: true,
+                  matchScore: job.matchScore,
+                  matchReasons: job.matchReasons
+                };
+              } else {
+                // Add new recommended job
+                jobsById[jobId] = job;
+              }
+            }
+          });
+        }
+        
+        filteredJobs = Object.values(jobsById);
+        console.log('🔍 All jobs combined:', {
+          regular: safeJobs.length,
+          recommended: recommendedJobs.length,
+          total: filteredJobs.length,
+          jobType: jobType,
+          userRole: userRole
+        });
         break;
     }
 
@@ -1207,24 +1478,7 @@ export const EnhancedJobsTab = ({
       location: "",
       jobType: "",
       salary: "",
-      experience: "",
-      search: "",
     });
-  };
-
-  // Handle job application
-  const handleApply = async (jobId) => {
-    setApplying((prev) => ({ ...prev, [jobId]: true }));
-    try {
-      const result = await applyToJob(jobId);
-      if (result.success) {
-        // Show success message
-      }
-    } catch (error) {
-      console.error("Failed to apply:", error);
-    } finally {
-      setApplying((prev) => ({ ...prev, [jobId]: false }));
-    }
   };
 
   // Handle save/unsave job
@@ -1310,16 +1564,37 @@ export const EnhancedJobsTab = ({
     const currentJob = jobs.find(job => job.id === jobId || job._id === jobId);
     console.log('🔍 Found job for editing:', currentJob);
     
-    if (currentJob) {
-      console.log('✅ Opening edit modal with job data');
-      setEditModal({ isOpen: true, job: currentJob });
+    if (currentJob && onEditJob) {
+      onEditJob(currentJob);
     } else {
-      console.error('❌ Job not found for ID:', jobId);
-      alert('Job not found. Please refresh the page and try again.');
+      console.log('🔍 No onEditJob callback provided or job not found');
     }
   };
 
-  // Handle update job
+  // Handle apply to job
+  const handleApply = (jobId) => {
+    const currentJob = jobs.find(job => job.id === jobId || job._id === jobId);
+    
+    if (currentJob && onApply) {
+      onApply(currentJob);
+    } else {
+      console.log('❌ No onApply callback provided or job not found');
+    }
+  };
+
+  // Handle save/favorite job
+  const handleSaveJob = (jobId, isSaved) => {
+    console.log('🔍 Save job clicked, jobId:', jobId, 'isSaved:', isSaved);
+    const currentJob = jobs.find(job => job.id === jobId || job._id === jobId);
+    console.log('🔍 Found job for saving:', currentJob);
+    
+    if (currentJob && onSave) {
+      onSave(currentJob);
+    } else {
+      console.log('🔍 No onSave callback provided or job not found');
+    }
+  };
+
   const handleUpdateJob = async (jobId, updateData) => {
     console.log('🔍 Updating job:', jobId, updateData);
     
@@ -1654,9 +1929,16 @@ export const EnhancedJobsTab = ({
                           <>
                             <td className="px-6 py-4 whitespace-nowrap text-center">
                               {job.recommended ? (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                  ⭐ Yes
-                                </span>
+                                <div className="flex flex-col items-center">
+                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                    ⭐ Yes
+                                  </span>
+                                  {job.matchScore && (
+                                    <span className="text-xs text-gray-500 mt-1">
+                                      {job.matchScore}% match
+                                    </span>
+                                  )}
+                                </div>
                               ) : (
                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
                                   ➖ No
@@ -1672,7 +1954,7 @@ export const EnhancedJobsTab = ({
                                 }`}
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                onClick={() => handleSave(job.id, job.saved)}
+                                onClick={() => handleSaveJob(job.id, job.saved)}
                                 disabled={saving[job.id]}
                               >
                                 {saving[job.id]
@@ -1977,6 +2259,7 @@ export const EnhancedJobsTab = ({
                           className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 text-sm font-medium"
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
+                          onClick={() => handleViewJobDetails(job)}
                         >
                           👁️ View Details
                         </motion.button>
@@ -2004,6 +2287,18 @@ export const EnhancedJobsTab = ({
         job={applicationsModal.job}
         applications={applicationsModal.applications}
         onClose={() => setApplicationsModal({ isOpen: false, job: null, applications: [] })}
+      />
+
+      {/* Job Details Modal */}
+      <JobDetailsModal
+        open={isJobDetailsModalOpen}
+        onClose={handleCloseJobDetails}
+        job={selectedJob}
+        onApply={(jobId) => {
+          console.log('Apply to job from modal:', jobId);
+          handleCloseJobDetails();
+          // Add apply logic here if needed
+        }}
       />
     </motion.div>
   );

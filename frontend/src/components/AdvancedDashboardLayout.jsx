@@ -232,7 +232,7 @@ const AdvancedDashboardLayout = ({
           icon: <Work />,
           color: 'info',
           submenu: [
-            { text: 'Post New Job', icon: <Add />, path: '/add-job' },
+            { text: 'Post New Job', icon: <Add />, path: '/recruiter-dashboard/jobs' },
             { text: 'Manage Jobs', icon: <Work />, path: '/jobs' },
             { text: 'Edit Posts', icon: <Settings />, path: '/edit-jobs' },
           ]

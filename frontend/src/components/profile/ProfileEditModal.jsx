@@ -32,8 +32,19 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
         ...(userRole === 'applicant' && {
           skills: (() => {
             // Handle different skill formats from registration
-            if (Array.isArray(actualUser.skills)) {
+            console.log('🔍 ProfileEditModal skills debug:', actualUser.skills);
+            console.log('🔍 ProfileEditModal skills_array debug:', actualUser.skills_array);
+            console.log('🔍 ProfileEditModal primary_skills debug:', actualUser.primary_skills);
+            
+            // Try multiple sources for skills
+            if (Array.isArray(actualUser.skills_array)) {
+              return actualUser.skills_array;
+            } else if (Array.isArray(actualUser.primary_skills)) {
+              return actualUser.primary_skills;
+            } else if (Array.isArray(actualUser.skills)) {
               return actualUser.skills;
+            } else if (actualUser.skills?.primary && Array.isArray(actualUser.skills.primary)) {
+              return actualUser.skills.primary;
             } else if (actualUser.skills?.technical && Array.isArray(actualUser.skills.technical)) {
               return actualUser.skills.technical;
             } else if (actualUser.skills?.soft && Array.isArray(actualUser.skills.soft)) {
@@ -190,6 +201,19 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
                       value={formData.qualification || ''}
                       onChange={(e) => setFormData({...formData, qualification: e.target.value})}
                       className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      placeholder="e.g. Bachelor's in Computer Science"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Years of Experience</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="50"
+                      value={formData.experience_years || ''}
+                      onChange={(e) => setFormData({...formData, experience_years: parseInt(e.target.value) || 0})}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      placeholder="e.g. 3"
                     />
                   </div>
                   <div>

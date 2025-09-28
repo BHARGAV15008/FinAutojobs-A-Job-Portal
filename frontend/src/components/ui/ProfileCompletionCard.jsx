@@ -22,7 +22,7 @@ import {
     Assignment,
 } from '@mui/icons-material';
 
-const ProfileCompletionCard = ({ profile }) => {
+const ProfileCompletionCard = ({ profile, userRole = 'applicant' }) => {
     const steps = [
         {
             id: 'basic_info',
@@ -129,7 +129,7 @@ const ProfileCompletionCard = ({ profile }) => {
                         <Button
                             variant="contained"
                             fullWidth
-                            href="/profile"
+                            href={userRole === 'recruiter' ? '/recruiter-dashboard/profile' : '/applicant-dashboard/profile'}
                         >
                             Complete Your Profile
                         </Button>

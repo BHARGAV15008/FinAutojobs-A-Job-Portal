@@ -1,18 +1,58 @@
 import express from 'express';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 import Application from '../models/unified/Application.js';
 import Job from '../models/Job.js';
+// Import the correct user model that other routes use
+import { BaseUser } from '../models/UserModels.js';
 import CleanUser from '../models/CleanUser.js';
 import joi from 'joi';
 
 const router = express.Router();
 
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = 'uploads/applications/';
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'resume-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: function (req, file, cb) {
+    const allowedTypes = /pdf|doc|docx/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Only PDF, DOC, and DOCX files are allowed!'));
+    }
+  }
+});
+
 // Authentication middleware
 const authenticateToken = async (req, res, next) => {
   try {
+    console.log('🔐 Authentication middleware hit for:', req.method, req.url);
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
+      console.log('❌ Auth failed: No token provided');
       return res.status(401).json({
         success: false,
         message: 'Access token is required'
@@ -20,25 +60,94 @@ const authenticateToken = async (req, res, next) => {
     }
     
     const jwt = await import('jsonwebtoken');
-    const decoded = jwt.default.verify(token, process.env.JWT_SECRET || 'your-jwt-secret-key-change-this-in-production');
+    const jwtSecret = process.env.JWT_SECRET || 'your-jwt-secret-key-change-this-in-production';
     
-    const user = await CleanUser.findById(decoded.userId);
-    
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
+    // Log warning if using default secret (for development only)
+    if (!process.env.JWT_SECRET) {
+      console.warn('⚠️ Using default JWT secret - configure JWT_SECRET in environment variables for production');
     }
     
+    const decoded = jwt.default.verify(token, jwtSecret);
+    
+    console.log('🔍 JWT decoded successfully, looking up user:', decoded.userId);
+    console.log('🔍 Decoded token data:', JSON.stringify(decoded, null, 2));
+    
+    // Try multiple lookup methods for user identification
+    let user = null;
+    
+    // Method 1: Try BaseUser first (primary user collection)
+    try {
+      user = await BaseUser.findById(decoded.userId);
+      console.log('🔍 BaseUser lookup by _id result:', user ? 'Found' : 'Not found');
+    } catch (error) {
+      console.log('⚠️ BaseUser lookup by _id failed:', error.message);
+    }
+    
+    // Method 2: Try BaseUser by email if available in token
+    if (!user && decoded.email) {
+      try {
+        user = await BaseUser.findOne({ email: decoded.email });
+        console.log('🔍 BaseUser lookup by email result:', user ? 'Found' : 'Not found');
+      } catch (error) {
+        console.log('⚠️ BaseUser lookup by email failed:', error.message);
+      }
+    }
+    
+    // Method 3: Try BaseUser by username if available in token
+    if (!user && decoded.username) {
+      try {
+        user = await BaseUser.findOne({ username: decoded.username });
+        console.log('🔍 BaseUser lookup by username result:', user ? 'Found' : 'Not found');
+      } catch (error) {
+        console.log('⚠️ BaseUser lookup by username failed:', error.message);
+      }
+    }
+    
+    // Method 4: Try alternative ID field if exists
+    if (!user && decoded.id) {
+      try {
+        user = await BaseUser.findById(decoded.id);
+        console.log('🔍 BaseUser lookup by alternative id result:', user ? 'Found' : 'Not found');
+      } catch (error) {
+        console.log('⚠️ BaseUser lookup by alternative id failed:', error.message);
+      }
+    }
+    
+    // Method 5: Fallback to CleanUser (legacy)
+    if (!user) {
+      try {
+        user = await CleanUser.findById(decoded.userId);
+        console.log('🔍 CleanUser fallback lookup result:', user ? 'Found' : 'Not found');
+        if (!user && decoded.email) {
+          user = await CleanUser.findOne({ email: decoded.email });
+          console.log('🔍 CleanUser fallback by email result:', user ? 'Found' : 'Not found');
+        }
+      } catch (error) {
+        console.log('⚠️ CleanUser fallback lookup failed:', error.message);
+      }
+    }
+    
+    if (!user) {
+      console.log('❌ Auth failed: User not found with any method');
+      console.log('🔍 Available decoded fields:', Object.keys(decoded));
+      console.log('🔍 Tried user models: BaseUser, CleanUser');
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token - user not found'
+      });
+    }
+
+    console.log('✅ Auth successful for user:', user.email, 'role:', user.role);
     req.user = {
-      ...decoded,
-      ...user.toObject(),
-      userId: decoded.userId || user._id,
-      _id: user._id
+      userId: user._id.toString(), // Convert ObjectId to string for consistency
+      role: user.role,
+      email: user.email
     };
+    
+    console.log('🔄 Auth middleware completed, calling next()');
     next();
   } catch (error) {
+    console.error('❌ Authentication error:', error.message);
     return res.status(401).json({
       success: false,
       message: 'Invalid token'
@@ -46,19 +155,17 @@ const authenticateToken = async (req, res, next) => {
   }
 };
 
-// Validation schemas
 const createApplicationSchema = joi.object({
   jobId: joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
   coverLetter: joi.string().max(5000).optional()
 });
 
-// GET /api/applications - Get applications for current user
+// GET /api/applications - Get applications with optional filtering
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const { status, page = 1, limit = 20 } = req.query;
-    
-    const query = {};
-    
+    const { userId, status, page = 1, limit = 10 } = req.query;
+    let query = {};
+
     // Role-based filtering
     if (req.user.role === 'applicant') {
       query.applicantId = req.user.userId;
@@ -77,9 +184,13 @@ router.get('/', authenticateToken, async (req, res) => {
 
     const [applications, totalCount] = await Promise.all([
       Application.find(query)
-        .populate('jobId', 'title company location type')
-        .populate('applicantId', 'firstName lastName email')
-        .sort({ appliedAt: -1 })
+        .populate('jobId', 'title company location type jobTitle companyName')
+        .populate({
+          path: 'applicantId',
+          select: 'firstName lastName email',
+          model: 'BaseUser'
+        })
+        .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limitNum)
         .lean(),
@@ -87,24 +198,35 @@ router.get('/', authenticateToken, async (req, res) => {
     ]);
 
     const transformedApplications = applications.map(application => ({
+      _id: application._id,
       id: application._id,
-      jobId: application.jobId._id,
-      job: {
-        title: application.jobId.title,
-        company: application.jobId.company,
-        location: application.jobId.location,
-        type: application.jobId.type
+      jobId: application.jobId?._id || application.jobId,
+      
+      // Job snapshot - use populated data first, then snapshot as fallback
+      jobSnapshot: {
+        title: application.jobId?.title || application.jobId?.jobTitle || application.jobSnapshot?.jobTitle || 'Unknown Position',
+        company: application.jobId?.company || application.jobId?.companyName || application.jobSnapshot?.companyName || 'Unknown Company',
+        location: application.jobId?.location || application.jobSnapshot?.location || 'Unknown Location',
+        type: application.jobId?.type || application.jobSnapshot?.jobType || 'Unknown Type'
       },
-      applicant: application.applicantId ? {
-        id: application.applicantId._id,
-        name: `${application.applicantId.firstName} ${application.applicantId.lastName}`,
-        email: application.applicantId.email
-      } : null,
+      
+      // Applicant snapshot - use populated data first, then snapshot as fallback
+      applicantSnapshot: application.applicantId ? {
+        fullName: `${application.applicantId.firstName} ${application.applicantId.lastName}`,
+        email: application.applicantId.email,
+        phone: application.applicantSnapshot?.phone || application.applicationData?.phone || '',
+        location: application.applicantSnapshot?.location || application.applicationData?.location || ''
+      } : (application.applicantSnapshot || null),
+      
+      // Application data
+      applicationData: application.applicationData || {},
+      
       status: application.applicationStatus,
-      resumeUrl: application.applicationData?.resumeUrl,
-      coverLetter: application.applicationData?.coverLetter,
-      appliedAt: application.appliedAt,
-      updatedAt: application.updatedAt
+      appliedAt: application.createdAt || application.appliedAt,
+      updatedAt: application.updatedAt,
+      
+      // Recruiter notes
+      recruiterNotes: application.recruiterNotes || ''
     }));
 
     res.json({
@@ -141,8 +263,16 @@ router.get('/:id', authenticateToken, async (req, res) => {
 
     const application = await Application.findById(applicationId)
       .populate('jobId', 'title company location type description')
-      .populate('applicantId', 'firstName lastName email phone resume_url')
-      .populate('recruiterId', 'firstName lastName email')
+      .populate({
+        path: 'applicantId',
+        select: 'firstName lastName email phone resume_url',
+        model: 'BaseUser'
+      })
+      .populate({
+        path: 'recruiterId',
+        select: 'firstName lastName email',
+        model: 'BaseUser'
+      })
       .lean();
 
     if (!application) {
@@ -202,9 +332,30 @@ router.get('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// POST /api/applications - Create new application
-router.post('/', authenticateToken, async (req, res) => {
+// POST /api/applications - Create new application with file upload
+router.post('/', (req, res, next) => {
+  console.log('🎯 POST /api/applications route hit - before middleware');
+  next();
+}, authenticateToken, (req, res, next) => {
+  console.log('🔄 About to run multer middleware');
+  upload.single('resume')(req, res, (err) => {
+    if (err) {
+      console.error('❌ Multer error:', err);
+      return res.status(400).json({ success: false, message: err.message });
+    }
+    console.log('✅ Multer middleware completed successfully');
+    next();
+  });
+}, async (req, res) => {
   try {
+    console.log('🚀 APPLICATION ROUTE HIT - POST /api/applications');
+    console.log('🔍 Application submission request:', {
+      body: req.body,
+      file: req.file ? req.file.filename : 'No file',
+      user: req.user ? req.user.userId : 'No user',
+      headers: req.headers
+    });
+
     if (req.user.role !== 'applicant') {
       return res.status(403).json({
         success: false,
@@ -212,24 +363,29 @@ router.post('/', authenticateToken, async (req, res) => {
       });
     }
 
-    const { error, value } = createApplicationSchema.validate(req.body);
-    if (error) {
+    const { jobId, jobTitle, companyName } = req.body;
+    console.log('🔍 Extracted jobId:', jobId);
+
+    if (!jobId) {
+      console.log('❌ No jobId provided');
       return res.status(400).json({
         success: false,
-        message: 'Validation failed',
-        errors: error.details
+        message: 'Job ID is required'
       });
     }
 
-    const { jobId, coverLetter } = value;
-
+    console.log('🔍 Looking up job with ID:', jobId);
     const job = await Job.findById(jobId);
-    if (!job || job.status !== 'active') {
-      return res.status(404).json({
+    console.log('🔍 Job lookup result:', job ? 'Found' : 'Not found');
+    
+    if (!job || job.status !== 'Active') {
+      console.log('❌ Job not found or inactive. Job status:', job?.status);
+      return res.status(400).json({
         success: false,
         message: 'Job not found or not accepting applications'
       });
     }
+    console.log('✅ Job found and active');
 
     // Check for duplicate application
     const existingApplication = await Application.findOne({
@@ -238,45 +394,140 @@ router.post('/', authenticateToken, async (req, res) => {
     });
 
     if (existingApplication) {
+      console.log('❌ Duplicate application found');
       return res.status(409).json({
         success: false,
         message: 'You have already applied to this job'
       });
     }
+    console.log('✅ No duplicate application found');
+
+    // Prepare application data
+    console.log('🔍 Preparing application data...');
+    const applicationData = {
+      resumeUrl: req.file ? `/uploads/applications/${req.file.filename}` : req.user.resume_url || '',
+      coverLetter: req.body.coverLetter || '',
+      portfolioUrl: req.body.portfolioUrl || '',
+      linkedinUrl: req.body.linkedinUrl || '',
+      expectedSalary: req.body.expectedSalary || '',
+      noticePeriod: req.body.noticePeriod || '',
+      willingToRelocate: req.body.willingToRelocate === 'true',
+      remoteWorkPreference: req.body.remoteWorkPreference === 'true',
+      additionalInfo: req.body.additionalInfo || '',
+      referralSource: req.body.referralSource || '',
+      customAnswers: []
+    };
+
+    // Get applicant user data
+    console.log('🔍 Fetching applicant user data...');
+    console.log('🔍 req.user object:', JSON.stringify(req.user, null, 2));
+    console.log('🔍 Looking up user with ID:', req.user.userId);
+    console.log('🔍 User ID type:', typeof req.user.userId);
+    
+    let applicantUser = await BaseUser.findById(req.user.userId);
+    console.log('🔍 BaseUser lookup result:', applicantUser ? 'Found' : 'Not found');
+    
+    if (!applicantUser) {
+      console.log('❌ Applicant user not found in BaseUser for ID:', req.user.userId);
+      
+      // Try CleanUser as fallback
+      console.log('🔄 Trying CleanUser fallback lookup...');
+      applicantUser = await CleanUser.findById(req.user.userId);
+      console.log('🔍 CleanUser fallback result:', applicantUser ? 'Found' : 'Not found');
+      
+      if (!applicantUser) {
+        return res.status(400).json({
+          success: false,
+          message: 'Applicant user not found'
+        });
+      }
+    }
+
+    // Create comprehensive applicant snapshot
+    const applicantSnapshot = {
+      fullName: `${req.body.firstName || applicantUser.firstName || ''} ${req.body.lastName || applicantUser.lastName || ''}`,
+      email: req.body.email || applicantUser.email,
+      phone: req.body.phone || applicantUser.phone || '',
+      location: req.body.location || applicantUser.currentLocation?.city || applicantUser.location || '',
+      currentJobTitle: req.body.currentJobTitle || applicantUser.careerInfo?.currentJobTitle || '',
+      currentCompany: req.body.currentCompany || applicantUser.careerInfo?.currentCompany || '',
+      experience: req.body.experience || applicantUser.yearsOfExperience || '',
+      skills: Array.isArray(applicantUser.skills?.primary) ? applicantUser.skills.primary : (applicantUser.skills || []),
+      education: Array.isArray(applicantUser.education) ? applicantUser.education.map(edu => ({
+        degree: edu.degree || '',
+        institution: edu.institution || '',
+        fieldOfStudy: edu.fieldOfStudy || ''
+      })) : [],
+      workExperience: Array.isArray(applicantUser.workExperience) ? applicantUser.workExperience.map(exp => ({
+        jobTitle: exp.jobTitle || '',
+        companyName: exp.companyName || '',
+        description: exp.description || ''
+      })) : []
+    };
 
     // Create application
+    console.log('🔍 Creating new application...');
     const newApplication = new Application({
       applicantId: req.user.userId,
       jobId: jobId,
       recruiterId: job.postedBy,
       applicationStatus: 'pending',
-      applicationData: {
-        resumeUrl: req.user.resume_url || '',
-        coverLetter: coverLetter || '',
-        customAnswers: []
-      },
-      applicantSnapshot: {
-        fullName: `${req.user.firstName} ${req.user.lastName}`,
-        email: req.user.email,
-        phone: req.user.phone
-      },
+      applicationData: applicationData,
+      applicantSnapshot: applicantSnapshot,
       jobSnapshot: {
-        jobTitle: job.title,
-        companyName: job.company
+        jobTitle: job.jobTitle,
+        companyName: job.companyName,
+        location: job.location,
+        jobType: job.jobType
       },
       timeline: [{
         status: 'pending',
         timestamp: new Date(),
-        updatedBy: req.user.userId
+        updatedBy: req.user.userId,
+        notes: 'Application submitted'
       }]
     });
 
+    console.log('🔍 Saving application to database...');
     const savedApplication = await newApplication.save();
+    console.log('✅ Application saved successfully with ID:', savedApplication._id);
 
     // Update job application count
+    console.log('🔍 Updating job application count...');
     await Job.findByIdAndUpdate(jobId, {
-      $inc: { applications: 1 }
+      $inc: { applicationsCount: 1 }
     });
+    console.log('✅ Job application count updated');
+
+    console.log('✅ Application created successfully:', savedApplication._id);
+
+    // Create notification for recruiter
+    console.log('🔍 Creating notification for recruiter...');
+    try {
+      // Import notification creation function if it exists
+      const createNotification = async (userId, type, title, message, data = {}) => {
+        console.log('📧 Creating notification:', { userId, type, title, message });
+        // This would integrate with your notification system
+        // For now, just log the notification
+        return true;
+      };
+      
+      await createNotification(
+        job.postedBy,
+        'new_application',
+        'New Job Application',
+        `${applicantSnapshot.fullName} applied for ${job.jobTitle}`,
+        {
+          applicationId: savedApplication._id,
+          jobId: jobId,
+          applicantId: req.user.userId
+        }
+      );
+      console.log('✅ Notification created successfully');
+    } catch (notificationError) {
+      console.log('⚠️ Notification creation failed:', notificationError.message);
+      // Don't fail the application if notification fails
+    }
 
     // Emit real-time notification
     const io = req.app.get('io');
@@ -285,19 +536,23 @@ router.post('/', authenticateToken, async (req, res) => {
         message: 'New application received',
         application: {
           id: savedApplication._id,
-          jobTitle: job.title
+          jobTitle: job.jobTitle,
+          applicantName: applicantSnapshot.fullName
         },
         timestamp: new Date()
       });
+      console.log('✅ Real-time notification emitted');
     }
 
+    console.log('🎉 Sending success response to frontend');
     res.status(201).json({
       success: true,
       message: 'Application submitted successfully',
       data: {
         application: {
           id: savedApplication._id,
-          status: savedApplication.applicationStatus
+          status: savedApplication.applicationStatus,
+          appliedAt: savedApplication.appliedAt
         }
       }
     });
@@ -314,7 +569,14 @@ router.post('/', authenticateToken, async (req, res) => {
 // PUT /api/applications/:id/status - Update application status
 router.put('/:id/status', authenticateToken, async (req, res) => {
   try {
+    console.log('🔄 Application status update request:', {
+      applicationId: req.params.id,
+      body: req.body,
+      user: req.user
+    });
+
     if (req.user.role !== 'recruiter') {
+      console.log('❌ Access denied: User is not a recruiter');
       return res.status(403).json({
         success: false,
         message: 'Only recruiters can update application status'
@@ -324,32 +586,52 @@ router.put('/:id/status', authenticateToken, async (req, res) => {
     const applicationId = req.params.id;
     const { status, notes } = req.body;
 
+    console.log('🔍 Extracted data:', { applicationId, status, notes });
+
     if (!applicationId.match(/^[0-9a-fA-F]{24}$/)) {
+      console.log('❌ Invalid application ID format');
       return res.status(400).json({
         success: false,
         message: 'Invalid application ID format'
       });
     }
 
+    console.log('🔍 Looking up application...');
     const application = await Application.findById(applicationId)
       .populate('jobId', 'postedBy')
-      .populate('applicantId', 'firstName lastName email');
+      .populate({
+        path: 'applicantId',
+        select: 'firstName lastName email',
+        model: 'BaseUser'
+      });
+
+    console.log('🔍 Application lookup result:', application ? 'Found' : 'Not found');
 
     if (!application) {
+      console.log('❌ Application not found');
       return res.status(404).json({
         success: false,
         message: 'Application not found'
       });
     }
 
+    console.log('🔍 Application details:', {
+      id: application._id,
+      jobId: application.jobId?._id,
+      postedBy: application.jobId?.postedBy,
+      currentUserId: req.user.userId
+    });
+
     // Verify ownership
-    if (application.jobId.postedBy.toString() !== req.user.userId) {
+    if (application.jobId?.postedBy?.toString() !== req.user.userId) {
+      console.log('❌ Access denied: User does not own this job');
       return res.status(403).json({
         success: false,
         message: 'You can only update applications for your jobs'
       });
     }
 
+    console.log('🔄 Updating application status...');
     // Update application
     const updatedApplication = await Application.findByIdAndUpdate(
       applicationId,
@@ -360,34 +642,48 @@ router.put('/:id/status', authenticateToken, async (req, res) => {
             status: status,
             timestamp: new Date(),
             updatedBy: req.user.userId,
-            note: notes || ''
+            notes: notes || ''
           }
         }
       },
       { new: true }
     );
 
+    console.log('✅ Application updated successfully:', updatedApplication ? 'Success' : 'Failed');
+
+    // Add recruiter notes if provided
+    if (notes) {
+      console.log('🔄 Adding recruiter notes...');
+      await Application.findByIdAndUpdate(applicationId, {
+        recruiterNotes: notes
+      });
+    }
+
     // Emit real-time notification to applicant
+    console.log('🔄 Emitting real-time notification...');
     const io = req.app.get('io');
-    if (io) {
+    if (io && application.applicantId?._id) {
       io.to(`user-${application.applicantId._id}`).emit('application-status-changed', {
         message: `Application status updated to: ${status}`,
         application: {
           id: application._id,
-          jobTitle: application.jobId.title,
+          jobTitle: application.jobSnapshot?.jobTitle || 'Unknown Position',
           status: status
         },
         timestamp: new Date()
       });
+      console.log('✅ Real-time notification emitted');
     }
 
+    console.log('✅ Sending success response');
     res.json({
       success: true,
       message: 'Application status updated successfully',
       data: {
         application: {
           id: updatedApplication._id,
-          status: updatedApplication.applicationStatus
+          status: updatedApplication.applicationStatus,
+          notes: notes || ''
         }
       }
     });
@@ -425,7 +721,11 @@ router.get('/job/:jobId', authenticateToken, async (req, res) => {
     }
 
     const applications = await Application.find({ jobId })
-      .populate('applicantId', 'firstName lastName email phone resume_url')
+      .populate({
+        path: 'applicantId',
+        select: 'firstName lastName email phone resume_url',
+        model: 'BaseUser'
+      })
       .sort({ appliedAt: -1 })
       .lean();
 
@@ -459,6 +759,51 @@ router.get('/job/:jobId', authenticateToken, async (req, res) => {
       error: error.message
     });
   }
+});
+
+// GET /api/applications/check - Check if user has applied to a job
+router.get('/check', authenticateToken, async (req, res) => {
+  try {
+    const { jobId, userId } = req.query;
+    
+    if (!jobId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Job ID is required'
+      });
+    }
+
+    const application = await Application.findOne({
+      applicantId: userId || req.user.userId,
+      jobId: jobId
+    });
+
+    res.json({
+      success: true,
+      data: {
+        hasApplied: !!application,
+        applicationId: application?._id,
+        status: application?.applicationStatus,
+        appliedAt: application?.appliedAt
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error checking application status:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to check application status',
+      error: error.message
+    });
+  }
+});
+
+// Health check route for applications
+router.get('/health', (req, res) => {
+  res.json({ 
+    success: true, 
+    message: 'Applications API is healthy',
+    timestamp: new Date().toISOString()
+  });
 });
 
 export default router;

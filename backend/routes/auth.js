@@ -417,36 +417,59 @@ router.get('/profile', authenticateToken, async (req, res) => {
         
         // Role-specific fields for recruiters
         ...(user.role === 'recruiter' && {
-          companyInfo: user.companyInfo,
-          officeLocation: user.officeLocation,
-          professionalLinks: user.professionalLinks,
-          recruitingStats: user.recruitingStats,
-          subscription: user.subscription,
-          preferences: user.preferences,
+          companyInfo: user.companyInfo || {},
+          officeLocation: user.officeLocation || {},
+          professionalLinks: user.professionalLinks || {},
+          specializations: user.specializations || [],
+          industryExpertise: user.industryExpertise || [],
+          recruitingStats: user.recruitingStats || {},
+          subscription: user.subscription || {},
+          preferences: user.preferences || {},
           
-          // Flat fields for form compatibility
+          // Flat fields for form compatibility - map from database structure
           company: user.companyInfo?.companyName || '',
-          department: user.companyInfo?.department || '',
           job_title: user.companyInfo?.designation || user.companyInfo?.jobTitle || '',
+          department: user.companyInfo?.department || '',
+          location: user.officeLocation?.city || user.companyInfo?.workLocation?.city || '',
+          linkedin_url: user.professionalLinks?.linkedin || '',
+          github_url: user.professionalLinks?.github || '',
+          portfolio_url: user.professionalLinks?.personalWebsite || '',
           experience_years: user.yearsOfExperience || 0
         }),
         
         // Role-specific fields for applicants
         ...(user.role === 'applicant' && {
-          currentLocation: user.currentLocation,
-          careerInfo: user.careerInfo,
-          skills: user.skills,
-          languages: user.languages,
-          education: user.education,
-          workExperience: user.workExperience,
-          documents: user.documents,
-          jobPreferences: user.jobPreferences,
-          profileCompletion: user.profileCompletion,
+          currentLocation: user.currentLocation || {},
+          careerInfo: user.careerInfo || {},
+          skills: user.skills || { technical: [], soft: [], primary: [], languages: [] },
+          languages: user.languages || [],
+          education: user.education || [],
+          workExperience: user.workExperience || [],
+          documents: user.documents || { resumeUrl: '', coverLetterUrl: '', portfolioUrl: '', certificates: [] },
+          jobPreferences: user.jobPreferences || {},
+          profileCompletion: user.profileCompletion || { basicInfo: true, completionPercentage: 10 },
           
           // Flat fields for form compatibility
           current_job_title: user.careerInfo?.currentJobTitle || '',
           current_company: user.careerInfo?.currentCompany || '',
-          expected_salary: user.careerInfo?.expectedSalary || 0
+          expected_salary: user.careerInfo?.expectedSalary || 0,
+          
+          // Resume field mapping (multiple possible sources)
+          resume_url: user.documents?.resumeUrl || user.resumeUrl || user.resume_url || '',
+          
+          // Additional applicant fields for registration compatibility
+          primary_skills: user.skills?.primary || user.primarySkills || [],
+          experience_level: user.careerInfo?.experienceLevel || user.experienceLevel || '',
+          current_location: user.currentLocation?.city || user.location || '',
+          willing_to_relocate: user.jobPreferences?.willingToRelocate || false,
+          remote_work_preference: user.jobPreferences?.remoteWorkPreference || false,
+          
+          // Experience and qualification fields for form compatibility
+          experience_years: user.yearsOfExperience || user.experience_years || 0,
+          qualification: user.education?.[0]?.degree || user.qualification || '',
+          
+          // Handle skills array for form display
+          skills_array: user.skills?.primary || user.skills?.technical || user.primarySkills || []
         })
       }
     };
@@ -465,9 +488,16 @@ router.get('/profile', authenticateToken, async (req, res) => {
 // Update user profile with role-specific field mapping
 router.put('/profile', authenticateToken, async (req, res) => {
   try {
-    const userId = req.userId;
-    const userRole = req.userRole;
-    let updateData = { ...req.body };
+    const userId = req.user.userId || req.user._id;
+    const userRole = req.user.role;
+    const updateData = req.body;
+    
+    console.log('🔍 ===== PROFILE UPDATE REQUEST =====');
+    console.log('🔍 User ID:', userId);
+    console.log('🔍 User Role:', userRole);
+    console.log('🔍 Update Data Keys:', Object.keys(updateData));
+    console.log('🔍 Full Update Data:', JSON.stringify(updateData, null, 2));
+    console.log('🔍 =====================================');
     
     // Remove sensitive fields that shouldn't be updated via this endpoint
     delete updateData.password;
@@ -511,40 +541,62 @@ router.put('/profile', authenticateToken, async (req, res) => {
     
     // Role-specific transformations
     if (userRole === 'recruiter') {
-      // Company info for recruiters
+      // Company info for recruiters - match database structure
       if (updateData.companyInfo) {
         transformedData.companyInfo = {
+          ...transformedData.companyInfo, // Preserve existing fields
           companyName: updateData.companyInfo.companyName,
-          department: updateData.companyInfo.department,
-          designation: updateData.companyInfo.designation
+          designation: updateData.companyInfo.designation, // Note: designation, not department
+          workLocation: updateData.companyInfo.workLocation
         };
       } else {
-        // Handle flat form fields
-        if (updateData.company || updateData.department || updateData.job_title) {
-          transformedData.companyInfo = {
-            companyName: updateData.company,
-            department: updateData.department,
-            designation: updateData.job_title
+        // Handle flat form fields - map to correct database fields
+        const companyInfoUpdate = {};
+        if (updateData.company) companyInfoUpdate.companyName = updateData.company;
+        if (updateData.job_title) companyInfoUpdate.designation = updateData.job_title; // job_title -> designation
+        if (updateData.location) {
+          companyInfoUpdate.workLocation = { 
+            city: updateData.location,
+            country: "India" // Default country
+          };
+        }
+        
+        if (Object.keys(companyInfoUpdate).length > 0) {
+          transformedData.companyInfo = companyInfoUpdate;
+        }
+      }
+      
+      // Office location for recruiters - match database structure
+      if (updateData.officeLocation) {
+        transformedData.officeLocation = updateData.officeLocation;
+      } else if (updateData.location) {
+        transformedData.officeLocation = { 
+          city: updateData.location,
+          country: "India" // Default country
+        };
+      }
+      
+      // Professional links for recruiters - match database structure
+      if (updateData.professionalLinks) {
+        transformedData.professionalLinks = updateData.professionalLinks;
+      } else {
+        // Build professional links object matching database structure
+        const professionalLinksUpdate = {};
+        if (updateData.linkedin_url) professionalLinksUpdate.linkedin = updateData.linkedin_url;
+        if (updateData.github_url) professionalLinksUpdate.github = updateData.github_url;
+        if (updateData.portfolio_url) professionalLinksUpdate.personalWebsite = updateData.portfolio_url;
+        
+        if (Object.keys(professionalLinksUpdate).length > 0) {
+          transformedData.professionalLinks = {
+            ...professionalLinksUpdate,
+            otherUrls: [] // Maintain database structure
           };
         }
       }
       
-      // Office location for recruiters
-      if (updateData.officeLocation) {
-        transformedData.officeLocation = updateData.officeLocation;
-      } else if (updateData.location) {
-        transformedData.officeLocation = { city: updateData.location };
-      }
-      
-      // Professional links for recruiters
-      if (updateData.professionalLinks) {
-        transformedData.professionalLinks = updateData.professionalLinks;
-      } else {
-        transformedData.professionalLinks = {
-          linkedin: updateData.linkedin_url,
-          github: updateData.github_url,
-          personalWebsite: updateData.portfolio_url
-        };
+      // Years of experience - direct mapping
+      if (updateData.experience_years !== undefined) {
+        transformedData.yearsOfExperience = parseInt(updateData.experience_years) || 0;
       }
     }
     
@@ -552,13 +604,19 @@ router.put('/profile', authenticateToken, async (req, res) => {
       // Current location for applicants
       if (updateData.currentLocation) {
         transformedData.currentLocation = updateData.currentLocation;
-      } else if (updateData.location) {
-        transformedData.currentLocation = { city: updateData.location };
+      } else if (updateData.location || updateData.current_location) {
+        transformedData.currentLocation = { city: updateData.location || updateData.current_location };
       }
       
       // Skills for applicants
       if (updateData.skills) {
         transformedData.skills = updateData.skills;
+      } else if (updateData.primary_skills) {
+        transformedData.skills = {
+          primary: updateData.primary_skills,
+          technical: updateData.technical_skills || [],
+          soft: updateData.soft_skills || []
+        };
       }
       
       // Languages for applicants
@@ -569,11 +627,95 @@ router.put('/profile', authenticateToken, async (req, res) => {
       // Career info for applicants
       if (updateData.careerInfo) {
         transformedData.careerInfo = updateData.careerInfo;
+      } else {
+        // Handle flat form fields for career info
+        const careerInfo = {};
+        if (updateData.current_job_title) careerInfo.currentJobTitle = updateData.current_job_title;
+        if (updateData.current_company) careerInfo.currentCompany = updateData.current_company;
+        if (updateData.expected_salary) careerInfo.expectedSalary = updateData.expected_salary;
+        if (updateData.experience_level) careerInfo.experienceLevel = updateData.experience_level;
+        
+        if (Object.keys(careerInfo).length > 0) {
+          transformedData.careerInfo = careerInfo;
+        }
+      }
+      
+      // Education for applicants
+      if (updateData.education) {
+        transformedData.education = updateData.education;
+      } else if (updateData.qualification) {
+        // Handle simple qualification field by converting to education array
+        transformedData.education = [{
+          institution: 'Not specified',
+          degree: updateData.qualification,
+          fieldOfStudy: 'Not specified',
+          startDate: null,
+          endDate: null,
+          grade: '',
+          isCurrentlyStudying: false
+        }];
+      }
+      
+      // Work experience for applicants
+      if (updateData.workExperience) {
+        transformedData.workExperience = updateData.workExperience;
+      } else if (updateData.experience_years || updateData.current_job_title || updateData.current_company) {
+        // Handle flat experience fields by converting to workExperience array
+        const experienceEntry = {
+          companyName: updateData.current_company || 'Not specified',
+          jobTitle: updateData.current_job_title || 'Not specified',
+          startDate: null,
+          endDate: null,
+          isCurrentJob: true,
+          description: updateData.experience_years ? `${updateData.experience_years} years of experience` : 'Experience details',
+          achievements: []
+        };
+        transformedData.workExperience = [experienceEntry];
+      }
+      
+      // Documents for applicants
+      if (updateData.documents) {
+        transformedData.documents = updateData.documents;
+      } else {
+        // Handle flat document fields
+        const documents = {};
+        if (updateData.resume_url) documents.resumeUrl = updateData.resume_url;
+        if (updateData.cover_letter_url) documents.coverLetterUrl = updateData.cover_letter_url;
+        if (updateData.portfolio_url) documents.portfolioUrl = updateData.portfolio_url;
+        
+        if (Object.keys(documents).length > 0) {
+          transformedData.documents = documents;
+        }
+      }
+      
+      // Job preferences for applicants
+      if (updateData.jobPreferences) {
+        transformedData.jobPreferences = updateData.jobPreferences;
+      } else {
+        // Handle flat preference fields
+        const jobPreferences = {};
+        if (updateData.willing_to_relocate !== undefined) jobPreferences.willingToRelocate = updateData.willing_to_relocate;
+        if (updateData.remote_work_preference !== undefined) jobPreferences.remoteWorkPreference = updateData.remote_work_preference;
+        if (updateData.preferred_job_types) jobPreferences.preferredJobTypes = updateData.preferred_job_types;
+        if (updateData.preferred_locations) jobPreferences.preferredLocations = updateData.preferred_locations;
+        
+        if (Object.keys(jobPreferences).length > 0) {
+          transformedData.jobPreferences = jobPreferences;
+        }
       }
     }
     
     // Update user profile
+    console.log('🔍 Calling updateUserProfile with:', {
+      userId,
+      transformedData: JSON.stringify(transformedData, null, 2),
+      userRole
+    });
+    
     const updatedUser = await updateUserProfile(userId, transformedData, userRole);
+    
+    console.log('✅ Profile update successful!');
+    console.log('✅ Updated user keys:', Object.keys(updatedUser));
     
     res.json({
       success: true,
@@ -581,7 +723,8 @@ router.put('/profile', authenticateToken, async (req, res) => {
       data: updatedUser
     });
   } catch (error) {
-    console.error('Profile update error:', error);
+    console.error('❌ Profile update error:', error);
+    console.error('❌ Error stack:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Failed to update profile',
@@ -699,6 +842,319 @@ router.post('/validate-username', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to validate username',
+      error: error.message
+    });
+  }
+});
+
+// Email OTP endpoint
+router.post('/send-otp-email', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Store OTP in memory (in production, use Redis or database)
+    if (!global.otpStore) {
+      global.otpStore = new Map();
+    }
+    
+    // Store OTP with 5-minute expiry
+    global.otpStore.set(email, {
+      otp: otp,
+      expires: Date.now() + 5 * 60 * 1000, // 5 minutes
+      type: 'email'
+    });
+
+    // Check if email configuration is available and valid
+    const hasEmailConfig = (process.env.SMTP_USER || process.env.EMAIL_USER) && 
+                          (process.env.SMTP_PASS || process.env.EMAIL_PASS);
+    
+    if (!hasEmailConfig) {
+      // For development, log the OTP instead of sending email
+      console.log(`📧 Email OTP for ${email}: ${otp} (Email not configured - check console)`);
+      
+      res.json({
+        success: true,
+        message: 'OTP sent successfully to your email',
+        data: {
+          email: email,
+          expiresIn: 300, // 5 minutes in seconds
+          // In development mode, include OTP for testing
+          ...(process.env.NODE_ENV === 'development' && { otp: otp, note: 'Email not configured - OTP shown for development' })
+        }
+      });
+      return;
+    }
+
+    // Try to send email, but fall back to console logging if it fails
+    try {
+
+    // Configure email transporter only if credentials are available
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT) || 587,
+      secure: process.env.SMTP_SECURE === 'true' || false,
+      auth: {
+        user: process.env.SMTP_USER || process.env.EMAIL_USER,
+        pass: process.env.SMTP_PASS || process.env.EMAIL_PASS
+      }
+    });
+
+    // Send OTP email
+    const mailOptions = {
+      from: `"FinAutoJobs" <${process.env.FROM_EMAIL || process.env.SMTP_USER || process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'Your FinAutoJobs Verification Code',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: #2196F3; color: white; padding: 20px; text-align: center;">
+            <h1>Email Verification</h1>
+          </div>
+          <div style="padding: 20px; background: #f9f9f9;">
+            <h2>Your Verification Code</h2>
+            <p>Use the following code to verify your email address:</p>
+            <div style="background: white; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px;">
+              <h1 style="color: #2196F3; font-size: 32px; letter-spacing: 8px; margin: 0;">${otp}</h1>
+            </div>
+            <p><strong>This code will expire in 5 minutes.</strong></p>
+            <p>If you didn't request this code, please ignore this email.</p>
+          </div>
+          <div style="padding: 20px; text-align: center; color: #666;">
+            <p>&copy; 2024 FinAutoJobs. All rights reserved.</p>
+          </div>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    
+      console.log(`✅ Email OTP sent to ${email}: ${otp}`);
+      
+      res.json({
+        success: true,
+        message: 'OTP sent successfully to your email',
+        data: {
+          email: email,
+          expiresIn: 300 // 5 minutes in seconds
+        }
+      });
+
+    } catch (emailError) {
+      // If email sending fails, fall back to console logging
+      console.warn('⚠️ Email sending failed, falling back to console logging:', emailError.message);
+      console.log(`📧 Email OTP for ${email}: ${otp} (Email sending failed - check console)`);
+      
+      res.json({
+        success: true,
+        message: 'OTP sent successfully to your email',
+        data: {
+          email: email,
+          expiresIn: 300, // 5 minutes in seconds
+          // In development mode, include OTP for testing when email fails
+          ...(process.env.NODE_ENV === 'development' && { otp: otp, note: 'Email sending failed - OTP shown for development' })
+        }
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Email OTP error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to send email OTP',
+      error: error.message
+    });
+  }
+});
+
+// SMS OTP endpoint
+router.post('/send-otp-sms', async (req, res) => {
+  try {
+    const { phone } = req.body;
+    
+    if (!phone) {
+      return res.status(400).json({
+        success: false,
+        message: 'Phone number is required'
+      });
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Store OTP in memory (in production, use Redis or database)
+    if (!global.otpStore) {
+      global.otpStore = new Map();
+    }
+    
+    // Store OTP with 5-minute expiry
+    global.otpStore.set(phone, {
+      otp: otp,
+      expires: Date.now() + 5 * 60 * 1000, // 5 minutes
+      type: 'sms'
+    });
+
+    // For development, we'll just log the OTP instead of sending SMS
+    // In production, integrate with SMS service like Twilio, AWS SNS, etc.
+    console.log(`📱 SMS OTP for ${phone}: ${otp}`);
+    
+    // Simulate SMS sending delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    res.json({
+      success: true,
+      message: 'OTP sent successfully to your phone',
+      data: {
+        phone: phone,
+        expiresIn: 300, // 5 minutes in seconds
+        // In development, include OTP for testing
+        ...(process.env.NODE_ENV === 'development' && { otp: otp })
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ SMS OTP error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to send SMS OTP',
+      error: error.message
+    });
+  }
+});
+
+// Verify OTP endpoint
+router.post('/verify-otp', async (req, res) => {
+  try {
+    const { identifier, otp, type } = req.body; // identifier can be email or phone
+    
+    if (!identifier || !otp || !type) {
+      return res.status(400).json({
+        success: false,
+        message: 'Identifier, OTP, and type are required'
+      });
+    }
+
+    if (!global.otpStore) {
+      return res.status(400).json({
+        success: false,
+        message: 'No OTP found. Please request a new one.'
+      });
+    }
+
+    const storedOtpData = global.otpStore.get(identifier);
+    
+    if (!storedOtpData) {
+      return res.status(400).json({
+        success: false,
+        message: 'OTP not found or expired. Please request a new one.'
+      });
+    }
+
+    // Check if OTP is expired
+    if (Date.now() > storedOtpData.expires) {
+      global.otpStore.delete(identifier);
+      return res.status(400).json({
+        success: false,
+        message: 'OTP has expired. Please request a new one.'
+      });
+    }
+
+    // Check if OTP matches
+    if (storedOtpData.otp !== otp) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid OTP. Please try again.'
+      });
+    }
+
+    // Check if type matches
+    if (storedOtpData.type !== type) {
+      return res.status(400).json({
+        success: false,
+        message: 'OTP type mismatch.'
+      });
+    }
+
+    // OTP is valid, remove it from store
+    global.otpStore.delete(identifier);
+    
+    console.log(`✅ OTP verified successfully for ${identifier}`);
+    
+    res.json({
+      success: true,
+      message: 'OTP verified successfully',
+      data: {
+        identifier: identifier,
+        type: type,
+        verified: true
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ OTP verification error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to verify OTP',
+      error: error.message
+    });
+  }
+});
+
+// Get OTP status endpoint (for debugging)
+router.get('/otp-status/:identifier', async (req, res) => {
+  try {
+    const { identifier } = req.params;
+    
+    if (!global.otpStore) {
+      return res.json({
+        success: true,
+        data: {
+          exists: false,
+          message: 'No OTP store initialized'
+        }
+      });
+    }
+
+    const storedOtpData = global.otpStore.get(identifier);
+    
+    if (!storedOtpData) {
+      return res.json({
+        success: true,
+        data: {
+          exists: false,
+          message: 'No OTP found for this identifier'
+        }
+      });
+    }
+
+    const isExpired = Date.now() > storedOtpData.expires;
+    const timeRemaining = Math.max(0, Math.floor((storedOtpData.expires - Date.now()) / 1000));
+
+    res.json({
+      success: true,
+      data: {
+        exists: true,
+        expired: isExpired,
+        type: storedOtpData.type,
+        timeRemaining: timeRemaining,
+        // In development, show OTP for testing
+        ...(process.env.NODE_ENV === 'development' && { otp: storedOtpData.otp })
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ OTP status error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get OTP status',
       error: error.message
     });
   }

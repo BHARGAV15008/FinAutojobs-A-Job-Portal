@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import JobDetailsModal from '../components/modals/JobDetailsModal';
 import AuthModal from '../components/modals/AuthModal';
+import JobApplicationModal from '../components/modals/JobApplicationModal';
 import { useAuth } from '../contexts/AuthContext.jsx';
+import { applicationService } from '../services/applicationService';
 import {
     Container,
     Box,
@@ -91,13 +93,56 @@ const JobCard = styled(Card, {
 
 const FilterDrawer = styled(Drawer)(({ theme }) => ({
     '& .MuiDrawer-paper': {
-        width: 320,
         padding: theme.spacing(2),
     },
 }));
 
 const JobsPage = () => {
-    const { user, login } = useAuth();
+    const { user } = useAuth();
+    
+    // Simple local state for favorites and bookmarks
+    const [localFavorites, setLocalFavorites] = useState(new Set());
+    const [localBookmarks, setLocalBookmarks] = useState(new Set());
+
+    // Load from localStorage on mount
+    useEffect(() => {
+        if (user && (user.id || user._id)) {
+            const userId = user.id || user._id;
+            console.log('🔍 Loading favorites/bookmarks for user:', userId);
+            
+            try {
+                const savedFavorites = localStorage.getItem(`favorites_${userId}`);
+                const savedBookmarks = localStorage.getItem(`bookmarks_${userId}`);
+                
+                if (savedFavorites) {
+                    const favoritesArray = JSON.parse(savedFavorites);
+                    setLocalFavorites(new Set(favoritesArray));
+                    console.log('✅ Loaded favorites from localStorage:', favoritesArray.length);
+                }
+                if (savedBookmarks) {
+                    const bookmarksArray = JSON.parse(savedBookmarks);
+                    setLocalBookmarks(new Set(bookmarksArray));
+                    console.log('✅ Loaded bookmarks from localStorage:', bookmarksArray.length);
+                }
+            } catch (error) {
+                console.error('❌ Error loading from localStorage:', error);
+            }
+        } else {
+            console.log('🔍 No user found or user ID missing');
+        }
+    }, [user]);
+
+    // Debug: Log current state
+    useEffect(() => {
+        console.log('🔍 Current state:', {
+            user: !!user,
+            userId: user?.id || user?._id,
+            localFavorites: localFavorites.size,
+            localBookmarks: localBookmarks.size,
+            favoritesList: [...localFavorites],
+            bookmarksList: [...localBookmarks]
+        });
+    }, [user, localFavorites, localBookmarks]);
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -111,19 +156,19 @@ const JobsPage = () => {
     const [sortBy, setSortBy] = useState('relevance');
     const [selectedTab, setSelectedTab] = useState(0);
     const [showFilters, setShowFilters] = useState(false);
-    const [favorites, setFavorites] = useState(new Set());
-    const [bookmarks, setBookmarks] = useState(new Set());
+    // Removed local state - now using FavoritesContext
     const [page, setPage] = useState(1);
     const [viewFormat, setViewFormat] = useState('list'); // 'table', 'list', 'grid'
-
     // Modal state
     const [selectedJob, setSelectedJob] = useState(null);
     const [modalOpen, setModalOpen] = useState(false);
     const [viewDetailsModal, setViewDetailsModal] = useState({ isOpen: false, job: null });
-    
-    // Authentication modal state
     const [authModalOpen, setAuthModalOpen] = useState(false);
     const [pendingApplication, setPendingApplication] = useState(null);
+    const [applicationModalOpen, setApplicationModalOpen] = useState(false);
+    const [selectedJobForApplication, setSelectedJobForApplication] = useState(null);
+    const [appliedJobs, setAppliedJobs] = useState(new Set());
+    const [applicationLoading, setApplicationLoading] = useState(false);
 
     // Fetch jobs from API
     useEffect(() => {
@@ -444,27 +489,69 @@ const JobsPage = () => {
     };
 
     const toggleFavorite = (jobId) => {
-        setFavorites(prev => {
-            const newFavorites = new Set(prev);
-            if (newFavorites.has(jobId)) {
-                newFavorites.delete(jobId);
+        console.log('🔍 Favorite button clicked for job:', jobId);
+        
+        // Check if user is authenticated
+        if (!user || !(user.id || user._id)) {
+            console.log('❌ User not authenticated, showing login modal');
+            setAuthModalOpen(true);
+            return;
+        }
+
+        try {
+            const wasFavorited = localFavorites.has(jobId);
+            const newLocalFavorites = new Set(localFavorites);
+            
+            if (wasFavorited) {
+                newLocalFavorites.delete(jobId);
+                console.log('✅ Removed from favorites:', jobId);
             } else {
-                newFavorites.add(jobId);
+                newLocalFavorites.add(jobId);
+                console.log('✅ Added to favorites:', jobId);
             }
-            return newFavorites;
-        });
+            
+            setLocalFavorites(newLocalFavorites);
+
+            // Save to localStorage
+            const userId = user.id || user._id;
+            localStorage.setItem(`favorites_${userId}`, JSON.stringify([...newLocalFavorites]));
+            console.log('✅ Saved favorites to localStorage for user:', userId);
+        } catch (error) {
+            console.error('❌ Error toggling favorite:', error);
+        }
     };
 
     const toggleBookmark = (jobId) => {
-        setBookmarks(prev => {
-            const newBookmarks = new Set(prev);
-            if (newBookmarks.has(jobId)) {
-                newBookmarks.delete(jobId);
+        console.log('🔍 Bookmark button clicked for job:', jobId);
+        
+        // Check if user is authenticated
+        if (!user || !(user.id || user._id)) {
+            console.log('❌ User not authenticated, showing login modal');
+            setAuthModalOpen(true);
+            return;
+        }
+
+        try {
+            const wasBookmarked = localBookmarks.has(jobId);
+            const newLocalBookmarks = new Set(localBookmarks);
+            
+            if (wasBookmarked) {
+                newLocalBookmarks.delete(jobId);
+                console.log('✅ Removed from bookmarks:', jobId);
             } else {
-                newBookmarks.add(jobId);
+                newLocalBookmarks.add(jobId);
+                console.log('✅ Added to bookmarks:', jobId);
             }
-            return newBookmarks;
-        });
+            
+            setLocalBookmarks(newLocalBookmarks);
+
+            // Save to localStorage
+            const userId = user.id || user._id;
+            localStorage.setItem(`bookmarks_${userId}`, JSON.stringify([...newLocalBookmarks]));
+            console.log('✅ Saved bookmarks to localStorage for user:', userId);
+        } catch (error) {
+            console.error('❌ Error toggling bookmark:', error);
+        }
     };
 
     const formatSalary = (min, max) => {
@@ -493,45 +580,89 @@ const JobsPage = () => {
         setSelectedJob(null);
     };
 
+    // Load applied jobs status on mount
+    useEffect(() => {
+        const loadAppliedJobs = async () => {
+            if (user && (user.id || user._id)) {
+                try {
+                    const userId = user.id || user._id;
+                    const applications = await applicationService.getUserApplications(userId);
+                    const appliedJobIds = new Set(applications.data?.map(app => app.jobId) || []);
+                    setAppliedJobs(appliedJobIds);
+                    console.log('✅ Loaded applied jobs:', appliedJobIds.size);
+                } catch (error) {
+                    console.error('❌ Error loading applied jobs:', error);
+                    // Don't fail silently - this is expected for new users with no applications
+                    console.log('ℹ️ No applications found (this is normal for new users)');
+                    setAppliedJobs(new Set()); // Set empty set as fallback
+                }
+            }
+        };
+        
+        loadAppliedJobs();
+    }, [user]);
+
     const handleApply = (job) => {
+        console.log('🔍 Apply button clicked for job:', job.title || job.jobTitle);
+        console.log('🔍 Job object:', job);
+        console.log('🔍 User object:', user);
+        
         // Check if user is authenticated
-        if (!user) {
+        if (!user || !(user.id || user._id || user.userId)) {
+            console.log('❌ User not authenticated, showing login modal');
             setPendingApplication(job);
             setAuthModalOpen(true);
             return;
         }
+
+        // Check if user is recruiter (recruiters can't apply to jobs)
+        if (user.role === 'recruiter') {
+            alert('Recruiters cannot apply to jobs. Please switch to an applicant account.');
+            return;
+        }
+
+        // Check if already applied (handle different ID formats)
+        const jobId = job.id || job._id;
+        if (appliedJobs.has(jobId)) {
+            alert('You have already applied to this job!');
+            return;
+        }
         
-        // User is authenticated, proceed with application
-        submitApplication(job);
+        console.log('✅ Opening application modal for job:', jobId);
+        
+        // Open application modal
+        setSelectedJobForApplication(job);
+        setApplicationModalOpen(true);
     };
 
-    const submitApplication = async (job) => {
+    const handleSubmitApplication = async (applicationData) => {
         try {
-            console.log('Submitting application for:', job.title, 'by user:', user.email);
+            setApplicationLoading(true);
+            console.log('🔍 Submitting application with data:', applicationData);
             
-            // TODO: Implement actual API call to submit application
-            const applicationData = {
-                jobId: job.id,
-                userId: user.id,
-                appliedAt: new Date().toISOString(),
-                status: 'pending',
-                jobTitle: job.title,
-                company: job.company,
-                location: job.location,
-            };
+            // Log FormData contents for debugging
+            for (let [key, value] of applicationData.entries()) {
+                console.log(`🔍 FormData field: ${key} = ${value}`);
+            }
             
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            const response = await applicationService.submitApplication(applicationData);
             
-            // Show success message
-            alert(`Application submitted successfully for ${job.title} at ${job.company}!`);
+            // Update applied jobs state
+            const jobId = applicationData.get('jobId');
+            setAppliedJobs(prev => new Set([...prev, jobId]));
             
-            // Close modals
-            handleCloseModal();
+            console.log('✅ Application submitted successfully:', response);
+            alert(`Application submitted successfully for ${selectedJobForApplication?.title || selectedJobForApplication?.jobTitle}!`);
+            
+            // Close modal
+            setApplicationModalOpen(false);
+            setSelectedJobForApplication(null);
             
         } catch (error) {
-            console.error('Error submitting application:', error);
-            alert('Failed to submit application. Please try again.');
+            console.error('❌ Error submitting application:', error);
+            alert('Error submitting application. Please try again.');
+        } finally {
+            setApplicationLoading(false);
         }
     };
 
@@ -636,18 +767,42 @@ const JobsPage = () => {
                         </Box>
                     </Box>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                        <Tooltip title={favorites.has(job.id) ? 'Remove from favorites' : 'Add to favorites'}>
-                            <IconButton onClick={() => toggleFavorite(job.id)} size="small">
-                                {favorites.has(job.id) ?
-                                    <Favorite color="error" /> :
+                        <Tooltip title={localFavorites.has(job.id) ? 'Remove from favorites' : 'Add to favorites'}>
+                            <IconButton 
+                                onClick={() => toggleFavorite(job.id)} 
+                                size="small"
+                                sx={{
+                                    color: localFavorites.has(job.id) ? 'error.main' : 'action.active',
+                                    backgroundColor: localFavorites.has(job.id) ? 'error.light' : 'transparent',
+                                    border: '2px solid',
+                                    borderColor: localFavorites.has(job.id) ? 'error.main' : 'action.active',
+                                    '&:hover': {
+                                        backgroundColor: localFavorites.has(job.id) ? 'error.light' : 'action.hover'
+                                    }
+                                }}
+                            >
+                                {localFavorites.has(job.id) ?
+                                    <Favorite /> :
                                     <FavoriteBorder />
                                 }
                             </IconButton>
                         </Tooltip>
-                        <Tooltip title={bookmarks.has(job.id) ? 'Remove bookmark' : 'Bookmark job'}>
-                            <IconButton onClick={() => toggleBookmark(job.id)} size="small">
-                                {bookmarks.has(job.id) ?
-                                    <Bookmark color="primary" /> :
+                        <Tooltip title={localBookmarks.has(job.id) ? 'Remove bookmark' : 'Bookmark job'}>
+                            <IconButton 
+                                onClick={() => toggleBookmark(job.id)} 
+                                size="small"
+                                sx={{
+                                    color: localBookmarks.has(job.id) ? 'primary.main' : 'action.active',
+                                    backgroundColor: localBookmarks.has(job.id) ? 'primary.light' : 'transparent',
+                                    border: '2px solid',
+                                    borderColor: localBookmarks.has(job.id) ? 'primary.main' : 'action.active',
+                                    '&:hover': {
+                                        backgroundColor: localBookmarks.has(job.id) ? 'primary.light' : 'action.hover'
+                                    }
+                                }}
+                            >
+                                {localBookmarks.has(job.id) ?
+                                    <Bookmark /> :
                                     <BookmarkBorder />
                                 }
                             </IconButton>
@@ -770,11 +925,20 @@ const JobsPage = () => {
                     </Button>
                     <Button
                         onClick={() => handleApply(job)}
-                        variant="contained"
+                        variant={appliedJobs.has(job.id) ? "outlined" : "contained"}
                         size="large"
-                        sx={{ minWidth: '120px' }}
+                        sx={{
+                            minWidth: '120px',
+                            backgroundColor: appliedJobs.has(job.id) ? 'transparent' : undefined,
+                            color: appliedJobs.has(job.id) ? 'success.main' : undefined,
+                            borderColor: appliedJobs.has(job.id) ? 'success.main' : undefined,
+                            '&:hover': {
+                                backgroundColor: appliedJobs.has(job.id) ? 'success.light' : undefined,
+                            }
+                        }}
+                        disabled={appliedJobs.has(job.id)}
                     >
-                        Apply Now
+                        {appliedJobs.has(job.id) ? '✓ Applied' : 'Apply'}
                     </Button>
                 </Box>
                 
@@ -1167,8 +1331,17 @@ const JobsPage = () => {
                                             <Button size="small" onClick={() => handleViewDetails(job)}>
                                                 View Details
                                             </Button>
-                                            <Button size="small" variant="contained" onClick={() => handleApply(job)}>
-                                                Apply
+                                            <Button 
+                                                size="small" 
+                                                variant={appliedJobs.has(job.id) ? "outlined" : "contained"} 
+                                                onClick={() => handleApply(job)}
+                                                disabled={appliedJobs.has(job.id)}
+                                                sx={{
+                                                    color: appliedJobs.has(job.id) ? 'success.main' : undefined,
+                                                    borderColor: appliedJobs.has(job.id) ? 'success.main' : undefined,
+                                                }}
+                                            >
+                                                {appliedJobs.has(job.id) ? '✓ Applied' : 'Apply'}
                                             </Button>
                                         </Box>
                                     </TableCell>
@@ -1242,8 +1415,16 @@ const JobsPage = () => {
                                     <Button variant="outlined" onClick={() => handleViewDetails(job)}>
                                         View Details
                                     </Button>
-                                    <Button variant="contained" onClick={() => handleApply(job)}>
-                                        Apply Now
+                                    <Button 
+                                        variant={appliedJobs.has(job.id) ? "outlined" : "contained"} 
+                                        onClick={() => handleApply(job)}
+                                        disabled={appliedJobs.has(job.id)}
+                                        sx={{
+                                            color: appliedJobs.has(job.id) ? 'success.main' : undefined,
+                                            borderColor: appliedJobs.has(job.id) ? 'success.main' : undefined,
+                                        }}
+                                    >
+                                        {appliedJobs.has(job.id) ? '✓ Applied' : 'Apply Now'}
                                     </Button>
                                 </Box>
                                 <Typography variant="body2" color="text.secondary">
@@ -1306,8 +1487,17 @@ const JobsPage = () => {
                                     <Button size="small" onClick={() => handleViewDetails(job)}>
                                         View Details
                                     </Button>
-                                    <Button size="small" variant="contained" onClick={() => handleApply(job)}>
-                                        Apply Now
+                                    <Button 
+                                        size="small" 
+                                        variant={appliedJobs.has(job.id) ? "outlined" : "contained"} 
+                                        onClick={() => handleApply(job)}
+                                        disabled={appliedJobs.has(job.id)}
+                                        sx={{
+                                            color: appliedJobs.has(job.id) ? 'success.main' : undefined,
+                                            borderColor: appliedJobs.has(job.id) ? 'success.main' : undefined,
+                                        }}
+                                    >
+                                        {appliedJobs.has(job.id) ? '✓ Applied' : 'Apply Now'}
                                     </Button>
                                 </CardActions>
                             </Card>
@@ -1595,6 +1785,18 @@ const JobsPage = () => {
                 }}
                 onSuccess={handleAuthSuccess}
                 defaultTab={0}
+            />
+
+            {/* Job Application Modal */}
+            <JobApplicationModal
+                open={applicationModalOpen}
+                onClose={() => {
+                    setApplicationModalOpen(false);
+                    setSelectedJobForApplication(null);
+                }}
+                job={selectedJobForApplication}
+                user={user}
+                onSubmit={handleSubmitApplication}
             />
         </Container>
     );

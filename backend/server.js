@@ -189,7 +189,9 @@ import jobRoutes from './routes/jobs.js';
 import dashboardRoutes from './routes/dashboard.js';
 
 import companyRoutes from './routes/companies.js';
+console.log('🔄 Loading applications routes...');
 import applicationRoutes from './routes/applications.js';
+console.log('✅ Applications routes loaded successfully');
 import oauthRoutes from './routes/oauth.js';
 import notificationsRoutes from './routes/notifications.js';
 import usersRoutes from './routes/users.js';
@@ -197,6 +199,9 @@ import savedJobsRoutes from './routes/savedJobs.js';
 import recruiterRoutes from './routes/recruiters.js';
 import candidatesRoutes from './routes/candidates.js';
 import interviewsRoutes from './routes/interviews.js';
+import enhancedApplicationsRoutes from './routes/enhancedApplications.js';
+import fileUploadRoutes from './routes/fileUpload.js';
+import recommendationsRoutes from './routes/recommendations.js';
 
 // Mount routes under /api
 app.use('/api/auth', authRoutes);
@@ -208,13 +213,28 @@ apiRouter.use('/dashboard', dashboardRoutes);
 
 apiRouter.use('/oauth', oauthRoutes);
 apiRouter.use('/companies', companyRoutes);
+console.log('🔄 Registering /api/applications routes...');
 apiRouter.use('/applications', applicationRoutes);
+console.log('✅ /api/applications routes registered successfully');
+apiRouter.use('/enhanced-applications', enhancedApplicationsRoutes);
+apiRouter.use('/upload', fileUploadRoutes);
 apiRouter.use('/users', usersRoutes);
 apiRouter.use('/saved-jobs', savedJobsRoutes);
 apiRouter.use('/notifications', notificationsRoutes);
 apiRouter.use('/recruiters', recruiterRoutes);
 apiRouter.use('/candidates', candidatesRoutes);
 apiRouter.use('/interviews', interviewsRoutes);
+apiRouter.use('/recommendations', recommendationsRoutes);
+
+// Debug middleware to log all requests
+app.use((req, res, next) => {
+  console.log(`🌐 ${req.method} ${req.url} - Headers:`, {
+    origin: req.headers.origin,
+    authorization: req.headers.authorization ? 'Bearer ***' : 'None',
+    contentType: req.headers['content-type']
+  });
+  next();
+});
 
 app.use('/api', apiRouter);
 
@@ -228,6 +248,16 @@ app.get('/', (req, res) => {
         apiDocs: '/api/docs',
         timestamp: new Date().toISOString()
     });
+});
+
+// Catch-all 404 handler for debugging (must be last)
+app.use('*', (req, res) => {
+  console.log(`❌ 404 - Route not found: ${req.method} ${req.originalUrl}`);
+  res.status(404).json({
+    success: false,
+    message: `Route not found: ${req.method} ${req.originalUrl}`,
+    availableRoutes: ['/api/applications', '/api/jobs', '/api/auth', '/api/health']
+  });
 });
 
 // Add health check endpoint under /api 

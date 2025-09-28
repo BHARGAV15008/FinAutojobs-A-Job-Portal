@@ -84,8 +84,8 @@ const Navigation = () => {
 
   const userMenuItems = user ? [
     { label: 'Dashboard', path: user.role === 'recruiter' ? '/recruiter-dashboard' : '/applicant-dashboard', icon: <Dashboard /> },
-    { label: 'Profile', path: '/profile', icon: <Person /> },
-    ...(user.role === 'recruiter' ? [{ label: 'Post Job', path: '/add-job', icon: <PostAdd /> }] : []),
+    { label: 'Profile', path: user.role === 'recruiter' ? '/recruiter-dashboard/profile' : '/applicant-dashboard/profile', icon: <Person /> },
+    ...(user.role === 'recruiter' ? [{ label: 'Post Job', path: '/recruiter-dashboard/jobs', icon: <PostAdd /> }] : []),
     { label: 'Applications', path: '/applications', icon: <Description /> },
   ] : [];
 
@@ -394,7 +394,7 @@ const Navigation = () => {
                 {user.role === 'recruiter' && (
                   <Button
                     component={Link}
-                    href="/add-job"
+                    href="/recruiter-dashboard/jobs"
                     variant="contained"
                     color="primary"
                     startIcon={<PostAdd />}
