@@ -274,11 +274,23 @@ export const EnhancedProfileTab = ({
         { label: "Phone", value: safeStringValue(user?.phone), icon: "📱" },
         {
           label: "Location",
-          value: safeStringValue(
-            userRole === 'recruiter' 
-              ? user?.officeLocation || user?.location
-              : user?.currentLocation || user?.location
-          ) || "Not specified",
+          value: (() => {
+            if (userRole === 'recruiter') {
+              return safeStringValue(
+                user?.officeLocation?.city || 
+                user?.officeLocation || 
+                user?.location || 
+                "Not specified"
+              );
+            } else {
+              return safeStringValue(
+                user?.currentLocation?.city || 
+                user?.currentLocation || 
+                user?.location || 
+                "Not specified"
+              );
+            }
+          })(),
           icon: "📍",
         },
       ],
@@ -3007,6 +3019,51 @@ export const EnhancedAnalyticsTab = ({ userRole = "applicant" }) => {
   const [filters, setFilters] = useState({
     timeRange: "30d",
   });
+  const [analyticsData, setAnalyticsData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch analytics data
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Import analyticsAPI dynamically
+        const { analyticsAPI } = await import("../../services/api");
+        const response = await analyticsAPI.getDashboardAnalytics(userRole);
+        
+        if (response.data.success) {
+          setAnalyticsData(response.data.data.analytics);
+          console.log('✅ Analytics data loaded:', response.data.data.analytics);
+        } else {
+          throw new Error(response.data.message || 'Failed to fetch analytics');
+        }
+      } catch (error) {
+        console.error('❌ Error fetching analytics:', error);
+        setError(error.message);
+        // Set fallback data
+        setAnalyticsData({
+          overview: {
+            totalApplications: 0,
+            shortlisted: 0,
+            interviews: 0,
+            hired: 0
+          },
+          performance: {
+            shortlistRate: 0,
+            interviewRate: 0,
+            hireRate: 0
+          }
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnalytics();
+  }, [userRole]);
 
   // Handle filter changes
   const handleFilterChange = (key, value) => {
@@ -3022,6 +3079,18 @@ export const EnhancedAnalyticsTab = ({ userRole = "applicant" }) => {
       timeRange: "30d",
     });
   };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading analytics...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -3081,15 +3150,15 @@ export const EnhancedAnalyticsTab = ({ userRole = "applicant" }) => {
         {/* Analytics Content */}
         <div className="flex-1 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Analytics Cards */}
+            {/* Analytics Cards with Real Data */}
             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Applications
+                    {userRole === 'recruiter' ? 'Total Applications' : 'Applications Sent'}
                   </p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    24
+                    {analyticsData?.overview?.totalApplications || 0}
                   </p>
                 </div>
                 <div className="text-3xl">📝</div>
@@ -3100,13 +3169,16 @@ export const EnhancedAnalyticsTab = ({ userRole = "applicant" }) => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Profile Views
+                    {userRole === 'recruiter' ? 'Active Jobs' : 'Shortlisted'}
                   </p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    156
+                    {userRole === 'recruiter' 
+                      ? (analyticsData?.overview?.activeJobs || 0)
+                      : (analyticsData?.overview?.shortlisted || 0)
+                    }
                   </p>
                 </div>
-                <div className="text-3xl">👀</div>
+                <div className="text-3xl">{userRole === 'recruiter' ? '💼' : '⭐'}</div>
               </div>
             </div>
 
@@ -3114,13 +3186,16 @@ export const EnhancedAnalyticsTab = ({ userRole = "applicant" }) => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Interviews
+                    {userRole === 'recruiter' ? 'Shortlisted' : 'Interviews'}
                   </p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    3
+                    {userRole === 'recruiter' 
+                      ? (analyticsData?.overview?.shortlisted || 0)
+                      : (analyticsData?.overview?.interviews || 0)
+                    }
                   </p>
                 </div>
-                <div className="text-3xl">🗣️</div>
+                <div className="text-3xl">{userRole === 'recruiter' ? '⭐' : '🗣️'}</div>
               </div>
             </div>
 
@@ -3128,10 +3203,13 @@ export const EnhancedAnalyticsTab = ({ userRole = "applicant" }) => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Response Rate
+                    {userRole === 'recruiter' ? 'Hire Rate' : 'Success Rate'}
                   </p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    12%
+                    {userRole === 'recruiter' 
+                      ? `${analyticsData?.performance?.hireRate || 0}%`
+                      : `${analyticsData?.performance?.shortlistRate || 0}%`
+                    }
                   </p>
                 </div>
                 <div className="text-3xl">📊</div>

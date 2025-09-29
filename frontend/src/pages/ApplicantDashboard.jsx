@@ -22,6 +22,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useFavorites } from "../contexts/FavoritesContext";
 import JobApplicationModal from "../components/modals/JobApplicationModal";
 import AuthModal from "../components/modals/AuthModal";
+import MessagesTab from "../components/dashboard/MessagesTab";
 import { applicationService } from "../services/applicationService";
 
 const ApplicantDashboardContent = () => {
@@ -369,6 +370,8 @@ const ApplicantDashboardContent = () => {
         );
       case "analytics":
         return <EnhancedAnalyticsTab userRole="applicant" />;
+      case "messages":
+        return <MessagesTab userRole="applicant" />;
       default:
         return (
           <div className="space-y-8">

@@ -4,6 +4,7 @@ import * as authAPI from "../api/auth";
 import * as applicationsAPI from "../api/applications";
 import * as jobsAPI from "../api/jobs";
 import * as notificationsAPI from "../api/notifications";
+import * as analyticsAPI from "../api/analytics";
 import { calculateProfileCompletion } from "../utils/profileCompletion";
 
 const DashboardContext = createContext();
@@ -74,53 +75,46 @@ export const DashboardProvider = ({ children }) => {
     try {
       setLoading(true);
 
-      // Fetch data based on user role with delays to avoid rate limiting
-      const jobsResponse = await jobsAPI.getJobs({ limit: 50 }).catch((error) => {
-        console.error('🔍 Jobs API error:', error.response?.status, error.message);
-        return { data: { data: [] } };
+      // Fetch comprehensive analytics from the new analytics API
+      console.log('🔍 Loading dashboard data for:', role);
+      const analyticsResponse = await analyticsAPI.getDashboardAnalytics(role).catch((error) => {
+        console.error('🔍 Analytics API error:', error.response?.status, error.message);
+        return null;
       });
-      
-      console.log('🔍 Jobs API response:', {
-        status: jobsResponse?.status,
-        dataLength: jobsResponse?.data?.data?.length || 0,
-        jobsLength: jobsResponse?.data?.jobs?.length || 0
-      });
-      
-      // Add small delay between requests
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      const applicationsResponse = await applicationsAPI
-        .getApplications({ limit: 10 })
-        .catch(() => ({ data: { data: [] } }));
-      
-      // Add small delay between requests
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      const notificationsResponse = await notificationsAPI
-        .getNotifications({ limit: 5 })
-        .catch(() => ({ data: { data: [] } }));
 
-      let usersResponse = { data: { data: [] } };
-      if (role === "admin") {
-        usersResponse = await usersAPI
-          .getUsers({ limit: 10 })
-          .catch(() => ({ data: { data: [] } }));
-      }
+      // Fetch basic data for display (jobs, applications, notifications)
+      const [jobsResponse, applicationsResponse, notificationsResponse] = await Promise.all([
+        jobsAPI.getJobs({ limit: 50 }).catch((error) => {
+          console.error('🔍 Jobs API error:', error.response?.status, error.message);
+          return { data: { data: [] } };
+        }),
+        applicationsAPI.getApplications({ limit: 10 }).catch(() => ({ data: { data: [] } })),
+        notificationsAPI.getNotifications({ limit: 5 }).catch(() => ({ data: { data: [] } }))
+      ]);
 
-      // Extract jobs from the correct path - API returns {data: {jobs: [...], total: X}}
+      // Extract data from responses
       const extractedJobs = jobsResponse.data?.jobs || jobsResponse.data?.data?.jobs || jobsResponse.data?.data || [];
       const extractedApplications = applicationsResponse.data?.applications || applicationsResponse.data?.data?.applications || applicationsResponse.data?.data || [];
-      const extractedUsers = usersResponse.data?.users || usersResponse.data?.data?.users || usersResponse.data?.data || [];
+      const extractedNotifications = notificationsResponse.data?.notifications || notificationsResponse.data?.data?.notifications || notificationsResponse.data?.data || [];
 
-      // Calculate stats based on real data
-      const stats = calculateStats(role, {
-        jobs: extractedJobs,
-        applications: extractedApplications,
-        users: extractedUsers,
-      });
+      // Use analytics data if available, otherwise fall back to calculated stats
+      let stats;
+      if (analyticsResponse && analyticsResponse.success) {
+        console.log('📊 Using analytics API data:', analyticsResponse.data);
+        const analyticsData = analyticsResponse.data.analytics || analyticsResponse.data;
+        stats = analyticsData.overview || analyticsData;
+      } else {
+        console.log('📊 Falling back to calculated stats, analytics response was:', analyticsResponse);
+        stats = calculateStats(role, {
+          jobs: extractedJobs,
+          applications: extractedApplications,
+          users: [],
+        });
+      }
 
       // Debug logging
       console.log('🔍 API Responses:', {
+        analytics: analyticsResponse?.success ? 'Success' : 'Failed',
         jobs: jobsResponse.data,
         applications: applicationsResponse.data,
         notifications: notificationsResponse.data
@@ -129,15 +123,16 @@ export const DashboardProvider = ({ children }) => {
       console.log('🔍 Extracted data:', {
         jobs: extractedJobs.length,
         applications: extractedApplications.length,
-        users: extractedUsers.length
+        notifications: extractedNotifications.length
       });
 
       const dashboardDataToSet = {
         stats,
+        analytics: analyticsResponse?.success ? analyticsResponse.data.analytics : null,
         recentJobs: extractedJobs,
         applications: extractedApplications,
-        notifications: notificationsResponse.data?.notifications || notificationsResponse.data?.data?.notifications || notificationsResponse.data?.data || [],
-        users: extractedUsers,
+        notifications: extractedNotifications,
+        users: [],
       };
 
       console.log('📊 Setting dashboard data:', dashboardDataToSet);
@@ -175,9 +170,14 @@ export const DashboardProvider = ({ children }) => {
         };
 
       case "recruiter":
+        console.log('🔍 Calculating recruiter stats with jobs:', jobs.length, 'applications:', applicationsArray.length);
+        const activeJobs = jobs.filter((job) => job.status === "active" || job.status === "Active").length;
+        const totalJobs = jobs.length;
+        console.log('🔍 Active jobs:', activeJobs, 'Total jobs:', totalJobs);
         return {
           profileCompletion: calculateProfileCompletion(currentUser, "recruiter"),
-          activeJobs: jobs.filter((job) => job.status === "active").length,
+          activeJobs,
+          totalJobs,
           totalApplications: applicationsArray.length,
           shortlisted: applicationsArray.filter(
             (app) => app.status === "shortlisted"
@@ -341,6 +341,27 @@ export const DashboardProvider = ({ children }) => {
     }
   };
 
+  // Refresh real-time statistics without full data reload
+  const refreshStats = async () => {
+    try {
+      if (!isAuthenticated || !userRole) return;
+      
+      const statsResponse = await analyticsAPI.getRealTimeStats(userRole);
+      if (statsResponse.success) {
+        setDashboardData(prevData => ({
+          ...prevData,
+          stats: {
+            ...prevData?.stats,
+            ...statsResponse.data.stats
+          }
+        }));
+        console.log('📊 Real-time stats updated:', statsResponse.data.stats);
+      }
+    } catch (error) {
+      console.error('❌ Failed to refresh stats:', error);
+    }
+  };
+
   // Job management functions
   const postJob = async (jobData) => {
     try {
@@ -356,8 +377,8 @@ export const DashboardProvider = ({ children }) => {
         }));
       }
       
-      // Also refresh all data from server
-      await loadDashboardData(userRole);
+      // Refresh stats to reflect the new job
+      await refreshStats();
       return response.data;
     } catch (error) {
       console.error("Failed to post job:", error);
@@ -371,7 +392,17 @@ export const DashboardProvider = ({ children }) => {
     try {
       setLoading(true);
       const response = await jobsAPI.updateJob(jobId, updateData);
-      await loadDashboardData(userRole); // Refresh data after updating
+      
+      // Update the job in local state immediately
+      setDashboardData(prevData => ({
+        ...prevData,
+        recentJobs: prevData.recentJobs?.map(job => 
+          job._id === jobId ? { ...job, ...updateData } : job
+        ) || []
+      }));
+      
+      // Refresh stats to reflect changes
+      await refreshStats();
       return response.data;
     } catch (error) {
       console.error("Failed to update job:", error);
@@ -385,7 +416,15 @@ export const DashboardProvider = ({ children }) => {
     try {
       setLoading(true);
       const response = await jobsAPI.deleteJob(jobId);
-      await loadDashboardData(userRole); // Refresh data after deleting
+      
+      // Remove the job from local state immediately
+      setDashboardData(prevData => ({
+        ...prevData,
+        recentJobs: prevData.recentJobs?.filter(job => job._id !== jobId) || []
+      }));
+      
+      // Refresh stats to reflect deletion
+      await refreshStats();
       return response.data;
     } catch (error) {
       console.error("Failed to delete job:", error);
@@ -412,6 +451,7 @@ export const DashboardProvider = ({ children }) => {
     logout,
     refreshData,
     refreshCurrentUser,
+    refreshStats,
     checkAuthStatus,
 
     // Job management

@@ -27,25 +27,25 @@ const NotificationSystem = () => {
     
     // Auto-remove after 5 seconds
     setTimeout(() => {
-      removeNotification(notification.id);
+      removeNotification(notification._id || notification.id);
     }, 5000);
   };
 
   const removeNotification = (id) => {
-    setVisibleNotifications(prev => prev.filter(n => n.id !== id));
+    setVisibleNotifications(prev => prev.filter(n => (n._id || n.id) !== id));
   };
 
   const handleNotificationClick = async (notification) => {
     // Mark as read via API if authenticated
     if (isAuthenticated) {
       try {
-        await notificationsAPI.markAsRead(notification.id);
+        await notificationsAPI.markAsRead(notification._id || notification.id);
       } catch (error) {
         console.error('Failed to mark notification as read:', error);
       }
     }
     
-    removeNotification(notification.id);
+    removeNotification(notification._id || notification.id);
     
     // Handle navigation based on notification type
     if (notification.type === 'application_status') {
@@ -94,9 +94,9 @@ const NotificationSystem = () => {
   return (
     <div className="fixed top-4 right-4 z-50 space-y-2">
       <AnimatePresence>
-        {visibleNotifications.map((notification) => (
+        {visibleNotifications.map((notification, index) => (
           <motion.div
-            key={notification.id}
+            key={`notification-${notification.id || `temp-${index}`}-${index}`}
             initial={{ opacity: 0, x: 300, scale: 0.8 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 300, scale: 0.8 }}

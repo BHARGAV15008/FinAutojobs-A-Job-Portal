@@ -1,13 +1,24 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useDashboard } from '../../contexts/RealDashboardContext';
 
 const JobMetrics = ({ userRole }) => {
+  const { dashboardData, getStats, loading } = useDashboard();
+  
+  // Get real stats from dashboard context
+  const stats = getStats ? getStats(userRole) : {};
+  
+  // Debug logs (reduced)
+  if (stats && Object.keys(stats).length > 0) {
+    console.log('✅ JobMetrics loaded with real data');
+  }
+
   const getMetrics = () => {
     if (userRole === 'applicant') {
       return [
         {
           title: 'Applications Sent',
-          value: '12',
+          value: String(stats?.totalApplications || dashboardData?.stats?.totalApplications || 0),
           change: '+3 this week',
           changeType: 'positive',
           icon: '📄',
@@ -16,7 +27,7 @@ const JobMetrics = ({ userRole }) => {
         },
         {
           title: 'Profile Views',
-          value: '89',
+          value: String(stats?.profileViews || 0),
           change: '+15 this week',
           changeType: 'positive',
           icon: '👁️',
@@ -25,7 +36,7 @@ const JobMetrics = ({ userRole }) => {
         },
         {
           title: 'Shortlisted',
-          value: '3',
+          value: String(stats?.shortlisted || dashboardData?.stats?.shortlisted || 0),
           change: '+1 this week',
           changeType: 'positive',
           icon: '⭐',
@@ -34,7 +45,7 @@ const JobMetrics = ({ userRole }) => {
         },
         {
           title: 'Interviews',
-          value: '2',
+          value: String(stats?.interviews || dashboardData?.stats?.interviews || 0),
           change: '+2 this week',
           changeType: 'positive',
           icon: '🗣️',
@@ -46,8 +57,8 @@ const JobMetrics = ({ userRole }) => {
       return [
         {
           title: 'Active Jobs',
-          value: '5',
-          change: '+2 this month',
+          value: String(stats?.activeJobs || dashboardData?.stats?.activeJobs || 0),
+          change: `${stats?.totalJobs || dashboardData?.stats?.totalJobs || 0} total`,
           changeType: 'positive',
           icon: '💼',
           bgColor: 'bg-blue-50 dark:bg-blue-900/20',
@@ -55,7 +66,7 @@ const JobMetrics = ({ userRole }) => {
         },
         {
           title: 'Total Applications',
-          value: '45',
+          value: String(stats?.totalApplications || dashboardData?.stats?.totalApplications || 0),
           change: '+12 this week',
           changeType: 'positive',
           icon: '📋',
@@ -64,7 +75,7 @@ const JobMetrics = ({ userRole }) => {
         },
         {
           title: 'Shortlisted',
-          value: '12',
+          value: String(stats?.shortlisted || dashboardData?.stats?.shortlisted || 0),
           change: '+4 this week',
           changeType: 'positive',
           icon: '🎯',
@@ -73,7 +84,7 @@ const JobMetrics = ({ userRole }) => {
         },
         {
           title: 'Hired',
-          value: '3',
+          value: String(stats?.hired || dashboardData?.stats?.hired || 0),
           change: '+1 this month',
           changeType: 'positive',
           icon: '✅',

@@ -7,7 +7,9 @@ import {
   DashboardProvider,
   useDashboard,
 } from "../contexts/RealDashboardContext";
-import { ThemeProvider } from "../contexts/ThemeContext";
+import { useTheme } from "../contexts/IntegratedThemeContext";
+import { useAutoRefresh, useVisibilityRefresh } from "../hooks/useAutoRefresh";
+import { useRealTimeNotifications } from "../hooks/useRealTimeNotifications";
 import {
   EnhancedProfileTab,
   EnhancedSettingsTab,
@@ -18,6 +20,7 @@ import EnhancedJobPostingTab from "../components/dashboard/EnhancedJobPostingTab
 import EnhancedApplicantsTab from "../components/dashboard/EnhancedApplicantsTab";
 import RealApplicationsTab from "../components/dashboard/RealApplicationsTab";
 import EnhancedCandidatesTab from "../components/dashboard/EnhancedCandidatesTab";
+import NotificationsTab from "../components/dashboard/NotificationsTab";
 import EnhancedInterviewsTab from "../components/dashboard/EnhancedInterviewsTab";
 import JobMetrics from "../components/dashboard/JobMetrics";
 import RecentActivity from "../components/dashboard/RecentActivity";
@@ -28,7 +31,6 @@ import LoginStatusBanner from "../components/dashboard/LoginStatusBanner";
 import MessagesTab from "../components/dashboard/MessagesTab";
 
 const RecruiterDashboardContent = () => {
-  try {
   const [location] = useLocation();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [activeJobTab, setActiveJobTab] = useState("post");
@@ -73,8 +75,22 @@ const RecruiterDashboardContent = () => {
     dashboardData, 
     loading,
     refreshData,
-    refreshCurrentUser 
+    refreshCurrentUser,
+    refreshStats
   } = dashboardContext || {};
+
+  // Auto-refresh dashboard data every 30 seconds
+  const { manualRefresh } = useAutoRefresh(30000, isAuthenticated);
+  
+  // Refresh when user returns to the page
+  useVisibilityRefresh();
+
+  // Real-time notifications
+  const { 
+    isConnected: isNotificationConnected, 
+    notifications: realTimeNotifications,
+    unreadCount: realTimeUnreadCount 
+  } = useRealTimeNotifications();
 
   // Debug: Log currentUser to see what fields are available (reduced logging)
   if (currentUser && Math.random() < 0.1) { // Only log 10% of the time to reduce spam
@@ -181,6 +197,13 @@ const RecruiterDashboardContent = () => {
     { id: "candidates", label: "Candidates", icon: "🎯" },
     { id: "interviews", label: "Interviews", icon: "🗣️" },
     { id: "analytics", label: "Analytics", icon: "📈" },
+    { 
+      id: "notifications", 
+      label: "Notifications", 
+      icon: "🔔",
+      badge: realTimeUnreadCount || 0,
+      status: isNotificationConnected ? "connected" : "disconnected"
+    },
     { id: "messages", label: "Messages", icon: "💬" },
     { id: "reports", label: "Reports", icon: "📋" },
     { id: "settings", label: "Settings", icon: "⚙️" },
@@ -468,6 +491,8 @@ const RecruiterDashboardContent = () => {
             </div>
           </div>
         );
+      case "notifications":
+        return <NotificationsTab />;
       default:
         return (
           <div className="space-y-8">
@@ -618,10 +643,10 @@ const RecruiterDashboardContent = () => {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600 dark:text-gray-400">
-                      Job Views
+                      Active Jobs
                     </span>
                     <span className="text-sm font-medium text-gray-900 dark:text-white">
-                      1,234
+                      {stats.activeJobs || 0}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -634,10 +659,10 @@ const RecruiterDashboardContent = () => {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600 dark:text-gray-400">
-                      Response Rate
+                      Hired
                     </span>
                     <span className="text-sm font-medium text-green-600 dark:text-green-400">
-                      68%
+                      {stats.hired || 0}
                     </span>
                   </div>
                 </div>
@@ -671,17 +696,6 @@ const RecruiterDashboardContent = () => {
       </div>
     </ModernDashboardLayout>
   );
-  } catch (error) {
-    console.error('RecruiterDashboard error:', error);
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
 };
 
 const RecruiterDashboardPage = () => {

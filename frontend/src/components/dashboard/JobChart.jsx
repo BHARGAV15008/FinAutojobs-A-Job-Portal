@@ -1,34 +1,39 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useDashboard } from '../../contexts/RealDashboardContext';
 
 const JobChart = ({ userRole }) => {
+  const { dashboardData, getStats } = useDashboard();
+  const stats = getStats ? getStats(userRole) : {};
+  
+  // Debug logs (reduced)
+
   const getChartData = () => {
+    // Use real data if available, otherwise show minimal placeholder
+    const currentMonth = new Date().toLocaleDateString('en-US', { month: 'short' });
+    
     if (userRole === 'applicant') {
+      const totalApplications = stats?.totalApplications || 0;
+      const interviews = stats?.interviews || 0;
+      
       return {
         title: 'Application Progress',
         data: [
-          { month: 'Jan', applications: 8, interviews: 2 },
-          { month: 'Feb', applications: 12, interviews: 3 },
-          { month: 'Mar', applications: 15, interviews: 4 },
-          { month: 'Apr', applications: 10, interviews: 5 },
-          { month: 'May', applications: 18, interviews: 6 },
-          { month: 'Jun', applications: 20, interviews: 8 }
+          { month: currentMonth, applications: totalApplications, interviews: interviews }
         ]
       };
     } else if (userRole === 'recruiter') {
+      const totalJobs = stats?.totalJobs || stats?.activeJobs || 0;
+      const hired = stats?.hired || 0;
+      
       return {
         title: 'Hiring Analytics',
         data: [
-          { month: 'Jan', posted: 5, hired: 2 },
-          { month: 'Feb', posted: 8, hired: 3 },
-          { month: 'Mar', posted: 6, hired: 4 },
-          { month: 'Apr', posted: 10, hired: 5 },
-          { month: 'May', posted: 12, hired: 7 },
-          { month: 'Jun', posted: 15, hired: 9 }
+          { month: currentMonth, posted: totalJobs, hired: hired }
         ]
       };
     }
-    return { title: '', data: [] };
+    return { title: 'No Data Available', data: [] };
   };
 
   const chartData = getChartData();

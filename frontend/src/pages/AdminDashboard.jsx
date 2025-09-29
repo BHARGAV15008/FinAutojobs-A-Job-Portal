@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import ModernDashboardLayout from "../components/layout/ModernDashboardLayout";
 import DashboardCard from "../components/cards/DashboardCard";
 import { DashboardProvider, useDashboard } from "../contexts/RealDashboardContext";
-import { ThemeProvider } from "../contexts/ThemeContext";
+import { useTheme } from "../contexts/IntegratedThemeContext";
 import {
   EnhancedProfileTab,
   EnhancedSettingsTab,

@@ -1,13 +1,14 @@
 import jwt from 'jsonwebtoken';
-import User from '../models/mongoose/user/User.js';
-import { securityLogger } from './logger.js';
+import crypto from 'crypto';
+import User from '../models/unified/BaseUser.js';
+import { securityLogger } from './Others/logger.js';
 
 // Enhanced token generation with additional security
 export const generateToken = (payload, expiresIn = '15m') => {
   const tokenPayload = {
     ...payload,
     iat: Math.floor(Date.now() / 1000),
-    jti: require('crypto').randomUUID(), // JWT ID for token tracking
+    jti: crypto.randomUUID(), // JWT ID for token tracking
     iss: 'finautojobs-api', // Issuer
     aud: 'finautojobs-client' // Audience
   };
@@ -23,7 +24,7 @@ export const generateRefreshToken = (payload) => {
   const tokenPayload = {
     ...payload,
     iat: Math.floor(Date.now() / 1000),
-    jti: require('crypto').randomUUID(),
+    jti: crypto.randomUUID(),
     type: 'refresh',
     iss: 'finautojobs-api',
     aud: 'finautojobs-client'

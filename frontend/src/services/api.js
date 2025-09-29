@@ -80,7 +80,7 @@ export const applicationsAPI = {
   createApplication: (applicationData) => api.post('/applications', applicationData),
   updateApplication: (id, data) => api.put(`/applications/${id}`, data),
   deleteApplication: (id) => api.delete(`/applications/${id}`),
-  getApplicationsByJob: (jobId) => api.get(`/jobs/${jobId}/applications`),
+  getApplicationsByJob: (jobId) => api.get(`/applications/job/${jobId}`),
   updateApplicationStatus: (id, status) => api.put(`/applications/${id}/status`, { status }),
   bulkUpdateApplications: (applicationIds, status) => 
     api.put('/applications/bulk-update', { applicationIds, status }),
@@ -88,9 +88,9 @@ export const applicationsAPI = {
 
 // Candidates API
 export const candidatesAPI = {
-  getCandidates: (params) => api.get('/candidates', { params }),
-  getCandidate: (id) => api.get(`/candidates/${id}`),
-  updateCandidateStatus: (id, status) => api.put(`/candidates/${id}/status`, { status }),
+  getCandidates: (params) => api.get('/applications', { params }),
+  getCandidate: (id) => api.get(`/applications/${id}`),
+  updateCandidateStatus: (id, status, notes = '') => api.put(`/applications/${id}/status`, { status, notes }),
   sendEmail: (id, emailData) => api.post(`/candidates/${id}/send-email`, emailData),
   downloadResume: (id) => api.get(`/candidates/${id}/resume/download`, { responseType: 'blob' }),
   getStats: () => api.get('/candidates/stats'),
@@ -174,6 +174,7 @@ export const filesAPI = {
 
 // Analytics API
 export const analyticsAPI = {
+  getDashboardAnalytics: (role) => api.get(`/analytics/dashboard/${role || ''}`),
   getPlatformAnalytics: (period) => api.get(`/analytics/platform?period=${period}`),
   getUserAnalytics: (userId, period) => api.get(`/analytics/user/${userId}?period=${period}`),
   getJobAnalytics: (jobId, period) => api.get(`/analytics/job/${jobId}?period=${period}`),
@@ -191,6 +192,16 @@ export const settingsAPI = {
   updateSystemSettings: (settings) => api.put('/settings/system', settings),
   getEmailTemplates: () => api.get('/settings/email-templates'),
   updateEmailTemplate: (id, template) => api.put(`/settings/email-templates/${id}`, template),
+};
+
+// Messages API
+export const messagesAPI = {
+  getConversations: () => api.get('/messages/conversations'),
+  getConversation: (userId, limit) => api.get(`/messages/conversation/${userId}?limit=${limit || 50}`),
+  sendMessage: (messageData) => api.post('/messages', messageData),
+  markAsRead: (messageId) => api.put(`/messages/${messageId}/read`),
+  deleteMessage: (messageId) => api.delete(`/messages/${messageId}`),
+  getStats: () => api.get('/messages/stats'),
 };
 
 // Search API

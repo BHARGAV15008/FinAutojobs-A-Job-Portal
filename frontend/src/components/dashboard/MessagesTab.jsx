@@ -1,78 +1,112 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 const MessagesTab = ({ userRole = 'admin' }) => {
   const [selectedConversation, setSelectedConversation] = useState(null);
+  const [conversations, setConversations] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [newMessage, setNewMessage] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
 
-  const conversations = [
-    {
-      id: 1,
-      name: 'Sarah Johnson',
-      role: 'Recruiter',
-      company: 'TechCorp India',
-      lastMessage: 'Thanks for approving our job posting!',
-      timestamp: '2 min ago',
-      unread: true,
-      avatar: 'SJ'
-    },
-    {
-      id: 2,
-      name: 'John Doe',
-      role: 'Applicant',
-      company: null,
-      lastMessage: 'I need help with my profile verification',
-      timestamp: '1 hour ago',
-      unread: true,
-      avatar: 'JD'
-    },
-    {
-      id: 3,
-      name: 'Mike Wilson',
-      role: 'Recruiter',
-      company: 'StartupXYZ',
-      lastMessage: 'Could you review our flagged job posting?',
-      timestamp: '3 hours ago',
-      unread: false,
-      avatar: 'MW'
-    },
-    {
-      id: 4,
-      name: 'Lisa Chen',
-      role: 'Applicant',
-      company: null,
-      lastMessage: 'Thank you for the quick response!',
-      timestamp: '1 day ago',
-      unread: false,
-      avatar: 'LC'
-    }
-  ];
+  // Fetch conversations
+  useEffect(() => {
+    const fetchConversations = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Import messagesAPI dynamically
+        const { messagesAPI } = await import("../../services/api");
+        const response = await messagesAPI.getConversations();
+        
+        if (response.data.success) {
+          setConversations(response.data.data.conversations || []);
+          console.log('✅ Conversations loaded:', response.data.data.conversations);
+        } else {
+          throw new Error(response.data.message || 'Failed to fetch conversations');
+        }
+      } catch (error) {
+        console.error('❌ Error fetching conversations:', error);
+        setError(error.message);
+        // Set fallback empty array
+        setConversations([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const messages = selectedConversation ? [
-    {
-      id: 1,
-      sender: 'other',
-      content: 'Hello! I need some assistance with my account.',
-      timestamp: '10:30 AM'
-    },
-    {
-      id: 2,
-      sender: 'me',
-      content: 'Hi! I\'d be happy to help. What specific issue are you experiencing?',
-      timestamp: '10:32 AM'
-    },
-    {
-      id: 3,
-      sender: 'other',
-      content: 'I\'m having trouble uploading my resume. It keeps showing an error.',
-      timestamp: '10:35 AM'
-    },
-    {
-      id: 4,
-      sender: 'me',
-      content: 'I see. Can you tell me what file format you\'re trying to upload and the file size?',
-      timestamp: '10:37 AM'
+    fetchConversations();
+  }, []);
+
+  // Fetch messages for selected conversation
+  const fetchMessages = async (userId) => {
+    try {
+      const { messagesAPI } = await import("../../services/api");
+      const response = await messagesAPI.getConversation(userId);
+      
+      if (response.data.success) {
+        setMessages(response.data.data.messages || []);
+        console.log('✅ Messages loaded:', response.data.data.messages);
+      } else {
+        throw new Error(response.data.message || 'Failed to fetch messages');
+      }
+    } catch (error) {
+      console.error('❌ Error fetching messages:', error);
+      setMessages([]);
     }
-  ] : [];
+  };
+
+  // Handle conversation selection
+  const handleConversationSelect = (conversation) => {
+    setSelectedConversation(conversation);
+    fetchMessages(conversation.id);
+  };
+
+  // Send new message
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !selectedConversation || sendingMessage) return;
+
+    try {
+      setSendingMessage(true);
+      
+      const { messagesAPI } = await import("../../services/api");
+      const response = await messagesAPI.sendMessage({
+        receiverId: selectedConversation.id,
+        subject: 'Message',
+        content: newMessage.trim(),
+        messageType: 'general'
+      });
+      
+      if (response.data.success) {
+        // Add new message to the list
+        setMessages(prev => [...prev, response.data.data.message]);
+        setNewMessage('');
+        console.log('✅ Message sent successfully');
+      } else {
+        throw new Error(response.data.message || 'Failed to send message');
+      }
+    } catch (error) {
+      console.error('❌ Error sending message:', error);
+      alert('Failed to send message. Please try again.');
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading messages...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -112,7 +146,7 @@ const MessagesTab = ({ userRole = 'admin' }) => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.1 }}
-                  onClick={() => setSelectedConversation(conversation)}
+                  onClick={() => handleConversationSelect(conversation)}
                 >
                   <div className="flex items-start space-x-3">
                     <div className="flex-shrink-0">

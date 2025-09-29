@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useTheme } from '../../contexts/IntegratedThemeContext';
 import { candidatesAPI, interviewsAPI } from '../../services/api';
+import { applicationService } from '../../services/applicationService';
 import CandidateProfileModal from '../modals/CandidateProfileModal';
 import ContactModal from '../modals/ContactModal';
 import ScheduleModal from '../modals/ScheduleModal';
@@ -14,98 +15,79 @@ const EnhancedCandidatesTab = () => {
   const [sortBy, setSortBy] = useState('lastActivity');
   const [sortOrder, setSortOrder] = useState('desc');
   const [actionLoading, setActionLoading] = useState({});
+  const [applications, setApplications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   
   // Modal states
   const [profileModal, setProfileModal] = useState({ isOpen: false, candidate: null });
   const [contactModal, setContactModal] = useState({ isOpen: false, candidate: null });
   const [scheduleModal, setScheduleModal] = useState({ isOpen: false, candidate: null });
 
-  // Mock candidates data
-  const mockCandidates = [
-    {
-      id: 1,
-      name: 'Sarah Johnson',
-      email: 'sarah.johnson@email.com',
-      phone: '+91 9876543210',
-      currentRole: 'Senior React Developer',
-      experience: '6 years',
-      location: 'Mumbai, India',
-      skills: ['React', 'Node.js', 'TypeScript', 'AWS'],
-      education: [{
-        degree: 'M.Tech Computer Science',
-        institution: 'Indian Institute of Technology',
-        year: '2018',
-        grade: '8.5 CGPA'
-      }],
-      workExperience: [{
-        company: 'Tech Solutions Inc.',
-        position: 'Senior React Developer',
-        duration: '2020 - Present',
-        description: 'Led development of multiple React applications, mentored junior developers.'
-      }],
-      portfolioLinks: [{
-        type: 'Portfolio',
-        url: 'https://sarah-portfolio.com',
-        label: 'Personal Portfolio'
-      }],
-      status: 'active',
-      availability: 'Immediate',
-      expectedSalary: '₹25-30 LPA',
-      lastActivity: '2024-01-28',
-      rating: 4.8,
-      notes: 'Excellent technical skills, strong leadership potential',
-      avatar: '👩‍💻',
-      resume: 'sarah_johnson_resume.pdf',
-      portfolio: 'https://sarah-portfolio.com'
-    },
-    {
-      id: 2,
-      name: 'Arjun Patel',
-      email: 'arjun.patel@email.com',
-      phone: '+91 9876543211',
-      currentRole: 'Full Stack Developer',
-      experience: '4 years',
-      location: 'Bangalore, India',
-      skills: ['Python', 'Django', 'React', 'PostgreSQL'],
-      education: [{
-        degree: 'B.Tech Information Technology',
-        institution: 'National Institute of Technology',
-        year: '2020',
-        grade: '8.2 CGPA'
-      }],
-      workExperience: [{
-        company: 'Digital Innovations Ltd.',
-        position: 'Full Stack Developer',
-        duration: '2020 - Present',
-        description: 'Developed web applications using Python, Django, and React.'
-      }],
-      portfolioLinks: [{
-        type: 'Portfolio',
-        url: 'https://arjun-dev.com',
-        label: 'Development Portfolio'
-      }],
-      status: 'interested',
-      availability: '2 weeks notice',
-      expectedSalary: '₹18-22 LPA',
-      lastActivity: '2024-01-25',
-      rating: 4.5,
-      notes: 'Good problem solver, team player',
-      avatar: '👨‍💻',
-      resume: 'arjun_patel_resume.pdf',
-      portfolio: 'https://arjun-dev.com'
-    }
-  ];
+  // Fetch applications data
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        setLoading(true);
+        console.log('🔍 Fetching applications for candidates tab...');
+        
+        const response = await applicationService.getUserApplications(50, 1);
+        console.log('✅ Applications fetched for candidates:', response);
+        
+        if (response.success) {
+          setApplications(response.data?.applications || []);
+        } else {
+          setError('Failed to fetch applications');
+        }
+      } catch (error) {
+        console.error('❌ Error fetching applications:', error);
+        setError('Error loading applications');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchApplications();
+  }, []);
+
+  // Transform applications data into candidates format
+  const candidates = useMemo(() => {
+    return applications.map(app => ({
+      id: app._id,
+      applicationId: app._id,
+      name: app.applicantSnapshot?.fullName || 'Unknown Candidate',
+      email: app.applicantSnapshot?.email || '',
+      phone: app.applicantSnapshot?.phone || app.applicationData?.phone || '',
+      currentRole: app.applicationData?.currentJobTitle || 'Not specified',
+      experience: app.applicationData?.experience || 'Not specified',
+      location: app.applicantSnapshot?.location || app.applicationData?.location || 'Not specified',
+      skills: app.applicationData?.skills || [],
+      education: [],
+      workExperience: [],
+      portfolioLinks: [],
+      status: app.status || 'pending',
+      appliedDate: app.appliedAt ? new Date(app.appliedAt).toISOString().split('T')[0] : '',
+      lastActivity: app.updatedAt ? new Date(app.updatedAt).toISOString().split('T')[0] : '',
+      rating: 0,
+      notes: app.recruiterNotes || '',
+      isShortlisted: app.status === 'shortlisted',
+      interviewScheduled: false,
+      resumeUrl: app.applicationData?.resumeUrl || '',
+      jobTitle: app.jobSnapshot?.title || 'Unknown Position',
+      company: app.jobSnapshot?.company || 'Unknown Company'
+    }));
+  }, [applications]);
 
   const statusConfig = {
-    all: { label: 'All Candidates', color: 'bg-gray-100 text-gray-800', count: mockCandidates.length },
-    active: { label: 'Active', color: 'bg-green-100 text-green-800', count: mockCandidates.filter(c => c.status === 'active').length },
-    interested: { label: 'Interested', color: 'bg-blue-100 text-blue-800', count: mockCandidates.filter(c => c.status === 'interested').length },
-    contacted: { label: 'Contacted', color: 'bg-yellow-100 text-yellow-800', count: mockCandidates.filter(c => c.status === 'contacted').length },
-    not_interested: { label: 'Not Interested', color: 'bg-red-100 text-red-800', count: mockCandidates.filter(c => c.status === 'not_interested').length }
+    all: { label: 'All Candidates', color: 'bg-gray-100 text-gray-800', count: candidates.length },
+    pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800', count: candidates.filter(c => c.status === 'pending').length },
+    shortlisted: { label: 'Shortlisted', color: 'bg-blue-100 text-blue-800', count: candidates.filter(c => c.status === 'shortlisted').length },
+    interviewed: { label: 'Interviewed', color: 'bg-purple-100 text-purple-800', count: candidates.filter(c => c.status === 'interviewed').length },
+    rejected: { label: 'Rejected', color: 'bg-red-100 text-red-800', count: candidates.filter(c => c.status === 'rejected').length }
   };
 
   const filteredAndSortedCandidates = useMemo(() => {
-    let filtered = mockCandidates;
+    let filtered = candidates;
     if (selectedStatus !== 'all') {
       filtered = filtered.filter(candidate => candidate.status === selectedStatus);
     }
@@ -167,13 +149,22 @@ const EnhancedCandidatesTab = () => {
     }
   };
 
-  const handleStatusChange = async (candidateId, newStatus) => {
+  const handleStatusChange = async (applicationId, newStatus) => {
     try {
-      const response = await candidatesAPI.updateCandidateStatus(candidateId, newStatus);
-      console.log('Status update result:', response.data);
+      console.log('🔄 Updating application status:', { applicationId, newStatus });
+      const response = await applicationService.updateApplicationStatus(applicationId, newStatus, '');
+      console.log('✅ Status update result:', response.data);
+      
+      // Update local state
+      setApplications(prev => prev.map(app => 
+        app._id === applicationId 
+          ? { ...app, status: newStatus }
+          : app
+      ));
+      
       alert(`✅ Candidate status updated to ${newStatus} - Database updated successfully!`);
     } catch (error) {
-      console.error('Failed to update status:', error);
+      console.error('❌ Failed to update status:', error);
       const errorMessage = error.response?.data?.message || error.message || 'Unknown error occurred';
       alert(`❌ Failed to update status: ${errorMessage}. Please try again.`);
     }
@@ -195,13 +186,17 @@ const EnhancedCandidatesTab = () => {
   const handleShortlistCandidate = async (candidate) => {
     try {
       // Toggle shortlist status
-      const newStatus = candidate.isShortlisted ? 'active' : 'shortlisted';
-      await candidatesAPI.updateCandidateStatus(candidate.id, newStatus, 'Shortlist status updated by recruiter');
+      const newStatus = candidate.isShortlisted ? 'pending' : 'shortlisted';
+      await applicationService.updateApplicationStatus(candidate.applicationId, newStatus, 'Shortlist status updated by recruiter');
       
       // Update local state
-      candidate.isShortlisted = !candidate.isShortlisted;
+      setApplications(prev => prev.map(app => 
+        app._id === candidate.applicationId 
+          ? { ...app, status: newStatus }
+          : app
+      ));
       
-      alert(`✅ Candidate ${candidate.isShortlisted ? 'added to' : 'removed from'} shortlist!`);
+      alert(`✅ Candidate ${newStatus === 'shortlisted' ? 'added to' : 'removed from'} shortlist!`);
     } catch (error) {
       console.error('Failed to update shortlist:', error);
       alert('❌ Failed to update shortlist. Please try again.');
@@ -287,6 +282,30 @@ const EnhancedCandidatesTab = () => {
       throw error;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -442,13 +461,13 @@ const EnhancedCandidatesTab = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <select
                           value={candidate.status}
-                          onChange={(e) => handleStatusChange(candidate.id, e.target.value)}
-                          className={`px-3 py-1 rounded-full text-xs font-medium border-0 ${statusConfig[candidate.status]?.color || statusConfig.active.color}`}
+                          onChange={(e) => handleStatusChange(candidate.applicationId, e.target.value)}
+                          className={`px-3 py-1 rounded-full text-xs font-medium border-0 ${statusConfig[candidate.status]?.color || statusConfig.pending?.color}`}
                         >
-                          <option value="active">Active</option>
-                          <option value="interested">Interested</option>
-                          <option value="contacted">Contacted</option>
-                          <option value="not_interested">Not Interested</option>
+                          <option value="pending">Pending</option>
+                          <option value="shortlisted">Shortlisted</option>
+                          <option value="interviewed">Interviewed</option>
+                          <option value="rejected">Rejected</option>
                         </select>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{candidate.experience}</td>
@@ -565,13 +584,13 @@ const EnhancedCandidatesTab = () => {
                 <div className="mb-4">
                   <select
                     value={candidate.status}
-                    onChange={(e) => handleStatusChange(candidate.id, e.target.value)}
-                    className={`w-full px-3 py-2 rounded-lg text-sm font-medium ${statusConfig[candidate.status]?.color || statusConfig.active.color}`}
+                    onChange={(e) => handleStatusChange(candidate.applicationId, e.target.value)}
+                    className={`w-full px-3 py-2 rounded-lg text-sm font-medium ${statusConfig[candidate.status]?.color || statusConfig.pending?.color}`}
                   >
-                    <option value="active">Active</option>
-                    <option value="interested">Interested</option>
-                    <option value="contacted">Contacted</option>
-                    <option value="not_interested">Not Interested</option>
+                    <option value="pending">Pending</option>
+                    <option value="shortlisted">Shortlisted</option>
+                    <option value="interviewed">Interviewed</option>
+                    <option value="rejected">Rejected</option>
                   </select>
                 </div>
 
@@ -620,7 +639,7 @@ const EnhancedCandidatesTab = () => {
       </AnimatePresence>
 
       <div className="text-center text-gray-600 dark:text-gray-400">
-        Showing {filteredAndSortedCandidates.length} of {mockCandidates.length} candidates
+        Showing {filteredAndSortedCandidates.length} of {candidates.length} candidates
       </div>
 
       {/* Modals */}

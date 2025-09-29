@@ -12,6 +12,13 @@ export default defineConfig({
       },
     }),
   ],
+  define: {
+    'process.env': {},
+    'process': {
+      env: {}
+    },
+    global: 'globalThis',
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

@@ -4,7 +4,7 @@ import { useLocation } from 'wouter';
 import ModernDashboardLayout from '../components/layout/ModernDashboardLayout';
 import DashboardCard from '../components/cards/DashboardCard';
 import { useDashboard } from '../contexts/RealDashboardContext';
-import { useTheme } from '../contexts/ThemeContext';
+import { useTheme } from '../contexts/IntegratedThemeContext';
 
 // Import sub-components (we'll create these)
 import ApplicantProfile from '../components/dashboard/applicant/ApplicantProfile';

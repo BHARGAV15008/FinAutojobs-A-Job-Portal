@@ -8,6 +8,7 @@ import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import path from 'path';
+// Server restart trigger - fix backend crash
 import { fileURLToPath } from 'url';
 
 // Import configurations
@@ -44,6 +45,9 @@ const io = new Server(server, {
   },
   transports: ['websocket', 'polling']
 });
+
+// Make io available to routes
+app.set('io', io);
 
 // Socket.io connection handling
 io.on('connection', (socket) => {
@@ -156,8 +160,8 @@ app.use(sanitizeRequest);
 app.use(sqlInjectionPrevention);
 app.use(preventNoSqlInjection);
 
-// Apply rate limiting to API routes
-app.use('/api/', apiLimiter);
+// Apply rate limiting to API routes (disabled for development)
+// app.use('/api/', apiLimiter);
 
 // Session configuration
 app.use(session({
@@ -202,6 +206,8 @@ import interviewsRoutes from './routes/interviews.js';
 import enhancedApplicationsRoutes from './routes/enhancedApplications.js';
 import fileUploadRoutes from './routes/fileUpload.js';
 import recommendationsRoutes from './routes/recommendations.js';
+import analyticsRoutes from './routes/analytics.js';
+import messagesRoutes from './routes/messages.js';
 
 // Mount routes under /api
 app.use('/api/auth', authRoutes);
@@ -225,6 +231,8 @@ apiRouter.use('/recruiters', recruiterRoutes);
 apiRouter.use('/candidates', candidatesRoutes);
 apiRouter.use('/interviews', interviewsRoutes);
 apiRouter.use('/recommendations', recommendationsRoutes);
+apiRouter.use('/analytics', analyticsRoutes);
+apiRouter.use('/messages', messagesRoutes);
 
 // Debug middleware to log all requests
 app.use((req, res, next) => {

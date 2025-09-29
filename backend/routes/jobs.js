@@ -1,7 +1,9 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
 import Job from '../models/Job.js';
-import { BaseUser, Recruiter } from '../models/UserModels.js';
+import { BaseUser } from '../models/UserModels.js';
+import Notification from '../models/Notification.js';
+import jwt from 'jsonwebtoken';
 
 const router = express.Router();
 
@@ -705,6 +707,64 @@ router.post('/', jobValidation, authenticateToken, async (req, res) => {
     // Create and save job
     const newJob = new Job(jobData);
     const savedJob = await newJob.save();
+
+    // Create notifications for relevant applicants
+    console.log('🔔 Creating job alert notifications for applicants...');
+    try {
+      // Find applicants with matching skills or location
+      const applicants = await BaseUser.find({ 
+        role: 'applicant',
+        $or: [
+          { 'skills.primary': { $in: savedJob.requiredSkills } },
+          { 'skills.technical': { $in: savedJob.requiredSkills } },
+          { 'currentLocation.city': { $regex: savedJob.location, $options: 'i' } },
+          { 'location': { $regex: savedJob.location, $options: 'i' } }
+        ]
+      }).limit(50); // Limit to prevent spam
+
+      // Create notifications for matching applicants
+      const notifications = applicants.map(applicant => ({
+        userId: applicant._id,
+        type: 'new_job_posted',
+        title: 'New Job Opportunity Available!',
+        message: `A new ${savedJob.jobTitle} position has been posted at ${savedJob.companyName}.`,
+        data: {
+          jobId: savedJob._id,
+          jobTitle: savedJob.jobTitle,
+          companyName: savedJob.companyName,
+          location: savedJob.location,
+          requiredSkills: savedJob.requiredSkills
+        },
+        priority: 'medium',
+        actionUrl: `/jobs/${savedJob._id}`
+      }));
+
+      if (notifications.length > 0) {
+        await Notification.insertMany(notifications);
+        console.log(`✅ Created ${notifications.length} job alert notifications`);
+
+        // Emit real-time notifications
+        const io = req.app.get('io');
+        if (io) {
+          applicants.forEach(applicant => {
+            io.to(`user-${applicant._id}`).emit('new-job-posted', {
+              message: `New ${savedJob.jobTitle} position available at ${savedJob.companyName}`,
+              job: {
+                id: savedJob._id,
+                title: savedJob.jobTitle,
+                company: savedJob.companyName,
+                location: savedJob.location
+              },
+              timestamp: new Date()
+            });
+          });
+          console.log('✅ Real-time job alerts sent');
+        }
+      }
+    } catch (notificationError) {
+      console.error('❌ Failed to create job notifications:', notificationError);
+      // Don't fail the job creation if notifications fail
+    }
 
     // Transform response
     const responseJob = {

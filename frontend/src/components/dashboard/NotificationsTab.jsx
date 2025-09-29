@@ -64,16 +64,12 @@ const NotificationsTab = () => {
         setLoading(true);
         console.log('🔍 Fetching notifications for user:', user?.userId);
         
-        // Mock API call - replace with actual API
-        const response = await fetch(`/api/notifications?userId=${user?.userId}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
+        // Real API call
+        const { getNotifications } = await import('../../api/notifications');
+        const response = await getNotifications();
         
-        if (response.ok) {
-          const data = await response.json();
-          setNotifications(data.data || []);
+        if (response.success) {
+          setNotifications(response.data.notifications || []);
         } else {
           // Mock notifications for demo
           const mockNotifications = [
@@ -162,7 +158,8 @@ const NotificationsTab = () => {
   // Mark notification as read
   const markAsRead = async (notificationId) => {
     try {
-      // API call to mark as read
+      const { markAsRead: markAsReadAPI } = await import('../../api/notifications');
+      await markAsReadAPI(notificationId);
       setNotifications(prev => prev.map(notification => 
         notification._id === notificationId 
           ? { ...notification, read: true }
@@ -176,7 +173,8 @@ const NotificationsTab = () => {
   // Delete notification
   const deleteNotification = async (notificationId) => {
     try {
-      // API call to delete
+      const { deleteNotification: deleteNotificationAPI } = await import('../../api/notifications');
+      await deleteNotificationAPI(notificationId);
       setNotifications(prev => prev.filter(notification => notification._id !== notificationId));
       setAnchorEl(null);
     } catch (error) {
@@ -187,6 +185,8 @@ const NotificationsTab = () => {
   // Mark all as read
   const markAllAsRead = async () => {
     try {
+      const { markAllAsRead: markAllAsReadAPI } = await import('../../api/notifications');
+      await markAllAsReadAPI();
       setNotifications(prev => prev.map(notification => ({ ...notification, read: true })));
     } catch (error) {
       console.error('❌ Error marking all as read:', error);

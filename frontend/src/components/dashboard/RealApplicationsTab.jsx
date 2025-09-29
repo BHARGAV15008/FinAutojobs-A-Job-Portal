@@ -42,18 +42,20 @@ import {
   Download,
   MoreVert,
   CheckCircle,
-  Cancel,
   Schedule,
   Visibility,
   Star,
   StarBorder,
+  Cancel,
 } from '@mui/icons-material';
-import { motion, AnimatePresence } from 'framer-motion';
-import { applicationService } from '../../services/applicationService';
+import { motion } from 'framer-motion';
+import applicationService from '../../services/applicationService';
+import { useDashboard } from '../../contexts/RealDashboardContext';
 import { useAuth } from '../../contexts/AuthContext';
 
 const RealApplicationsTab = () => {
   const { user } = useAuth();
+  const { refreshStats } = useDashboard();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -134,6 +136,11 @@ const RealApplicationsTab = () => {
             ? { ...app, status: newStatus, recruiterNotes: notes }
             : app
         ));
+        
+        // Refresh dashboard stats to reflect the status change
+        if (refreshStats) {
+          refreshStats();
+        }
         
         setStatusUpdateModal(false);
         setSelectedApplication(null);

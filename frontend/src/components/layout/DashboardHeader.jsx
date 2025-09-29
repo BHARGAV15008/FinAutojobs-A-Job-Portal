@@ -4,6 +4,7 @@ import { useTheme } from "../../contexts/IntegratedThemeContext";
 import { useDashboard } from "../../contexts/RealDashboardContext";
 import { useAuth } from "../../contexts/AuthContext.jsx";
 import { useLocation } from "wouter";
+import { useRealTimeNotifications } from "../../hooks/useRealTimeNotifications";
 
 const DashboardHeader = ({
   title,
@@ -25,7 +26,15 @@ const DashboardHeader = ({
   const { logout } = useAuth();
   const [, setLocation] = useLocation();
 
+  // Real-time notifications
+  const { 
+    isConnected: isNotificationConnected, 
+    notifications: realTimeNotifications,
+    unreadCount: realTimeUnreadCount 
+  } = useRealTimeNotifications();
+
   const notifications = dashboardData?.notifications || [];
+  const combinedNotifications = [...realTimeNotifications, ...notifications];
 
   const profileDropdownRef = useRef(null);
   const searchRef = useRef(null);
@@ -60,7 +69,7 @@ const DashboardHeader = ({
     }
   }, [searchQuery, searchJobs]);
 
-  const unreadNotifications = Array.isArray(notifications) ? notifications.filter((n) => !n.read).length : 0;
+  const unreadNotifications = realTimeUnreadCount + (Array.isArray(notifications) ? notifications.filter((n) => !n.read).length : 0);
 
   const handleProfileAction = (action) => {
     setProfileDropdownOpen(false);
@@ -278,6 +287,26 @@ const DashboardHeader = ({
                   {unreadNotifications > 9 ? "9+" : unreadNotifications}
                 </motion.span>
               )}
+              
+              {/* Real-time connection status indicator */}
+              <div className="absolute -bottom-1 -right-1">
+                <div
+                  className={`w-3 h-3 rounded-full border-2 border-white ${
+                    isNotificationConnected 
+                      ? 'bg-green-500' 
+                      : 'bg-red-500'
+                  }`}
+                  title={isNotificationConnected ? 'Connected to real-time notifications' : 'Disconnected from real-time notifications'}
+                >
+                  {isNotificationConnected && (
+                    <motion.div
+                      className="w-full h-full bg-green-400 rounded-full"
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
+                  )}
+                </div>
+              </div>
             </motion.button>
 
             {/* Profile dropdown - Enhanced with proper sizing and margin */}

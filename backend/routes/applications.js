@@ -7,6 +7,7 @@ import Job from '../models/Job.js';
 // Import the correct user model that other routes use
 import { BaseUser } from '../models/UserModels.js';
 import CleanUser from '../models/CleanUser.js';
+import Notification from '../models/Notification.js';
 import joi from 'joi';
 
 const router = express.Router();
@@ -504,23 +505,15 @@ router.post('/', (req, res, next) => {
     // Create notification for recruiter
     console.log('🔍 Creating notification for recruiter...');
     try {
-      // Import notification creation function if it exists
-      const createNotification = async (userId, type, title, message, data = {}) => {
-        console.log('📧 Creating notification:', { userId, type, title, message });
-        // This would integrate with your notification system
-        // For now, just log the notification
-        return true;
-      };
-      
-      await createNotification(
+      await Notification.createApplicationReceived(
         job.postedBy,
-        'new_application',
-        'New Job Application',
-        `${applicantSnapshot.fullName} applied for ${job.jobTitle}`,
         {
-          applicationId: savedApplication._id,
-          jobId: jobId,
-          applicantId: req.user.userId
+          _id: savedApplication._id,
+          applicantName: applicantSnapshot.fullName
+        },
+        {
+          _id: job._id,
+          title: job.jobTitle || job.title
         }
       );
       console.log('✅ Notification created successfully');
@@ -657,6 +650,20 @@ router.put('/:id/status', authenticateToken, async (req, res) => {
       await Application.findByIdAndUpdate(applicationId, {
         recruiterNotes: notes
       });
+    }
+
+    // Create notification for applicant
+    console.log('🔄 Creating notification for applicant...');
+    try {
+      await Notification.createApplicationStatusUpdate(
+        application.applicantId._id || application.applicantId,
+        application._id,
+        status,
+        application.jobSnapshot?.jobTitle || application.jobId?.title || 'Unknown Position'
+      );
+      console.log('✅ Notification created successfully');
+    } catch (notificationError) {
+      console.error('❌ Failed to create notification:', notificationError);
     }
 
     // Emit real-time notification to applicant

@@ -20,7 +20,12 @@ const ModernDashboardLayout = ({
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
   const { darkMode } = useTheme();
   const { dashboardData } = useDashboard();
-  const notifications = dashboardData?.notifications || [];
+  let notifications = dashboardData?.notifications || [];
+  
+  // Debug notifications (only log if there are notifications)
+  if (notifications.length > 0) {
+    console.log('✅ Loaded', notifications.length, 'real notifications:', notifications.map(n => n.title));
+  }
 
   // Close sidebar on mobile when clicking outside
   useEffect(() => {

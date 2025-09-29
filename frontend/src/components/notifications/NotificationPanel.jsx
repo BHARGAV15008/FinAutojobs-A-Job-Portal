@@ -10,6 +10,13 @@ const NotificationPanel = ({ isOpen, onClose, notifications }) => {
     console.log('Notification clicked:', notification);
   };
 
+  const clearReadNotifications = () => {
+    // Handle clearing read notifications
+    console.log('Clearing read notifications...');
+    // This would typically call an API to clear read notifications
+    // For now, we'll just log it
+  };
+
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'job_application':
@@ -113,9 +120,9 @@ const NotificationPanel = ({ isOpen, onClose, notifications }) => {
                 </div>
               ) : (
                 <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {notifications.map((notification) => (
+                  {notifications.map((notification, index) => (
                     <motion.div
-                      key={notification.id}
+                      key={notification._id || notification.id || `notification-${index}`}
                       className={`p-4 cursor-pointer transition-colors duration-200 ${
                         notification.read
                           ? 'bg-gray-50 dark:bg-gray-800/50'

@@ -39,7 +39,7 @@ export const markAsUnread = async (id) => {
 
 export const markAllAsRead = async () => {
   try {
-    const response = await apiClient.put('/notifications/read-all');
+    const response = await apiClient.put('/notifications/mark-all-read');
     return response.data;
   } catch (error) {
     throw error.response?.data || error.message;

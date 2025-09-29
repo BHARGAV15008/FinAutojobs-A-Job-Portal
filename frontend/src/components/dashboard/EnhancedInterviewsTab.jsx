@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useTheme } from '../../contexts/IntegratedThemeContext';
 import { interviewsAPI, candidatesAPI } from '../../services/api';
 import CandidateProfileModal from '../modals/CandidateProfileModal';
 import ContactModal from '../modals/ContactModal';
@@ -20,7 +20,44 @@ const EnhancedInterviewsTab = () => {
   const [contactModal, setContactModal] = useState({ isOpen: false, candidate: null });
   const [scheduleModal, setScheduleModal] = useState({ isOpen: false, candidate: null });
 
-  // Mock interviews data
+  // Real interviews data
+  const [interviews, setInterviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch interviews from API
+  useEffect(() => {
+    const fetchInterviews = async () => {
+      try {
+        setLoading(true);
+        console.log('🔍 Fetching interviews from API...');
+        const response = await interviewsAPI.getInterviews();
+        console.log('📊 Interviews API response:', response);
+        
+        if (response.data.success) {
+          console.log('✅ Interviews data:', response.data.data);
+          setInterviews(response.data.data || []);
+        } else {
+          console.log('❌ API returned success: false');
+          setError('Failed to fetch interviews');
+          // Fallback to mock data
+          setInterviews(mockInterviews);
+        }
+      } catch (err) {
+        console.error('❌ Error fetching interviews:', err);
+        console.log('🔄 Falling back to mock data');
+        setError('Failed to load interviews - using mock data');
+        // Fallback to mock data for now
+        setInterviews(mockInterviews);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInterviews();
+  }, []);
+
+  // Mock interviews data (fallback)
   const mockInterviews = [
     {
       id: 1,
@@ -104,16 +141,16 @@ const EnhancedInterviewsTab = () => {
   ];
 
   const statusConfig = {
-    all: { label: 'All Interviews', color: 'bg-gray-100 text-gray-800', count: mockInterviews.length },
-    scheduled: { label: 'Scheduled', color: 'bg-blue-100 text-blue-800', count: mockInterviews.filter(i => i.status === 'scheduled').length },
-    completed: { label: 'Completed', color: 'bg-green-100 text-green-800', count: mockInterviews.filter(i => i.status === 'completed').length },
-    rescheduled: { label: 'Rescheduled', color: 'bg-yellow-100 text-yellow-800', count: mockInterviews.filter(i => i.status === 'rescheduled').length },
-    cancelled: { label: 'Cancelled', color: 'bg-red-100 text-red-800', count: mockInterviews.filter(i => i.status === 'cancelled').length },
-    no_show: { label: 'No Show', color: 'bg-gray-100 text-gray-800', count: mockInterviews.filter(i => i.status === 'no_show').length }
+    all: { label: 'All Interviews', color: 'bg-gray-100 text-gray-800', count: interviews.length },
+    scheduled: { label: 'Scheduled', color: 'bg-blue-100 text-blue-800', count: interviews.filter(i => i.status === 'scheduled').length },
+    completed: { label: 'Completed', color: 'bg-green-100 text-green-800', count: interviews.filter(i => i.status === 'completed').length },
+    rescheduled: { label: 'Rescheduled', color: 'bg-yellow-100 text-yellow-800', count: interviews.filter(i => i.status === 'rescheduled').length },
+    cancelled: { label: 'Cancelled', color: 'bg-red-100 text-red-800', count: interviews.filter(i => i.status === 'cancelled').length },
+    no_show: { label: 'No Show', color: 'bg-gray-100 text-gray-800', count: interviews.filter(i => i.status === 'no_show').length }
   };
 
   const filteredAndSortedInterviews = useMemo(() => {
-    let filtered = mockInterviews;
+    let filtered = interviews;
     if (selectedStatus !== 'all') {
       filtered = filtered.filter(interview => interview.status === selectedStatus);
     }
@@ -134,7 +171,7 @@ const EnhancedInterviewsTab = () => {
       }
       return sortOrder === 'asc' ? (aValue > bValue ? 1 : -1) : (aValue < bValue ? 1 : -1);
     });
-  }, [selectedStatus, searchQuery, sortBy, sortOrder]);
+  }, [interviews, selectedStatus, searchQuery, sortBy, sortOrder]);
 
   // Modal handlers
   const handleViewCandidate = (interview) => {
@@ -284,6 +321,16 @@ const EnhancedInterviewsTab = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  console.log('🔍 Current interviews state:', { interviews, error, loading });
+
   return (
     <motion.div
       className="space-y-6"
@@ -399,7 +446,20 @@ const EnhancedInterviewsTab = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                  {filteredAndSortedInterviews.map((interview, index) => (
+                  {filteredAndSortedInterviews.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="px-6 py-12 text-center">
+                        <div className="text-gray-500 dark:text-gray-400">
+                          <p className="text-lg mb-2">📅 No interviews found</p>
+                          <p className="text-sm">
+                            {error ? `Error: ${error}` : 'No interviews match your current filters.'}
+                          </p>
+                          <p className="text-xs mt-2">Total interviews in database: {interviews.length}</p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredAndSortedInterviews.map((interview, index) => (
                     <motion.tr
                       key={interview.id}
                       className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
@@ -503,7 +563,7 @@ const EnhancedInterviewsTab = () => {
                         </div>
                       </td>
                     </motion.tr>
-                  ))}
+                  )))}
                 </tbody>
               </table>
             </div>
@@ -516,7 +576,18 @@ const EnhancedInterviewsTab = () => {
             exit={{ opacity: 0, x: -20 }}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
-            {filteredAndSortedInterviews.map((interview, index) => (
+            {filteredAndSortedInterviews.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <div className="text-gray-500 dark:text-gray-400">
+                  <p className="text-lg mb-2">📅 No interviews found</p>
+                  <p className="text-sm">
+                    {error ? `Error: ${error}` : 'No interviews match your current filters.'}
+                  </p>
+                  <p className="text-xs mt-2">Total interviews in database: {interviews.length}</p>
+                </div>
+              </div>
+            ) : (
+              filteredAndSortedInterviews.map((interview, index) => (
               <motion.div
                 key={interview.id}
                 className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-300"
@@ -627,13 +698,13 @@ const EnhancedInterviewsTab = () => {
                   )}
                 </div>
               </motion.div>
-            ))}
+            )))}
           </motion.div>
         )}
       </AnimatePresence>
 
       <div className="text-center text-gray-600 dark:text-gray-400">
-        Showing {filteredAndSortedInterviews.length} of {mockInterviews.length} interviews
+        Showing {filteredAndSortedInterviews.length} of {interviews.length} interviews
       </div>
 
       {/* Modals */}

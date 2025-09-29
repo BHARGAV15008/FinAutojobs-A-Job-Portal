@@ -1,96 +1,81 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useDashboard } from '../../contexts/RealDashboardContext';
 
 const RecentActivity = ({ userRole }) => {
+  const { dashboardData } = useDashboard();
+  
   const getActivities = () => {
+    // Use real data from dashboard context
+    const recentJobs = dashboardData?.recentJobs || [];
+    const applications = dashboardData?.applications || [];
+    const notifications = dashboardData?.notifications || [];
+    
+    // Debug logs (reduced)
+    
+    let activities = [];
+    
     if (userRole === 'applicant') {
-      return [
-        {
-          id: 1,
+      // Show recent applications and notifications
+      applications.slice(0, 3).forEach((app, index) => {
+        activities.push({
+          id: `app-${index}`,
           type: 'application',
-          title: 'Applied to Software Engineer at TechCorp',
-          time: '2 hours ago',
+          title: `Applied to ${app.jobTitle || app.jobId?.title || 'Job Position'}`,
+          time: app.createdAt ? new Date(app.createdAt).toLocaleDateString() : 'Recently',
           icon: '📄',
-          status: 'pending'
-        },
-        {
-          id: 2,
-          type: 'shortlist',
-          title: 'Shortlisted for Frontend Developer at StartupXYZ',
-          time: '1 day ago',
-          icon: '⭐',
-          status: 'success'
-        },
-        {
-          id: 3,
-          type: 'interview',
-          title: 'Interview scheduled with DataTech Solutions',
-          time: '2 days ago',
-          icon: '🗣️',
-          status: 'upcoming'
-        },
-        {
-          id: 4,
-          type: 'profile',
-          title: 'Profile viewed by 5 recruiters',
-          time: '3 days ago',
-          icon: '👁️',
+          status: app.status || 'pending'
+        });
+      });
+      
+      notifications.slice(0, 2).forEach((notif, index) => {
+        activities.push({
+          id: `notif-${index}`,
+          type: 'notification',
+          title: notif.message || notif.title || 'New notification',
+          time: notif.createdAt ? new Date(notif.createdAt).toLocaleDateString() : 'Recently',
+          icon: '🔔',
           status: 'info'
-        },
-        {
-          id: 5,
-          type: 'application',
-          title: 'Applied to React Developer at WebCorp',
-          time: '4 days ago',
-          icon: '📄',
-          status: 'pending'
-        }
-      ];
+        });
+      });
     } else if (userRole === 'recruiter') {
-      return [
-        {
-          id: 1,
-          type: 'application',
-          title: 'New application for Senior Developer position',
-          time: '1 hour ago',
-          icon: '📋',
-          status: 'new'
-        },
-        {
-          id: 2,
-          type: 'interview',
-          title: 'Interview completed with John Doe',
-          time: '3 hours ago',
-          icon: '✅',
-          status: 'completed'
-        },
-        {
-          id: 3,
+      // Show recent jobs and applications
+      recentJobs.slice(0, 3).forEach((job, index) => {
+        activities.push({
+          id: `job-${index}`,
           type: 'job',
-          title: 'Posted new job: Full Stack Developer',
-          time: '1 day ago',
+          title: `Posted: ${job.jobTitle || job.title || 'Job Position'}`,
+          time: job.createdAt ? new Date(job.createdAt).toLocaleDateString() : 'Recently',
           icon: '💼',
-          status: 'active'
-        },
-        {
-          id: 4,
-          type: 'shortlist',
-          title: 'Shortlisted 3 candidates for UI/UX Designer',
-          time: '2 days ago',
-          icon: '🎯',
-          status: 'success'
-        },
-        {
-          id: 5,
-          type: 'hire',
-          title: 'Hired Sarah Johnson as Frontend Developer',
-          time: '3 days ago',
-          icon: '🎉',
-          status: 'success'
-        }
-      ];
+          status: job.status || 'active'
+        });
+      });
+      
+      applications.slice(0, 2).forEach((app, index) => {
+        activities.push({
+          id: `app-${index}`,
+          type: 'application',
+          title: `New application for ${app.jobTitle || app.jobId?.title || 'Job Position'}`,
+          time: app.createdAt ? new Date(app.createdAt).toLocaleDateString() : 'Recently',
+          icon: '📋',
+          status: app.status || 'new'
+        });
+      });
     }
-    return [];
+    
+    // If no real data, show a placeholder
+    if (activities.length === 0) {
+      activities.push({
+        id: 'placeholder',
+        type: 'info',
+        title: 'No recent activity',
+        time: 'Start using the platform to see activity here',
+        icon: '📊',
+        status: 'info'
+      });
+    }
+    
+    return activities.slice(0, 5); // Limit to 5 items
   };
 
   const getStatusColor = (status) => {
