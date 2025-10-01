@@ -194,15 +194,6 @@ export const settingsAPI = {
   updateEmailTemplate: (id, template) => api.put(`/settings/email-templates/${id}`, template),
 };
 
-// Messages API
-export const messagesAPI = {
-  getConversations: () => api.get('/messages/conversations'),
-  getConversation: (userId, limit) => api.get(`/messages/conversation/${userId}?limit=${limit || 50}`),
-  sendMessage: (messageData) => api.post('/messages', messageData),
-  markAsRead: (messageId) => api.put(`/messages/${messageId}/read`),
-  deleteMessage: (messageId) => api.delete(`/messages/${messageId}`),
-  getStats: () => api.get('/messages/stats'),
-};
 
 // Search API
 export const searchAPI = {
@@ -211,6 +202,15 @@ export const searchAPI = {
   searchCandidates: (query, filters) => api.post('/search/candidates', { query, filters }),
   searchCompanies: (query, filters) => api.post('/search/companies', { query, filters }),
   getSearchSuggestions: (query, type) => api.get(`/search/suggestions?q=${query}&type=${type}`),
+};
+
+// Recommendations API
+export const recommendationsAPI = {
+  getJobRecommendations: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return api.get(`/recommendations/jobs?${queryString}`);
+  },
+  getRecommendationStats: () => api.get('/recommendations/stats'),
 };
 
 // Reports API

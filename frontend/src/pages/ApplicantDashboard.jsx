@@ -13,16 +13,17 @@ import {
   EnhancedAnalyticsTab,
 } from "../components/dashboard/EnhancedDashboardTabs";
 import MyApplicationsTab from "../components/dashboard/applicant/MyApplicationsTab";
-import JobMetrics from "../components/dashboard/JobMetrics";
 import RecentActivity from "../components/dashboard/RecentActivity";
 import JobChart from "../components/dashboard/JobChart";
+import JobMetrics from "../components/dashboard/JobMetrics";
 import LoginStatusBanner from "../components/dashboard/LoginStatusBanner";
 import EmptyState from "../components/dashboard/EmptyState";
 import { useAuth } from "../contexts/AuthContext";
 import { useFavorites } from "../contexts/FavoritesContext";
+import { toast } from "react-hot-toast";
+import { getRecommendedJobs } from "../api/recommendations";
 import JobApplicationModal from "../components/modals/JobApplicationModal";
 import AuthModal from "../components/modals/AuthModal";
-import MessagesTab from "../components/dashboard/MessagesTab";
 import { applicationService } from "../services/applicationService";
 
 const ApplicantDashboardContent = () => {
@@ -45,6 +46,10 @@ const ApplicantDashboardContent = () => {
   const [applicationModalOpen, setApplicationModalOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [selectedJobForApplication, setSelectedJobForApplication] = useState(null);
+  
+  // Recommended jobs state
+  const [recommendedJobs, setRecommendedJobs] = useState([]);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
   const [pendingApplication, setPendingApplication] = useState(null);
   const [applicationLoading, setApplicationLoading] = useState(false);
   
@@ -88,7 +93,6 @@ const ApplicantDashboardContent = () => {
       icon: "📄",
       badge: dashboardData?.applications?.length || 0,
     },
-    { id: "resume", label: "Resume Builder", icon: "📝" },
     { id: "job-alerts", label: "Job Alerts", icon: "🔔" },
     { id: "analytics", label: "Analytics", icon: "📈" },
     { id: "settings", label: "Settings", icon: "⚙️" },
@@ -105,6 +109,31 @@ const ApplicantDashboardContent = () => {
       setActiveTab("dashboard");
     }
   }, [location, dashboardTabs]);
+
+  // Fetch recommended jobs for applicants
+  useEffect(() => {
+    const fetchRecommendedJobs = async () => {
+      if (!isAuthenticated || !authUser || authUser.role !== 'applicant') {
+        return;
+      }
+
+      setLoadingRecommendations(true);
+      try {
+        const response = await getRecommendedJobs({ limit: 3, minMatchPercentage: 10 });
+        if (response.success && response.data?.jobs) {
+          setRecommendedJobs(response.data.jobs);
+        }
+      } catch (error) {
+        console.error('Error fetching recommended jobs:', error);
+        // Fallback to empty array on error
+        setRecommendedJobs([]);
+      } finally {
+        setLoadingRecommendations(false);
+      }
+    };
+
+    fetchRecommendedJobs();
+  }, [isAuthenticated, authUser]);
 
   // Handle tab changes
   const handleTabChange = (tabId) => {
@@ -334,23 +363,6 @@ const ApplicantDashboardContent = () => {
         );
       case "applications":
         return <MyApplicationsTab />;
-      case "resume":
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Resume Builder
-            </h2>
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm border border-gray-200 dark:border-gray-700 text-center">
-              <div className="text-6xl mb-4">📝</div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                Resume Builder Coming Soon
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                Build professional resumes with our AI-powered builder.
-              </p>
-            </div>
-          </div>
-        );
       case "job-alerts":
         return (
           <div className="space-y-6">
@@ -370,8 +382,6 @@ const ApplicantDashboardContent = () => {
         );
       case "analytics":
         return <EnhancedAnalyticsTab userRole="applicant" />;
-      case "messages":
-        return <MessagesTab userRole="applicant" />;
       default:
         return (
           <div className="space-y-8">
@@ -437,30 +447,36 @@ const ApplicantDashboardContent = () => {
                   </button>
                 </div>
                 <div className="space-y-4">
+                  {/* Debug applications data structure */}
+                  {dashboardData?.applications && console.log('🔍 Applications data:', dashboardData.applications)}
+                  {dashboardData?.applications && dashboardData.applications[0] && console.log('🔍 First application structure:', dashboardData.applications[0])}
+                  {dashboardData?.applications && dashboardData.applications[0] && console.log('🔍 First app jobId:', dashboardData.applications[0].jobId)}
                   {dashboardData?.applications && dashboardData.applications.length > 0 ? (
                     dashboardData.applications.slice(0, 3).map((app) => (
                       <div
-                        key={app.id}
+                        key={app.id || app._id || app.applicationId}
                         className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
                       >
                         <div>
                           <h4 className="font-medium text-gray-900 dark:text-white">
-                            {app.jobTitle}
+                            {app.jobSnapshot?.title || app.jobTitle || app.jobId?.title || app.jobId?.jobTitle || app.job?.title || app.job?.jobTitle || app.jobSnapshot?.jobTitle || app.title || app.position || 'Job Title Not Available'}
                           </h4>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {app.company}
+                            {app.jobSnapshot?.company || app.company || app.companyName || app.jobId?.companyName || app.jobId?.company || app.job?.companyName || app.job?.company || app.jobSnapshot?.companyName || app.employer || 'Company Not Available'}
                           </p>
                         </div>
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            app.status === "pending"
+                            (app.status || app.applicationStatus) === "pending"
                               ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                              : app.status === "shortlisted"
+                              : (app.status || app.applicationStatus) === "shortlisted"
                               ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                              : (app.status || app.applicationStatus) === "interviewed"
+                              ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                              : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
                           }`}
                         >
-                          {app.status}
+                          {app.status || app.applicationStatus || 'pending'}
                         </span>
                       </div>
                     ))
@@ -490,27 +506,75 @@ const ApplicantDashboardContent = () => {
                   </button>
                 </div>
                 <div className="space-y-4">
-                  {dashboardData?.recentJobs && dashboardData.recentJobs.length > 0 ? (
-                    dashboardData.recentJobs.slice(0, 3).map((job) => (
+                  {/* Debug recommended jobs data structure */}
+                  {recommendedJobs && console.log('🔍 Recommended jobs data:', recommendedJobs)}
+                  {loadingRecommendations ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                      <span className="ml-2 text-gray-600 dark:text-gray-400">Loading recommendations...</span>
+                    </div>
+                  ) : recommendedJobs && recommendedJobs.length > 0 ? (
+                    recommendedJobs.slice(0, 3).map((job) => (
                       <div
-                        key={job.id}
+                        key={job.id || job._id || job.jobId}
                         className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors cursor-pointer"
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <h4 className="font-medium text-gray-900 dark:text-white">
-                              {job.title}
+                              {job.jobTitle || job.title || 'Job Title Not Available'}
                             </h4>
                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                              {job.company} • {job.location}
+                              {job.companyName || job.company || 'Company Not Available'} • {job.location || 'Location Not Available'}
                             </p>
+                            {/* Match score indicator */}
+                            {job.matchScore && (
+                              <div className="flex items-center mt-1">
+                                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                                  {job.matchScore.overall}% Match
+                                </span>
+                                {job.recommendationReasons && job.recommendationReasons.length > 0 && (
+                                  <span className="text-xs text-gray-500 ml-2">
+                                    {job.recommendationReasons[0]}
+                                  </span>
+                                )}
+                              </div>
+                            )}
                             <p className="text-sm text-green-600 dark:text-green-400 font-medium mt-1">
-                              {job.salary}
+                              {typeof job.salary === 'string' ? job.salary : 
+                               job.salaryRange ? `₹${job.salaryRange.min/100000}L - ₹${job.salaryRange.max/100000}L ${job.salaryRange.period || 'Yearly'}` : 
+                               'Salary Not Disclosed'}
                             </p>
+                            {/* Additional job details */}
+                            <div className="mt-2 space-y-1">
+                              {job.jobType && (
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                  📋 {job.jobType}
+                                </p>
+                              )}
+                              {job.experience && (
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                  🎯 {typeof job.experience === 'string' ? 
+                                      (job.experience.toLowerCase().includes('experience') ? job.experience : `${job.experience} experience required`) : 
+                                      typeof job.experience === 'number' ? `${job.experience} years experience required` :
+                                      typeof job.experience === 'object' ? 
+                                        (job.experience.minimum && job.experience.maximum ? 
+                                          `${job.experience.minimum}-${job.experience.maximum} years experience required` :
+                                          job.experience.minimum ? `${job.experience.minimum}+ years experience required` :
+                                          'Experience required') :
+                                      'Experience required'}
+                                </p>
+                              )}
+                              {job.requiredSkills && Array.isArray(job.requiredSkills) && job.requiredSkills.length > 0 && (
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                  💡 Skills: {job.requiredSkills.slice(0, 3).join(', ')}{job.requiredSkills.length > 3 ? '...' : ''}
+                                </p>
+                              )}
+                            </div>
                           </div>
                           <button
                             className="ml-4 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
-                            onClick={() => handleApplyJob(job.id)}
+                            onClick={() => handleApplyJob(job.id || job._id || job.jobId)}
                           >
                             Apply
                           </button>
@@ -519,11 +583,21 @@ const ApplicantDashboardContent = () => {
                     ))
                   ) : (
                     <div className="text-center py-8">
-                      <div className="text-4xl mb-2">💼</div>
-                      <p className="text-gray-500 dark:text-gray-400">No recommended jobs yet</p>
+                      <div className="text-4xl mb-2">⭐</div>
+                      <p className="text-gray-500 dark:text-gray-400">No personalized recommendations yet</p>
                       <p className="text-sm text-gray-400 dark:text-gray-500">
-                        {isAuthenticated ? "Check back later for job recommendations" : "Login to see personalized job recommendations"}
+                        {isAuthenticated ? 
+                          "Complete your profile with skills and preferences to get better job recommendations" : 
+                          "Login to see personalized job recommendations based on your skills"}
                       </p>
+                      {isAuthenticated && (
+                        <button
+                          onClick={() => handleTabChange("profile")}
+                          className="mt-2 text-blue-600 hover:text-blue-700 text-sm font-medium"
+                        >
+                          Complete Profile →
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>

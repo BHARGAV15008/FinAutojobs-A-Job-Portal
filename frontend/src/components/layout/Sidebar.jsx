@@ -104,12 +104,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           description: 'New job notifications'
         },
         {
-          title: 'Resume Builder',
-          href: '/resume-builder',
-          icon: FileText,
-          description: 'Create professional resume'
-        },
-        {
           title: 'Analytics',
           href: '/analytics',
           icon: BarChart3,

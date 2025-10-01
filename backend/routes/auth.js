@@ -87,6 +87,12 @@ router.post('/register', registerValidation, async (req, res) => {
     }
 
     let { firstName, lastName, username, email, phone, password, role, ...additionalData } = req.body;
+    
+    console.log('🔍 ===== REGISTRATION REQUEST =====');
+    console.log('🔍 Role:', role);
+    console.log('🔍 Additional Data Keys:', Object.keys(additionalData));
+    console.log('🔍 Additional Data:', JSON.stringify(additionalData, null, 2));
+    console.log('🔍 =====================================');
 
     // Check if email is already taken for this role
     const emailAvailable = await checkFieldAvailability('email', email, role);
@@ -141,7 +147,7 @@ router.post('/register', registerValidation, async (req, res) => {
       }
     }
 
-    // Prepare user data based on role
+    // Prepare user data based on role with proper field transformation
     const userData = {
       firstName,
       lastName,
@@ -149,9 +155,144 @@ router.post('/register', registerValidation, async (req, res) => {
       email,
       phone,
       password,
-      role,
-      ...additionalData
+      role
     };
+
+    // Transform role-specific data
+    if (role === 'recruiter') {
+      // Transform flat recruiter fields to nested structure
+      if (additionalData.company || additionalData.position || additionalData.department) {
+        userData.companyInfo = {
+          companyName: additionalData.company || additionalData.companyName || '',
+          designation: additionalData.position || additionalData.jobTitle || additionalData.job_title || '',
+          department: additionalData.department || ''
+        };
+      }
+      
+      // Handle location for recruiters
+      if (additionalData.location) {
+        userData.officeLocation = {
+          city: additionalData.location,
+          state: additionalData.state || '',
+          country: additionalData.country || 'India'
+        };
+      }
+      
+      // Handle years of experience
+      if (additionalData.experience_years || additionalData.yearsOfExperience) {
+        userData.yearsOfExperience = parseInt(additionalData.experience_years || additionalData.yearsOfExperience) || 0;
+      }
+      
+      // Handle social links
+      if (additionalData.linkedin_url || additionalData.github_url || additionalData.portfolio_url) {
+        userData.professionalLinks = {
+          linkedin: additionalData.linkedin_url || '',
+          github: additionalData.github_url || '',
+          personalWebsite: additionalData.portfolio_url || ''
+        };
+        
+        // Also save to flat fields for compatibility
+        userData.linkedin_url = additionalData.linkedin_url || '';
+        userData.github_url = additionalData.github_url || '';
+        userData.portfolio_url = additionalData.portfolio_url || '';
+      }
+      
+      // Add other recruiter-specific fields
+      Object.keys(additionalData).forEach(key => {
+        if (!['company', 'position', 'department', 'location', 'experience_years', 'linkedin_url', 'github_url', 'portfolio_url'].includes(key)) {
+          userData[key] = additionalData[key];
+        }
+      });
+      
+    } else if (role === 'applicant') {
+      // Transform flat applicant fields to nested structure
+      if (additionalData.skills || additionalData.primary_skills) {
+        userData.skills = {
+          primary: additionalData.primary_skills || additionalData.skills || [],
+          technical: additionalData.technical_skills || [],
+          soft: additionalData.soft_skills || []
+        };
+      }
+      
+      // Handle career info for applicants
+      if (additionalData.current_job_title || additionalData.current_company || additionalData.expected_salary) {
+        userData.careerInfo = {
+          currentJobTitle: additionalData.current_job_title || '',
+          currentCompany: additionalData.current_company || '',
+          expectedSalary: parseInt(additionalData.expected_salary) || 0,
+          experienceLevel: additionalData.experience_level || ''
+        };
+      }
+      
+      // Handle location for applicants
+      if (additionalData.location || additionalData.current_location) {
+        userData.currentLocation = {
+          city: additionalData.location || additionalData.current_location || '',
+          state: additionalData.state || '',
+          country: additionalData.country || 'India'
+        };
+      }
+      
+      // Handle years of experience
+      if (additionalData.experience_years || additionalData.yearsOfExperience) {
+        userData.yearsOfExperience = parseInt(additionalData.experience_years || additionalData.yearsOfExperience) || 0;
+      }
+      
+      // Handle qualification -> education conversion
+      if (additionalData.qualification) {
+        userData.education = [{
+          institution: 'Not specified',
+          degree: additionalData.qualification,
+          fieldOfStudy: 'Not specified',
+          startDate: null,
+          endDate: null,
+          grade: '',
+          isCurrentlyStudying: false
+        }];
+      }
+      
+      // Handle job preferences
+      if (additionalData.willing_to_relocate !== undefined || additionalData.remote_work_preference !== undefined) {
+        userData.jobPreferences = {
+          willingToRelocate: additionalData.willing_to_relocate || false,
+          remoteWorkPreference: additionalData.remote_work_preference || false,
+          preferredJobTypes: additionalData.preferred_job_types ? [additionalData.preferred_job_types] : [],
+          preferredLocations: additionalData.preferred_locations ? [additionalData.preferred_locations] : []
+        };
+      }
+      
+      // Handle documents
+      if (additionalData.resume_url || additionalData.cover_letter_url) {
+        userData.documents = {
+          resumeUrl: additionalData.resume_url || '',
+          coverLetterUrl: additionalData.cover_letter_url || '',
+          portfolioUrl: additionalData.portfolio_url || '',
+          certificates: []
+        };
+      }
+      
+      // Handle social links for applicants too
+      if (additionalData.linkedin_url || additionalData.github_url || additionalData.portfolio_url) {
+        userData.linkedin_url = additionalData.linkedin_url || '';
+        userData.github_url = additionalData.github_url || '';
+        userData.portfolio_url = additionalData.portfolio_url || '';
+      }
+      
+      // Add other applicant-specific fields
+      Object.keys(additionalData).forEach(key => {
+        if (!['skills', 'primary_skills', 'technical_skills', 'soft_skills', 'current_job_title', 'current_company', 'expected_salary', 'experience_level', 'location', 'current_location', 'experience_years', 'qualification', 'willing_to_relocate', 'remote_work_preference', 'preferred_job_types', 'preferred_locations', 'resume_url', 'cover_letter_url', 'portfolio_url', 'linkedin_url', 'github_url'].includes(key)) {
+          userData[key] = additionalData[key];
+        }
+      });
+    } else {
+      // For other roles, just add additional data as-is
+      Object.assign(userData, additionalData);
+    }
+
+    console.log('🔍 ===== TRANSFORMED USER DATA =====');
+    console.log('🔍 Final userData Keys:', Object.keys(userData));
+    console.log('🔍 Final userData:', JSON.stringify(userData, null, 2));
+    console.log('🔍 =====================================');
 
     // Create user with role-specific schema
     const user = await createUserByRole(userData);
@@ -533,9 +674,11 @@ router.put('/profile', authenticateToken, async (req, res) => {
     
     // Years of experience
     if (updateData.yearsOfExperience !== undefined) {
+      console.log('🔍 Backend: Setting yearsOfExperience from yearsOfExperience field:', updateData.yearsOfExperience);
       transformedData.yearsOfExperience = parseInt(updateData.yearsOfExperience) || 0;
     }
     if (updateData.experience_years !== undefined) {
+      console.log('🔍 Backend: Setting yearsOfExperience from experience_years field:', updateData.experience_years);
       transformedData.yearsOfExperience = parseInt(updateData.experience_years) || 0;
     }
     
@@ -642,9 +785,11 @@ router.put('/profile', authenticateToken, async (req, res) => {
       
       // Education for applicants
       if (updateData.education) {
+        console.log('🔍 Backend: Using existing education array:', updateData.education);
         transformedData.education = updateData.education;
       } else if (updateData.qualification) {
         // Handle simple qualification field by converting to education array
+        console.log('🔍 Backend: Converting qualification to education:', updateData.qualification);
         transformedData.education = [{
           institution: 'Not specified',
           degree: updateData.qualification,
@@ -654,6 +799,10 @@ router.put('/profile', authenticateToken, async (req, res) => {
           grade: '',
           isCurrentlyStudying: false
         }];
+        console.log('🔍 Backend: Created education array:', transformedData.education);
+        
+        // Also save qualification as a flat field for backward compatibility
+        transformedData.qualification = updateData.qualification;
       }
       
       // Work experience for applicants
@@ -676,16 +825,21 @@ router.put('/profile', authenticateToken, async (req, res) => {
       // Documents for applicants
       if (updateData.documents) {
         transformedData.documents = updateData.documents;
-      } else {
-        // Handle flat document fields
-        const documents = {};
-        if (updateData.resume_url) documents.resumeUrl = updateData.resume_url;
-        if (updateData.cover_letter_url) documents.coverLetterUrl = updateData.cover_letter_url;
-        if (updateData.portfolio_url) documents.portfolioUrl = updateData.portfolio_url;
+      } else if (updateData.resume_url !== undefined || updateData.cover_letter_url !== undefined || updateData.portfolio_url !== undefined) {
+        // Handle flat document fields - always create documents object if any field is provided
+        transformedData.documents = {
+          resumeUrl: updateData.resume_url || '',
+          coverLetterUrl: updateData.cover_letter_url || '',
+          portfolioUrl: updateData.portfolio_url || '',
+          certificates: []
+        };
         
-        if (Object.keys(documents).length > 0) {
-          transformedData.documents = documents;
-        }
+        // Also save to flat fields for backward compatibility
+        if (updateData.resume_url !== undefined) transformedData.resume_url = updateData.resume_url;
+        if (updateData.cover_letter_url !== undefined) transformedData.cover_letter_url = updateData.cover_letter_url;
+        if (updateData.portfolio_url !== undefined) transformedData.portfolio_url = updateData.portfolio_url;
+        
+        console.log('🔍 Backend created documents object:', transformedData.documents);
       }
       
       // Job preferences for applicants
@@ -717,10 +871,105 @@ router.put('/profile', authenticateToken, async (req, res) => {
     console.log('✅ Profile update successful!');
     console.log('✅ Updated user keys:', Object.keys(updatedUser));
     
+    // Return the same comprehensive data structure as GET /profile
+    const profileData = {
+      _id: updatedUser._id,
+      userId: updatedUser.userId,
+      firstName: updatedUser.firstName,
+      lastName: updatedUser.lastName,
+      username: updatedUser.username,
+      fullName: updatedUser.fullName,
+      email: updatedUser.email,
+      phone: updatedUser.phone,
+      role: updatedUser.role,
+      bio: updatedUser.bio,
+      location: updatedUser.location,
+      profileImage: updatedUser.profileImage,
+      
+      // Social links (dual mapping for compatibility)
+      linkedin_url: updatedUser.linkedin_url || updatedUser.socialLinks?.linkedinUrl || updatedUser.professionalLinks?.linkedin || '',
+      github_url: updatedUser.github_url || updatedUser.socialLinks?.githubUrl || updatedUser.professionalLinks?.github || '',
+      portfolio_url: updatedUser.portfolio_url || updatedUser.socialLinks?.portfolioUrl || updatedUser.professionalLinks?.personalWebsite || '',
+      
+      // Experience
+      yearsOfExperience: updatedUser.yearsOfExperience || 0,
+      
+      // Status fields
+      status: updatedUser.status,
+      isEmailVerified: updatedUser.isEmailVerified,
+      isPhoneVerified: updatedUser.isPhoneVerified,
+      createdAt: updatedUser.createdAt,
+      updatedAt: updatedUser.updatedAt,
+      
+      // Role-specific fields for recruiters
+      ...(updatedUser.role === 'recruiter' && {
+        companyInfo: updatedUser.companyInfo || {},
+        officeLocation: updatedUser.officeLocation || {},
+        professionalLinks: updatedUser.professionalLinks || {},
+        specializations: updatedUser.specializations || [],
+        industryExpertise: updatedUser.industryExpertise || [],
+        recruitingStats: updatedUser.recruitingStats || {},
+        subscription: updatedUser.subscription || {},
+        preferences: updatedUser.preferences || {},
+        
+        // Flat fields for form compatibility - map from database structure
+        company: updatedUser.companyInfo?.companyName || '',
+        job_title: updatedUser.companyInfo?.designation || updatedUser.companyInfo?.jobTitle || '',
+        department: updatedUser.companyInfo?.department || '',
+        location: updatedUser.officeLocation?.city || updatedUser.companyInfo?.workLocation?.city || '',
+        linkedin_url: updatedUser.professionalLinks?.linkedin || '',
+        github_url: updatedUser.professionalLinks?.github || '',
+        portfolio_url: updatedUser.professionalLinks?.personalWebsite || '',
+        experience_years: updatedUser.yearsOfExperience || 0
+      }),
+      
+      // Role-specific fields for applicants
+      ...(updatedUser.role === 'applicant' && {
+        currentLocation: updatedUser.currentLocation || {},
+        careerInfo: updatedUser.careerInfo || {},
+        skills: updatedUser.skills || { technical: [], soft: [], primary: [], languages: [] },
+        languages: updatedUser.languages || [],
+        education: updatedUser.education || [],
+        workExperience: updatedUser.workExperience || [],
+        documents: updatedUser.documents || { resumeUrl: '', coverLetterUrl: '', portfolioUrl: '', certificates: [] },
+        jobPreferences: updatedUser.jobPreferences || {},
+        profileCompletion: updatedUser.profileCompletion || { basicInfo: true, completionPercentage: 10 },
+        
+        // Flat fields for form compatibility
+        current_job_title: updatedUser.careerInfo?.currentJobTitle || '',
+        current_company: updatedUser.careerInfo?.currentCompany || '',
+        expected_salary: updatedUser.careerInfo?.expectedSalary || 0,
+        
+        // Resume field mapping (multiple possible sources)
+        resume_url: updatedUser.documents?.resumeUrl || updatedUser.resumeUrl || updatedUser.resume_url || '',
+        
+        // Additional applicant fields for registration compatibility
+        primary_skills: updatedUser.skills?.primary || updatedUser.primarySkills || [],
+        experience_level: updatedUser.careerInfo?.experienceLevel || updatedUser.experienceLevel || '',
+        current_location: updatedUser.currentLocation?.city || updatedUser.location || '',
+        willing_to_relocate: updatedUser.jobPreferences?.willingToRelocate || false,
+        remote_work_preference: updatedUser.jobPreferences?.remoteWorkPreference || false,
+        
+        // Experience and qualification fields for form compatibility
+        experience_years: updatedUser.yearsOfExperience || updatedUser.experience_years || 0,
+        qualification: updatedUser.education?.[0]?.degree || updatedUser.qualification || '',
+        
+        // Handle skills array for form display
+        skills_array: updatedUser.skills?.primary || updatedUser.skills?.technical || updatedUser.primarySkills || []
+      })
+    };
+    
+    console.log('✅ Returning comprehensive profile data with keys:', Object.keys(profileData));
+    console.log('✅ Applicant-specific fields:', {
+      skills_array: profileData.skills_array,
+      primary_skills: profileData.primary_skills,
+      resume_url: profileData.resume_url
+    });
+    
     res.json({
       success: true,
       message: 'Profile updated successfully',
-      data: updatedUser
+      data: profileData
     });
   } catch (error) {
     console.error('❌ Profile update error:', error);

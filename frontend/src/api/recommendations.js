@@ -1,4 +1,4 @@
-import { apiClient } from './apiClient';
+import apiClient from './apiClient';
 
 // Get recommended jobs for applicant based on skill matching
 export const getRecommendedJobs = async (params = {}) => {

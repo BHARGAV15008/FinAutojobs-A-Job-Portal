@@ -276,7 +276,7 @@ export const sendEmailToCandidate = async (req, res) => {
     const candidate = candidateResult[0];
 
     // Configure email transporter (you'll need to set up your email service)
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
       port: process.env.SMTP_PORT || 587,
       secure: false,

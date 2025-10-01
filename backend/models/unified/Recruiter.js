@@ -9,7 +9,7 @@ const recruiterSchema = new mongoose.Schema({
   // Company Information (Required for registration)
   companyInfo: {
     companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' },
-    companyName: { type: String, required: true },
+    companyName: { type: String, required: false }, // Made optional for existing users
     department: { type: String },
     designation: { type: String }, // Job title/position
     jobTitle: { type: String }, // Alternative field name

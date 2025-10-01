@@ -207,7 +207,8 @@ import enhancedApplicationsRoutes from './routes/enhancedApplications.js';
 import fileUploadRoutes from './routes/fileUpload.js';
 import recommendationsRoutes from './routes/recommendations.js';
 import analyticsRoutes from './routes/analytics.js';
-import messagesRoutes from './routes/messages.js';
+import applicationInformationRoutes from './routes/applicationInformation.js';
+import communicationsRoutes from './routes/communications.js';
 
 // Mount routes under /api
 app.use('/api/auth', authRoutes);
@@ -232,7 +233,8 @@ apiRouter.use('/candidates', candidatesRoutes);
 apiRouter.use('/interviews', interviewsRoutes);
 apiRouter.use('/recommendations', recommendationsRoutes);
 apiRouter.use('/analytics', analyticsRoutes);
-apiRouter.use('/messages', messagesRoutes);
+apiRouter.use('/application-information', applicationInformationRoutes);
+apiRouter.use('/communications', communicationsRoutes);
 
 // Debug middleware to log all requests
 app.use((req, res, next) => {

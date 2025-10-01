@@ -43,6 +43,11 @@ export const DashboardProvider = ({ children }) => {
       setCurrentUser(actualUser);
       setUserRole(actualUser.role);
       setIsAuthenticated(true);
+      
+      // Reload dashboard data with the new user
+      if (actualUser.role) {
+        loadDashboardData(actualUser.role, actualUser);
+      }
     } else {
       setCurrentUser(null);
       setUserRole(null);
@@ -60,7 +65,7 @@ export const DashboardProvider = ({ children }) => {
         setCurrentUser(user);
         setUserRole(user.role);
         setIsAuthenticated(true);
-        await loadDashboardData(user.role);
+        await loadDashboardData(user.role, user);
       } catch (error) {
         console.error("Auth check failed:", error);
         setIsAuthenticated(false);
@@ -71,7 +76,7 @@ export const DashboardProvider = ({ children }) => {
     setLoading(false);
   };
 
-  const loadDashboardData = async (role) => {
+  const loadDashboardData = async (role, user = null) => {
     try {
       setLoading(true);
 
@@ -82,9 +87,17 @@ export const DashboardProvider = ({ children }) => {
         return null;
       });
 
+      // Prepare jobs API parameters - include recruiterId for recruiters to see all their jobs (including drafts)
+      const jobsParams = { limit: 50 };
+      const userToUse = user || currentUser;
+      if (role === 'recruiter' && userToUse?._id) {
+        jobsParams.recruiterId = userToUse._id;
+        console.log('🔍 Adding recruiterId to jobs query:', userToUse._id);
+      }
+
       // Fetch basic data for display (jobs, applications, notifications)
       const [jobsResponse, applicationsResponse, notificationsResponse] = await Promise.all([
-        jobsAPI.getJobs({ limit: 50 }).catch((error) => {
+        jobsAPI.getJobs(jobsParams).catch((error) => {
           console.error('🔍 Jobs API error:', error.response?.status, error.message);
           return { data: { data: [] } };
         }),

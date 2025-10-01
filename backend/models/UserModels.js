@@ -198,6 +198,26 @@ export const updateUserProfile = async (userId, updateData, role) => {
         for (const [nestedKey, nestedValue] of Object.entries(value)) {
           updateQuery[`currentLocation.${nestedKey}`] = nestedValue;
         }
+      } else if (key === 'skills' && typeof value === 'object' && value !== null) {
+        // Handle skills nested updates for applicants
+        for (const [nestedKey, nestedValue] of Object.entries(value)) {
+          updateQuery[`skills.${nestedKey}`] = nestedValue;
+        }
+      } else if (key === 'careerInfo' && typeof value === 'object' && value !== null) {
+        // Handle careerInfo nested updates for applicants
+        for (const [nestedKey, nestedValue] of Object.entries(value)) {
+          updateQuery[`careerInfo.${nestedKey}`] = nestedValue;
+        }
+      } else if (key === 'documents' && typeof value === 'object' && value !== null) {
+        // Handle documents nested updates for applicants
+        for (const [nestedKey, nestedValue] of Object.entries(value)) {
+          updateQuery[`documents.${nestedKey}`] = nestedValue;
+        }
+      } else if (key === 'jobPreferences' && typeof value === 'object' && value !== null) {
+        // Handle jobPreferences nested updates for applicants
+        for (const [nestedKey, nestedValue] of Object.entries(value)) {
+          updateQuery[`jobPreferences.${nestedKey}`] = nestedValue;
+        }
       } else {
         // Handle flat fields normally
         updateQuery[key] = value;

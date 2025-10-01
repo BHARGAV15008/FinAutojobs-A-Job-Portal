@@ -3,13 +3,11 @@ import React from "react";
 const EnhancedSettingsTab = ({ user, userRole }) => {
   const notifications = {
     email: {
-      newMessages: true,
       applicationUpdates: true,
       jobAlerts: true,
       accountAlerts: true,
     },
     app: {
-      newMessages: true,
       applicationUpdates: true,
       jobAlerts: true,
       accountAlerts: true,
@@ -19,7 +17,6 @@ const EnhancedSettingsTab = ({ user, userRole }) => {
   const privacy = {
     profileVisibility: "public",
     showResume: true,
-    allowMessages: true,
     showActivity: true,
   };
 

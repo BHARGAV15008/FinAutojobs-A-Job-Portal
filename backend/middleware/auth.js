@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import User from '../models/unified/BaseUser.js';
-import { securityLogger } from './Others/logger.js';
+// Removed console.error import - using console.error instead
 
 // Enhanced token generation with additional security
 export const generateToken = (payload, expiresIn = '15m') => {
@@ -141,17 +141,16 @@ export const authenticateToken = async (req, res, next) => {
       token = req.cookies.accessToken;
     }
     
-    // Check query parameter (for specific endpoints like file downloads)
     if (!token && req.query.token) {
       token = req.query.token;
     }
     
     if (!token) {
-      securityLogger('MISSING_TOKEN', req);
+      console.error('❌ MISSING_TOKEN');
       return res.status(401).json({
         success: false,
         message: 'Access token required',
-        code: 'TOKEN_REQUIRED'
+        code: 'MISSING_TOKEN'
       });
     }
     
@@ -160,7 +159,7 @@ export const authenticateToken = async (req, res, next) => {
     try {
       decoded = verifyToken(token);
     } catch (error) {
-      securityLogger('INVALID_TOKEN', req, { error: error.message });
+      console.error('❌ INVALID_TOKEN:', error.message);
       
       let errorCode = 'INVALID_TOKEN';
       let statusCode = 403;
@@ -181,7 +180,7 @@ export const authenticateToken = async (req, res, next) => {
     const user = await User.findById(decoded.userId).select('+last_login +login_attempts +lock_until');
     
     if (!user) {
-      securityLogger('USER_NOT_FOUND', req, { userId: decoded.userId });
+      console.error('❌ USER_NOT_FOUND:', decoded.userId);
       return res.status(404).json({
         success: false,
         message: 'User not found',
@@ -191,7 +190,7 @@ export const authenticateToken = async (req, res, next) => {
     
     // Check if user account is locked
     if (user.isLocked) {
-      securityLogger('ACCOUNT_LOCKED', req, { userId: user._id });
+      console.error('❌ ACCOUNT_LOCKED:', user._id);
       return res.status(423).json({
         success: false,
         message: 'Account is temporarily locked',
@@ -201,7 +200,7 @@ export const authenticateToken = async (req, res, next) => {
     
     // Check if user account is active
     if (user.status !== 'active') {
-      securityLogger('INACTIVE_ACCOUNT', req, { userId: user._id, status: user.status });
+      console.error('❌ INACTIVE_ACCOUNT:', { userId: user._id, status: user.status });
       return res.status(403).json({
         success: false,
         message: `Account is ${user.status}`,
@@ -209,9 +208,11 @@ export const authenticateToken = async (req, res, next) => {
       });
     }
     
-    // Update user activity tracking
-    user.analytics.lastActivity = new Date();
-    user.analytics.loginCount += 1;
+    // Update user activity tracking (with safe property access)
+    if (user.analytics) {
+      user.analytics.lastActivity = new Date();
+      user.analytics.loginCount = (user.analytics.loginCount || 0) + 1;
+    }
     
     // Update last login time (throttled to avoid too many DB writes)
     const now = new Date();
@@ -219,25 +220,29 @@ export const authenticateToken = async (req, res, next) => {
       user.last_login = now;
     }
     
-    await user.save();
+    // Save user updates safely
+    try {
+      await user.save();
+    } catch (saveError) {
+      console.warn('⚠️ Could not save user activity:', saveError.message);
+    }
     
-    // Attach comprehensive user data to request object
+    // Attach comprehensive user data to request object (with safe property access)
     req.user = {
+      id: user._id,
       userId: user._id,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      normalizedRole: user.normalizedRole,
-      status: user.status,
-      email_verified: user.email_verified,
-      phone_verified: user.phone_verified,
-      profile_completed: user.profile_completed,
+      username: user.username || '',
+      email: user.email || '',
+      role: user.role || 'applicant',
+      status: user.status || 'active',
+      email_verified: user.email_verified || user.isEmailVerified || false,
+      phone_verified: user.phone_verified || user.isPhoneVerified || false,
+      profile_completed: user.profile_completed || false,
       created_at: user.createdAt,
-      full_name: user.full_name,
-      phone: user.phone,
-      profile_picture: user.profile_picture,
-      company_id: user.company_id,
-      preferences: user.preferences,
+      full_name: user.fullName || user.full_name || `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+      phone: user.phone || '',
+      profile_picture: user.profile_picture || user.profileImage || '',
+      preferences: user.preferences || {},
       tokenJti: decoded.jti, // For token tracking
       tokenIat: decoded.iat
     };
@@ -255,7 +260,7 @@ export const authenticateToken = async (req, res, next) => {
     
     next();
   } catch (error) {
-    securityLogger('AUTH_ERROR', req, { error: error.message });
+    console.error('❌ AUTH_ERROR:', error.message);
     console.error('Authentication error:', error);
     return res.status(500).json({
       success: false,
@@ -472,7 +477,7 @@ export const authRateLimit = (maxAttempts = 5, windowMs = 15 * 60 * 1000) => {
     }
     
     if (attemptData.count >= maxAttempts) {
-      securityLogger('AUTH_RATE_LIMIT', req, { 
+      console.error('AUTH_RATE_LIMIT', req, { 
         attempts: attemptData.count,
         identifier: key.split(':')[1]
       });
@@ -552,7 +557,7 @@ export const authenticateApiKey = async (req, res, next) => {
     // In a real implementation, you'd validate against stored API keys
     // For now, we'll use a simple check
     if (apiKey !== process.env.API_KEY) {
-      securityLogger('INVALID_API_KEY', req, { providedKey: apiKey.substring(0, 8) + '...' });
+      console.error('INVALID_API_KEY', req, { providedKey: apiKey.substring(0, 8) + '...' });
       return res.status(403).json({
         success: false,
         message: 'Invalid API key',

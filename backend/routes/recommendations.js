@@ -4,6 +4,118 @@ import { BaseUser, Applicant } from '../models/UserModels.js';
 
 const router = express.Router();
 
+// Helper function to check skill aliases and variations
+const checkSkillAliases = (applicantSkill, jobSkill) => {
+  const skillAliases = {
+    // Programming Languages
+    'javascript': ['js', 'node.js', 'nodejs', 'react', 'vue', 'angular', 'jquery', 'ecmascript', 'es6', 'es2015'],
+    'js': ['javascript', 'node.js', 'nodejs', 'react', 'vue', 'angular', 'ecmascript'],
+    'python': ['django', 'flask', 'fastapi', 'pandas', 'numpy', 'py', 'python3'],
+    'java': ['spring', 'hibernate', 'maven', 'gradle', 'jvm', 'jsp', 'servlet'],
+    'c++': ['cpp', 'c plus plus', 'cplusplus'],
+    'c#': ['csharp', 'c sharp', 'dotnet', '.net'],
+    'php': ['laravel', 'symfony', 'codeigniter', 'wordpress'],
+    
+    // Frontend Frameworks
+    'react': ['reactjs', 'react.js', 'javascript', 'js', 'jsx', 'react native'],
+    'reactjs': ['react', 'react.js', 'javascript', 'jsx'],
+    'vue': ['vuejs', 'vue.js', 'javascript', 'nuxt'],
+    'angular': ['angularjs', 'javascript', 'typescript', 'ng'],
+    'svelte': ['sveltekit', 'javascript'],
+    
+    // Backend Technologies
+    'node.js': ['nodejs', 'node', 'javascript', 'js', 'express', 'npm'],
+    'nodejs': ['node.js', 'node', 'javascript', 'express'],
+    'express': ['expressjs', 'node.js', 'nodejs', 'javascript'],
+    'django': ['python', 'web framework'],
+    'flask': ['python', 'micro framework'],
+    'spring': ['java', 'spring boot', 'springframework'],
+    
+    // Databases
+    'mongodb': ['mongo', 'nosql', 'document database'],
+    'mysql': ['sql', 'database', 'relational database'],
+    'postgresql': ['postgres', 'sql', 'database', 'psql'],
+    'redis': ['cache', 'in-memory database'],
+    'sqlite': ['sql', 'database'],
+    
+    // Web Technologies
+    'html': ['html5', 'markup', 'web development'],
+    'css': ['css3', 'styling', 'sass', 'scss', 'less', 'stylesheets'],
+    'sass': ['scss', 'css', 'preprocessor'],
+    'scss': ['sass', 'css', 'preprocessor'],
+    'bootstrap': ['css', 'framework', 'responsive'],
+    'tailwind': ['tailwindcss', 'css', 'utility-first'],
+    
+    // Programming Concepts
+    'typescript': ['ts', 'javascript', 'typed javascript'],
+    'api': ['rest', 'restful', 'backend', 'web services', 'graphql'],
+    'rest': ['api', 'restful', 'web services', 'http'],
+    'graphql': ['api', 'query language'],
+    'json': ['data format', 'api'],
+    
+    // Development Tools
+    'git': ['github', 'version control', 'gitlab', 'bitbucket', 'vcs'],
+    'github': ['git', 'version control', 'repository'],
+    'docker': ['containerization', 'devops', 'containers'],
+    'kubernetes': ['k8s', 'container orchestration', 'devops'],
+    'jenkins': ['ci/cd', 'continuous integration', 'devops'],
+    
+    // Cloud & DevOps
+    'aws': ['amazon web services', 'cloud', 'ec2', 's3'],
+    'azure': ['microsoft azure', 'cloud'],
+    'gcp': ['google cloud platform', 'cloud'],
+    'cloud': ['aws', 'azure', 'gcp', 'cloud computing'],
+    'devops': ['ci/cd', 'deployment', 'automation'],
+    
+    // Data & AI
+    'machine learning': ['ml', 'ai', 'artificial intelligence', 'data science'],
+    'artificial intelligence': ['ai', 'ml', 'machine learning'],
+    'data science': ['data analysis', 'analytics', 'statistics', 'ml'],
+    'pandas': ['python', 'data analysis'],
+    'numpy': ['python', 'numerical computing'],
+    'tensorflow': ['ml', 'deep learning', 'ai'],
+    'pytorch': ['ml', 'deep learning', 'ai'],
+    
+    // Mobile Development
+    'react native': ['react', 'mobile development', 'javascript'],
+    'flutter': ['dart', 'mobile development'],
+    'android': ['java', 'kotlin', 'mobile development'],
+    'ios': ['swift', 'objective-c', 'mobile development'],
+    
+    // General Development
+    'web development': ['frontend', 'backend', 'full stack', 'html', 'css', 'javascript'],
+    'frontend': ['front-end', 'ui', 'web development', 'html', 'css', 'javascript'],
+    'backend': ['back-end', 'server', 'api', 'database'],
+    'full stack': ['fullstack', 'frontend', 'backend', 'web development'],
+    'ui': ['user interface', 'frontend', 'design'],
+    'ux': ['user experience', 'design'],
+    
+    // Testing
+    'testing': ['unit testing', 'integration testing', 'qa'],
+    'jest': ['javascript testing', 'testing'],
+    'cypress': ['e2e testing', 'testing'],
+    
+    // Other
+    'agile': ['scrum', 'methodology'],
+    'scrum': ['agile', 'methodology'],
+    'mvc': ['model view controller', 'architecture pattern']
+  };
+
+  // Check if applicant skill matches any aliases of job skill
+  const jobAliases = skillAliases[jobSkill] || [];
+  if (jobAliases.includes(applicantSkill)) {
+    return true;
+  }
+
+  // Check if job skill matches any aliases of applicant skill
+  const applicantAliases = skillAliases[applicantSkill] || [];
+  if (applicantAliases.includes(jobSkill)) {
+    return true;
+  }
+
+  return false;
+};
+
 // Authentication middleware
 const authenticateToken = async (req, res, next) => {
   try {
@@ -50,44 +162,95 @@ const calculateSkillMatch = (applicantSkills, jobRequiredSkills) => {
     return { matchPercentage: 0, matchedSkills: [], missingSkills: jobRequiredSkills || [] };
   }
 
-  // Combine all applicant skills into a single array
-  const allApplicantSkills = [
-    ...(applicantSkills.primary || []),
-    ...(applicantSkills.technical || []),
-    ...(applicantSkills.soft || [])
-  ].map(skill => skill.toLowerCase().trim());
+  // Combine all applicant skills and handle comma-separated strings
+  let allApplicantSkills = [];
+  
+  // Handle different skill sources
+  const skillSources = [
+    applicantSkills.primary || [],
+    applicantSkills.technical || [],
+    applicantSkills.soft || [],
+    Array.isArray(applicantSkills) ? applicantSkills : [],
+    applicantSkills.skills_array || [],
+    applicantSkills.primarySkills || []
+  ];
+  
+  skillSources.forEach(source => {
+    if (Array.isArray(source)) {
+      source.forEach(skill => {
+        if (typeof skill === 'string' && skill.includes(',')) {
+          // Handle comma-separated skills like "JavaScript, React, Node.js"
+          const splitSkills = skill.split(',').map(s => s.trim()).filter(s => s.length > 0);
+          allApplicantSkills.push(...splitSkills);
+        } else if (skill && typeof skill === 'string' && skill.trim().length > 0) {
+          allApplicantSkills.push(skill.trim());
+        }
+      });
+    }
+  });
+  
+  // Remove duplicates, convert to lowercase, and filter empty values
+  allApplicantSkills = [...new Set(allApplicantSkills)]
+    .filter(skill => skill && skill.length > 0)
+    .map(skill => skill.toLowerCase().trim());
 
-  // Convert job required skills to lowercase for comparison
-  const jobSkills = jobRequiredSkills.map(skill => skill.toLowerCase().trim());
+  // Handle comma-separated job skills and convert to lowercase
+  let jobSkills = [];
+  jobRequiredSkills.forEach(skill => {
+    if (typeof skill === 'string' && skill.includes(',')) {
+      // Handle comma-separated job skills like "JavaScript, React, Node.js"
+      const splitSkills = skill.split(',').map(s => s.trim().toLowerCase()).filter(s => s.length > 0);
+      jobSkills.push(...splitSkills);
+    } else if (skill && typeof skill === 'string') {
+      jobSkills.push(skill.toLowerCase().trim());
+    }
+  });
+  
+  // Remove duplicates
+  jobSkills = [...new Set(jobSkills)].filter(skill => skill.length > 0);
 
   console.log(`🔍 SKILL COMPARISON:`);
   console.log(`🔍 Applicant skills: [${allApplicantSkills.join(', ')}]`);
   console.log(`🔍 Job required skills: [${jobSkills.join(', ')}]`);
 
-  // Find matched skills with detailed logging
+  // Find matched skills with more inclusive matching
   const matchedSkills = jobSkills.filter(jobSkill => {
     const isMatched = allApplicantSkills.some(applicantSkill => {
       const exactMatch = applicantSkill === jobSkill;
       
-      // Only allow partial matches if they are meaningful (avoid false positives)
-      const meaningfulPartialMatch = (
-        // Applicant skill contains job skill (e.g., "JavaScript Programming" contains "JavaScript")
-        (applicantSkill.includes(jobSkill) && jobSkill.length > 4) ||
-        // Job skill contains applicant skill (e.g., "Advanced Java" contains "Java")
-        (jobSkill.includes(applicantSkill) && applicantSkill.length > 4)
+      // EXTREMELY inclusive partial matching - even 1 character overlap
+      const partialMatch = (
+        // Applicant skill contains job skill
+        (applicantSkill.includes(jobSkill) && jobSkill.length > 1) ||
+        // Job skill contains applicant skill
+        (jobSkill.includes(applicantSkill) && applicantSkill.length > 1) ||
+        // Case insensitive partial match
+        (applicantSkill.toLowerCase().includes(jobSkill.toLowerCase()) && jobSkill.length > 1) ||
+        (jobSkill.toLowerCase().includes(applicantSkill.toLowerCase()) && applicantSkill.length > 1)
       );
       
-      // Very strict word matching - only for technical skills with exact word boundaries
-      const strictWordMatch = applicantSkill.split(' ').some(word => 
-        word.length > 4 && jobSkill.split(' ').some(jobWord => jobWord === word)
-      ) || jobSkill.split(' ').some(word => 
-        word.length > 4 && applicantSkill.split(' ').some(appWord => appWord === word)
+      // Word-based matching - very loose
+      const wordMatch = applicantSkill.split(/[\s,.-]+/).some(word => 
+        word.length > 1 && jobSkill.split(/[\s,.-]+/).some(jobWord => 
+          jobWord.toLowerCase() === word.toLowerCase() ||
+          jobWord.toLowerCase().includes(word.toLowerCase()) ||
+          word.toLowerCase().includes(jobWord.toLowerCase())
+        )
+      ) || jobSkill.split(/[\s,.-]+/).some(word => 
+        word.length > 1 && applicantSkill.split(/[\s,.-]+/).some(appWord => 
+          appWord.toLowerCase() === word.toLowerCase() ||
+          appWord.toLowerCase().includes(word.toLowerCase()) ||
+          word.toLowerCase().includes(appWord.toLowerCase())
+        )
       );
       
-      const matched = exactMatch || meaningfulPartialMatch || strictWordMatch;
+      // Common skill variations and aliases
+      const aliasMatch = checkSkillAliases(applicantSkill, jobSkill);
+      
+      const matched = exactMatch || partialMatch || wordMatch || aliasMatch;
       
       if (matched) {
-        console.log(`🔍 SKILL MATCH: "${applicantSkill}" matches "${jobSkill}" - Exact: ${exactMatch}, Partial: ${meaningfulPartialMatch}, Word: ${strictWordMatch}`);
+        console.log(`🔍 SKILL MATCH: "${applicantSkill}" matches "${jobSkill}" - Exact: ${exactMatch}, Partial: ${partialMatch}, Word: ${wordMatch}, Alias: ${aliasMatch}`);
       }
       
       return matched;
@@ -187,27 +350,51 @@ router.get('/jobs', authenticateToken, async (req, res) => {
     }
     
     console.log('🔍 Applicant found:', applicant.firstName, applicant.lastName);
-    console.log('🔍 Applicant skills:', JSON.stringify(applicant.skills, null, 2));
+    console.log('🔍 Applicant skills object:', JSON.stringify(applicant.skills, null, 2));
+    console.log('🔍 Applicant skills_array:', applicant.skills_array);
+    console.log('🔍 Applicant primarySkills:', applicant.primarySkills);
     console.log('🔍 Applicant location:', JSON.stringify(applicant.currentLocation, null, 2));
     console.log('🔍 Applicant experience:', applicant.yearsOfExperience);
+    
+    // Debug: Show all skill-related fields
+    console.log('🔍 All skill fields on applicant:');
+    Object.keys(applicant.toObject()).filter(key => key.toLowerCase().includes('skill')).forEach(key => {
+      console.log(`🔍   ${key}:`, applicant[key]);
+    });
 
-    // Get all active jobs
-    const jobs = await Job.find({ 
-      status: 'Active',  // Changed from 'active' to 'Active' to match your data
-      applicationDeadline: { $gte: new Date() } // Only jobs that are still accepting applications
-    }).lean();
+    // Get ALL jobs - remove all restrictions to debug
+    const jobs = await Job.find({}).lean();
+    
+    console.log('🔍 Total jobs in database:', jobs.length);
+    
+    // Filter only for truly active jobs but be very inclusive
+    const activeJobs = jobs.filter(job => {
+      const isActive = !job.status || 
+                      job.status.toLowerCase() === 'active' || 
+                      job.status === 'Active' ||
+                      job.status === 'Published' ||
+                      job.status === 'Open';
+      
+      const hasValidDeadline = !job.applicationDeadline || 
+                              new Date(job.applicationDeadline) >= new Date() ||
+                              new Date(job.applicationDeadline).getFullYear() > 2020; // Very lenient date check
+      
+      console.log(`🔍 Job "${job.jobTitle}" - Status: ${job.status} - Active: ${isActive} - Deadline: ${job.applicationDeadline} - Valid: ${hasValidDeadline}`);
+      
+      return isActive && hasValidDeadline;
+    });
 
-    console.log('🔍 Found jobs:', jobs.length);
-    if (jobs.length > 0) {
+    console.log('🔍 Found active jobs:', activeJobs.length);
+    if (activeJobs.length > 0) {
       console.log('🔍 First job example:', {
-        title: jobs[0].jobTitle,
-        skills: jobs[0].requiredSkills,
-        status: jobs[0].status
+        title: activeJobs[0].jobTitle,
+        skills: activeJobs[0].requiredSkills,
+        status: activeJobs[0].status
       });
     }
 
     // Calculate match scores for each job
-    const jobsWithScores = jobs.map(job => {
+    const jobsWithScores = activeJobs.map(job => {
       console.log('🔍 Processing job:', job.jobTitle);
       console.log('🔍 Job required skills:', job.requiredSkills);
       
@@ -242,24 +429,65 @@ router.get('/jobs', authenticateToken, async (req, res) => {
     console.log('🔍 Jobs with scores:', jobsWithScores.length);
     console.log('🔍 Min match percentage required:', minMatchPercentage);
 
-    // Filter jobs with minimum match percentage and MANDATORY skill match
-    const recommendedJobs = jobsWithScores
-      .filter(job => {
-        const hasSkillMatch = job.matchScore.skills.matchPercentage > 0; // Must have at least 1 skill match
-        const meetsOverallThreshold = job.matchScore.overall >= minMatchPercentage;
-        
-        // Additional check: Require meaningful skill match (at least 25% for cross-industry relevance)
-        const hasMeaningfulSkillMatch = job.matchScore.skills.matchPercentage >= 25;
-        
-        const passes = hasSkillMatch && meetsOverallThreshold && hasMeaningfulSkillMatch;
-        
-        console.log(`🔍 Job "${job.jobTitle}" (${job.industry}) - Skills: ${job.matchScore.skills.matchPercentage}% - Overall: ${job.matchScore.overall}% - Meaningful Skills: ${hasMeaningfulSkillMatch} - Passes: ${passes}`);
-        return passes;
+    // FILTER TO SHOW ONLY JOBS WITH SKILL MATCHES
+    console.log('🔍 FILTERING JOBS - ONLY SHOWING JOBS WITH SKILL MATCHES');
+    
+    // Filter to show ONLY jobs that have at least one skill match
+    const jobsWithSkillMatches = jobsWithScores.filter(job => {
+      const hasMatchedSkills = job.matchScore.skills.matchedSkills && job.matchScore.skills.matchedSkills.length > 0;
+      const hasSkillMatch = job.matchScore.skills.matchPercentage > 0;
+      
+      // Only include jobs that have actual skill matches
+      const shouldInclude = hasMatchedSkills && hasSkillMatch;
+      
+      console.log(`🔍 Job "${job.jobTitle}" - Skills: ${job.matchScore.skills.matchPercentage}% - Matched Skills: ${job.matchScore.skills.matchedSkills?.length || 0}`);
+      console.log(`🔍   Required Skills: [${job.requiredSkills?.join(', ') || 'none'}]`);
+      
+      if (hasMatchedSkills) {
+        console.log(`🔍   ✅ MATCHED SKILLS: [${job.matchScore.skills.matchedSkills.join(', ')}] - INCLUDED`);
+      } else {
+        console.log(`🔍   ❌ NO SKILL MATCHES - EXCLUDED`);
+      }
+      
+      return shouldInclude;
+    });
+    
+    console.log(`🔍 FILTERING RESULT: ${jobsWithScores.length} total jobs → ${jobsWithSkillMatches.length} jobs with skill matches`);
+    
+    // Show only jobs with skill matches
+    let recommendedJobs = jobsWithSkillMatches;
+    
+    recommendedJobs = recommendedJobs
+      .sort((a, b) => {
+        // Sort by skill match first, then overall score
+        if (a.matchScore.skills.matchPercentage !== b.matchScore.skills.matchPercentage) {
+          return b.matchScore.skills.matchPercentage - a.matchScore.skills.matchPercentage;
+        }
+        return b.matchScore.overall - a.matchScore.overall;
       })
-      .sort((a, b) => b.matchScore.overall - a.matchScore.overall)
       .slice(0, parseInt(limit));
 
     console.log('🔍 Final recommended jobs:', recommendedJobs.length);
+
+    // If no recommendations found, show recent/popular jobs as fallback
+    if (recommendedJobs.length === 0) {
+      console.log('🔍 No skill-matched jobs found, showing recent jobs as fallback');
+      const fallbackJobs = jobs
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sort by newest first
+        .slice(0, Math.min(parseInt(limit), 10)) // Limit fallback jobs
+        .map(job => ({
+          ...job,
+          matchScore: {
+            overall: 15, // Low but positive score
+            skills: { matchPercentage: 0, matchedSkills: [], missingSkills: job.requiredSkills || [] },
+            location: 0,
+            experience: 50 // Neutral experience score
+          }
+        }));
+      
+      recommendedJobs.push(...fallbackJobs);
+      console.log('🔍 Added fallback jobs:', fallbackJobs.length);
+    }
 
     // Format response
     const formattedJobs = recommendedJobs.map(job => ({
@@ -382,6 +610,106 @@ router.get('/stats', authenticateToken, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to get recommendation statistics',
+      error: error.message
+    });
+  }
+});
+
+// DEBUG endpoint to show all jobs without filtering
+router.get('/debug/all-jobs', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'applicant') {
+      return res.status(403).json({
+        success: false,
+        message: 'This endpoint is only available for applicants'
+      });
+    }
+
+    const applicant = await Applicant.findById(req.user._id);
+    if (!applicant) {
+      return res.status(404).json({
+        success: false,
+        message: 'Applicant profile not found'
+      });
+    }
+
+    // Get ALL jobs without any filtering
+    const allJobs = await Job.find({}).lean();
+    
+    const jobsWithBasicInfo = allJobs.map(job => ({
+      id: job._id,
+      title: job.jobTitle,
+      company: job.companyName,
+      status: job.status,
+      deadline: job.applicationDeadline,
+      requiredSkills: job.requiredSkills,
+      skillMatch: calculateSkillMatch(applicant.skills, job.requiredSkills)
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        totalJobs: allJobs.length,
+        applicantSkills: applicant.skills,
+        jobs: jobsWithBasicInfo.slice(0, 20) // Show first 20 for debugging
+      }
+    });
+
+  } catch (error) {
+    console.error('Debug all jobs error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to debug all jobs',
+      error: error.message
+    });
+  }
+});
+
+// DEBUG endpoint to test skill matching
+router.get('/debug/skills', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'applicant') {
+      return res.status(403).json({
+        success: false,
+        message: 'This endpoint is only available for applicants'
+      });
+    }
+
+    const applicant = await Applicant.findById(req.user._id);
+    if (!applicant) {
+      return res.status(404).json({
+        success: false,
+        message: 'Applicant profile not found'
+      });
+    }
+
+    // Get a few sample jobs to test matching
+    const sampleJobs = await Job.find({}).limit(5).lean();
+    
+    const debugInfo = {
+      applicantSkills: {
+        skills: applicant.skills,
+        skills_array: applicant.skills_array,
+        primarySkills: applicant.primarySkills,
+        allSkillFields: Object.keys(applicant.toObject()).filter(key => key.toLowerCase().includes('skill'))
+      },
+      sampleJobs: sampleJobs.map(job => ({
+        title: job.jobTitle,
+        requiredSkills: job.requiredSkills,
+        skillMatch: calculateSkillMatch(applicant.skills, job.requiredSkills)
+      }))
+    };
+
+    res.json({
+      success: true,
+      data: debugInfo
+    });
+
+  } catch (error) {
+    console.error('Debug skills error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to debug skills',
       error: error.message
     });
   }

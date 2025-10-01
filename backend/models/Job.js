@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-// Job Schema with comprehensive fields for finance and automotive industries
+// Enhanced Job Schema with automatic status management based on deadline
 const JobSchema = new mongoose.Schema({
   // Basic Information
   jobTitle: {
@@ -296,35 +296,26 @@ const JobSchema = new mongoose.Schema({
     }
   },
   
-  // Job Status & Analytics
+  // Job Status with automatic deadline management
   status: {
     type: String,
-    enum: ['Draft', 'Active', 'Paused', 'Closed', 'Expired'],
-    default: 'Active'
+    enum: {
+      values: ['draft', 'active', 'closed', 'expired'],
+      message: 'Status must be draft, active, closed, or expired'
+    },
+    default: 'draft'
   },
   
-  views: {
-    type: Number,
-    default: 0
+  // Auto-status management based on deadline
+  autoStatusManagement: {
+    type: Boolean,
+    default: true
   },
   
   applicationsCount: {
     type: Number,
     default: 0
   },
-  
-  // SEO & Search
-  slug: {
-    type: String,
-    unique: true,
-    lowercase: true
-  },
-  
-  tags: [{
-    type: String,
-    lowercase: true,
-    trim: true
-  }],
   
   // Timestamps
   createdAt: {
@@ -343,13 +334,32 @@ const JobSchema = new mongoose.Schema({
   }
 }, {
   timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
+  collection: 'jobs'
 });
 
-// Indexes for better query performance
-JobSchema.index({ jobTitle: 'text', jobDescription: 'text', companyName: 'text' });
-JobSchema.index({ industry: 1, jobCategory: 1 });
+// Pre-save middleware for automatic status management
+JobSchema.pre('save', function(next) {
+  if (this.autoStatusManagement && this.applicationDeadline) {
+    const now = new Date();
+    const deadline = new Date(this.applicationDeadline);
+    
+    // If deadline has passed and job is active, mark as closed
+    if (deadline < now && this.status === 'active') {
+      this.status = 'closed';
+    }
+    // If deadline is in future and user wants to make it active
+    else if (deadline >= now && this.isModified('status') && this.status === 'active') {
+      this.status = 'active';
+    }
+    // If deadline is in past and user tries to make it active, keep as draft or close
+    else if (deadline < now && this.isModified('status') && this.status === 'active') {
+      this.status = 'closed';
+    }
+  }
+  next();
+});
+
+// Indexes for performance
 JobSchema.index({ location: 1 });
 JobSchema.index({ jobType: 1, workArrangement: 1 });
 JobSchema.index({ 'salary.minimum': 1, 'salary.maximum': 1 });
@@ -466,6 +476,36 @@ JobSchema.methods.isExpired = function() {
 
 JobSchema.methods.canApply = function() {
   return this.status === 'Active' && !this.isExpired();
+};
+
+// Method to check if job should be automatically closed
+JobSchema.methods.checkDeadlineStatus = function() {
+  if (this.autoStatusManagement && this.applicationDeadline) {
+    const now = new Date();
+    const deadline = new Date(this.applicationDeadline);
+    
+    if (deadline < now && this.status === 'active') {
+      this.status = 'closed';
+      return true; // Status changed
+    }
+  }
+  return false; // No status change
+};
+
+// Static method to update expired jobs
+JobSchema.statics.updateExpiredJobs = async function() {
+  const now = new Date();
+  const result = await this.updateMany(
+    {
+      status: 'active',
+      applicationDeadline: { $lt: now },
+      autoStatusManagement: true
+    },
+    {
+      status: 'closed'
+    }
+  );
+  return result;
 };
 
 const Job = mongoose.model('Job', JobSchema);

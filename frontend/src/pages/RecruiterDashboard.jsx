@@ -28,7 +28,6 @@ import JobChart from "../components/dashboard/JobChart";
 import CandidatesTab from "../components/dashboard/CandidatesTab";
 import InterviewsTab from "../components/dashboard/InterviewsTab";
 import LoginStatusBanner from "../components/dashboard/LoginStatusBanner";
-import MessagesTab from "../components/dashboard/MessagesTab";
 
 const RecruiterDashboardContent = () => {
   const [location] = useLocation();
@@ -100,6 +99,9 @@ const RecruiterDashboardContent = () => {
   
   // Add a state to force re-render when profile updates
   const [profileUpdateTrigger, setProfileUpdateTrigger] = useState(0);
+  
+  // Add a state to force re-render when jobs are updated
+  const [jobsRefreshTrigger, setJobsRefreshTrigger] = useState(0);
 
   // Handle job editing
   const handleEditJob = (job) => {
@@ -432,16 +434,31 @@ const RecruiterDashboardContent = () => {
                 <EnhancedJobPostingTab 
                   key={editingJob ? `edit-${editingJob.id || editingJob._id}` : 'new-job'}
                   editingJob={editingJob} 
-                  onJobSaved={() => {
-                    console.log('🔍 Job saved, clearing editingJob and switching to active tab');
+                  onJobSaved={(result) => {
+                    console.log('🔍 Job saved, result:', result);
+                    console.log('🔍 Enhanced result isDraft:', result?.isDraft);
+                    console.log('🔍 Enhanced result jobStatus:', result?.jobStatus);
                     setEditingJob(null);
-                    setActiveJobTab("active");
+                    
+                    // Switch to appropriate tab based on job status
+                    if (result?.isDraft || result?.jobStatus === 'draft' || result?.data?.status === 'draft') {
+                      console.log('🔍 Switching to draft tab for draft job');
+                      setActiveJobTab("draft");
+                    } else {
+                      console.log('🔍 Switching to active tab for active job');
+                      setActiveJobTab("active");
+                    }
+                    
+                    // Trigger a refresh of the jobs data
+                    console.log('🔍 Triggering jobs refresh...');
+                    setJobsRefreshTrigger(prev => prev + 1);
                   }} 
                 />
               </>
             )}
             {activeJobTab === "active" && (
               <EnhancedJobsTab 
+                key={`active-${jobsRefreshTrigger}`}
                 userRole="recruiter" 
                 jobType="active" 
                 onEditJob={handleEditJob}
@@ -449,6 +466,7 @@ const RecruiterDashboardContent = () => {
             )}
             {activeJobTab === "draft" && (
               <EnhancedJobsTab 
+                key={`draft-${jobsRefreshTrigger}`}
                 userRole="recruiter" 
                 jobType="draft" 
                 onEditJob={handleEditJob}
@@ -456,6 +474,7 @@ const RecruiterDashboardContent = () => {
             )}
             {activeJobTab === "closed" && (
               <EnhancedJobsTab 
+                key={`closed-${jobsRefreshTrigger}`}
                 userRole="recruiter" 
                 jobType="closed" 
                 onEditJob={handleEditJob}
@@ -469,8 +488,6 @@ const RecruiterDashboardContent = () => {
         return <EnhancedCandidatesTab />;
       case "interviews":
         return <EnhancedInterviewsTab />;
-      case "messages":
-        return <MessagesTab userRole="recruiter" />;
       case "analytics":
         return (
           <div className="space-y-6">

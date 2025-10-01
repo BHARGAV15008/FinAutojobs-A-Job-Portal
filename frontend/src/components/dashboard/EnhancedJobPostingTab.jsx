@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, MapPin, Clock, Users, DollarSign, BookOpen, Briefcase, Zap } from 'lucide-react';
 import { useDashboard } from '../../contexts/RealDashboardContext';
 
-const EnhancedJobPostingTab = () => {
-  const { postJob, currentUser } = useDashboard();
+const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
+  const { postJob, updateJob, currentUser } = useDashboard();
   const [formData, setFormData] = useState({
     // Basic Information
     title: '',
@@ -51,9 +51,102 @@ const EnhancedJobPostingTab = () => {
   const [success, setSuccess] = useState(false);
   const [enhancingDescription, setEnhancingDescription] = useState(false);
 
-  const handleSubmit = async (e) => {
+  // Populate form when editing a job
+  useEffect(() => {
+    if (editingJob) {
+      console.log('🔍 Populating form with editing job:', editingJob);
+      
+      // Helper function to safely extract array values
+      const extractArray = (value) => {
+        if (Array.isArray(value)) return value;
+        if (typeof value === 'string') return value.split(',').map(s => s.trim()).filter(s => s);
+        return [];
+      };
+
+      // Helper function to extract experience values
+      const extractExperience = (exp) => {
+        if (typeof exp === 'object' && exp) {
+          return {
+            min: exp.minimum || exp.min || 1,
+            max: exp.maximum || exp.max || 3
+          };
+        }
+        if (typeof exp === 'string') {
+          const match = exp.match(/(\d+)-(\d+)/);
+          if (match) {
+            return { min: parseInt(match[1]), max: parseInt(match[2]) };
+          }
+        }
+        return { min: 1, max: 3 };
+      };
+
+      // Helper function to extract salary values
+      const extractSalary = (salary) => {
+        if (typeof salary === 'object' && salary) {
+          return {
+            min: salary.minimum || salary.min || '300000',
+            max: salary.maximum || salary.max || '600000',
+            currency: salary.currency || 'INR',
+            period: salary.period || 'yearly'
+          };
+        }
+        return { min: '300000', max: '600000', currency: 'INR', period: 'yearly' };
+      };
+
+      const experience = extractExperience(editingJob.experience);
+      const salary = extractSalary(editingJob.salary || editingJob.salaryRange);
+
+      setFormData({
+        // Basic Information
+        title: editingJob.jobTitle || editingJob.title || '',
+        location: editingJob.location || '',
+        jobType: editingJob.jobType?.toLowerCase().replace(' ', '-') || editingJob.type?.toLowerCase().replace(' ', '-') || 'full-time',
+        workArrangement: editingJob.workArrangement?.toLowerCase() || 'onsite',
+        
+        // Experience & Skills
+        experienceMin: experience.min,
+        experienceMax: experience.max,
+        requiredSkills: extractArray(editingJob.requiredSkills || editingJob.skills),
+        preferredSkills: extractArray(editingJob.preferredSkills),
+        
+        // Salary & Benefits
+        salaryType: 'range',
+        salaryMin: salary.min.toString(),
+        salaryMax: salary.max.toString(),
+        currency: salary.currency,
+        salaryPeriod: salary.period,
+        
+        // Job Details
+        description: editingJob.jobDescription || editingJob.description || '',
+        responsibilities: extractArray(editingJob.keyResponsibilities || editingJob.responsibilities),
+        requirements: extractArray(editingJob.requirements),
+        qualifications: extractArray(editingJob.qualifications),
+        keyResponsibilities: extractArray(editingJob.keyResponsibilities || editingJob.responsibilities),
+        
+        // Industry & Category
+        industry: editingJob.industry || 'Finance & Banking',
+        jobCategory: editingJob.jobCategory || editingJob.category || 'Finance',
+        
+        // Application
+        contactEmail: editingJob.contactEmail || currentUser?.email || '',
+        applicationDeadline: editingJob.applicationDeadline ? 
+          new Date(editingJob.applicationDeadline).toISOString().split('T')[0] : 
+          new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        urgency: editingJob.jobUrgency?.toLowerCase().replace(' priority', '').replace(' ', '-') || 'normal',
+        
+        // AI Enhancement
+        keywordsForAI: '',
+        aiKeywords: extractArray(editingJob.aiKeywords),
+        isAiEnhanced: editingJob.isAiEnhanced || false
+      });
+
+      console.log('✅ Form populated with editing job data');
+    }
+  }, [editingJob, currentUser]);
+
+  const handleSubmit = async (e, isDraft = false) => {
     e.preventDefault();
-    console.log('🚀 Form submission started');
+    console.log('🚀 Form submission started', isDraft ? '(as draft)' : '(as active)');
     console.log('🔍 Form data at submission:', formData);
     setLoading(true);
 
@@ -163,39 +256,81 @@ const EnhancedJobPostingTab = () => {
                    formData.urgency === 'high' ? 'High Priority' : 'Normal Priority',
         
         aiKeywords: formData.requiredSkills || [],
-        isAiEnhanced: false
+        isAiEnhanced: false,
+        
+        // Set status based on whether it's a draft or active job
+        status: isDraft ? 'draft' : 'active'
       };
       
       console.log('🔍 Job payload being sent:', jobPayload);
-      console.log('🔍 About to call postJob function...');
+      console.log('🔍 Job status:', isDraft ? 'draft' : 'active');
+      console.log('🔍 Editing job?', !!editingJob);
       
-      // Use dashboard context's postJob function (automatically refreshes jobs list)
-      const result = await postJob(jobPayload);
-      console.log('🔍 postJob function returned:', result);
-      console.log('✅ Job posted successfully:', result);
+      let result;
+      if (editingJob) {
+        // Update existing job
+        console.log('🔍 About to call updateJob function...');
+        const jobId = editingJob.id || editingJob._id;
+        result = await updateJob(jobId, jobPayload);
+        console.log('🔍 updateJob function returned:', result);
+        console.log('✅ Job updated successfully:', result);
+      } else {
+        // Create new job
+        console.log('🔍 About to call postJob function...');
+        result = await postJob(jobPayload);
+        console.log('🔍 postJob function returned:', result);
+        console.log('✅ Job posted successfully:', result);
+      }
       
-      setSuccess(true);
-      // Reset form after successful submission
+      setSuccess(editingJob ? 'updated' : (isDraft ? 'draft' : true));
+      
+      // Call onJobSaved callback if provided
+      if (onJobSaved) {
+        console.log('🔍 Calling onJobSaved with result:', result);
+        console.log('🔍 Result data:', result?.data);
+        console.log('🔍 Job status in result:', result?.data?.status || result?.data?.data?.status);
+        console.log('🔍 isDraft flag:', isDraft);
+        
+        // Enhance result with draft information
+        const enhancedResult = {
+          ...result,
+          isDraft: isDraft,
+          jobStatus: isDraft ? 'draft' : 'active'
+        };
+        
+        onJobSaved(enhancedResult);
+      }
+      
+      // Reset form after successful submission (only for new jobs, not edits)
       setTimeout(() => {
         setSuccess(false);
-        setFormData({
-          title: '', location: '', jobType: 'full-time', workArrangement: 'onsite',
-          experienceMin: 1, experienceMax: 3, requiredSkills: [], preferredSkills: [],
-          salaryType: 'range', salaryMin: '300000', salaryMax: '600000', currency: 'INR', salaryPeriod: 'yearly',
-          description: '', responsibilities: [], requirements: [], qualifications: [],
-          industry: 'Finance & Banking', jobCategory: 'Finance', contactEmail: '', 
-          applicationDeadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], 
-          urgency: 'normal', keywordsForAI: '', aiKeywords: [], isAiEnhanced: false
-        });
+        if (!editingJob) {
+          setFormData({
+            title: '', location: '', jobType: 'full-time', workArrangement: 'onsite',
+            experienceMin: 1, experienceMax: 3, requiredSkills: [], preferredSkills: [],
+            salaryType: 'range', salaryMin: '300000', salaryMax: '600000', currency: 'INR', salaryPeriod: 'yearly',
+            description: '', responsibilities: [], requirements: [], qualifications: [],
+            industry: 'Finance & Banking', jobCategory: 'Finance', contactEmail: '', 
+            applicationDeadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], 
+            urgency: 'normal', keywordsForAI: '', aiKeywords: [], isAiEnhanced: false
+          });
+        }
       }, 3000);
     } catch (error) {
       console.error('Job posting error:', error);
       // For demo purposes, still show success
-      setSuccess(true);
+      setSuccess(isDraft ? 'draft' : true);
       setTimeout(() => setSuccess(false), 2000);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Handle saving as draft
+  const handleSaveAsDraft = async (e) => {
+    e.preventDefault();
+    console.log('💾 Saving job as draft...');
+    await handleSubmit(e, true); // Call handleSubmit with isDraft = true
   };
 
   // Industry-specific data - Updated to match backend validation
@@ -346,10 +481,36 @@ const EnhancedJobPostingTab = () => {
   };
 
   if (success) {
+    const getSuccessContent = () => {
+      switch (success) {
+        case 'draft':
+          return {
+            icon: '💾',
+            title: 'Job Saved as Draft!',
+            message: 'Your job has been saved as a draft. You can edit and publish it later.'
+          };
+        case 'updated':
+          return {
+            icon: '✅',
+            title: 'Job Updated Successfully!',
+            message: 'Your job posting has been updated and the changes are now live.'
+          };
+        default:
+          return {
+            icon: '🎉',
+            title: 'Job Posted Successfully!',
+            message: 'Your job posting is now live and visible to candidates.'
+          };
+      }
+    };
+
+    const { icon, title, message } = getSuccessContent();
+
     return (
       <div className="text-center py-12">
-        <div className="text-6xl mb-4">🎉</div>
-        <h2 className="text-2xl font-bold text-green-600 mb-2">Job Posted Successfully!</h2>
+        <div className="text-6xl mb-4">{icon}</div>
+        <h2 className="text-2xl font-bold text-green-600 mb-2">{title}</h2>
+        <p className="text-gray-600 dark:text-gray-400">{message}</p>
       </div>
     );
   }
@@ -358,7 +519,14 @@ const EnhancedJobPostingTab = () => {
     <motion.div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
       <div className="flex items-center gap-3 mb-6">
         <Briefcase className="w-8 h-8 text-blue-600" />
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Post New Job</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          {editingJob ? 'Edit Job' : 'Post New Job'}
+        </h2>
+        {editingJob && (
+          <span className="text-sm text-gray-500 dark:text-gray-400">
+            Editing: {editingJob.jobTitle || editingJob.title}
+          </span>
+        )}
       </div>
       
       <form onSubmit={handleSubmit} className="space-y-8">
@@ -765,16 +933,25 @@ const EnhancedJobPostingTab = () => {
             ) : (
               <>
                 <Briefcase className="w-5 h-5" />
-                Post Job
+                {editingJob ? 'Update Job' : 'Post Job'}
               </>
             )}
           </button>
           
           <button
             type="button"
-            className="px-8 py-4 border border-gray-300 text-gray-700 dark:text-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+            onClick={handleSaveAsDraft}
+            disabled={loading}
+            className="px-8 py-4 border border-gray-300 text-gray-700 dark:text-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Save as Draft
+            {loading ? (
+              <div className="flex items-center space-x-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-700"></div>
+                <span>Saving Draft...</span>
+              </div>
+            ) : (
+              'Save as Draft'
+            )}
           </button>
         </div>
       </form>

@@ -20,6 +20,14 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
       console.log('🔍 ProfileEditModal actualUser.lastName:', actualUser.lastName);
       console.log('🔍 ProfileEditModal actualUser.email:', actualUser.email);
       console.log('🔍 ProfileEditModal actualUser.phone:', actualUser.phone);
+      console.log('🔍 ProfileEditModal document URLs debug:');
+      console.log('  - resume_url:', actualUser.resume_url);
+      console.log('  - documents?.resumeUrl:', actualUser.documents?.resumeUrl);
+      console.log('  - cover_letter_url:', actualUser.cover_letter_url);
+      console.log('  - documents?.coverLetterUrl:', actualUser.documents?.coverLetterUrl);
+      console.log('  - portfolio_url:', actualUser.portfolio_url);
+      console.log('  - documents?.portfolioUrl:', actualUser.documents?.portfolioUrl);
+      console.log('  - professionalLinks?.personalWebsite:', actualUser.professionalLinks?.personalWebsite);
       
       setFormData({
         name: `${actualUser.firstName || ''} ${actualUser.lastName || ''}`.trim() || '',
@@ -27,7 +35,6 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
         location: actualUser.currentLocation?.city || actualUser.location || '',
         bio: actualUser.bio || '',
         linkedin_url: actualUser.linkedin_url || actualUser.professionalLinks?.linkedin || '',
-        github_url: actualUser.github_url || actualUser.professionalLinks?.github || '',
         portfolio_url: actualUser.portfolio_url || actualUser.professionalLinks?.personalWebsite || '',
         ...(userRole === 'applicant' && {
           skills: (() => {
@@ -35,6 +42,10 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
             console.log('🔍 ProfileEditModal skills debug:', actualUser.skills);
             console.log('🔍 ProfileEditModal skills_array debug:', actualUser.skills_array);
             console.log('🔍 ProfileEditModal primary_skills debug:', actualUser.primary_skills);
+            console.log('🔍 ProfileEditModal experience_years debug:', actualUser.experience_years);
+            console.log('🔍 ProfileEditModal yearsOfExperience debug:', actualUser.yearsOfExperience);
+            console.log('🔍 ProfileEditModal qualification debug:', actualUser.qualification);
+            console.log('🔍 ProfileEditModal education debug:', actualUser.education);
             
             // Try multiple sources for skills
             if (Array.isArray(actualUser.skills_array)) {
@@ -55,8 +66,11 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
             return [];
           })(),
           experience_years: actualUser.experience_years || actualUser.yearsOfExperience || 0,
-          qualification: actualUser.qualification || '',
-          resume_url: actualUser.resume_url || ''
+          qualification: actualUser.qualification || actualUser.education?.[0]?.degree || '',
+          // Document URLs - check multiple sources
+          resume_url: actualUser.resume_url || actualUser.documents?.resumeUrl || '',
+          cover_letter_url: actualUser.cover_letter_url || actualUser.documents?.coverLetterUrl || '',
+          portfolio_url: actualUser.portfolio_url || actualUser.documents?.portfolioUrl || actualUser.professionalLinks?.personalWebsite || ''
         }),
         ...(userRole === 'recruiter' && {
           company: actualUser.companyInfo?.companyName || actualUser.companyName || actualUser.company || '',
@@ -71,9 +85,20 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setErrors({}); // Clear previous errors
+    
     try {
+      console.log('🔍 ProfileEditModal handleSubmit called');
+      console.log('🔍 Form data being submitted:', formData);
+      console.log('🔍 User role:', userRole);
+      console.log('🔍 Specific field values:');
+      console.log('  - qualification:', formData.qualification);
+      console.log('  - experience_years:', formData.experience_years);
+      console.log('  - skills:', formData.skills);
+      
       // If there's a resume file, we need to handle it specially
       if (formData.resumeFile) {
+        console.log('🔍 Handling file upload with resume');
         const formDataWithFile = new FormData();
         
         // Add all form fields
@@ -90,13 +115,31 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
         // Add the resume file
         formDataWithFile.append('resume', formData.resumeFile);
         
-        await onSave(formDataWithFile, true); // true indicates file upload
+        console.log('🔍 Calling onSave with file upload');
+        const result = await onSave(formDataWithFile, true); // true indicates file upload
+        console.log('✅ File upload result:', result);
       } else {
-        await onSave(formData);
+        console.log('🔍 Handling regular form submission');
+        console.log('🔍 Calling onSave with form data');
+        const result = await onSave(formData);
+        console.log('✅ Regular form submission result:', result);
       }
+      
+      console.log('✅ Profile update successful, closing modal');
+      
+      // Show success message
+      if (window.showToast) {
+        window.showToast('Profile updated successfully!', 'success');
+      }
+      
       onClose();
     } catch (error) {
-      setErrors({ general: 'Failed to save profile' });
+      console.error('❌ ProfileEditModal handleSubmit error:', error);
+      console.error('❌ Error details:', error.message);
+      console.error('❌ Error stack:', error.stack);
+      setErrors({ 
+        general: error.message || 'Failed to save profile. Please try again.' 
+      });
     } finally {
       setLoading(false);
     }

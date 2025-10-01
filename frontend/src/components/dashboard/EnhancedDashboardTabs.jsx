@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import EditJobModal from '../modals/EditJobModal';
 import JobDetailsModal from '../modals/JobDetailsModal';
+import CandidateProfileModal from '../modals/CandidateProfileModal';
+import ContactModal from '../modals/ContactModal';
+import { communicationsAPI } from '../../api/communications';
+import { toast } from '../ui/use-toast';
 import { 
   User, 
   MapPin, 
@@ -119,9 +123,11 @@ import {
   Receipt,
   Calculator,
   Wallet as PiggyBank,
-  TrendingDown
+  TrendingDown,
+  Sparkles
 } from 'lucide-react';
 import ProfileEditModal from '../profile/ProfileEditModal';
+import JobRecommendations from '../recommendations/JobRecommendations';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { calculateProfileCompletion } from '../../utils/profileCompletion';
 import { useTheme } from "../../contexts/IntegratedThemeContext";
@@ -322,8 +328,8 @@ export const EnhancedProfileTab = ({
           label: "Portfolio",
           value: safeStringValue(
             userRole === 'recruiter' 
-              ? user?.professionalLinks?.personalWebsite || user?.portfolio_url
-              : user?.portfolio_url
+              ? user?.professionalLinks?.personalWebsite || user?.portfolio_url || user?.documents?.portfolioUrl
+              : user?.portfolio_url || user?.documents?.portfolioUrl
           ),
           icon: "🌐",
         },
@@ -384,11 +390,15 @@ export const EnhancedProfileTab = ({
           {
             label: "Resume",
             value: (() => {
+              // Check multiple sources for resume URL
+              const resumeUrl = user?.resume_url || user?.documents?.resumeUrl || '';
               console.log('🔍 Resume debug - user.resume_url:', user?.resume_url);
-              console.log('🔍 Resume debug - full user object:', user);
-              return user?.resume_url ? (
+              console.log('🔍 Resume debug - user.documents?.resumeUrl:', user?.documents?.resumeUrl);
+              console.log('🔍 Resume debug - final resumeUrl:', resumeUrl);
+              
+              return resumeUrl ? (
                 <a 
-                  href={`http://localhost:5000${user.resume_url}`} 
+                  href={resumeUrl.startsWith('http') ? resumeUrl : `http://localhost:5000${resumeUrl}`} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
@@ -450,12 +460,15 @@ export const EnhancedProfileTab = ({
           {
             label: "Resume",
             value: (() => {
+              // Check multiple sources for resume URL
+              const resumeUrl = user?.resume_url || user?.documents?.resumeUrl || '';
               console.log('🔍 Resume debug (recruiter) - user.resume_url:', user?.resume_url);
-              console.log('🔍 Resume debug (recruiter) - user keys:', Object.keys(user || {}));
-              console.log('🔍 Resume debug (recruiter) - full user object:', user);
-              return user?.resume_url ? (
+              console.log('🔍 Resume debug (recruiter) - user.documents?.resumeUrl:', user?.documents?.resumeUrl);
+              console.log('🔍 Resume debug (recruiter) - final resumeUrl:', resumeUrl);
+              
+              return resumeUrl ? (
                 <a 
-                  href={`http://localhost:5000${user.resume_url}`} 
+                  href={resumeUrl.startsWith('http') ? resumeUrl : `http://localhost:5000${resumeUrl}`} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
@@ -529,6 +542,9 @@ export const EnhancedProfileTab = ({
       // Transform form data to match backend expectations (for regular updates)
       const transformedData = { ...formData };
       
+      console.log('🔍 Original formData keys:', Object.keys(formData));
+      console.log('🔍 Original formData values:', formData);
+      
       // Handle name field - split into firstName and lastName
       if (formData.name) {
         const nameParts = formData.name.split(' ');
@@ -539,14 +555,18 @@ export const EnhancedProfileTab = ({
       
       // Handle recruiter-specific fields
       if (userRole === 'recruiter') {
-        // Map company info to nested structure
-        if (formData.company || formData.department || formData.job_title) {
+        console.log('🔍 Processing recruiter fields - company:', formData.company, 'department:', formData.department, 'job_title:', formData.job_title);
+        
+        // Map company info to nested structure - ALWAYS create companyInfo if any field exists
+        if (formData.company !== undefined || formData.department !== undefined || formData.job_title !== undefined) {
           transformedData.companyInfo = {
-            ...(formData.company && { companyName: formData.company }),
-            ...(formData.department && { department: formData.department }),
-            ...(formData.job_title && { designation: formData.job_title })
+            companyName: formData.company || '',
+            department: formData.department || '',
+            designation: formData.job_title || ''
           };
-          // Remove flat fields
+          console.log('🔍 Created companyInfo:', transformedData.companyInfo);
+          
+          // Remove flat fields after transformation
           delete transformedData.company;
           delete transformedData.department;
           delete transformedData.job_title;
@@ -559,33 +579,37 @@ export const EnhancedProfileTab = ({
         }
         
         // Handle location field - map to officeLocation.city
-        if (formData.location) {
+        if (formData.location !== undefined) {
           transformedData.officeLocation = {
-            city: formData.location,
+            city: formData.location || '',
             state: 'Maharashtra', // Default state
             country: 'India' // Default country
           };
+          console.log('🔍 Created officeLocation:', transformedData.officeLocation);
           delete transformedData.location; // Remove the location field
         }
         
         // Handle professional links for recruiters - store in both places
+        console.log('🔍 Processing professional links - linkedin:', formData.linkedin_url, 'github:', formData.github_url, 'portfolio:', formData.portfolio_url);
+        
         const professionalLinks = {};
-        if (formData.linkedin_url) {
-          professionalLinks.linkedin = formData.linkedin_url;
+        if (formData.linkedin_url !== undefined) {
+          professionalLinks.linkedin = formData.linkedin_url || '';
           // Keep linkedin_url in BaseUser for backward compatibility - don't delete
         }
-        if (formData.github_url) {
-          professionalLinks.github = formData.github_url;
+        if (formData.github_url !== undefined) {
+          professionalLinks.github = formData.github_url || '';
           // Keep github_url in BaseUser for backward compatibility - don't delete
         }
-        if (formData.portfolio_url) {
-          professionalLinks.personalWebsite = formData.portfolio_url;
+        if (formData.portfolio_url !== undefined) {
+          professionalLinks.personalWebsite = formData.portfolio_url || '';
           // Keep portfolio_url in BaseUser for backward compatibility - don't delete
         }
         
-        // Only set professionalLinks if we have any links
+        // Always set professionalLinks if any field was provided (even if empty)
         if (Object.keys(professionalLinks).length > 0) {
           transformedData.professionalLinks = professionalLinks;
+          console.log('🔍 Created professionalLinks:', transformedData.professionalLinks);
         }
         
         // Ensure bio is preserved (it's a BaseUser field)
@@ -639,8 +663,10 @@ export const EnhancedProfileTab = ({
         // Handle education for applicants
         if (formData.education) {
           transformedData.education = Array.isArray(formData.education) ? formData.education : [];
+          console.log('🔍 Using existing education array:', transformedData.education);
         } else if (formData.qualification) {
           // Convert simple qualification string to education array
+          console.log('🔍 Converting qualification to education:', formData.qualification);
           transformedData.education = [{
             institution: 'Not specified',
             degree: formData.qualification,
@@ -650,6 +676,7 @@ export const EnhancedProfileTab = ({
             grade: '',
             isCurrentlyStudying: false
           }];
+          console.log('🔍 Created education array:', transformedData.education);
           delete transformedData.qualification;
         }
         
@@ -670,13 +697,19 @@ export const EnhancedProfileTab = ({
         }
         
         // Handle documents for applicants
-        if (formData.resume_url || formData.cover_letter_url || formData.portfolio_url) {
+        if (formData.resume_url !== undefined || formData.cover_letter_url !== undefined || formData.portfolio_url !== undefined) {
           transformedData.documents = {
-            ...(formData.resume_url && { resumeUrl: formData.resume_url }),
-            ...(formData.cover_letter_url && { coverLetterUrl: formData.cover_letter_url }),
-            ...(formData.portfolio_url && { portfolioUrl: formData.portfolio_url }),
+            resumeUrl: formData.resume_url || '',
+            coverLetterUrl: formData.cover_letter_url || '',
+            portfolioUrl: formData.portfolio_url || '',
             certificates: []
           };
+          console.log('🔍 Created documents object:', transformedData.documents);
+          
+          // Also preserve flat fields for backward compatibility
+          if (formData.resume_url !== undefined) transformedData.resume_url = formData.resume_url;
+          if (formData.cover_letter_url !== undefined) transformedData.cover_letter_url = formData.cover_letter_url;
+          if (formData.portfolio_url !== undefined) transformedData.portfolio_url = formData.portfolio_url;
         }
         
         // Handle job preferences for applicants
@@ -696,7 +729,9 @@ export const EnhancedProfileTab = ({
         
         // Handle years of experience for applicants
         if (formData.experience_years !== undefined) {
+          console.log('🔍 Converting experience_years to yearsOfExperience:', formData.experience_years);
           transformedData.yearsOfExperience = parseInt(formData.experience_years) || 0;
+          console.log('🔍 Set yearsOfExperience to:', transformedData.yearsOfExperience);
           delete transformedData.experience_years;
         }
       }
@@ -751,14 +786,20 @@ export const EnhancedProfileTab = ({
       }
       
       console.log('🔍 Sanitized data for backend:', transformedData);
+      console.log('🔍 Sanitized data keys:', Object.keys(transformedData));
+      console.log('🔍 Sanitized data companyInfo:', transformedData.companyInfo);
+      console.log('🔍 Sanitized data officeLocation:', transformedData.officeLocation);
+      console.log('🔍 Sanitized data professionalLinks:', transformedData.professionalLinks);
       
+      console.log('🔍 About to call updateProfile with transformed data');
       const response = await updateProfile(transformedData);
       console.log('✅ Profile update response:', response);
+      console.log('✅ Profile update response.success:', response.success);
       console.log('✅ Profile update response.data:', response.data);
-      console.log('✅ Profile update response.data.bio:', response.data?.bio);
-      console.log('✅ Profile update response.data.github_url:', response.data?.github_url);
+      console.log('✅ Profile update response.error:', response.error);
       
       if (response.success) {
+        console.log('✅ Profile update was successful');
         // Update local state immediately for UI responsiveness
         setCurrentUser(response.data);
         
@@ -774,11 +815,18 @@ export const EnhancedProfileTab = ({
         
         return response;
       } else {
+        console.error('❌ Profile update failed:', response.error);
         throw new Error(response.error || 'Profile update failed');
       }
     } catch (error) {
       console.error("❌ Failed to update profile:", error);
-      throw error; // Re-throw to let modal handle the error
+      console.error("❌ Error type:", typeof error);
+      console.error("❌ Error message:", error.message);
+      console.error("❌ Error stack:", error.stack);
+      
+      // Re-throw with more descriptive error message
+      const errorMessage = error.response?.data?.message || error.message || 'Profile update failed';
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -1373,6 +1421,8 @@ export const EnhancedJobsTab = ({
   const [updating, setUpdating] = useState({});
   const [editModal, setEditModal] = useState({ isOpen: false, job: null });
   const [applicationsModal, setApplicationsModal] = useState({ isOpen: false, job: null, applications: [] });
+  const [candidateModal, setCandidateModal] = useState({ isOpen: false, candidate: null });
+  const [contactModal, setContactModal] = useState({ isOpen: false, candidate: null });
 
   // Filter jobs based on job type and current filters
   const getJobsByType = () => {
@@ -1653,14 +1703,20 @@ export const EnhancedJobsTab = ({
 
   // Handle view applications
   const handleViewApplications = async (jobId) => {
-    console.log('View applications for job:', jobId);
+    console.log('🔍 View applications for job:', jobId);
     try {
       // Import applicationsAPI dynamically to avoid circular imports
       const { applicationsAPI } = await import("../../services/api");
-      const response = await applicationsAPI.getApplicationsByJob(jobId);
+      console.log('🔍 Calling API with jobId:', jobId);
       
-      const applications = response.data.data || response.data.applications || [];
+      const response = await applicationsAPI.getApplicationsByJob(jobId);
+      console.log('🔍 API Response:', response);
+      
+      const applications = response.data.data?.applications || response.data.applications || [];
+      console.log('🔍 Extracted applications:', applications);
+      
       const currentJob = jobs.find(job => job.id === jobId || job._id === jobId);
+      console.log('🔍 Found job:', currentJob);
       
       // Open the applications modal with job and applications data
       setApplicationsModal({
@@ -1672,6 +1728,138 @@ export const EnhancedJobsTab = ({
     } catch (error) {
       console.error('Error fetching applications:', error);
       alert('Failed to fetch applications. Please try again.');
+    }
+  };
+
+  // Transform application data to candidate format for CandidateProfileModal
+  const transformApplicationToCandidate = (app) => {
+    return {
+      id: app.applicantId || app._id,
+      name: app.applicant?.name || app.applicantSnapshot?.fullName || `${app.applicant?.firstName} ${app.applicant?.lastName}` || 'Unknown Applicant',
+      email: app.applicant?.email || app.applicantSnapshot?.email || 'No email provided',
+      phone: app.applicant?.phone || app.applicantSnapshot?.phone || 'No phone provided',
+      location: app.applicant?.location || app.applicantSnapshot?.location || app.personalInfo?.location || 'Location not specified',
+      currentRole: app.professionalInfo?.currentJobTitle || app.applicantSnapshot?.currentJobTitle || 'Not specified',
+      
+      // Experience data - check multiple possible sources
+      experience: app.applicant?.yearsOfExperience || app.yearsOfExperience || app.experience_years || 'Not specified',
+      expectedSalary: app.professionalInfo?.expectedSalary || app.applicationData?.expectedSalary || '',
+      
+      // Skills data
+      skills: [
+        ...(app.skills?.primary || []),
+        ...(app.skills?.technical || []),
+        ...(app.skills?.soft || []),
+        ...(app.applicantSnapshot?.skills || [])
+      ].filter(Boolean),
+      
+      // Education data
+      education: app.education || app.applicantSnapshot?.education || [],
+      
+      // Work experience data
+      workExperience: app.workExperience || app.applicantSnapshot?.workExperience || [],
+      
+      // Portfolio links
+      portfolioLinks: [
+        app.additionalInfo?.portfolioUrl && { type: 'Portfolio', url: app.additionalInfo.portfolioUrl, label: 'Personal Portfolio' },
+        app.additionalInfo?.linkedinUrl && { type: 'LinkedIn', url: app.additionalInfo.linkedinUrl, label: 'LinkedIn Profile' },
+        app.additionalInfo?.githubUrl && { type: 'GitHub', url: app.additionalInfo.githubUrl, label: 'GitHub Profile' }
+      ].filter(Boolean),
+      
+      // Application specific data
+      appliedDate: app.appliedAt ? new Date(app.appliedAt).toLocaleDateString() : 'Unknown',
+      status: app.applicationStatus || 'pending',
+      summary: app.additionalInfo?.bio || app.applicationData?.coverLetter || 'No summary provided',
+      rating: 4, // Default rating
+      notes: '',
+      isShortlisted: app.applicationStatus === 'shortlisted'
+    };
+  };
+
+  // Handle view candidate profile
+  const handleViewCandidate = (app) => {
+    console.log('🔍 Viewing candidate profile for:', app);
+    const candidateData = transformApplicationToCandidate(app);
+    console.log('🔍 Transformed candidate data:', candidateData);
+    setCandidateModal({ isOpen: true, candidate: candidateData });
+  };
+
+  // Handle contact candidate
+  const handleContactCandidate = (candidate) => {
+    console.log('📞 Opening contact modal for:', candidate);
+    setContactModal({ isOpen: true, candidate });
+  };
+
+  // Handle send email
+  const handleSendEmail = async (emailData) => {
+    try {
+      console.log('📧 Sending email:', emailData);
+      const response = await communicationsAPI.sendEmail(emailData);
+      console.log('✅ Email sent successfully:', response);
+      
+      // Show success message
+      toast({
+        title: "Email Sent Successfully!",
+        description: `Email sent to ${emailData.to}`,
+        variant: "default",
+      });
+      
+      return response;
+    } catch (error) {
+      console.error('❌ Failed to send email:', error);
+      
+      // Show error message
+      toast({
+        title: "Failed to Send Email",
+        description: error.message || 'Please try again later',
+        variant: "destructive",
+      });
+      
+      throw error;
+    }
+  };
+
+  // Handle send message/SMS
+  const handleSendMessage = async (candidate) => {
+    try {
+      console.log('📱 Sending message to:', candidate);
+      
+      if (!candidate.phone) {
+        throw new Error('No phone number available for this candidate');
+      }
+
+      // For now, we'll open the default SMS app
+      const message = `Hi ${candidate.name}, I'm interested in discussing a job opportunity with you. Please let me know if you're available for a conversation.`;
+      const smsUrl = `sms:${candidate.phone}?body=${encodeURIComponent(message)}`;
+      
+      // Try to open SMS app
+      window.open(smsUrl, '_self');
+      
+      // Also send via our API if available
+      try {
+        const response = await communicationsAPI.sendSMS({
+          to: candidate.phone,
+          message: message
+        });
+        console.log('✅ SMS sent via API:', response);
+      } catch (apiError) {
+        console.log('ℹ️ SMS API not available, opened default SMS app');
+      }
+      
+      toast({
+        title: "SMS App Opened",
+        description: `Message prepared for ${candidate.name}`,
+        variant: "default",
+      });
+      
+    } catch (error) {
+      console.error('❌ Failed to send message:', error);
+      
+      toast({
+        title: "Failed to Send Message",
+        description: error.message || 'Please try again later',
+        variant: "destructive",
+      });
     }
   };
 
@@ -1986,7 +2174,7 @@ export const EnhancedJobsTab = ({
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 title="View Applications"
-                                onClick={() => handleViewApplications(job.id)}
+                                onClick={() => handleViewApplications(job._id || job.id)}
                               >
                                 👥 Applications
                               </motion.button>
@@ -2230,7 +2418,7 @@ export const EnhancedJobsTab = ({
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           title="View Applications"
-                          onClick={() => handleViewApplications(job.id)}
+                          onClick={() => handleViewApplications(job._id || job.id)}
                         >
                           👥 Applications
                         </motion.button>
@@ -2311,6 +2499,35 @@ export const EnhancedJobsTab = ({
           handleCloseJobDetails();
           // Add apply logic here if needed
         }}
+      />
+
+      {/* Candidate Profile Modal */}
+      <CandidateProfileModal
+        candidate={candidateModal.candidate}
+        isOpen={candidateModal.isOpen}
+        onClose={() => setCandidateModal({ isOpen: false, candidate: null })}
+        onContact={handleContactCandidate}
+        onSchedule={(candidate) => {
+          console.log('Schedule interview with candidate:', candidate);
+          // Add schedule logic here
+        }}
+        onShortlist={(candidate) => {
+          console.log('Shortlist candidate:', candidate);
+          // Add shortlist logic here
+        }}
+        onDownloadResume={(candidateId) => {
+          console.log('Download resume for candidate:', candidateId);
+          // Add resume download logic here
+        }}
+      />
+
+      {/* Contact Modal */}
+      <ContactModal
+        candidate={contactModal.candidate}
+        isOpen={contactModal.isOpen}
+        onClose={() => setContactModal({ isOpen: false, candidate: null })}
+        onSendEmail={handleSendEmail}
+        onOpenMessaging={handleSendMessage}
       />
     </motion.div>
   );
@@ -3010,6 +3227,70 @@ export const EnhancedApplicationsTab = ({ userRole = "applicant" }) => {
         </div>
       </div>
     </motion.div>
+  );
+};
+
+// Enhanced Recommendations Tab Component
+export const EnhancedRecommendationsTab = ({ userRole = "applicant" }) => {
+  if (userRole !== 'applicant') {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
+        <div className="text-center py-8">
+          <Sparkles className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            Recommendations Not Available
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400">
+            Job recommendations are only available for applicant accounts.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <JobRecommendations limit={25} showTitle={false} />
+      
+      {/* Additional recommendation insights */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-700">
+        <div className="flex items-center space-x-3 mb-4">
+          <Target className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Improve Your Match Score
+          </h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+            <div className="flex items-center space-x-2 mb-2">
+              <Award className="w-5 h-5 text-green-600" />
+              <span className="font-medium text-gray-900 dark:text-white">Add Skills</span>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Complete your skills profile to get better job matches
+            </p>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+            <div className="flex items-center space-x-2 mb-2">
+              <GraduationCap className="w-5 h-5 text-blue-600" />
+              <span className="font-medium text-gray-900 dark:text-white">Update Education</span>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Add your educational background for relevant opportunities
+            </p>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+            <div className="flex items-center space-x-2 mb-2">
+              <Briefcase className="w-5 h-5 text-purple-600" />
+              <span className="font-medium text-gray-900 dark:text-white">Work Experience</span>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Update your experience level to find suitable positions
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -4072,6 +4353,10 @@ export const EnhancedActiveJobsTab = () => {
 // Applications Modal Component
 const ApplicationsModal = ({ isOpen, job, applications, onClose }) => {
   if (!isOpen) return null;
+  
+  // Debug: Log the job object to understand its structure
+  console.log('🔍 ApplicationsModal job object:', job);
+  console.log('🔍 ApplicationsModal applications:', applications);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -4083,7 +4368,7 @@ const ApplicationsModal = ({ isOpen, job, applications, onClose }) => {
                 Job Applications
               </h2>
               <p className="text-gray-600 dark:text-gray-400">
-                {job?.title || 'Job'} - {applications?.length || 0} applications
+                {job?.jobTitle || job?.title || 'Job'} - {applications?.length || 0} applications
               </p>
             </div>
             <button onClick={onClose} className="text-2xl">×</button>
@@ -4095,32 +4380,51 @@ const ApplicationsModal = ({ isOpen, job, applications, onClose }) => {
               <h3 className="text-lg font-semibold mb-4">💼 Job Details</h3>
               {job && (
                 <div className="space-y-3 text-sm">
-                  <div><strong>Title:</strong> {job.title}</div>
-                  <div><strong>Company:</strong> {job.company}</div>
-                  <div><strong>Location:</strong> {job.location}</div>
+                  <div><strong>Title:</strong> {job.jobTitle || job.title || 'Not specified'}</div>
+                  <div><strong>Company:</strong> {job.companyName || job.company || job.companyInfo?.companyName || 'Not specified'}</div>
+                  <div><strong>Location:</strong> {job.location || 'Not specified'}</div>
                   <div><strong>Industry:</strong> {job.industry || 'Not specified'}</div>
-                  <div><strong>Type:</strong> {job.type}</div>
-                  <div><strong>Work Mode:</strong> {job.workArrangement || 'Onsite'}</div>
-                  <div><strong>Salary:</strong> {job.salary || 'Negotiable'}</div>
+                  <div><strong>Type:</strong> {job.jobType || job.type || 'Not specified'}</div>
+                  <div><strong>Work Mode:</strong> {job.workArrangement || 'Not specified'}</div>
+                  <div><strong>Salary:</strong> {job.salary || job.formattedSalary || (job.salaryRange?.min && job.salaryRange?.max ? `₹${(job.salaryRange.min / 100000).toFixed(1)}L - ₹${(job.salaryRange.max / 100000).toFixed(1)}L ${job.salaryRange.period || 'Yearly'}` : 'Negotiable')}</div>
                   <div><strong>Experience:</strong> {
-                    job.experienceMin !== undefined && job.experienceMax !== undefined 
+                    job.experience?.minimum !== undefined && job.experience?.maximum !== undefined 
+                      ? `${job.experience.minimum}-${job.experience.maximum} years`
+                      : job.experienceMin !== undefined && job.experienceMax !== undefined 
                       ? `${job.experienceMin}-${job.experienceMax} years`
                       : 'Not specified'
                   }</div>
-                  {job.description && (
-                    <div><strong>Description:</strong> 
-                      <p className="text-sm mt-1 max-h-20 overflow-y-auto bg-white dark:bg-gray-600 p-2 rounded">{job.description}</p>
+                  {job.applicationDeadline && (
+                    <div><strong>Application Deadline:</strong> {new Date(job.applicationDeadline).toLocaleDateString()}</div>
+                  )}
+                  {job.jobUrgency && (
+                    <div><strong>Priority:</strong> 
+                      <span className={`ml-2 px-2 py-1 text-xs rounded ${
+                        job.jobUrgency === 'High Priority' ? 'bg-red-100 text-red-800' :
+                        job.jobUrgency === 'Urgent' ? 'bg-orange-100 text-orange-800' :
+                        'bg-green-100 text-green-800'
+                      }`}>
+                        {job.jobUrgency}
+                      </span>
                     </div>
                   )}
-                  {job.skills && job.skills.length > 0 && (
+                  {job.contactEmail && (
+                    <div><strong>Contact:</strong> {job.contactEmail}</div>
+                  )}
+                  {(job.jobDescription || job.description) && (
+                    <div><strong>Description:</strong> 
+                      <p className="text-sm mt-1 max-h-20 overflow-y-auto bg-white dark:bg-gray-600 p-2 rounded">{job.jobDescription || job.description}</p>
+                    </div>
+                  )}
+                  {(job.requiredSkills || job.skills) && (job.requiredSkills || job.skills).length > 0 && (
                     <div><strong>Skills:</strong> 
                       <div className="flex flex-wrap gap-1 mt-1">
-                        {job.skills.slice(0, 5).map((skill, index) => (
+                        {(job.requiredSkills || job.skills).slice(0, 5).map((skill, index) => (
                           <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
                             {skill}
                           </span>
                         ))}
-                        {job.skills.length > 5 && <span className="text-xs text-gray-500">+{job.skills.length - 5} more</span>}
+                        {(job.requiredSkills || job.skills).length > 5 && <span className="text-xs text-gray-500">+{(job.requiredSkills || job.skills).length - 5} more</span>}
                       </div>
                     </div>
                   )}
@@ -4138,34 +4442,50 @@ const ApplicationsModal = ({ isOpen, job, applications, onClose }) => {
                       <div className="flex justify-between items-start mb-2">
                         <div>
                           <h4 className="font-medium text-gray-900 dark:text-white">
-                            {app.applicantName || app.name || 'Unknown Applicant'}
+                            {app.applicant?.name || app.applicantSnapshot?.fullName || app.applicantName || app.name || 'Unknown Applicant'}
                           </h4>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {app.email || 'No email provided'}
+                            {app.applicant?.email || app.applicantSnapshot?.email || app.email || 'No email provided'}
                           </p>
+                          {(app.applicant?.phone || app.applicantSnapshot?.phone) && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              📞 {app.applicant?.phone || app.applicantSnapshot?.phone}
+                            </p>
+                          )}
                         </div>
                         <span className={`px-2 py-1 text-xs font-medium rounded ${
-                          app.status === 'accepted' ? 'bg-green-100 text-green-800' :
-                          app.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                          app.status === 'interviewed' ? 'bg-blue-100 text-blue-800' :
+                          app.applicationStatus === 'selected' ? 'bg-green-100 text-green-800' :
+                          app.applicationStatus === 'rejected' ? 'bg-red-100 text-red-800' :
+                          app.applicationStatus === 'shortlisted' ? 'bg-blue-100 text-blue-800' :
+                          app.applicationStatus === 'interviewed' ? 'bg-purple-100 text-purple-800' :
                           'bg-yellow-100 text-yellow-800'
                         }`}>
-                          {app.status || 'Pending'}
+                          {app.applicationStatus || app.status || 'pending'}
                         </span>
                       </div>
-                      {app.appliedDate && (
+                      {(app.appliedAt || app.appliedDate) && (
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Applied: {new Date(app.appliedDate).toLocaleDateString()}
+                          Applied: {new Date(app.appliedAt || app.appliedDate).toLocaleDateString()}
                         </p>
                       )}
-                      {app.coverLetter && (
+                      {(app.applicationData?.coverLetter || app.additionalInfo?.coverLetter || app.coverLetter) && (
                         <div className="mt-2">
                           <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Cover Letter:</p>
                           <p className="text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 p-2 rounded text-xs max-h-16 overflow-y-auto">
-                            {app.coverLetter}
+                            {app.applicationData?.coverLetter || app.additionalInfo?.coverLetter || app.coverLetter}
                           </p>
                         </div>
                       )}
+                      
+                      {/* View Profile Button */}
+                      <div className="mt-3 flex justify-end">
+                        <button
+                          onClick={() => handleViewCandidate(app)}
+                          className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors duration-200"
+                        >
+                          👤 View Profile
+                        </button>
+                      </div>
                     </div>
                   ))
                 ) : (

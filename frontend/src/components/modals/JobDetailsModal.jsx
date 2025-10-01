@@ -201,9 +201,12 @@ const JobDetailsModal = ({ open, onClose, job, onApply }) => {
                         </Box>
                       </TableCell>
                       <TableCell>
-                        {job.experience ? 
-                          `${job.experience.min || 0} - ${job.experience.max || 0} years` : 
-                          job.experience || 'Not specified'
+                        {job.experience && (job.experience.minimum !== undefined || job.experience.maximum !== undefined) ? 
+                          `${job.experience.minimum || 0} - ${job.experience.maximum || 0} years` : 
+                          job.experience && (job.experience.min !== undefined || job.experience.max !== undefined) ?
+                          `${job.experience.min || 0} - ${job.experience.max || 0} years` :
+                          typeof job.experience === 'string' ? job.experience :
+                          'Not specified'
                         }
                       </TableCell>
                     </TableRow>

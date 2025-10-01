@@ -1,11 +1,30 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
 import Job from '../models/Job.js';
-import { BaseUser } from '../models/UserModels.js';
+import { BaseUser, Recruiter } from '../models/UserModels.js';
 import Notification from '../models/Notification.js';
 import jwt from 'jsonwebtoken';
+import { sendJobMatchEmail } from '../services/notifications.js';
 
 const router = express.Router();
+
+// Notify matching applicants
+const notifyMatchingApplicants = async (job) => {
+  try {
+    const applicants = await BaseUser.find({ role: 'applicant' });
+    for (const applicant of applicants) {
+      const skills = [...(applicant.skills?.primary || [])];
+      const matches = (job.requiredSkills || []).filter(skill => 
+        skills.some(s => s.toLowerCase().includes(skill.toLowerCase()))
+      );
+      if (matches.length > 0) {
+        await sendJobMatchEmail(applicant.email, job.title, job.companyName);
+      }
+    }
+  } catch (error) {
+    console.error('Notification error:', error);
+  }
+};
 
 // Removed duplicate empty route - using the full implementation below
 
@@ -101,12 +120,20 @@ router.get('/', async (req, res) => {
       order = 'desc'
     } = req.query;
 
-    // Build query for active jobs by default
-    const query = { status: status || 'Active' };
+    // Build query - if recruiterId is provided, include all statuses for recruiter's dashboard
+    const query = {};
     
     // Filter by recruiter ID (for recruiter's own jobs)
     if (recruiterId) {
       query.postedBy = recruiterId;
+      // For recruiters viewing their own jobs, include all statuses unless specifically filtered
+      if (status) {
+        query.status = status;
+      }
+      // Don't filter by status if recruiter wants to see all their jobs
+    } else {
+      // For public job listings, only show active jobs
+      query.status = status || 'active';
     }
 
     // Text search across multiple fields
@@ -181,8 +208,10 @@ router.get('/', async (req, res) => {
       query.requiredSkills = { $in: skillsArray };
     }
 
-    // Only show jobs with future deadlines
-    query.applicationDeadline = { $gt: new Date() };
+    // Only show jobs with future deadlines for active jobs (not for draft jobs)
+    if (!recruiterId || (status && status !== 'draft')) {
+      query.applicationDeadline = { $gt: new Date() };
+    }
 
     // Calculate pagination
     const pageNum = parseInt(page);
@@ -701,7 +730,7 @@ router.post('/', jobValidation, authenticateToken, async (req, res) => {
           designation: recruiter.companyInfo?.designation
         }
       },
-      status: 'Active'
+      status: 'active'
     };
 
     // Create and save job
@@ -779,15 +808,15 @@ router.post('/', jobValidation, authenticateToken, async (req, res) => {
       formattedSalary: savedJob.formattedSalary,
       jobDescription: savedJob.jobDescription,
       status: savedJob.status,
-      createdAt: savedJob.createdAt,
-      applicationDeadline: savedJob.applicationDeadline,
-      slug: savedJob.slug
     };
 
+    // Notify matching applicants about new job
+    await notifyMatchingApplicants(savedJob);
+    
     res.status(201).json({
       success: true,
-      message: 'Job posted successfully',
-      data: { job: responseJob }
+      message: 'Job created successfully',
+      data: responseJob
     });
   } catch (error) {
     console.error('❌ Error creating job:', error);

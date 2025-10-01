@@ -8,6 +8,7 @@ import Job from '../models/Job.js';
 import { BaseUser } from '../models/UserModels.js';
 import CleanUser from '../models/CleanUser.js';
 import Notification from '../models/Notification.js';
+import { sendInterviewUpdate } from '../services/notifications.js';
 import joi from 'joi';
 
 const router = express.Router();
@@ -159,6 +160,194 @@ const authenticateToken = async (req, res, next) => {
 const createApplicationSchema = joi.object({
   jobId: joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
   coverLetter: joi.string().max(5000).optional()
+});
+
+// POST /api/applications - Create a new job application
+router.post('/', upload.single('resume'), authenticateToken, async (req, res) => {
+  try {
+    console.log('🔍 Creating new application...');
+    console.log('🔍 User:', req.user);
+    console.log('🔍 Body fields:', Object.keys(req.body));
+    console.log('🔍 File:', req.file ? 'Uploaded' : 'No file');
+
+    // Validate required fields
+    const { jobId, jobTitle, companyName } = req.body;
+    
+    if (!jobId || !jobTitle || !companyName) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields: jobId, jobTitle, companyName'
+      });
+    }
+
+    // Check if user has already applied to this job
+    const existingApplication = await Application.findOne({
+      applicantId: req.user.userId,
+      jobId: jobId
+    });
+
+    if (existingApplication) {
+      return res.status(400).json({
+        success: false,
+        message: 'You have already applied to this job'
+      });
+    }
+
+    // Verify job exists
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: 'Job not found'
+      });
+    }
+
+    // Create application data
+    const applicationData = {
+      applicantId: req.user.userId,
+      jobId: jobId,
+      recruiterId: job.postedBy, // Get recruiter ID from job
+      jobTitle: jobTitle,
+      companyName: companyName,
+      applicationStatus: 'pending',
+      appliedAt: new Date(),
+      
+      // Personal Information
+      personalInfo: {
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        email: req.body.email,
+        phone: req.body.phone,
+        location: req.body.location
+      },
+
+      // Professional Information
+      professionalInfo: {
+        currentJobTitle: req.body.currentJobTitle,
+        currentCompany: req.body.currentCompany,
+        experience: req.body.experience,
+        expectedSalary: req.body.expectedSalary,
+        noticePeriod: req.body.noticePeriod
+      },
+
+      // Skills
+      skills: {
+        primary: req.body.primarySkills ? req.body.primarySkills.split(',').map(s => s.trim()) : [],
+        technical: req.body.technicalSkills ? req.body.technicalSkills.split(',').map(s => s.trim()) : [],
+        soft: req.body.softSkills ? req.body.softSkills.split(',').map(s => s.trim()) : []
+      },
+
+      // Additional Information
+      additionalInfo: {
+        coverLetter: req.body.coverLetter,
+        portfolioUrl: req.body.portfolioUrl,
+        linkedinUrl: req.body.linkedinUrl,
+        githubUrl: req.body.githubUrl,
+        willingToRelocate: req.body.willingToRelocate === 'true',
+        remoteWorkPreference: req.body.remoteWorkPreference === 'true',
+        referralSource: req.body.referralSource,
+        bio: req.body.bio,
+        languages: req.body.languages ? req.body.languages.split(',').map(s => s.trim()) : []
+      },
+
+      // Documents
+      documents: {
+        resumeUrl: req.file ? `/uploads/applications/${req.file.filename}` : '',
+        coverLetterUrl: req.body.coverLetterUrl || ''
+      },
+
+      // Timeline
+      timeline: [{
+        status: 'pending',
+        timestamp: new Date(),
+        notes: 'Application submitted'
+      }],
+
+      // Applicant Snapshot (required fields)
+      applicantSnapshot: {
+        fullName: `${req.body.firstName} ${req.body.lastName}`,
+        email: req.body.email,
+        phone: req.body.phone,
+        location: req.body.location,
+        currentJobTitle: req.body.currentJobTitle,
+        currentCompany: req.body.currentCompany,
+        experience: req.body.experience,
+        skills: req.body.primarySkills ? req.body.primarySkills.split(',').map(s => s.trim()) : []
+      },
+
+      // Job Snapshot (required fields)
+      jobSnapshot: {
+        jobTitle: job.jobTitle,
+        companyName: job.companyName,
+        location: job.location,
+        jobType: job.jobType
+      }
+    };
+
+    // Handle education and work experience (if provided as JSON strings)
+    if (req.body.education) {
+      try {
+        applicationData.education = typeof req.body.education === 'string' 
+          ? JSON.parse(req.body.education) 
+          : req.body.education;
+      } catch (e) {
+        console.warn('Failed to parse education data:', e.message);
+      }
+    }
+
+    if (req.body.workExperience) {
+      try {
+        applicationData.workExperience = typeof req.body.workExperience === 'string' 
+          ? JSON.parse(req.body.workExperience) 
+          : req.body.workExperience;
+      } catch (e) {
+        console.warn('Failed to parse work experience data:', e.message);
+      }
+    }
+
+    // Create the application
+    const application = new Application(applicationData);
+    await application.save();
+
+    console.log('✅ Application created successfully:', application._id);
+
+    // Create notification for recruiter
+    try {
+      const notification = new Notification({
+        userId: job.postedBy,
+        type: 'new_application',
+        title: 'New Job Application',
+        message: `${req.body.firstName} ${req.body.lastName} applied for ${jobTitle}`,
+        data: {
+          applicationId: application._id,
+          jobId: jobId,
+          applicantName: `${req.body.firstName} ${req.body.lastName}`
+        }
+      });
+      await notification.save();
+      console.log('✅ Notification created for recruiter');
+    } catch (notifError) {
+      console.warn('⚠️ Failed to create notification:', notifError.message);
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Application submitted successfully',
+      data: {
+        applicationId: application._id,
+        status: application.applicationStatus,
+        appliedAt: application.appliedAt
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error creating application:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to submit application',
+      error: error.message
+    });
+  }
 });
 
 // GET /api/applications - Get applications with optional filtering
@@ -682,6 +871,17 @@ router.put('/:id/status', authenticateToken, async (req, res) => {
       console.log('✅ Real-time notification emitted');
     }
 
+    // Send email notification to applicant
+    try {
+      const applicant = await BaseUser.findById(updatedApplication.applicantId);
+      const job = await Job.findById(updatedApplication.jobId);
+      if (applicant && job) {
+        await sendInterviewUpdate(applicant.email, status, job.title);
+      }
+    } catch (notificationError) {
+      console.error('Notification error:', notificationError);
+    }
+
     console.log('✅ Sending success response');
     res.json({
       success: true,
@@ -763,6 +963,97 @@ router.get('/job/:jobId', authenticateToken, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch job applications',
+      error: error.message
+    });
+  }
+});
+
+// GET /api/applications/job/:jobId - Get all applications for a specific job (recruiter only)
+router.get('/job/:jobId', authenticateToken, async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    console.log('🔍 Fetching applications for job:', jobId);
+    console.log('🔍 Requester role:', req.user.role);
+
+    // Verify job exists and user is the recruiter who posted it
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: 'Job not found'
+      });
+    }
+
+    // Check if user is the recruiter who posted this job
+    if (req.user.role !== 'recruiter' || job.postedBy.toString() !== req.user.userId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. You can only view applications for your own jobs.'
+      });
+    }
+
+    // Fetch applications for this job
+    const applications = await Application.find({ jobId: jobId })
+      .populate({
+        path: 'applicantId',
+        select: 'firstName lastName email phone profileImage'
+      })
+      .sort({ appliedAt: -1 });
+
+    console.log(`🔍 Found ${applications.length} applications for job ${jobId}`);
+
+    // Transform applications for frontend
+    const transformedApplications = applications.map(app => ({
+      _id: app._id,
+      id: app._id,
+      applicantId: app.applicantId._id,
+      jobId: app.jobId,
+      applicationStatus: app.applicationStatus,
+      appliedAt: app.appliedAt,
+      
+      // Applicant info
+      applicant: {
+        id: app.applicantId._id,
+        name: `${app.applicantId.firstName} ${app.applicantId.lastName}`,
+        firstName: app.applicantId.firstName,
+        lastName: app.applicantId.lastName,
+        email: app.applicantId.email,
+        phone: app.applicantId.phone,
+        profileImage: app.applicantId.profileImage
+      },
+
+      // Application data
+      applicationData: app.applicationData,
+      applicantSnapshot: app.applicantSnapshot,
+      timeline: app.timeline,
+
+      // For compatibility
+      personalInfo: app.personalInfo,
+      professionalInfo: app.professionalInfo,
+      skills: app.skills,
+      additionalInfo: app.additionalInfo,
+      documents: app.documents
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        applications: transformedApplications,
+        total: transformedApplications.length,
+        job: {
+          _id: job._id,
+          jobTitle: job.jobTitle,
+          companyName: job.companyName,
+          location: job.location
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error fetching applications for job:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch applications',
       error: error.message
     });
   }

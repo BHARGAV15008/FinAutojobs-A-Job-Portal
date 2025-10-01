@@ -37,7 +37,7 @@ const JobChart = ({ userRole }) => {
   };
 
   const chartData = getChartData();
-  const maxValue = Math.max(...chartData.data.flatMap(d => Object.values(d).filter(v => typeof v === 'number')));
+  const maxValue = Math.max(...chartData.data.flatMap(d => Object.values(d).filter(v => typeof v === 'number')), 1) || 1;
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
@@ -64,10 +64,10 @@ const JobChart = ({ userRole }) => {
       <div className="relative h-64">
         <div className="flex items-end justify-between h-full space-x-2">
           {chartData.data.map((item, index) => {
-            const value1 = userRole === 'applicant' ? item.applications : item.posted;
-            const value2 = userRole === 'applicant' ? item.interviews : item.hired;
-            const height1 = (value1 / maxValue) * 100;
-            const height2 = (value2 / maxValue) * 100;
+            const value1 = userRole === 'applicant' ? (item.applications || 0) : (item.posted || 0);
+            const value2 = userRole === 'applicant' ? (item.interviews || 0) : (item.hired || 0);
+            const height1 = Math.max(0, Math.min(100, (value1 / maxValue) * 100)) || 0;
+            const height2 = Math.max(0, Math.min(100, (value2 / maxValue) * 100)) || 0;
 
             return (
               <div key={item.month} className="flex flex-col items-center flex-1">

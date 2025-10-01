@@ -34,7 +34,7 @@ export const sendEmail = async (to, subject, body) => {
     }
 
     // Create a transporter object
-    let transporter = nodemailer.createTransporter(emailConfig);
+    let transporter = nodemailer.createTransport(emailConfig);
 
     // Send mail with defined transport object
     let info = await transporter.sendMail({

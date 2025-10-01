@@ -6,9 +6,9 @@ const applicationSchema = new mongoose.Schema({
   applicationId: { type: mongoose.Schema.Types.ObjectId, default: () => new mongoose.Types.ObjectId(), unique: true },
   
   // References (consistent ID linking)
-  applicantId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  applicantId: { type: mongoose.Schema.Types.ObjectId, ref: 'BaseUser', required: true },
   jobId: { type: mongoose.Schema.Types.ObjectId, ref: 'Job', required: true },
-  recruiterId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  recruiterId: { type: mongoose.Schema.Types.ObjectId, ref: 'BaseUser', required: true },
   
   // Application Status
   applicationStatus: { 

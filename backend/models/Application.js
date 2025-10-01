@@ -10,6 +10,13 @@ const applicationSchema = new mongoose.Schema({
     enum: ['pending', 'reviewing', 'shortlisted', 'interviewed', 'offered', 'rejected', 'withdrawn'],
     default: 'pending'
   },
+  // Reference to detailed application information
+  applicationInfo: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'ApplicationInformation',
+    unique: true,
+    sparse: true // Allows null values while maintaining uniqueness for non-null values
+  },
   notes: [{
     author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     content: { type: String },

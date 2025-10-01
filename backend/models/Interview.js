@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 
+// Enhanced Interview Schema with comprehensive interview management
 const interviewSchema = new mongoose.Schema({
   // Basic interview information
   candidateId: {

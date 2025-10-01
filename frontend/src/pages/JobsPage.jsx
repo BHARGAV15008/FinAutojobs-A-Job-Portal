@@ -238,11 +238,14 @@ const JobsPage = () => {
                     daysUntilDeadline: job.daysUntilDeadline,
                     
                     // Experience and skills
-                    experience: job.experience ? 
-                        `${job.experience.min || 0}-${job.experience.max || 0} years` : 
+                    experience: job.experience && (job.experience.minimum !== undefined || job.experience.maximum !== undefined) ? 
+                        `${job.experience.minimum || 0}-${job.experience.maximum || 0} years` : 
+                        job.experience && (job.experience.min !== undefined || job.experience.max !== undefined) ?
+                        `${job.experience.min || 0}-${job.experience.max || 0} years` :
+                        typeof job.experience === 'string' ? job.experience :
                         'Not specified',
-                    experienceMin: job.experience?.min,
-                    experienceMax: job.experience?.max,
+                    experienceMin: job.experience?.minimum || job.experience?.min,
+                    experienceMax: job.experience?.maximum || job.experience?.max,
                     
                     // Job content
                     description: job.jobDescription || job.description,

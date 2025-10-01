@@ -11,7 +11,7 @@ const AnalyticsTab = () => {
     { period: 'Jun', users: 320, jobs: 89, applications: 650 }
   ];
 
-  const maxValue = Math.max(...analyticsData.flatMap(d => [d.users, d.jobs, d.applications]));
+  const maxValue = Math.max(...analyticsData.flatMap(d => [d.users, d.jobs, d.applications]), 1) || 1;
 
   return (
     <div className="space-y-6">
@@ -96,9 +96,9 @@ const AnalyticsTab = () => {
         <div className="relative h-64">
           <div className="flex items-end justify-between h-full space-x-2">
             {analyticsData.map((item, index) => {
-              const userHeight = (item.users / maxValue) * 100;
-              const jobHeight = (item.jobs / maxValue) * 100;
-              const appHeight = (item.applications / maxValue) * 100;
+              const userHeight = Math.max(0, Math.min(100, ((item.users || 0) / maxValue) * 100)) || 0;
+              const jobHeight = Math.max(0, Math.min(100, ((item.jobs || 0) / maxValue) * 100)) || 0;
+              const appHeight = Math.max(0, Math.min(100, ((item.applications || 0) / maxValue) * 100)) || 0;
 
               return (
                 <div key={item.period} className="flex flex-col items-center flex-1">

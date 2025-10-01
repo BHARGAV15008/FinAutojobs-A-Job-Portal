@@ -15,7 +15,6 @@ import JobManagementTab from "../components/dashboard/JobManagementTab";
 import AnalyticsTab from "../components/dashboard/AnalyticsTab";
 import ModerationTab from "../components/dashboard/ModerationTab";
 import LoginStatusBanner from "../components/dashboard/LoginStatusBanner";
-import MessagesTab from "../components/dashboard/MessagesTab";
 
 const AdminDashboardContent = () => {
   const [location] = useLocation();
@@ -44,7 +43,7 @@ const AdminDashboardContent = () => {
   useEffect(() => {
     const pathParts = location.split('/');
     const tab = pathParts[pathParts.length - 1];
-    if (['profile', 'users', 'jobs', 'analytics', 'moderation', 'messages', 'settings'].includes(tab)) {
+    if (['profile', 'users', 'jobs', 'analytics', 'moderation', 'settings'].includes(tab)) {
       setActiveTab(tab);
     } else {
       setActiveTab('dashboard');
@@ -74,8 +73,6 @@ const AdminDashboardContent = () => {
         return <AnalyticsTab />;
       case 'moderation':
         return <ModerationTab />;
-      case 'messages':
-        return <MessagesTab userRole="admin" />;
       default:
         return <AdminDashboardMain user={user} />;
     }
