@@ -1,0 +1,70 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Job Offer - Congratulations!</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: #4CAF50; color: white; padding: 20px; text-align: center; }
+            .content { padding: 20px; background: #f9f9f9; }
+            .footer { padding: 20px; text-align: center; color: #666; }
+            .button { display: inline-block; padding: 12px 24px; background: #4CAF50; color: white; text-decoration: none; border-radius: 4px; margin: 5px; }
+            .offer-details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4CAF50; }
+            .celebration { text-align: center; font-size: 48px; margin: 20px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🎉 Congratulations!</h1>
+              <h2>Job Offer Extended</h2>
+            </div>
+            <div class="content">
+              <div class="celebration">🎊 🎉 🎊</div>
+              
+              <h2>Dear {{applicantName}},</h2>
+              <p>We are delighted to extend an offer for the <strong>{{jobTitle}}</strong> position at <strong>{{companyName}}</strong>!</p>
+              
+              <div class="offer-details">
+                <h3>Offer Details:</h3>
+                <p><strong>Position:</strong> {{jobTitle}}</p>
+                <p><strong>Department:</strong> {{department}}</p>
+                <p><strong>Start Date:</strong> {{startDate}}</p>
+                <p><strong>Salary:</strong> ₹{{salary}} {{salaryFrequency}}</p>
+                <p><strong>Work Arrangement:</strong> {{workArrangement}}</p>
+                {{#if probationPeriod}}
+                <p><strong>Probation Period:</strong> {{probationPeriod}} months</p>
+                {{/if}}
+                <p><strong>Notice Period:</strong> {{noticePeriod}} days</p>
+              </div>
+
+              {{#if benefits}}
+              <div class="offer-details">
+                <h3>Benefits Package:</h3>
+                <ul>
+                  {{#each benefits}}
+                  <li>{{this}}</li>
+                  {{/each}}
+                </ul>
+              </div>
+              {{/if}}
+
+              <p><strong>Offer Validity:</strong> This offer is valid until {{expiryDate}}.</p>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="{{acceptUrl}}" class="button" style="background: #4CAF50;">Accept Offer</a>
+                <a href="{{negotiateUrl}}" class="button" style="background: #FF9800;">Negotiate</a>
+                <a href="{{declineUrl}}" class="button" style="background: #f44336;">Decline</a>
+              </div>
+
+              <p>We are excited about the possibility of you joining our team and look forward to your response!</p>
+            </div>
+            <div class="footer">
+              <p>&copy; 2024 FinAutoJobs. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      

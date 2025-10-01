@@ -1,0 +1,573 @@
+You are an expert MERN stack developer specializing in building and debugging job portal applications. I have a partially built MERN job portal website where the frontend is mostly functional, but the backend is not working properly. The backend needs to be fixed to handle proper database connections, data flows, API endpoints, and ensure everything is dynamic without any hardcoding. The database is MongoDB, and we use Mongoose for schemas.
+
+Here is the structure of the website based on the available pages and routes:
+
+**Applicant Dashboard Pages:**
+1. /applicant-dashboard (main dashboard overview)
+2. /applicant-dashboard/profile (view/edit applicant profile)
+3. /applicant-dashboard/jobs (browse available jobs)
+4. /applicant-dashboard/recommended (recommended jobs based on profile/skills)
+5. /applicant-dashboard/favorites (saved/favorited jobs)
+6. /applicant-dashboard/applications (list of applied jobs and statuses)
+7. /applicant-dashboard/resume (upload/view/edit resume)
+8. /applicant-dashboard/job-alerts (set up and manage job alerts/notifications)
+9. /applicant-dashboard/analytics (personal analytics like application stats, views)
+10. /applicant-dashboard/messages (messaging with recruiters)
+11. /applicant-dashboard/settings (account settings, preferences)
+
+**Recruiter Dashboard Pages:**
+1. /recruiter-dashboard (main dashboard overview)
+2. /recruiter-dashboard/profile (view/edit recruiter/company profile)
+3. /recruiter-dashboard/jobs (manage jobs with sub-sections: Post New Job, Active Jobs, Draft Jobs, Closed Jobs)
+4. /recruiter-dashboard/applicants (view applicants for jobs)
+5. /recruiter-dashboard/candidates (manage candidate database/shortlists)
+6. /recruiter-dashboard/interviews (schedule/track interviews)
+7. /recruiter-dashboard/reports (generate reports on hiring metrics)
+8. /recruiter-dashboard/analytics (recruiter-specific analytics like job performance)
+9. /recruiter-dashboard/messages (messaging with applicants)
+10. /recruiter-dashboard/settings (account settings)
+
+**Main Site Pages (Navbar and General):**
+1. / (home page)
+2. /jobs (public job listings)
+3. /companies (list of companies/recruiters)
+4. /salary-insights (salary data/tools)
+5. /skills-assessment (skills tests/evaluations)
+6. /resume (resume builder/tool)
+7. /about (about page)
+8. /contact (contact form)
+9. /terms-of-service
+10. /privacy-policy
+
+Your task is to analyze the existing backend code (assume you have access to the full project files, including server.js, routes, models, controllers, etc.), identify issues, and provide a complete fix. This includes:
+
+1. **Database Schemas:** Examine the project and the pages above to determine the necessary MongoDB schemas. Create or update Mongoose models accordingly. Do not hardcode any data—everything must be dynamic and pulled from/stored in the DB. Based on the features:
+   - Suggest at least these schemas (expand as needed from your analysis):
+     - User Schema: For authentication (email, password, role: 'applicant' or 'recruiter', name, etc.). Include references to profiles.
+     - Profile Schema: Separate for applicants (skills, experience, education) and recruiters (company name, description, logo).
+     - Job Schema: Fields like title, description, company (ref to recruiter), location, salary, status (active/draft/closed), requirements, postedDate.
+     - Application Schema: Refs to job and applicant, status (applied/reviewed/rejected/hired), appliedDate, resume (file ref or embedded).
+     - Resume Schema: For applicant resumes (file upload, parsed data like skills/experience).
+     - Favorite Schema: Refs to applicant and job.
+     - JobAlert Schema: For applicant alerts (criteria like keywords, location, frequency).
+     - Message Schema: For conversations (sender, receiver refs, content, timestamp).
+     - Interview Schema: Refs to job, applicant, recruiter, date, status.
+     - Analytics Schema: For tracking views, applications, etc. (could be aggregated or separate docs).
+     - Report Schema: For recruiter reports (generated data).
+     - Other as inferred: e.g., Company Schema if separate from recruiter profile, SkillAssessment Schema for tests/results.
+   - Ensure schemas have proper relationships (e.g., refs with ObjectId, populate in queries). Use indexes for performance (e.g., on user IDs, job titles).
+
+2. **Database Linking and Connections:** Fix the MongoDB connection in server.js or config files. Ensure proper error handling, environment variables for DB URI, and connection pooling. Test connections and schema loading.
+
+3. **Data Flow:** Define and implement correct data flows:
+   - All data must be dynamic: Fetch from DB via APIs, update in real-time (use proper API responses; if needed, suggest WebSockets with Socket.io for real-time updates like messages or application status changes).
+   - When a user (applicant/recruiter) makes a change (e.g., edit profile, post job, apply to job), it must immediately update the DB and reflect on the frontend via API calls (no page reloads needed if using state management like Redux).
+   - Examples:
+     - Posting a job: Recruiter submits form → API creates Job doc → Visible in active jobs and public /jobs page.
+     - Applying to job: Applicant clicks apply → Creates Application doc → Updates applicant’s applications list and recruiter’s applicants list.
+     - Messaging: Send message → Save to Message schema → Real-time push to recipient if online.
+     - Recommendations: Use applicant profile/skills to query matching jobs (e.g., via aggregation pipelines).
+     - Analytics: Aggregate data from applications/jobs (use MongoDB queries like $group).
+   - Ensure CRUD operations for each schema, with authentication checks (e.g., JWT middleware to verify roles).
+
+4. **API Endpoints:** Create or fix Express routes/controllers for all features implied by the pages. Group by applicant, recruiter, and public. Use RESTful conventions (GET/POST/PUT/DELETE). Include validation (e.g., Joi or express-validator), error handling, and pagination/sorting where lists are involved (e.g., jobs list).
+
+5. **Frontend Integration:** For all pages, tabs, links, and buttons:
+   - Ensure proper functionality: E.g., buttons like "Apply Now" should trigger API calls, show loading spinners, then success/error popups (use modals from libraries like React Bootstrap or custom).
+   - Links: Make sure navigation works (using React Router).
+   - Popups/Feedback: For actions like submitting a form, show toast notifications or modals (e.g., "Job posted successfully!" or "Error: Invalid data"). Explain in code comments how it works.
+   - Dynamic Rendering: All data on pages must come from API fetches (use Axios or fetch in frontend), not hardcoded.
+
+6. **General Fixes:**
+   - No hardcoding: Replace any static data with DB queries.
+   - Security: Implement auth (JWT), role-based access (e.g., middleware to block applicants from recruiter routes).
+   - Error Handling: Global error middleware.
+   - Performance: Use async/await, proper indexing.
+   - Testing: Suggest basic unit tests for APIs.
+   - If any page implies file uploads (e.g., resume, company logo), integrate Multer or similar for storage (local or cloud like S3).
+
+Provide your response as:
+- A list of updated/fixed schemas (in code blocks).
+- Fixed server.js or key files.
+- New/fixed routes and controllers.
+- Suggestions for frontend adjustments if needed.
+- Step-by-step explanation of data flows for key features (e.g., job posting to application).
+
+=============
+Great! Since you already have the frontend routes/pages defined for both **Applicants**, **Recruiters**, and **Main Site**, you're looking to:
+
+1. **Fix the backend logic** properly.
+2. **Ensure dynamic data flow** between frontend ↔ backend ↔ database.
+3. **Create proper database schemas** for all necessary data.
+4. **Avoid hardcoding** — all data should be fetched/stored dynamically.
+5. **Enable real-time updates/reflection** (e.g., if a user updates profile, it reflects immediately).
+6. **Define functions** for buttons/links, and show **pop-ups** for user interaction cues.
+
+To help your **AI agent** (Claude Sonnet, ChatGPT, or Grok) **correct and complete the backend**, here is a prompt you can use.
+
+---
+
+### ✅ AI Prompt to Correct Backend and Connect Database Properly
+
+```plaintext
+I have built a MERN Job Portal website, but my backend isn't working properly. I need you to:
+
+1. Fix all backend logic to ensure proper connection between frontend, backend, and MongoDB.
+2. All data should be dynamic — no hardcoded content.
+3. Reflect all changes (like user profile update, job application, etc.) immediately in frontend and database.
+4. Design backend API routes and database schemas based on the following frontend routes and features.
+5. Ensure every page, tab, and button has its proper function and shows confirmation or status popup (e.g., success, error).
+6. Provide detailed explanation of how data flows between frontend ↔ backend ↔ MongoDB.
+7. Suggest how to implement real-time updates where needed (e.g., via WebSocket, polling, etc.).
+
+### 👤 Applicant Dashboard Pages:
+1. `/applicant-dashboard` - Overview/dashboard.
+2. `/applicant-dashboard/profile` - Applicant's personal details, resume link, editable.
+3. `/applicant-dashboard/jobs` - All available jobs for browsing and applying.
+4. `/applicant-dashboard/recommended` - AI or rule-based job recommendations.
+5. `/applicant-dashboard/favorites` - Bookmarked jobs.
+6. `/applicant-dashboard/applications` - List of jobs applied to.
+7. `/applicant-dashboard/resume` - Upload, update, or preview resume.
+8. `/applicant-dashboard/job-alerts` - Set or manage job alerts (by keyword, location).
+9. `/applicant-dashboard/analytics` - View application stats.
+10. `/applicant-dashboard/messages` - Chat/messages with recruiters.
+11. `/applicant-dashboard/settings` - Account settings (email, password, etc.)
+
+### 🧑‍💼 Recruiter Dashboard Pages:
+1. `/recruiter-dashboard` - Overview/dashboard.
+2. `/recruiter-dashboard/profile` - Company and recruiter details.
+3. `/recruiter-dashboard/jobs`:
+    - Post New Job
+    - Active Jobs
+    - Draft Jobs
+    - Closed Jobs
+4. `/recruiter-dashboard/applicants` - View applicants per job.
+5. `/recruiter-dashboard/candidates` - Shortlisted candidates.
+6. `/recruiter-dashboard/interviews` - Scheduled interviews, time slots.
+7. `/recruiter-dashboard/reports` - Export or view job performance.
+8. `/recruiter-dashboard/analytics` - Views, application counts, etc.
+9. `/recruiter-dashboard/messages` - Chat with applicants.
+10. `/recruiter-dashboard/settings` - Account & company preferences.
+
+### 🌐 Main Website Pages (Navbar):
+1. `/` - Homepage
+2. `/jobs` - Browse jobs by filters.
+3. `/companies` - Browse companies.
+4. `/salary-insights` - Average salary data by role.
+5. `/skills-assessment` - Skill tests and results.
+6. `/resume` - Resume builder tool.
+7. `/about`, `/contact`, `/terms-of-service`, `/privacy-policy`
+
+---
+
+### 🔁 Expected Dynamic Data Flow:
+- **User Sign Up/Login** → Creates Applicant/Recruiter in DB.
+- **Applicant Profile Edit** → Updates in DB, reflects instantly in frontend.
+- **Job Post by Recruiter** → Shown in job listing dynamically.
+- **Job Application by Applicant** → Saved in DB, visible to recruiter.
+- **Chat Messaging** → Real-time or near-real-time sync between applicant & recruiter.
+- **Resume Upload** → Store in cloud (e.g., Cloudinary), link saved in DB.
+- **Job Alerts** → Cron/trigger system to notify users when new matching jobs posted.
+
+---
+
+### 🗃️ Ask the AI to Provide:
+1. List of MongoDB **Schemas & Relationships** needed for this project.
+2. All **API Endpoints** (REST) for full-stack interaction.
+3. Complete **Node.js + Express backend logic** for major functions.
+4. WebSocket (or alternative) setup for **real-time messages and notifications**.
+5. Code for **pop-up triggers** or alert messages for major user actions (frontend logic).
+6. Best practice for **file storage** (e.g., resume uploads), secure user auth (JWT), and data validation.
+
+---
+
+### 📄 Notes for the Agent:
+- Don't assume schema — extract field requirements from frontend pages.
+- Avoid any hardcoding of data.
+- Every CRUD operation should reflect in frontend/database immediately.
+- Suggest improvements if the structure can be optimized.
+```
+
+---
+
+### ✅ What This Prompt Will Do:
+
+* The AI agent will now **review your frontend**, extract **expected schema**, **define endpoints**, and **correct backend** logic accordingly.
+* It will help create an **accurate data model** and **functional API** without any hardcoded values.
+* Ensures that the **user interactions (clicks, uploads, updates)** are handled dynamically.
+* You can **copy-paste** this prompt directly into Claude Sonnet, ChatGPT, or Grok.
+
+=============
+# Comprehensive Prompt for Windsurf AI Agent (Claude Sonnet 4)
+
+I'll provide you with a detailed prompt to fix your MERN Job Portal backend properly:
+
+---
+
+## PROMPT FOR WINDSURF AI AGENT:
+
+```
+I need you to examine my MERN Job Portal application and fix the backend completely. Here are my requirements:
+
+### PRIMARY OBJECTIVES:
+1. **Database Schema Design**: Analyze all pages and create proper MongoDB schemas
+2. **Backend API Structure**: Create RESTful APIs for all features
+3. **Dynamic Data Flow**: Remove ALL hardcoded data - everything must be database-driven
+4. **Real-time Updates**: Any user action should immediately reflect in frontend AND database
+5. **Complete Functionality**: Every button, link, and feature must have proper working functions
+
+---
+
+### PAGES TO ANALYZE FOR SCHEMA DESIGN:
+
+**APPLICANT DASHBOARD (11 pages):**
+- Dashboard Overview
+- Profile Management
+- Job Listings (Browse/Search)
+- Recommended Jobs (AI-based matching)
+- Favorites (Saved jobs)
+- Applications (Tracking submitted applications)
+- Resume Management (Upload/Edit/Multiple versions)
+- Job Alerts (Email/SMS notifications)
+- Analytics (Application stats, profile views)
+- Messages (Chat with recruiters)
+- Settings (Account preferences)
+
+**RECRUITER DASHBOARD (10 pages):**
+- Dashboard Overview
+- Company Profile
+- Job Management (Post/Edit/Active/Draft/Closed)
+- Applicants Management (View applications per job)
+- Candidates Database (Talent pool)
+- Interview Scheduling & Management
+- Reports (Hiring metrics)
+- Analytics (Job performance, applicant stats)
+- Messages (Chat with applicants)
+- Settings (Account & company preferences)
+
+**PUBLIC PAGES (10 pages):**
+- Home Page (Featured jobs, stats)
+- Jobs Listing (Search/Filter)
+- Companies Directory
+- Salary Insights (Industry data)
+- Skills Assessment (Tests/Certifications)
+- Resume Builder
+- About Us
+- Contact Us
+- Terms of Service
+- Privacy Policy
+
+---
+
+### REQUIRED DATABASE SCHEMAS:
+
+Design and create MongoDB schemas for:
+
+1. **User Schema** (with role: applicant/recruiter)
+2. **Applicant Profile Schema** (extended user data)
+3. **Recruiter Profile Schema** (extended user data)
+4. **Company Schema** (company information)
+5. **Job Schema** (job postings with all details)
+6. **Application Schema** (job applications with status tracking)
+7. **Resume Schema** (multiple resume versions per user)
+8. **Favorite Schema** (saved jobs)
+9. **Message Schema** (chat conversations)
+10. **Interview Schema** (interview scheduling)
+11. **JobAlert Schema** (notification preferences)
+12. **SkillAssessment Schema** (tests and results)
+13. **Notification Schema** (system notifications)
+14. **Analytics Schema** (tracking metrics)
+
+**IMPORTANT**: 
+- Define proper relationships between schemas (references/populate)
+- Add indexes for frequently queried fields
+- Include timestamps (createdAt, updatedAt)
+- Add field validations and required fields
+- Use enums for status fields (e.g., application status: pending/reviewing/shortlisted/rejected/hired)
+
+---
+
+### BACKEND API ENDPOINTS TO CREATE:
+
+For each schema, create CRUD operations plus additional endpoints:
+
+**Authentication APIs:**
+- POST /api/auth/register (applicant/recruiter)
+- POST /api/auth/login
+- POST /api/auth/logout
+- GET /api/auth/verify-token
+- POST /api/auth/forgot-password
+- POST /api/auth/reset-password
+
+**User/Profile APIs:**
+- GET /api/users/profile
+- PUT /api/users/profile
+- PUT /api/users/profile/picture
+- DELETE /api/users/account
+
+**Job APIs:**
+- GET /api/jobs (with filters, pagination, search)
+- GET /api/jobs/:id
+- POST /api/jobs (recruiter only)
+- PUT /api/jobs/:id (recruiter only)
+- DELETE /api/jobs/:id (recruiter only)
+- GET /api/jobs/recommended (applicant - AI matching)
+- GET /api/jobs/similar/:id
+
+**Application APIs:**
+- POST /api/applications (apply to job)
+- GET /api/applications/applicant (my applications)
+- GET /api/applications/recruiter/:jobId (applications for job)
+- PUT /api/applications/:id/status (update status)
+- DELETE /api/applications/:id (withdraw)
+
+**Favorites APIs:**
+- POST /api/favorites (save job)
+- GET /api/favorites (my saved jobs)
+- DELETE /api/favorites/:jobId (unsave)
+
+**Resume APIs:**
+- POST /api/resumes/upload
+- GET /api/resumes (list all user resumes)
+- GET /api/resumes/:id/download
+- PUT /api/resumes/:id
+- DELETE /api/resumes/:id
+- PUT /api/resumes/:id/set-default
+
+**Interview APIs:**
+- POST /api/interviews (schedule)
+- GET /api/interviews (list all - filtered by role)
+- PUT /api/interviews/:id (reschedule/cancel)
+- PUT /api/interviews/:id/status
+
+**Message APIs:**
+- POST /api/messages/conversation (create/get conversation)
+- GET /api/messages/conversations (list all)
+- POST /api/messages (send message)
+- GET /api/messages/:conversationId
+- PUT /api/messages/:id/read
+
+**Analytics APIs:**
+- GET /api/analytics/applicant (profile views, application stats)
+- GET /api/analytics/recruiter (job views, application metrics)
+- GET /api/analytics/dashboard
+
+**Company APIs:**
+- GET /api/companies
+- GET /api/companies/:id
+- POST /api/companies (recruiter)
+- PUT /api/companies/:id
+
+**Job Alert APIs:**
+- POST /api/job-alerts (create alert)
+- GET /api/job-alerts (list user alerts)
+- PUT /api/job-alerts/:id
+- DELETE /api/job-alerts/:id
+
+**Skill Assessment APIs:**
+- GET /api/assessments (available tests)
+- POST /api/assessments/:id/start
+- POST /api/assessments/:id/submit
+- GET /api/assessments/results
+
+---
+
+### DATA FLOW REQUIREMENTS:
+
+**CRITICAL RULES:**
+1. **NO HARDCODED DATA** - All data must come from database
+2. **Real-time Updates** - Use proper state management (React Query/SWR recommended)
+3. **Immediate Reflection** - When user performs action:
+   - Update database first
+   - Return updated data to frontend
+   - Frontend updates UI immediately
+   - Show success/error feedback
+
+**Example Flow (Job Application):**
+```
+User clicks "Apply" → 
+POST /api/applications → 
+Backend validates → 
+Creates application in DB → 
+Updates job's applicant count → 
+Sends notification to recruiter → 
+Returns success + application data → 
+Frontend updates UI (button changes to "Applied") → 
+Application appears in user's "My Applications"
+```
+
+---
+
+### BUTTON/LINK FUNCTIONALITY REQUIREMENTS:
+
+For EVERY interactive element:
+1. **Add proper onClick/onSubmit handlers**
+2. **Show loading states** (spinners/disabled buttons during API calls)
+3. **Display success/error messages** (toast notifications or modals)
+4. **Implement form validations** (client-side + server-side)
+5. **Add confirmation dialogs** for destructive actions (delete, withdraw, etc.)
+6. **Proper navigation** after actions (redirect/stay based on context)
+
+**Examples:**
+- "Apply Now" button → Show confirmation modal → Submit application → Show success toast → Redirect to applications page
+- "Save Job" button → Toggle favorite status → Update icon (filled/unfilled) → Show toast
+- "Edit Job" button → Open form with pre-filled data → Submit changes → Update in DB → Refresh view
+- "Delete Job" button → Show confirmation dialog → Delete from DB → Remove from UI → Show toast
+
+---
+
+### MIDDLEWARE & SECURITY:
+
+Implement:
+1. **Authentication Middleware** - Protect routes based on user role
+2. **Input Validation** - Using express-validator or Joi
+3. **Error Handling** - Centralized error handler
+4. **Rate Limiting** - Prevent API abuse
+5. **File Upload** - Multer for resume/images with size limits
+6. **CORS** - Proper configuration for frontend
+7. **Password Hashing** - bcrypt for passwords
+8. **JWT Tokens** - For authentication with expiry
+
+---
+
+### ADDITIONAL FEATURES TO IMPLEMENT:
+
+1. **Search & Filters**: Advanced job search with multiple filters
+2. **Pagination**: For all list views (jobs, applications, etc.)
+3. **Email Notifications**: For applications, interviews, alerts
+4. **Real-time Messaging**: Consider Socket.io for chat
+5. **File Upload**: Resume upload with validation (PDF, DOC, size limit)
+6. **Status Tracking**: Application status pipeline (Applied → Reviewing → Interview → Offer → Hired/Rejected)
+7. **Dashboard Stats**: Real-time counts and charts
+
+---
+
+### EXECUTION STEPS:
+
+1. **First, examine all frontend pages** to understand exact data requirements
+2. **Design complete database schemas** with relationships
+3. **Create all models** in backend/models folder
+4. **Build all API routes** in backend/routes folder
+5. **Implement controllers** in backend/controllers folder
+6. **Add middleware** for auth, validation, error handling
+7. **Connect frontend to backend** - replace all hardcoded data with API calls
+8. **Test each feature** end-to-end
+9. **Add proper error handling and user feedback** everywhere
+
+---
+
+### OUTPUT REQUIREMENTS:
+
+Provide me with:
+1. Complete database schema definitions (with comments)
+2. All API endpoint implementations
+3. Frontend integration examples for key features
+4. .env.example file with required environment variables
+5. Updated folder structure
+6. API documentation (endpoints, request/response formats)
+
+**Remember**: Every piece of data shown on frontend must come from database. No mock data, no placeholders. Everything dynamic and real-time.
+```
+
+------------
+ Email service configuration issues detected
+🚀 Enhanced FinAutoJobs Backend Server running on port 5000
+📊 Health check: http://localhost:5000/health
+🔗 Socket.IO enabled for real-time features
+🛡️ Enhanced security and error handling enabled
+📧 Email service: Limited functionality
+🌐 Environment: development
+
+📋 Available API Endpoints:
+   v1 (Legacy): /api/*
+   v2 (Enhanced): /api/v2/*
+
+🔧 Enhanced Features:
+   ✅ Real-time messaging
+   ✅ Advanced analytics
+   ✅ File upload system
+   ✅ Email notifications
+   ✅ Push notifications
+   ✅ Role-based access control
+   ✅ Comprehensive error handling
+[nodemon] restarting due to changes...
+[nodemon] starting `node server-enhanced.js`
+✅ Loaded 5 email templates
+(node:78074) [MONGOOSE] Warning: Duplicate schema index on {"username":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:78074) [MONGOOSE] Warning: Duplicate schema index on {"userId":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(node:78074) [MONGOOSE] Warning: Duplicate schema index on {"applicantId":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(node:78074) [MONGOOSE] Warning: Duplicate schema index on {"recruiterId":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(node:78074) [MONGOOSE] Warning: Duplicate schema index on {"userId":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(node:78074) [MONGOOSE] Warning: Duplicate schema index on {"jobId":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(node:78074) [MONGOOSE] Warning: Duplicate schema index on {"recruiterId":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(node:78074) [MONGOOSE] Warning: Duplicate schema index on {"slug":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(node:78074) [MONGOOSE] Warning: Duplicate schema index on {"applicationId":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(node:78074) [MONGODB DRIVER] Warning: useNewUrlParser is a deprecated option: useNewUrlParser has no effect since Node.js Driver version 4.0.0 and will be removed in the next major version
+(node:78074) [MONGODB DRIVER] Warning: useUnifiedTopology is a deprecated option: useUnifiedTopology has no effect since Node.js Driver version 4.0.0 and will be removed in the next major version
+✅ MongoDB Connected: localhost
+Email configuration verification failed: TypeError: nodemailer.createTransporter is not a function
+    at createTransporter (file:///run/media/technog/Data%20&%20Files/Projects/prf/FinAutojobs-A-Job-Portal/backend/services/enhanced/emailService.js:22:23)
+    at verifyEmailConfig (file:///run/media/technog/Data%20&%20Files/Projects/prf/FinAutojobs-A-Job-Portal/backend/services/enhanced/emailService.js:358:25)
+    at initializeServer (file:///run/media/technog/Data%20&%20Files/Projects/prf/FinAutojobs-A-Job-Portal/backend/server-enhanced.js:244:36)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+⚠️ Email service configuration issues detected
+🚀 Enhanced FinAutoJobs Backend Server running on port 5000
+📊 Health check: http://localhost:5000/health
+🔗 Socket.IO enabled for real-time features
+🛡️ Enhanced security and error handling enabled
+📧 Email service: Limited functionality
+🌐 Environment: development
+
+📋 Available API Endpoints:
+   v1 (Legacy): /api/*
+   v2 (Enhanced): /api/v2/*
+
+🔧 Enhanced Features:
+   ✅ Real-time messaging
+   ✅ Advanced analytics
+   ✅ File upload system
+   ✅ Email notifications
+   ✅ Push notifications
+   ✅ Role-based access control
+   ✅ Comprehensive error handling
+
+=====================================
+MAke sure In this websites evry pagr and every tabs has buttons and hyperlinks buttos presents every button own functionalities but remaining to assign so assign properly so they working well like other buttons;
+view, view job, view details are same functionalities and show same content;
+Apply atevery page has same works and same functionality;
+Applications button show applicant which is apply on those posts;
+
+
+In during edit post and new post job check dealine is after current date then make it live if user click on draft then make it draft;
+but dealine date before current date in new pst or edit post then make colsed job or if make it usrr draft then make draft jobs;
+
+In Active jobs, Closed Jobs and Draft Jobs tab we show three action button like Application, edit, Delete
+In application we want to show all data we have to shown in this page ort tabs http://localhost:3000/recruiter-dashboard/applicants but small changes is that only show thse candidate or applicant which is apply on respective job post;
+
+Also in http://localhost:3000/recruiter-dashboard/applicants or in http://localhost:3000/recruiter-dashboard/candidates page when we set status interview then it cant be show in interview tab why http://localhost:3000/recruiter-dashboard/interviews; 
+
+ALso when schedule the interview and then those all details got applicants mail and in meesage tab as well;
+in message tab allow two way communication; applicant able to end message to recruiter and recruiter can send to the applicants; Also user get information upto date when they update any thingg related post which they apply and status;
+
+When interviews all round completed then remove from interviews tab in dashboard recruiters;
+
+
+
+
+Also why this application open only this device and works in this device localhost not in all device over networks;
+@web-context:console-logs 
+All details fetch from cadedate informateion user inforamtion ; and application submition both;@dom-element:div:CandidateProfileModal @dom-element:div:CandidateProfileModal @dom-element:div:CandidateProfileModal @dom-element:div:CandidateProfileModal 
+
+And dont want to show fake and wrong data show only truedata; also fetch from resume as well;
+IF not fetch then build nnew scema and filled data from that scema using other scemas ;
+because in realtime user doesnot want wrong data that want o shoaser actual data;
+
+We have to build one more schema where we stored all details about applicat applications like:
+1. Education details
+2. Experience details
+3. Expected salary
+4. all details which is given in profile 
+5. and all other information which is required to filled job applications;
+
+and those schema link with: when user apply and filled application and also link  with @dom-element:button:MotionDOMComponent 
