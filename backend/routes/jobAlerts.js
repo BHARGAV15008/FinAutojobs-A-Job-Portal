@@ -22,27 +22,52 @@ const authenticateToken = async (req, res, next) => {
     // Use the same JWT secret as the main auth system
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-jwt-secret-key-change-this-in-production');
     
-    console.log('🔍 Job alerts JWT decoded:', decoded);
+    console.log('🔍 Job alerts JWT decoded:', JSON.stringify(decoded, null, 2));
     
     // Handle both userId and id for compatibility
     const userId = decoded.userId || decoded.id;
     console.log('🔍 Looking up user with ID:', userId);
     
     // Try multiple approaches to find the user
-    let user = await BaseUser.findById(userId);
+    let user = null;
     
-    if (!user) {
-      // Try finding by userId field (for role-based schema)
-      user = await BaseUser.findOne({ userId: decoded.userId });
-      console.log('🔍 User found by userId field:', user ? 'Yes' : 'No');
+    // Method 1: Try finding by _id using the userId from token
+    if (decoded.userId) {
+      try {
+        user = await BaseUser.findById(decoded.userId);
+        console.log('🔍 Method 1 - User found by decoded.userId as _id:', user ? 'Yes' : 'No');
+      } catch (err) {
+        console.log('🔍 Method 1 failed:', err.message);
+      }
     }
     
-    if (!user) {
-      // Try finding by the other ID field
-      const alternateId = decoded.userId || decoded.id;
-      if (alternateId && alternateId !== userId) {
-        user = await BaseUser.findById(alternateId);
-        console.log('🔍 User found by alternate ID:', user ? 'Yes' : 'No');
+    // Method 2: Try finding by _id using the id from token
+    if (!user && decoded.id) {
+      try {
+        user = await BaseUser.findById(decoded.id);
+        console.log('🔍 Method 2 - User found by decoded.id as _id:', user ? 'Yes' : 'No');
+      } catch (err) {
+        console.log('🔍 Method 2 failed:', err.message);
+      }
+    }
+    
+    // Method 3: Try finding by userId field
+    if (!user && decoded.userId) {
+      try {
+        user = await BaseUser.findOne({ userId: decoded.userId });
+        console.log('🔍 Method 3 - User found by userId field:', user ? 'Yes' : 'No');
+      } catch (err) {
+        console.log('🔍 Method 3 failed:', err.message);
+      }
+    }
+    
+    // Method 4: Try finding by email as fallback
+    if (!user && decoded.email) {
+      try {
+        user = await BaseUser.findOne({ email: decoded.email, role: decoded.role });
+        console.log('🔍 Method 4 - User found by email and role:', user ? 'Yes' : 'No');
+      } catch (err) {
+        console.log('🔍 Method 4 failed:', err.message);
       }
     }
     
@@ -77,6 +102,8 @@ const authenticateToken = async (req, res, next) => {
 // GET /api/job-alerts - Get user's job alerts
 router.get('/', authenticateToken, async (req, res) => {
   try {
+    console.log('🔍 Job alerts GET request - user:', req.user);
+    
     if (req.user.role !== 'applicant') {
       return res.status(403).json({
         success: false,
