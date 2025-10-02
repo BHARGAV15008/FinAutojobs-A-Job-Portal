@@ -437,57 +437,147 @@ router.post('/logout', (req, res) => {
 });
 
 // Forgot password
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password', [
+  body('email').isEmail().normalizeEmail().withMessage('Please provide a valid email address')
+], async (req, res) => {
   try {
+    // Check validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
     const { email } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: 'User not found' });
+    console.log(`🔍 Password reset requested for email: ${email}`);
 
-    const resetToken = crypto.randomBytes(20).toString('hex');
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
-    await user.save();
+    // Find user by email (works with discriminator pattern)
+    const user = await BaseUser.findOne({ email: email.toLowerCase() });
+    
+    if (!user) {
+      // For security, don't reveal if email exists or not
+      return res.json({
+        success: true,
+        message: 'If an account with that email exists, we have sent a password reset link.'
+      });
+    }
 
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
+    // Generate secure reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    
+    // Create password reset record
+    const PasswordReset = (await import('../models/PasswordReset.js')).default;
+    
+    // Remove any existing reset tokens for this user
+    await PasswordReset.deleteMany({ userId: user._id });
+    
+    // Create new reset token
+    await PasswordReset.create({
+      userId: user._id,
+      email: user.email,
+      token: resetToken,
+      expiresAt: new Date(Date.now() + 3600000) // 1 hour
     });
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_FROM,
-      to: email,
-      subject: 'Password Reset',
-      text: `Reset your password: http://localhost:3000/reset-password/${resetToken}`
+    // Send password reset email using EmailService
+    try {
+      const { EmailService } = await import('../services/emailService.js');
+      const emailService = new EmailService();
+      
+      await emailService.sendPasswordResetEmail(
+        user.email,
+        `${user.firstName} ${user.lastName}`,
+        resetToken
+      );
+      
+      console.log(`✅ Password reset email sent to ${user.email}`);
+    } catch (emailError) {
+      console.error('❌ Failed to send password reset email:', emailError);
+      // Don't fail the request if email fails, just log it
+    }
+
+    res.json({
+      success: true,
+      message: 'If an account with that email exists, we have sent a password reset link.'
     });
 
-    res.json({ message: 'Reset email sent' });
   } catch (error) {
-    res.status(500).json({ message: 'Failed to send reset email' });
+    console.error('❌ Forgot password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to process password reset request'
+    });
   }
 });
 
 // Reset password
-router.post('/reset-password', async (req, res) => {
+router.post('/reset-password', [
+  body('token').notEmpty().withMessage('Reset token is required'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
+], async (req, res) => {
   try {
-    const { token, password } = req.body;
-    const user = await User.findOne({
-      resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now() }
-    });
-    if (!user) return res.status(400).json({ message: 'Invalid or expired token' });
+    // Check validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
 
-    user.password = await bcrypt.hash(password, 12);
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
+    const { token, password } = req.body;
+    console.log(`🔍 Password reset attempt with token: ${token.substring(0, 8)}...`);
+
+    // Find password reset record
+    const PasswordReset = (await import('../models/PasswordReset.js')).default;
+    const resetRecord = await PasswordReset.findOne({
+      token: token,
+      used: false,
+      expiresAt: { $gt: new Date() }
+    });
+
+    if (!resetRecord) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired reset token'
+      });
+    }
+
+    // Find the user
+    const user = await BaseUser.findById(resetRecord.userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Hash new password and update user
+    const hashedPassword = await bcrypt.hash(password, 12);
+    user.password = hashedPassword;
     await user.save();
 
-    res.json({ message: 'Password reset successful' });
+    // Mark reset token as used
+    resetRecord.used = true;
+    await resetRecord.save();
+
+    console.log(`✅ Password reset successful for user: ${user.email}`);
+
+    res.json({
+      success: true,
+      message: 'Password reset successful. You can now login with your new password.'
+    });
+
   } catch (error) {
-    res.status(500).json({ message: 'Password reset failed' });
+    console.error('❌ Password reset error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Password reset failed'
+    });
   }
 });
 
@@ -1353,6 +1443,154 @@ router.post('/verify-otp', async (req, res) => {
       success: false,
       message: 'Failed to verify OTP',
       error: error.message
+    });
+  }
+});
+
+// Change password endpoint
+router.put('/change-password', [
+  authenticateToken,
+  body('currentPassword').notEmpty().withMessage('Current password is required'),
+  body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters long'),
+  body('confirmPassword').custom((value, { req }) => {
+    if (value !== req.body.newPassword) {
+      throw new Error('Password confirmation does not match');
+    }
+    return true;
+  })
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.userId || req.user._id;
+
+    // Find user and verify current password
+    const user = await BaseUser.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Verify current password
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Current password is incorrect'
+      });
+    }
+
+    // Hash new password
+    const saltRounds = 12;
+    const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // Update password
+    await BaseUser.findByIdAndUpdate(userId, {
+      password: hashedNewPassword,
+      updatedAt: new Date()
+    });
+
+    console.log(`✅ Password updated successfully for user: ${userId}`);
+
+    res.json({
+      success: true,
+      message: 'Password updated successfully'
+    });
+
+  } catch (error) {
+    console.error('❌ Error changing password:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to change password'
+    });
+  }
+});
+
+// Change username endpoint
+router.put('/change-username', [
+  authenticateToken,
+  body('newUsername')
+    .isLength({ min: 3, max: 30 })
+    .withMessage('Username must be between 3 and 30 characters')
+    .matches(/^[a-zA-Z0-9_]+$/)
+    .withMessage('Username can only contain letters, numbers, and underscores'),
+  body('password').notEmpty().withMessage('Password is required for username change')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { newUsername, password } = req.body;
+    const userId = req.user.userId || req.user._id;
+
+    // Find user and verify password
+    const user = await BaseUser.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password is incorrect'
+      });
+    }
+
+    // Check if username is already taken
+    const existingUser = await BaseUser.findOne({ 
+      username: newUsername.toLowerCase(),
+      _id: { $ne: userId } // Exclude current user
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username is already taken'
+      });
+    }
+
+    // Update username
+    await BaseUser.findByIdAndUpdate(userId, {
+      username: newUsername.toLowerCase(),
+      updatedAt: new Date()
+    });
+
+    console.log(`✅ Username updated successfully for user: ${userId} to: ${newUsername}`);
+
+    res.json({
+      success: true,
+      message: 'Username updated successfully',
+      data: {
+        username: newUsername.toLowerCase()
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error changing username:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to change username'
     });
   }
 });

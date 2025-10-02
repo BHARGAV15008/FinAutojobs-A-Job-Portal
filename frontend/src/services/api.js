@@ -34,28 +34,32 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
 // Auth API
 export const authAPI = {
   login: (credentials) => api.post('/auth/login', credentials),
   register: (userData) => api.post('/auth/register', userData),
   logout: () => api.post('/auth/logout'),
-  refreshToken: () => api.post('/auth/refresh'),
+  getProfile: () => api.get('/auth/profile'),
+  updateProfile: (profileData) => api.put('/auth/profile', profileData),
   forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
   resetPassword: (token, password) => api.post('/auth/reset-password', { token, password }),
-  verifyEmail: (token) => api.post('/auth/verify-email', { token }),
-  getProfile: () => api.get('/auth/profile'),
-  updateProfile: (data) => api.put('/auth/profile', data),
+  changePassword: (currentPassword, newPassword, confirmPassword) => 
+    api.put('/auth/change-password', { currentPassword, newPassword, confirmPassword }),
+  changeUsername: (newUsername, password) => 
+    api.put('/auth/change-username', { newUsername, password }),
+  checkAvailability: (field, value, role) => api.post('/auth/check-availability', { field, value, role }),
+  generateUsername: (firstName, lastName, role) => api.post('/auth/generate-username', { firstName, lastName, role }),
+  validateUsername: (username) => api.post('/auth/validate-username', { username }),
+  sendOTPEmail: (email) => api.post('/auth/send-otp-email', { email }),
+  sendOTPSMS: (phone) => api.post('/auth/send-otp-sms', { phone }),
+  verifyOTP: (identifier, otp, type) => api.post('/auth/verify-otp', { identifier, otp, type }),
+  refreshToken: () => api.post('/auth/refresh'),
 };
 
 // Dashboard API
 export const dashboardAPI = {
   getApplicantDashboard: () => api.get('/dashboard/applicant'),
   getRecruiterDashboard: () => api.get('/dashboard/recruiter'),
-  getAdminDashboard: () => api.get('/dashboard/admin'),
-  getUserPreferences: () => api.get('/dashboard/preferences'),
-  updateUserPreferences: (preferences) => api.put('/dashboard/preferences', preferences),
-  getAnalytics: (type, period) => api.get(`/dashboard/analytics/${type}?period=${period}`),
 };
 
 // Jobs API

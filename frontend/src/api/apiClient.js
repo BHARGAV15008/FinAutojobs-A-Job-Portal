@@ -35,12 +35,21 @@ apiClient.interceptors.response.use(
   (error) => {
     // Handle common errors
     if (error.response?.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
-      // Redirect to login if not already there
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
+      // Only logout for auth-related endpoints, not for optional features
+      const url = error.config?.url || '';
+      const isAuthEndpoint = url.includes('/auth/') || url.includes('/profile');
+      
+      if (isAuthEndpoint) {
+        // Token expired or invalid for critical auth endpoints
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        // Redirect to login if not already there
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+      } else {
+        // For optional features like job-alerts, just log the error
+        console.warn('401 error for optional feature:', url);
       }
     }
     

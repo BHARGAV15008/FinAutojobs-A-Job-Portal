@@ -127,6 +127,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import ProfileEditModal from '../profile/ProfileEditModal';
+import SecuritySettingsModal from '../profile/SecuritySettingsModal';
 import JobRecommendations from '../recommendations/JobRecommendations';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { calculateProfileCompletion } from '../../utils/profileCompletion';
@@ -224,6 +225,7 @@ export const EnhancedProfileTab = ({
 }) => {
   const { updateProfile, updateProfileWithFile } = useAuth();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isSecurityModalOpen, setIsSecurityModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(user);
   const [loading, setLoading] = useState(false);
   
@@ -868,15 +870,28 @@ export const EnhancedProfileTab = ({
           visibility.
         </p>
 
-        <motion.button
-          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors duration-200"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setIsEditModalOpen(true)}
-          disabled={loading}
-        >
-          ✏️ {loading ? "Saving..." : "Edit Profile"}
-        </motion.button>
+        <div className="flex flex-wrap gap-3">
+          <motion.button
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setIsEditModalOpen(true)}
+            disabled={loading}
+          >
+            <Edit3 className="w-4 h-4" />
+            <span>{loading ? "Saving..." : "Edit Profile"}</span>
+          </motion.button>
+          
+          <motion.button
+            className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setIsSecurityModalOpen(true)}
+          >
+            <Shield className="w-4 h-4" />
+            <span>Security</span>
+          </motion.button>
+        </div>
       </motion.div>
 
       {/* Profile Sections */}
@@ -933,6 +948,13 @@ export const EnhancedProfileTab = ({
         user={currentUser}
         userRole={userRole}
         onSave={handleProfileSave}
+      />
+
+      {/* Security Settings Modal */}
+      <SecuritySettingsModal
+        isOpen={isSecurityModalOpen}
+        onClose={() => setIsSecurityModalOpen(false)}
+        currentUser={actualUser}
       />
     </motion.div>
   );

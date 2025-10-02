@@ -323,4 +323,13 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  // During development/hot reload, context might be temporarily null
+  // Return a safe fallback to prevent crashes
+  if (context === null) {
+    console.warn('AuthContext is null, this might be during initialization or hot reload');
+    return null;
+  }
+  return context;
+};

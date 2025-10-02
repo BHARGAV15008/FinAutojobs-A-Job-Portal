@@ -12,9 +12,34 @@ export const useOAuth = () => {
 };
 
 export const OAuthProvider = ({ children }) => {
-  const { login } = useAuth();
+  const authContext = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Safely extract login function with fallback
+  const login = authContext?.login || (() => {
+    console.warn('Auth context not available, OAuth login disabled');
+    return Promise.reject(new Error('Authentication system not ready'));
+  });
+
+  // If auth context is not available, render a minimal provider
+  if (!authContext) {
+    const fallbackValue = {
+      loading: false,
+      error: null,
+      loginWithGoogle: () => Promise.reject(new Error('Authentication system not ready')),
+      loginWithMicrosoft: () => Promise.reject(new Error('Authentication system not ready')),
+      loginWithApple: () => Promise.reject(new Error('Authentication system not ready')),
+      getOAuthConfig: () => Promise.resolve({ google: { enabled: false }, microsoft: { enabled: false }, apple: { enabled: false } }),
+      clearError: () => {}
+    };
+
+    return (
+      <OAuthContext.Provider value={fallbackValue}>
+        {children}
+      </OAuthContext.Provider>
+    );
+  }
 
   // Google OAuth login
   const loginWithGoogle = useCallback(async (role = 'jobseeker') => {

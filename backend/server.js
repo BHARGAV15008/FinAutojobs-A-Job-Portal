@@ -209,6 +209,7 @@ import recommendationsRoutes from './routes/recommendations.js';
 import analyticsRoutes from './routes/analytics.js';
 import applicationInformationRoutes from './routes/applicationInformation.js';
 import communicationsRoutes from './routes/communications.js';
+import jobAlertsRoutes from './routes/jobAlerts.js';
 
 // Mount routes under /api
 app.use('/api/auth', authRoutes);
@@ -235,6 +236,7 @@ apiRouter.use('/recommendations', recommendationsRoutes);
 apiRouter.use('/analytics', analyticsRoutes);
 apiRouter.use('/application-information', applicationInformationRoutes);
 apiRouter.use('/communications', communicationsRoutes);
+apiRouter.use('/job-alerts', jobAlertsRoutes);
 
 // Debug middleware to log all requests
 app.use((req, res, next) => {

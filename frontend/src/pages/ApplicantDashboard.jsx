@@ -13,6 +13,7 @@ import {
   EnhancedAnalyticsTab,
 } from "../components/dashboard/EnhancedDashboardTabs";
 import MyApplicationsTab from "../components/dashboard/applicant/MyApplicationsTab";
+import JobAlertsTab from "../components/dashboard/JobAlertsTab";
 import RecentActivity from "../components/dashboard/RecentActivity";
 import JobChart from "../components/dashboard/JobChart";
 import JobMetrics from "../components/dashboard/JobMetrics";
@@ -364,22 +365,7 @@ const ApplicantDashboardContent = () => {
       case "applications":
         return <MyApplicationsTab />;
       case "job-alerts":
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Job Alerts
-            </h2>
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm border border-gray-200 dark:border-gray-700 text-center">
-              <div className="text-6xl mb-4">🔔</div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                Job Alerts
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                Get notified about new job opportunities that match your skills.
-              </p>
-            </div>
-          </div>
-        );
+        return <JobAlertsTab />;
       case "analytics":
         return <EnhancedAnalyticsTab userRole="applicant" />;
       default:

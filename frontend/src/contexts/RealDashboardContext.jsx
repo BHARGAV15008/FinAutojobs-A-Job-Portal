@@ -1,12 +1,10 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { useAuth } from "./AuthContext.jsx";
-import * as authAPI from "../api/auth";
-import * as applicationsAPI from "../api/applications";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { useAuth } from './AuthContext.jsx';
+import { applicationsAPI, authAPI } from '../services/api.js';
 import * as jobsAPI from "../api/jobs";
 import * as notificationsAPI from "../api/notifications";
 import * as analyticsAPI from "../api/analytics";
 import { calculateProfileCompletion } from "../utils/profileCompletion";
-
 const DashboardContext = createContext();
 
 export const useDashboard = () => {
@@ -26,58 +24,28 @@ export const DashboardProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState(null);
 
-  // Check authentication status on mount
-  useEffect(() => {
-    checkAuthStatus();
-  }, []);
+  // Add debouncing to prevent excessive API calls
+  const loadingRef = useRef(false);
+  const lastLoadTimeRef = useRef(0);
+  const DEBOUNCE_DELAY = 1000; // 1 second debounce
 
-  // Sync with AuthContext user changes
-  useEffect(() => {
-    if (authUser) {
-      console.log('🔍 RealDashboardContext syncing with AuthContext user:', authUser);
-      
-      // Handle case where authUser might be API response object
-      const actualUser = authUser.data ? authUser.data : authUser;
-      console.log('🔍 Extracted actual user:', actualUser);
-      
-      setCurrentUser(actualUser);
-      setUserRole(actualUser.role);
-      setIsAuthenticated(true);
-      
-      // Reload dashboard data with the new user
-      if (actualUser.role) {
-        loadDashboardData(actualUser.role, actualUser);
-      }
-    } else {
-      setCurrentUser(null);
-      setUserRole(null);
-      setIsAuthenticated(false);
+  const loadDashboardData = useCallback(async (role, user = null) => {
+    // Prevent multiple simultaneous loads
+    if (loadingRef.current) {
+      console.log('🔍 Dashboard load already in progress, skipping...');
+      return;
     }
-  }, [authUser, authIsAuthenticated]);
 
-  const checkAuthStatus = async () => {
-    const token = localStorage.getItem("token");
-    console.log('🔍 RealDashboardContext checkAuthStatus, token:', token ? 'exists' : 'not found');
-    if (token) {
-      try {
-        const response = await authAPI.getProfile();
-        const user = response.data.data?.user || response.data.user || response.data;
-        setCurrentUser(user);
-        setUserRole(user.role);
-        setIsAuthenticated(true);
-        await loadDashboardData(user.role, user);
-      } catch (error) {
-        console.error("Auth check failed:", error);
-        setIsAuthenticated(false);
-      }
-    } else {
-      setIsAuthenticated(false);
+    // Debounce rapid successive calls
+    const now = Date.now();
+    if (now - lastLoadTimeRef.current < DEBOUNCE_DELAY) {
+      console.log('🔍 Dashboard load debounced, too soon since last load');
+      return;
     }
-    setLoading(false);
-  };
 
-  const loadDashboardData = async (role, user = null) => {
     try {
+      loadingRef.current = true;
+      lastLoadTimeRef.current = now;
       setLoading(true);
 
       // Fetch comprehensive analytics from the new analytics API
@@ -156,8 +124,69 @@ export const DashboardProvider = ({ children }) => {
       loadEmptyData(); // Show empty data on error
     } finally {
       setLoading(false);
+      loadingRef.current = false; // Reset loading flag
     }
+  }, []); // Empty dependency array since we handle user/role internally
+
+  const checkAuthStatus = async () => {
+    const token = localStorage.getItem("token");
+    console.log('🔍 RealDashboardContext checkAuthStatus, token:', token ? 'exists' : 'not found');
+    if (token) {
+      try {
+        const response = await authAPI.getProfile();
+        const user = response.data.data?.user || response.data.user || response.data;
+        setCurrentUser(user);
+        setUserRole(user.role);
+        setIsAuthenticated(true);
+        await loadDashboardData(user.role, user);
+      } catch (error) {
+        console.error("Auth check failed:", error);
+        setIsAuthenticated(false);
+      }
+    } else {
+      setIsAuthenticated(false);
+    }
+    setLoading(false);
   };
+
+  // Check authentication status on mount
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  // Sync with AuthContext user changes (optimized to prevent excessive re-renders)
+  const prevAuthUserRef = useRef();
+  useEffect(() => {
+    // Only process if authUser actually changed
+    if (authUser && authUser !== prevAuthUserRef.current) {
+      console.log('🔍 RealDashboardContext syncing with AuthContext user:', authUser);
+      
+      // Handle case where authUser might be API response object
+      const actualUser = authUser.data ? authUser.data : authUser;
+      console.log('🔍 Extracted actual user:', actualUser);
+      
+      // Only update if user ID or role changed
+      if (!currentUser || currentUser._id !== actualUser._id || currentUser.role !== actualUser.role) {
+        setCurrentUser(actualUser);
+        setUserRole(actualUser.role);
+        setIsAuthenticated(true);
+        
+        // Reload dashboard data with the new user
+        if (actualUser.role) {
+          loadDashboardData(actualUser.role, actualUser);
+        }
+      }
+      
+      prevAuthUserRef.current = authUser;
+    } else if (!authUser && authIsAuthenticated === false) {
+      // Only clear if we actually had a user before
+      if (currentUser) {
+        setCurrentUser(null);
+        setUserRole(null);
+        setIsAuthenticated(false);
+      }
+    }
+  }, [authUser?._id, authUser?.role, authIsAuthenticated, loadDashboardData]);
 
   const calculateStats = (role, data) => {
     const { jobs = [], applications = [], users = [] } = data;
