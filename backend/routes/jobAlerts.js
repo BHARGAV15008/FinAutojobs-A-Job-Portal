@@ -1,9 +1,78 @@
 import express from 'express';
 import JobAlert from '../models/JobAlert.js';
 import Job from '../models/Job.js';
-import { authenticateToken } from '../middleware/auth.js';
+import jwt from 'jsonwebtoken';
+import { BaseUser } from '../models/UserModels.js';
 
 const router = express.Router();
+
+// Simple authentication middleware for job alerts
+const authenticateToken = async (req, res, next) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Access token required' 
+      });
+    }
+
+    // Use the same JWT secret as the main auth system
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-jwt-secret-key-change-this-in-production');
+    
+    console.log('🔍 Job alerts JWT decoded:', decoded);
+    
+    // Handle both userId and id for compatibility
+    const userId = decoded.userId || decoded.id;
+    console.log('🔍 Looking up user with ID:', userId);
+    
+    // Try multiple approaches to find the user
+    let user = await BaseUser.findById(userId);
+    
+    if (!user) {
+      // Try finding by userId field (for role-based schema)
+      user = await BaseUser.findOne({ userId: decoded.userId });
+      console.log('🔍 User found by userId field:', user ? 'Yes' : 'No');
+    }
+    
+    if (!user) {
+      // Try finding by the other ID field
+      const alternateId = decoded.userId || decoded.id;
+      if (alternateId && alternateId !== userId) {
+        user = await BaseUser.findById(alternateId);
+        console.log('🔍 User found by alternate ID:', user ? 'Yes' : 'No');
+      }
+    }
+    
+    if (!user) {
+      console.log('❌ User not found with ID:', userId);
+      return res.status(401).json({ 
+        success: false, 
+        message: 'User not found' 
+      });
+    }
+    
+    console.log('✅ User found:', user._id, user.email, user.role);
+
+    req.user = {
+      userId: user._id.toString(),
+      id: user._id.toString(),
+      email: user.email,
+      role: user.role
+    };
+    
+    next();
+  } catch (error) {
+    console.error('Job alerts auth error:', error);
+    return res.status(403).json({ 
+      success: false, 
+      message: 'Invalid token',
+      code: 'INVALID_TOKEN'
+    });
+  }
+};
 
 // GET /api/job-alerts - Get user's job alerts
 router.get('/', authenticateToken, async (req, res) => {
