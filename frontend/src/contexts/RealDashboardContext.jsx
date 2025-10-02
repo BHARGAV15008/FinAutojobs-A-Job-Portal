@@ -106,6 +106,8 @@ export const DashboardProvider = ({ children }) => {
         applications: extractedApplications.length,
         notifications: extractedNotifications.length
       });
+      
+      console.log('🔍 Sample application data structure:', extractedApplications.slice(0, 1));
 
       const dashboardDataToSet = {
         stats,
@@ -117,7 +119,14 @@ export const DashboardProvider = ({ children }) => {
       };
 
       console.log('📊 Setting dashboard data:', dashboardDataToSet);
+      console.log('📊 Final stats being set:', stats);
       setDashboardData(dashboardDataToSet);
+      
+      // Force a state update to ensure components re-render with new stats
+      setTimeout(() => {
+        console.log('🔄 Forcing stats refresh...');
+        setDashboardData(prev => ({ ...prev, lastUpdated: Date.now() }));
+      }, 100);
     } catch (error) {
       console.warn("Failed to load dashboard data, using fallback:", error);
       setError("Failed to load dashboard data - using offline mode");
@@ -198,14 +207,15 @@ export const DashboardProvider = ({ children }) => {
       case "applicant":
         return {
           profileCompletion: calculateProfileCompletion(currentUser, "applicant"),
-          appliedJobs: applicationsArray.filter((app) => app.status === "applied")
+          appliedJobs: applicationsArray.filter((app) => (app.applicationStatus || app.status) === "applied" || (app.applicationStatus || app.status) === "pending")
             .length,
           shortlisted: applicationsArray.filter(
-            (app) => app.status === "shortlisted"
+            (app) => (app.applicationStatus || app.status) === "shortlisted"
           ).length,
           interviews: applicationsArray.filter(
-            (app) => app.status === "interview"
+            (app) => (app.applicationStatus || app.status) === "interview"
           ).length,
+          hired: applicationsArray.filter((app) => (app.applicationStatus || app.status) === "hired").length,
           totalApplications: applicationsArray.length,
           savedJobs: 0, // Will be fetched from API later
           viewedJobs: 0, // Will be fetched from API later
@@ -213,22 +223,50 @@ export const DashboardProvider = ({ children }) => {
 
       case "recruiter":
         console.log('🔍 Calculating recruiter stats with jobs:', jobs.length, 'applications:', applicationsArray.length);
+        console.log('🔍 Sample applications data:', applicationsArray.slice(0, 2));
         const activeJobs = jobs.filter((job) => job.status === "active" || job.status === "Active").length;
         const totalJobs = jobs.length;
         console.log('🔍 Active jobs:', activeJobs, 'Total jobs:', totalJobs);
+        
+        // Debug hired count - only looking for "hired" status now
+        const hiredApps = applicationsArray.filter((app) => {
+          const status = (app.applicationStatus || app.status || '').toLowerCase();
+          return status === "hired";
+        });
+        const underReviewApps = applicationsArray.filter((app) => {
+          const status = (app.applicationStatus || app.status || '').toLowerCase();
+          return status === "under_review" || status === "reviewing";
+        });
+        
+        console.log('🔍 Hired applications:', hiredApps.length, 'Under Review applications:', underReviewApps.length);
+        console.log('🔍 Hired apps sample:', hiredApps.slice(0, 2));
+        console.log('🔍 All applications with status:', applicationsArray.map(app => ({ 
+          id: app.id, 
+          applicationStatus: app.applicationStatus,
+          status: app.status,
+          finalStatus: app.applicationStatus || app.status,
+          applicant: app.applicantSnapshot?.fullName 
+        })));
         return {
           profileCompletion: calculateProfileCompletion(currentUser, "recruiter"),
           activeJobs,
           totalJobs,
           totalApplications: applicationsArray.length,
           shortlisted: applicationsArray.filter(
-            (app) => app.status === "shortlisted"
+            (app) => (app.applicationStatus || app.status) === "shortlisted"
           ).length,
-          hired: applicationsArray.filter((app) => app.status === "hired").length,
-          pendingReview: applicationsArray.filter((app) => app.status === "pending")
+          hired: applicationsArray.filter((app) => {
+            const status = (app.applicationStatus || app.status || '').toLowerCase();
+            return status === "hired";
+          }).length,
+          underReview: applicationsArray.filter((app) => {
+            const status = (app.applicationStatus || app.status || '').toLowerCase();
+            return status === "under_review" || status === "reviewing";
+          }).length,
+          pendingReview: applicationsArray.filter((app) => (app.applicationStatus || app.status) === "pending")
             .length,
           interviewsScheduled: applicationsArray.filter(
-            (app) => app.status === "interview"
+            (app) => (app.applicationStatus || app.status) === "interview"
           ).length,
         };
 
@@ -261,10 +299,6 @@ export const DashboardProvider = ({ children }) => {
           profileCompletion: 0,
           appliedJobs: 0,
           shortlisted: 0,
-          interviews: 0,
-          totalApplications: 0,
-          savedJobs: 0,
-          viewedJobs: 0,
         },
         recruiter: {
           activeJobs: 0,
@@ -272,7 +306,7 @@ export const DashboardProvider = ({ children }) => {
           shortlisted: 0,
           hired: 0,
           pendingReview: 0,
-          interviewsScheduled: 0,
+          interviewsScheduled: 0
         },
         admin: {
           totalUsers: 0,
@@ -281,7 +315,7 @@ export const DashboardProvider = ({ children }) => {
           systemHealth: 0,
           newUsersToday: 0,
           jobsPostedToday: 0,
-        },
+        }
       },
       recentJobs: [],
       applications: [],
@@ -354,9 +388,20 @@ export const DashboardProvider = ({ children }) => {
       };
     }
 
+    console.log('🔍 getStats Debug:', {
+      role,
+      statsType: typeof dashboardData.stats,
+      statsKeys: Object.keys(dashboardData.stats || {}),
+      statsData: dashboardData.stats
+    });
+    
+    // Check if stats are nested by role or direct
     if (typeof dashboardData.stats === "object" && dashboardData.stats[role]) {
+      console.log('🔍 Returning nested stats for role:', role);
       return dashboardData.stats[role];
     }
+    
+    console.log('🔍 Returning direct stats');
     return dashboardData.stats;
   };
 
@@ -385,22 +430,51 @@ export const DashboardProvider = ({ children }) => {
 
   // Refresh real-time statistics without full data reload
   const refreshStats = async () => {
+    if (!isAuthenticated || !currentUser?.role) {
+      console.log('🔍 Skipping stats refresh - not authenticated or no role');
+      return;
+    }
+
     try {
-      if (!isAuthenticated || !userRole) return;
+      console.log('🔄 Refreshing stats for role:', currentUser.role);
       
-      const statsResponse = await analyticsAPI.getRealTimeStats(userRole);
-      if (statsResponse.success) {
+      // Test network connectivity first
+      try {
+        await fetch('http://localhost:5000/api/health', { method: 'HEAD' });
+        console.log('✅ Backend connectivity confirmed');
+      } catch (connectError) {
+        console.warn('⚠️ Backend connectivity issue:', connectError.message);
+      }
+      
+      const response = await getRealTimeStats(currentUser.role);
+      
+      if (response.success && response.data?.stats) {
         setDashboardData(prevData => ({
           ...prevData,
-          stats: {
-            ...prevData?.stats,
-            ...statsResponse.data.stats
-          }
+          stats: response.data.stats,
+          lastUpdated: response.data.timestamp || new Date().toISOString()
         }));
-        console.log('📊 Real-time stats updated:', statsResponse.data.stats);
+        console.log('✅ Stats refreshed successfully:', response.data.stats);
+      } else {
+        console.warn('⚠️ Invalid stats response format:', response);
       }
     } catch (error) {
       console.error('❌ Failed to refresh stats:', error);
+      
+      // Set fallback stats to prevent UI from breaking
+      setDashboardData(prevData => ({
+        ...prevData,
+        stats: {
+          totalJobs: 0,
+          activeJobs: 0,
+          totalApplications: 0,
+          pending: 0,
+          shortlisted: 0,
+          interviewed: 0,
+          hired: 0
+        },
+        lastUpdated: new Date().toISOString()
+      }));
     }
   };
 

@@ -794,11 +794,14 @@ export const EnhancedProfileTab = ({
       console.log('🔍 Sanitized data professionalLinks:', transformedData.professionalLinks);
       
       console.log('🔍 About to call updateProfile with transformed data');
+      console.log('🔍 Final transformed data being sent:', JSON.stringify(transformedData, null, 2));
+      
       const response = await updateProfile(transformedData);
       console.log('✅ Profile update response:', response);
       console.log('✅ Profile update response.success:', response.success);
       console.log('✅ Profile update response.data:', response.data);
       console.log('✅ Profile update response.error:', response.error);
+      console.log('✅ Profile update response.message:', response.message);
       
       if (response.success) {
         console.log('✅ Profile update was successful');
@@ -1755,46 +1758,123 @@ export const EnhancedJobsTab = ({
 
   // Transform application data to candidate format for CandidateProfileModal
   const transformApplicationToCandidate = (app) => {
+    console.log('Transforming application:', app);
+    
+    const applicant = app.applicant || app.applicantId || {};
+    const appInfo = app.applicationInfo || app.applicationData || {};
+    
+    console.log('Applicant data:', applicant);
+    console.log('Application info:', appInfo);
+    console.log('Applicant skills:', applicant.skills);
+    console.log('Applicant socialLinks:', applicant.socialLinks);
+    console.log('Applicant portfolioLinks:', applicant.portfolioLinks);
+    
+    // Extract structured data from applicationInfo
+    const basicInfo = appInfo.basicInfo || {};
+    const experience = appInfo.experience || {};
+    const expectedSalary = appInfo.expectedSalary || {};
+    const skills = appInfo.skills || {};
+    const socialLinks = appInfo.socialLinks || {};
+    const education = appInfo.education || [];
+    
+    console.log('🔍 Extracted appInfo:', appInfo);
+    console.log('🔍 Extracted basicInfo:', basicInfo);
+    console.log('🔍 Extracted experience:', experience);
+    console.log('🔍 Extracted expectedSalary:', expectedSalary);
+    console.log('🔍 Extracted skills from appInfo:', skills);
+    console.log('🔍 Extracted socialLinks from appInfo:', socialLinks);
+    
     return {
       id: app.applicantId || app._id,
-      name: app.applicant?.name || app.applicantSnapshot?.fullName || `${app.applicant?.firstName} ${app.applicant?.lastName}` || 'Unknown Applicant',
-      email: app.applicant?.email || app.applicantSnapshot?.email || 'No email provided',
-      phone: app.applicant?.phone || app.applicantSnapshot?.phone || 'No phone provided',
-      location: app.applicant?.location || app.applicantSnapshot?.location || app.personalInfo?.location || 'Location not specified',
-      currentRole: app.professionalInfo?.currentJobTitle || app.applicantSnapshot?.currentJobTitle || 'Not specified',
       
-      // Experience data - check multiple possible sources
-      experience: app.applicant?.yearsOfExperience || app.yearsOfExperience || app.experience_years || 'Not specified',
-      expectedSalary: app.professionalInfo?.expectedSalary || app.applicationData?.expectedSalary || '',
+      // Basic Information
+      name: basicInfo.firstName && basicInfo.lastName 
+        ? `${basicInfo.firstName} ${basicInfo.lastName}`
+        : applicant.fullName || applicant.name || `${applicant.firstName || ''} ${applicant.lastName || ''}`.trim() || 'Unknown Applicant',
+      email: basicInfo.email || applicant.email || 'No email provided',
+      phone: basicInfo.phone || applicant.phone || 'No phone provided',
+      location: applicant.location || appInfo.personalInfo?.location || 'Location not specified',
       
-      // Skills data
+      // Professional Information
+      currentRole: experience.currentJob?.jobTitle || applicant.currentJobTitle || 'Not specified',
+      
+      // Experience data - prioritize applicationInfo data
+      experience: experience.totalYears 
+        ? `${experience.totalYears} years`
+        : experience.rawExperienceText 
+        ? experience.rawExperienceText
+        : applicant.yearsOfExperience 
+        ? `${applicant.yearsOfExperience} years`
+        : 'Not specified',
+      
+      // Expected Salary - prioritize applicationInfo data
+      expectedSalary: expectedSalary.displayText 
+        ? expectedSalary.displayText
+        : expectedSalary.rawSalaryText 
+        ? expectedSalary.rawSalaryText
+        : expectedSalary.salaryRange?.min && expectedSalary.salaryRange?.max
+        ? `₹${expectedSalary.salaryRange.min}K - ₹${expectedSalary.salaryRange.max}K ${expectedSalary.salaryRange.period || 'yearly'}`
+        : expectedSalary.salaryRange?.min
+        ? `₹${expectedSalary.salaryRange.min}K+ ${expectedSalary.salaryRange.period || 'yearly'}`
+        : applicant.expectedSalary || 'Not specified',
+      
+      // Skills data - combine all skill types from multiple sources
       skills: [
-        ...(app.skills?.primary || []),
-        ...(app.skills?.technical || []),
-        ...(app.skills?.soft || []),
+        // From ApplicationInformation (application-time snapshot)
+        ...(skills.primary?.map(s => s.skill || s) || []),
+        ...(skills.technical?.map(s => s.skill || s) || []),
+        ...(skills.soft?.map(s => s.skill || s) || []),
+        
+        // From user profile (current profile data)
+        ...(applicant.skills?.primary?.map(s => s.skill || s) || []),
+        ...(applicant.skills?.technical?.map(s => s.skill || s) || []),
+        ...(applicant.skills?.soft?.map(s => s.skill || s) || []),
+        ...(applicant.skills || []), // If skills is a simple array
+        
+        // From applicant snapshot (fallback)
         ...(app.applicantSnapshot?.skills || [])
       ].filter(Boolean),
       
       // Education data
-      education: app.education || app.applicantSnapshot?.education || [],
+      education: education.length > 0 ? education : applicant.education || [],
       
       // Work experience data
-      workExperience: app.workExperience || app.applicantSnapshot?.workExperience || [],
+      workExperience: appInfo.workExperience || applicant.workExperience || [],
       
-      // Portfolio links
+      // Portfolio links - combine from multiple sources
       portfolioLinks: [
-        app.additionalInfo?.portfolioUrl && { type: 'Portfolio', url: app.additionalInfo.portfolioUrl, label: 'Personal Portfolio' },
-        app.additionalInfo?.linkedinUrl && { type: 'LinkedIn', url: app.additionalInfo.linkedinUrl, label: 'LinkedIn Profile' },
-        app.additionalInfo?.githubUrl && { type: 'GitHub', url: app.additionalInfo.githubUrl, label: 'GitHub Profile' }
+        // From ApplicationInformation (application-time snapshot)
+        socialLinks.portfolio?.url && { type: 'Portfolio', url: socialLinks.portfolio.url, label: 'Personal Portfolio' },
+        socialLinks.linkedin?.url && { type: 'LinkedIn', url: socialLinks.linkedin.url, label: 'LinkedIn Profile' },
+        socialLinks.github?.url && { type: 'GitHub', url: socialLinks.github.url, label: 'GitHub Profile' },
+        socialLinks.personalWebsite && { type: 'Website', url: socialLinks.personalWebsite, label: 'Personal Website' },
+        
+        // From user profile (current profile data)
+        applicant.socialLinks?.portfolio && { type: 'Portfolio', url: applicant.socialLinks.portfolio, label: 'Personal Portfolio' },
+        applicant.socialLinks?.linkedin && { type: 'LinkedIn', url: applicant.socialLinks.linkedin, label: 'LinkedIn Profile' },
+        applicant.socialLinks?.github && { type: 'GitHub', url: applicant.socialLinks.github, label: 'GitHub Profile' },
+        applicant.socialLinks?.website && { type: 'Website', url: applicant.socialLinks.website, label: 'Personal Website' },
+        
+        // From portfolioLinks field (if exists)
+        ...(applicant.portfolioLinks?.map(link => ({
+          type: link.type || 'Link',
+          url: link.url,
+          label: link.label || link.title || 'Portfolio Link'
+        })) || []),
+        
+        // From application data (fallback)
+        app.applicationData?.portfolioUrl && { type: 'Portfolio', url: app.applicationData.portfolioUrl, label: 'Personal Portfolio' },
+        app.applicationData?.linkedinUrl && { type: 'LinkedIn', url: app.applicationData.linkedinUrl, label: 'LinkedIn Profile' }
       ].filter(Boolean),
       
       // Application specific data
-      appliedDate: app.appliedAt ? new Date(app.appliedAt).toLocaleDateString() : 'Unknown',
-      status: app.applicationStatus || 'pending',
-      summary: app.additionalInfo?.bio || app.applicationData?.coverLetter || 'No summary provided',
+      appliedDate: app.appliedAt ? new Date(app.appliedAt).toLocaleDateString() : 
+                   app.createdAt ? new Date(app.createdAt).toLocaleDateString() : 'Unknown',
+      status: app.applicationStatus || app.status || 'pending',
+      summary: basicInfo.bio || app.coverLetter || applicant.bio || 'No summary provided',
       rating: 4, // Default rating
-      notes: '',
-      isShortlisted: app.applicationStatus === 'shortlisted'
+      notes: app.notes || '',
+      isShortlisted: (app.applicationStatus || app.status) === 'shortlisted'
     };
   };
 
@@ -2509,6 +2589,7 @@ export const EnhancedJobsTab = ({
         job={applicationsModal.job}
         applications={applicationsModal.applications}
         onClose={() => setApplicationsModal({ isOpen: false, job: null, applications: [] })}
+        onViewCandidate={handleViewCandidate}
       />
 
       {/* Job Details Modal */}
@@ -4373,7 +4454,7 @@ export const EnhancedActiveJobsTab = () => {
 };
 
 // Applications Modal Component
-const ApplicationsModal = ({ isOpen, job, applications, onClose }) => {
+const ApplicationsModal = ({ isOpen, job, applications, onClose, onViewCandidate }) => {
   if (!isOpen) return null;
   
   // Debug: Log the job object to understand its structure
@@ -4502,7 +4583,7 @@ const ApplicationsModal = ({ isOpen, job, applications, onClose }) => {
                       {/* View Profile Button */}
                       <div className="mt-3 flex justify-end">
                         <button
-                          onClick={() => handleViewCandidate(app)}
+                          onClick={() => onViewCandidate(app)}
                           className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors duration-200"
                         >
                           👤 View Profile

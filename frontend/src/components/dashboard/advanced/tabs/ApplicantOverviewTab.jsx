@@ -138,7 +138,7 @@ const ApplicantOverviewTab = ({ data, onDataUpdate, user }) => {
         return <Schedule sx={{ color: 'success.main' }} />;
       case 'rejected':
         return <Cancel sx={{ color: 'error.main' }} />;
-      case 'accepted':
+      case 'hired':
         return <CheckCircle sx={{ color: 'success.main' }} />;
       default:
         return <Pending sx={{ color: 'grey.500' }} />;
@@ -153,7 +153,7 @@ const ApplicantOverviewTab = ({ data, onDataUpdate, user }) => {
         return 'success';
       case 'rejected':
         return 'error';
-      case 'accepted':
+      case 'hired':
         return 'success';
       default:
         return 'default';

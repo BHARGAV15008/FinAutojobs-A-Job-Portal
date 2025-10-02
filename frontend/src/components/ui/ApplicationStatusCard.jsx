@@ -38,21 +38,21 @@ const ApplicationStatusCard = ({ application }) => {
             description: 'Recruiters are reviewing your profile',
             icon: PersonSearch,
             date: application.reviewStartedAt,
-            completed: application.status === 'review' || application.status === 'interview' || application.status === 'selected',
+            completed: application.status === 'under_review' || application.status === 'interviewed' || application.status === 'hired',
         },
         {
             label: 'Interview',
             description: application.interviewDetails || 'Scheduling in progress',
             icon: Assessment,
             date: application.interviewDate,
-            completed: application.status === 'interview' || application.status === 'selected',
+            completed: application.status === 'interviewed' || application.status === 'hired',
         },
         {
             label: 'Decision',
             description: application.decisionDetails || 'Pending final decision',
             icon: CheckCircle,
             date: application.decisionDate,
-            completed: application.status === 'selected',
+            completed: application.status === 'hired',
         },
     ];
 
@@ -60,11 +60,11 @@ const ApplicationStatusCard = ({ application }) => {
         switch (status) {
             case 'submitted':
                 return theme.palette.info.main;
-            case 'review':
+            case 'under_review':
                 return theme.palette.warning.main;
-            case 'interview':
-                return theme.palette.success.main;
-            case 'selected':
+            case 'interviewed':
+                return theme.palette.primary.main;
+            case 'hired':
                 return theme.palette.success.main;
             case 'rejected':
                 return theme.palette.error.main;
@@ -77,12 +77,12 @@ const ApplicationStatusCard = ({ application }) => {
         switch (status) {
             case 'submitted':
                 return 'Application Submitted';
-            case 'review':
+            case 'under_review':
                 return 'Under Review';
-            case 'interview':
+            case 'interviewed':
                 return 'Interview Stage';
-            case 'selected':
-                return 'Selected';
+            case 'hired':
+                return 'Hired';
             case 'rejected':
                 return 'Not Selected';
             default:

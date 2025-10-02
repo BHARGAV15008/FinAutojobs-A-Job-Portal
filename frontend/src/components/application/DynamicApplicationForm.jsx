@@ -53,6 +53,24 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/IntegratedThemeContext';
 import * as applicationsAPI from '../../api/applications';
 
+// Indian States and Countries for address dropdowns
+const INDIAN_STATES = [
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+  'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
+  'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
+  'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
+  'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+  'Andaman and Nicobar Islands', 'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu',
+  'Delhi', 'Jammu and Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry'
+];
+
+const COUNTRIES = [
+  'India', 'United States', 'United Kingdom', 'Canada', 'Australia',
+  'Germany', 'France', 'Singapore', 'UAE', 'Saudi Arabia', 'Qatar',
+  'Japan', 'South Korea', 'China', 'Malaysia', 'Thailand', 'Netherlands',
+  'Switzerland', 'Sweden', 'Norway', 'Denmark', 'Other'
+];
+
 /**
  * Dynamic Application Form Component
  * Implements comprehensive job application flow with validation and file uploads
@@ -79,7 +97,7 @@ const DynamicApplicationForm = ({
         street: user?.address?.street || '',
         city: user?.address?.city || user?.location || '',
         state: user?.address?.state || '',
-        country: user?.address?.country || 'India',
+        country: user?.address?.country || '',
         zipCode: user?.address?.zipCode || ''
       }
     },
@@ -618,11 +636,49 @@ const PersonalInfoStep = ({ data, onChange, onNestedChange, errors }) => (
       />
     </Grid>
     <Grid item xs={12} sm={6}>
+      <FormControl fullWidth>
+        <InputLabel>State</InputLabel>
+        <Select
+          value={data.address.state}
+          onChange={(e) => onNestedChange('address', 'state', e.target.value)}
+          label="State"
+        >
+          <MenuItem value="">
+            <em>Select State</em>
+          </MenuItem>
+          {INDIAN_STATES.map((state) => (
+            <MenuItem key={state} value={state}>
+              {state}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+    </Grid>
+    <Grid item xs={12} sm={6}>
+      <FormControl fullWidth>
+        <InputLabel>Country</InputLabel>
+        <Select
+          value={data.address.country}
+          onChange={(e) => onNestedChange('address', 'country', e.target.value)}
+          label="Country"
+        >
+          <MenuItem value="">
+            <em>Select Country</em>
+          </MenuItem>
+          {COUNTRIES.map((country) => (
+            <MenuItem key={country} value={country}>
+              {country}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+    </Grid>
+    <Grid item xs={12} sm={6}>
       <TextField
         fullWidth
-        label="State"
-        value={data.address.state}
-        onChange={(e) => onNestedChange('address', 'state', e.target.value)}
+        label="ZIP/Postal Code"
+        value={data.address.zipCode}
+        onChange={(e) => onNestedChange('address', 'zipCode', e.target.value)}
       />
     </Grid>
   </Grid>

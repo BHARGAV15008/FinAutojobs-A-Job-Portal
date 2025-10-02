@@ -7,7 +7,7 @@ const applicationSchema = new mongoose.Schema({
   coverLetter: { type: String },
   status: { 
     type: String, 
-    enum: ['pending', 'reviewing', 'shortlisted', 'interviewed', 'offered', 'rejected', 'withdrawn'],
+    enum: ['pending', 'under_review', 'shortlisted', 'interviewed', 'hired', 'rejected', 'withdrawn'],
     default: 'pending'
   },
   // Reference to detailed application information
@@ -37,4 +37,4 @@ applicationSchema.pre('save', function(next) {
   next();
 });
 
-export default mongoose.model('Application', applicationSchema);
+export default mongoose.models.SimpleApplication || mongoose.model('SimpleApplication', applicationSchema);

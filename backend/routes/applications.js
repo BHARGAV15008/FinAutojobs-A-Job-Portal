@@ -3,6 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import Application from '../models/unified/Application.js';
+import ApplicationInformation from '../models/ApplicationInformation.js';
 import Job from '../models/Job.js';
 // Import the correct user model that other routes use
 import { BaseUser } from '../models/UserModels.js';
@@ -359,9 +360,12 @@ router.get('/', authenticateToken, async (req, res) => {
     // Role-based filtering
     if (req.user.role === 'applicant') {
       query.applicantId = req.user.userId;
+      console.log('🔍 Applicant query:', query);
     } else if (req.user.role === 'recruiter') {
       const userJobs = await Job.find({ postedBy: req.user.userId }).select('_id');
+      console.log('🔍 Recruiter jobs found:', userJobs.length);
       query.jobId = { $in: userJobs.map(job => job._id) };
+      console.log('🔍 Recruiter query:', query);
     }
     
     if (status) {
@@ -377,15 +381,26 @@ router.get('/', authenticateToken, async (req, res) => {
         .populate('jobId', 'title company location type jobTitle companyName')
         .populate({
           path: 'applicantId',
-          select: 'firstName lastName email',
+          select: 'firstName lastName email phone profileImage bio skills education workExperience socialLinks portfolioLinks documents',
           model: 'BaseUser'
         })
+        .populate('applicationInfo') // Populate ApplicationInformation
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limitNum)
         .lean(),
       Application.countDocuments(query)
     ]);
+
+    console.log('🔍 Found applications:', applications.length);
+    console.log('🔍 Sample application:', applications[0] ? {
+      id: applications[0]._id,
+      status: applications[0].applicationStatus,
+      applicantId: applications[0].applicantId,
+      jobId: applications[0].jobId,
+      hasApplicationInfo: !!applications[0].applicationInfo,
+      applicationInfoKeys: applications[0].applicationInfo ? Object.keys(applications[0].applicationInfo) : []
+    } : 'No applications found');
 
     const transformedApplications = applications.map(application => ({
       _id: application._id,
@@ -402,6 +417,8 @@ router.get('/', authenticateToken, async (req, res) => {
       
       // Applicant snapshot - use populated data first, then snapshot as fallback
       applicantSnapshot: application.applicantId ? {
+        firstName: application.applicantId.firstName,
+        lastName: application.applicantId.lastName,
         fullName: `${application.applicantId.firstName} ${application.applicantId.lastName}`,
         email: application.applicantId.email,
         phone: application.applicantSnapshot?.phone || application.applicationData?.phone || '',
@@ -411,13 +428,26 @@ router.get('/', authenticateToken, async (req, res) => {
       // Application data
       applicationData: application.applicationData || {},
       
+      // Application Information (populated from ApplicationInformation model)
+      applicationInfo: application.applicationInfo || null,
+      
       status: application.applicationStatus,
+      applicationStatus: application.applicationStatus,
       appliedAt: application.createdAt || application.appliedAt,
       updatedAt: application.updatedAt,
       
       // Recruiter notes
       recruiterNotes: application.recruiterNotes || ''
     }));
+
+    console.log('🔍 Transformed applications sample:', transformedApplications[0] ? {
+      id: transformedApplications[0].id,
+      status: transformedApplications[0].status,
+      applicantSnapshot: transformedApplications[0].applicantSnapshot,
+      jobSnapshot: transformedApplications[0].jobSnapshot,
+      hasApplicationInfo: !!transformedApplications[0].applicationInfo,
+      applicationInfoKeys: transformedApplications[0].applicationInfo ? Object.keys(transformedApplications[0].applicationInfo) : []
+    } : 'No transformed applications');
 
     res.json({
       success: true,

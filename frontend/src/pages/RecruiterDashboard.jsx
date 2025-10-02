@@ -97,15 +97,32 @@ const RecruiterDashboardContent = () => {
     console.log('🔍 RecruiterDashboard editingJob state:', editingJob);
   }
   
-  // Add a state to force re-render when profile updates
   const [profileUpdateTrigger, setProfileUpdateTrigger] = useState(0);
   
   // Add a state to force re-render when jobs are updated
   const [jobsRefreshTrigger, setJobsRefreshTrigger] = useState(0);
 
+  // Get stats from dashboard context
+  const stats = getStats ? getStats("recruiter") : {};
+  console.log('🔍 RecruiterDashboard final stats:', stats);
+  console.log('🔍 Hired count from stats:', stats?.hired);
+  console.log('🔍 Dashboard applications data:', dashboardData?.applications);
+  
+  // Manual check for accepted applications
+  if (dashboardData?.applications) {
+    const acceptedApps = dashboardData.applications.filter(app => 
+      (app.applicationStatus === "accepted") || 
+      (app.status === "accepted") ||
+      (app.applicationStatus === "Accepted") || 
+      (app.status === "Accepted")
+    );
+    console.log('🔍 Manual check - Accepted applications found:', acceptedApps.length);
+    console.log('🔍 Accepted applications details:', acceptedApps);
+  }
+
   // Handle job editing
   const handleEditJob = (job) => {
-    console.log('🔍 RecruiterDashboard handleEditJob called with:', job);
+    console.log('🔍 Job called with:', job);
     console.log('🔍 Job fields:', Object.keys(job || {}));
     setEditingJob(job);
     setActiveTab("jobs");
@@ -177,13 +194,28 @@ const RecruiterDashboardContent = () => {
   // Watch for currentUser changes and trigger re-render
   useEffect(() => {
     if (currentUser) {
-      // Reduced logging to prevent spam
-      if (Math.random() < 0.1) {
-        console.log('🔍 currentUser changed, triggering re-render');
-      }
+      console.log('🔍 currentUser changed, triggering re-render');
+      console.log('🔍 Current user profile data:', {
+        name: currentUser.firstName + ' ' + currentUser.lastName,
+        company: currentUser.companyInfo?.companyName || currentUser.company,
+        department: currentUser.companyInfo?.department,
+        jobTitle: currentUser.companyInfo?.designation || currentUser.job_title,
+        bio: currentUser.bio,
+        linkedin: currentUser.linkedin_url
+      });
       setProfileUpdateTrigger(prev => prev + 1);
     }
-  }, [currentUser?._id, currentUser?.updatedAt]); // Only watch for ID and updatedAt to prevent infinite loops
+  }, [
+    currentUser?._id, 
+    currentUser?.updatedAt,
+    currentUser?.firstName,
+    currentUser?.lastName,
+    currentUser?.bio,
+    currentUser?.linkedin_url,
+    currentUser?.companyInfo?.companyName,
+    currentUser?.companyInfo?.department,
+    currentUser?.companyInfo?.designation
+  ]); // Watch for profile-related fields
 
   // Define comprehensive dashboard tabs for recruiters
   const dashboardTabs = [
@@ -255,38 +287,46 @@ const RecruiterDashboardContent = () => {
     );
   }
 
-  const stats = (getStats && getStats("recruiter")) || {
-    activeJobs: 0,
-    totalApplications: 0,
-    shortlisted: 0,
-    hired: 0
-  };
-
   // Handle profile edit - refresh the dashboard context user data
   const handleEditProfile = async (updatedUserData) => {
     console.log("🔄 Handling profile edit in RecruiterDashboard:", updatedUserData);
     try {
-      // Force re-render by updating the trigger
+      // Force immediate re-render
       setProfileUpdateTrigger(prev => prev + 1);
       
       // Refresh current user data first
       if (refreshCurrentUser) {
         console.log("🔄 Refreshing current user data after profile update");
         await refreshCurrentUser();
+        console.log("✅ Current user data refreshed");
       }
+      
+      // Wait a bit for the user data to propagate
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       // Then refresh dashboard data to get updated stats
       if (refreshData) {
         console.log("🔄 Refreshing dashboard data after profile update");
         await refreshData();
+        console.log("✅ Dashboard data refreshed");
       }
       
-      console.log("✅ Profile updated, user and dashboard data refreshed");
+      // Force multiple re-renders to ensure UI updates
+      setProfileUpdateTrigger(prev => prev + 1);
       
-      // Additional trigger after refresh
+      // Additional triggers with delays to ensure all components update
       setTimeout(() => {
+        console.log("🔄 Additional re-render trigger 1");
         setProfileUpdateTrigger(prev => prev + 1);
       }, 200);
+      
+      setTimeout(() => {
+        console.log("🔄 Additional re-render trigger 2");
+        setProfileUpdateTrigger(prev => prev + 1);
+      }, 500);
+      
+      console.log("✅ Profile update complete - all refresh triggers set");
+      
     } catch (error) {
       console.error("❌ Error handling profile edit:", error);
     }
@@ -296,91 +336,91 @@ const RecruiterDashboardContent = () => {
   const overviewCards = [
     {
       title: "Active Jobs",
-      value: stats.activeJobs || 0,
+      value: stats?.activeJobs || 0,
       change: "+2 this month",
       changeType: "positive",
       gradient: "blue",
-      icon: (
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6"
-          />
-        </svg>
-      ),
-    },
+        icon: (
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6"
+            />
+          </svg>
+        ),
+      },
     {
       title: "Total Applications",
-      value: stats.totalApplications || 0,
+      value: stats?.totalApplications || 0,
       change: "+12 this week",
       changeType: "positive",
       gradient: "green",
-      icon: (
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
-      ),
-    },
+        icon: (
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+        ),
+      },
     {
       title: "Shortlisted",
-      value: stats.shortlisted || 0,
+      value: stats?.shortlisted || 0,
       change: "+5 this week",
       changeType: "positive",
       gradient: "purple",
-      icon: (
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-      ),
-    },
+        icon: (
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        ),
+      },
     {
       title: "Hired",
-      value: stats.hired || 0,
+      value: stats?.hired || 0,
       change: "+1 this month",
       changeType: "positive",
       gradient: "orange",
-      icon: (
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
-          />
-        </svg>
-      ),
+        icon: (
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
+            />
+          </svg>
+        ),
     },
   ];
 
@@ -539,6 +579,76 @@ const RecruiterDashboardContent = () => {
             </motion.div>
 
             {/* Job Metrics */}
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Dashboard Metrics</h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    console.log('🔄 Manual refresh triggered');
+                    refreshData();
+                  }}
+                  className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                  Refresh Stats
+                </button>
+                <button
+                  onClick={async () => {
+                    console.log('🧪 Testing profile update...');
+                    try {
+                      const testData = {
+                        bio: `Updated at ${new Date().toLocaleTimeString()}`,
+                        companyInfo: {
+                          companyName: 'Test Company Updated',
+                          department: 'Test Department',
+                          designation: 'Test Position'
+                        }
+                      };
+                      console.log('🧪 Test data:', testData);
+                      const result = await handleEditProfile(testData);
+                      console.log('🧪 Test result:', result);
+                      alert('Profile test update completed - check console');
+                    } catch (error) {
+                      console.error('🧪 Test failed:', error);
+                      alert('Profile test update failed - check console');
+                    }
+                  }}
+                  className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
+                >
+                  Test Profile Update
+                </button>
+                <button
+                  onClick={async () => {
+                    console.log('🔗 Testing backend connectivity...');
+                    try {
+                      // Test health endpoint
+                      const healthResponse = await fetch('http://localhost:5000/api/health');
+                      console.log('✅ Health check:', healthResponse.status);
+                      
+                      // Test analytics endpoint
+                      const token = localStorage.getItem('token');
+                      const analyticsResponse = await fetch('http://localhost:5000/api/analytics/realtime/recruiter', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                      });
+                      console.log('✅ Analytics check:', analyticsResponse.status);
+                      
+                      if (analyticsResponse.ok) {
+                        const data = await analyticsResponse.json();
+                        console.log('✅ Analytics data:', data);
+                        alert('Backend connectivity test passed - check console');
+                      } else {
+                        alert('Analytics endpoint returned error - check console');
+                      }
+                    } catch (error) {
+                      console.error('🔗 Connectivity test failed:', error);
+                      alert('Backend connectivity test failed - check console');
+                    }
+                  }}
+                  className="px-3 py-1 text-sm bg-purple-500 text-white rounded hover:bg-purple-600"
+                >
+                  Test Backend
+                </button>
+              </div>
+            </div>
             <JobMetrics userRole="recruiter" />
 
             {/* Charts and Activity */}
@@ -614,31 +724,58 @@ const RecruiterDashboardContent = () => {
                       className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
                     >
                       <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
-                          <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                            {((app.jobTitle || app.jobId?.title || app.job?.title || 'N/A') || 'N').charAt(0).toUpperCase()}
+                        <div className="w-8 h-8 bg-blue-500 dark:bg-blue-600 rounded-full flex items-center justify-center">
+                          <span className="text-xs font-medium text-white">
+                            {(app.applicantSnapshot?.fullName || app.applicantId?.firstName || app.applicantSnapshot?.firstName || 'U').charAt(0).toUpperCase()}
                           </span>
                         </div>
                         <div>
                           <p className="text-sm font-medium text-gray-900 dark:text-white">
-                            {app.jobTitle || app.jobId?.title || app.job?.title || 'Unknown Position'}
+                            {app.jobSnapshot?.title || app.jobId?.title || app.jobTitle || 'Unknown Position'}
                           </p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {app.company || app.jobId?.company || app.job?.company || 'Unknown Company'}
+                            {app.applicantSnapshot?.fullName ||
+                             (app.applicantSnapshot?.firstName && app.applicantSnapshot?.lastName 
+                              ? `${app.applicantSnapshot.firstName} ${app.applicantSnapshot.lastName}`
+                              : app.applicantId?.firstName && app.applicantId?.lastName
+                              ? `${app.applicantId.firstName} ${app.applicantId.lastName}`
+                              : 'Unknown Applicant')}
                           </p>
                         </div>
                       </div>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          app.status === "pending"
-                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                            : app.status === "shortlisted"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                            : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                        }`}
-                      >
-                        {app.status || 'Pending'}
-                      </span>
+                      <div className="flex gap-1">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            (app.applicationStatus || app.status) === "pending"
+                              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                              : (app.applicationStatus || app.status) === "under_review"
+                              ? "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
+                              : (app.applicationStatus || app.status) === "shortlisted"
+                              ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                              : (app.applicationStatus || app.status) === "interviewed"
+                              ? "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+                              : (app.applicationStatus || app.status) === "hired"
+                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                              : (app.applicationStatus || app.status) === "rejected"
+                              ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                              : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+                          }`}
+                        >
+                          {(() => {
+                            const status = app.applicationStatus || app.status || 'pending';
+                            switch (status) {
+                              case 'pending': return 'Pending';
+                              case 'under_review': return 'Under Review';
+                              case 'shortlisted': return 'Shortlisted';
+                              case 'interviewed': return 'Interviewed';
+                              case 'hired': return 'Hired';
+                              case 'rejected': return 'Rejected';
+                              case 'withdrawn': return 'Withdrawn';
+                              default: return status.charAt(0).toUpperCase() + status.slice(1);
+                            }
+                          })()}
+                        </span>
+                      </div>
                     </div>
                   ))}
                 </div>

@@ -779,6 +779,7 @@ router.put('/profile', authenticateToken, async (req, res) => {
         transformedData.companyInfo = {
           ...transformedData.companyInfo, // Preserve existing fields
           companyName: updateData.companyInfo.companyName,
+          department: updateData.companyInfo.department, // Add department field
           designation: updateData.companyInfo.designation, // Note: designation, not department
           workLocation: updateData.companyInfo.workLocation
         };
@@ -786,6 +787,7 @@ router.put('/profile', authenticateToken, async (req, res) => {
         // Handle flat form fields - map to correct database fields
         const companyInfoUpdate = {};
         if (updateData.company) companyInfoUpdate.companyName = updateData.company;
+        if (updateData.department) companyInfoUpdate.department = updateData.department; // Add department field
         if (updateData.job_title) companyInfoUpdate.designation = updateData.job_title; // job_title -> designation
         if (updateData.location) {
           companyInfoUpdate.workLocation = { 
@@ -1064,10 +1066,16 @@ router.put('/profile', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('❌ Profile update error:', error);
     console.error('❌ Error stack:', error.stack);
+    console.error('❌ Error details:', {
+      message: error.message,
+      name: error.name,
+      code: error.code
+    });
     res.status(500).json({
       success: false,
       message: 'Failed to update profile',
-      error: error.message
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });

@@ -1,17 +1,30 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useDashboard } from '../../contexts/RealDashboardContext';
 
 const JobMetrics = ({ userRole }) => {
   const { dashboardData, getStats, loading } = useDashboard();
+  const [forceUpdate, setForceUpdate] = useState(0);
   
   // Get real stats from dashboard context
   const stats = getStats ? getStats(userRole) : {};
   
-  // Debug logs (reduced)
-  if (stats && Object.keys(stats).length > 0) {
-    console.log('✅ JobMetrics loaded with real data');
-  }
+  // Force re-render when dashboardData changes
+  useEffect(() => {
+    if (dashboardData) {
+      console.log('🔄 JobMetrics: Dashboard data changed, forcing update');
+      setForceUpdate(prev => prev + 1);
+    }
+  }, [dashboardData, dashboardData?.stats, dashboardData?.lastUpdated]);
+  
+  // Debug logs (enhanced)
+  console.log('🔍 JobMetrics Debug:', {
+    userRole,
+    stats,
+    dashboardData: dashboardData?.stats,
+    loading,
+    forceUpdate
+  });
 
   const getMetrics = () => {
     if (userRole === 'applicant') {

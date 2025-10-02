@@ -1,7 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import Job from '../models/Job.js';
-import Application from '../models/Application.js';
+import Application from '../models/unified/Application.js';
 import ApplicationDetails from '../models/ApplicationDetails.js';
 import Interview from '../models/Interview.js';
 import { BaseUser, Applicant, Recruiter } from '../models/UserModels.js';

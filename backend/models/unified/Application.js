@@ -10,6 +10,13 @@ const applicationSchema = new mongoose.Schema({
   jobId: { type: mongoose.Schema.Types.ObjectId, ref: 'Job', required: true },
   recruiterId: { type: mongoose.Schema.Types.ObjectId, ref: 'BaseUser', required: true },
   
+  // Reference to detailed application information
+  applicationInfo: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'ApplicationInformation',
+    sparse: true // Allows null values while maintaining uniqueness for non-null values
+  },
+  
   // Application Status
   applicationStatus: { 
     type: String, 
@@ -129,4 +136,4 @@ applicationSchema.pre('save', function(next) {
   next();
 });
 
-export default mongoose.model('Application', applicationSchema);
+export default mongoose.models.Application || mongoose.model('Application', applicationSchema);

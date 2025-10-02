@@ -21,15 +21,19 @@ const CandidateProfileModal = ({
   isOpen, 
   onClose, 
   onContact, 
-  onSchedule, 
   onShortlist,
   onDownloadResume 
 }) => {
   const { darkMode } = useTheme();
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(false);
-
+  
   if (!isOpen || !candidate) return null;
+
+  // Debug logging
+  console.log('🔍 CandidateProfileModal received candidate:', candidate);
+  console.log('🔍 Candidate skills:', candidate.skills);
+  console.log('🔍 Candidate portfolioLinks:', candidate.portfolioLinks);
 
   const handleDownloadResume = async () => {
     setLoading(true);
@@ -227,7 +231,7 @@ const CandidateProfileModal = ({
                       darkMode ? 'bg-gray-700' : 'bg-gray-50'
                     }`}>
                       <div className="text-2xl font-bold text-blue-600">
-                        {candidate.experience}
+                        {candidate.experience || 'Not specified'}
                       </div>
                       <div className={`text-sm ${
                         darkMode ? 'text-gray-300' : 'text-gray-600'
@@ -239,7 +243,7 @@ const CandidateProfileModal = ({
                       darkMode ? 'bg-gray-700' : 'bg-gray-50'
                     }`}>
                       <div className="text-2xl font-bold text-green-600">
-                        {candidate.expectedSalary}
+                        {candidate.expectedSalary || 'Not specified'}
                       </div>
                       <div className={`text-sm ${
                         darkMode ? 'text-gray-300' : 'text-gray-600'
@@ -279,7 +283,7 @@ const CandidateProfileModal = ({
                           Applied Date:
                         </span>
                         <p className={darkMode ? 'text-white' : 'text-gray-900'}>
-                          {candidate.appliedDate}
+                          {candidate.appliedDate || 'Unknown'}
                         </p>
                       </div>
                       <div>

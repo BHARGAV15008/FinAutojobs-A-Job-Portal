@@ -93,7 +93,7 @@ const ApplicantApplicationsTab = ({ user }) => {
       company: "Design Studios Inc",
       companyLogo: "/api/placeholder/40/40",
       appliedDate: "2024-01-08",
-      status: "accepted",
+      status: "hired",
       location: "Los Angeles, CA",
       salary: "$70,000 - $95,000",
       jobType: "Full-time",
@@ -102,7 +102,7 @@ const ApplicantApplicationsTab = ({ user }) => {
         { status: "applied", date: "2024-01-08", description: "Application submitted" },
         { status: "reviewed", date: "2024-01-09", description: "Application reviewed" },
         { status: "interview_scheduled", date: "2024-01-10", description: "Interview completed" },
-        { status: "accepted", date: "2024-01-12", description: "Job offer received" }
+        { status: "hired", date: "2024-01-12", description: "Job offer accepted" }
       ],
       offerDetails: {
         startDate: "2024-02-01",
@@ -130,7 +130,7 @@ const ApplicantApplicationsTab = ({ user }) => {
     } else if (currentTab === 2) {
       filtered = filtered.filter(app => app.status === 'interview_scheduled');
     } else if (currentTab === 3) {
-      filtered = filtered.filter(app => app.status === 'accepted');
+      filtered = filtered.filter(app => app.status === 'hired');
     } else if (currentTab === 4) {
       filtered = filtered.filter(app => app.status === 'rejected');
     }
@@ -156,7 +156,7 @@ const ApplicantApplicationsTab = ({ user }) => {
       case 'pending': return 'warning';
       case 'reviewed': return 'info';
       case 'interview_scheduled': return 'primary';
-      case 'accepted': return 'success';
+      case 'hired': return 'success';
       case 'rejected': return 'error';
       default: return 'default';
     }
@@ -167,7 +167,7 @@ const ApplicantApplicationsTab = ({ user }) => {
       case 'pending': return <HourglassEmpty />;
       case 'reviewed': return <Visibility />;
       case 'interview_scheduled': return <Schedule />;
-      case 'accepted': return <CheckCircle />;
+      case 'hired': return <CheckCircle />;
       case 'rejected': return <CancelIcon />;
       default: return <Work />;
     }
@@ -178,7 +178,7 @@ const ApplicantApplicationsTab = ({ user }) => {
       case 'pending': return 'Pending Review';
       case 'reviewed': return 'Under Review';
       case 'interview_scheduled': return 'Interview Scheduled';
-      case 'accepted': return 'Offer Received';
+      case 'hired': return 'Hired';
       case 'rejected': return 'Rejected';
       default: return status;
     }
@@ -198,7 +198,7 @@ const ApplicantApplicationsTab = ({ user }) => {
       all: applications.length,
       pending: applications.filter(app => app.status === 'pending').length,
       interviews: applications.filter(app => app.status === 'interview_scheduled').length,
-      accepted: applications.filter(app => app.status === 'accepted').length,
+      hired: applications.filter(app => app.status === 'hired').length,
       rejected: applications.filter(app => app.status === 'rejected').length
     };
   };

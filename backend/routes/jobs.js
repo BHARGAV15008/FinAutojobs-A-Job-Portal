@@ -1,6 +1,8 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
 import Job from '../models/Job.js';
+import Application from '../models/unified/Application.js';
+import ApplicationInformation from '../models/ApplicationInformation.js';
 import { BaseUser, Recruiter } from '../models/UserModels.js';
 import Notification from '../models/Notification.js';
 import jwt from 'jsonwebtoken';
@@ -1085,51 +1087,86 @@ router.get('/stats', authenticateToken, async (req, res) => {
   }
 });
 
-// GET /api/jobs/:jobId/applications - Get applications for a specific job
+// GET /api/jobs/:jobId/applications -// Get applications for a specific job
 router.get('/:jobId/applications', authenticateToken, async (req, res) => {
   try {
     const { jobId } = req.params;
-    console.log('🔍 Getting applications for job:', jobId);
+    const userId = req.user.id;
+    console.log('🔍 Getting applications for job:', jobId, 'by user:', userId);
     
-    // Mock applications data for now
-    const mockApplications = [
-      {
-        id: 1,
-        applicantName: "John Doe",
-        email: "john.doe@email.com",
-        status: "pending",
-        appliedDate: new Date().toISOString(),
-        coverLetter: "I am very interested in this position and believe my skills would be a great fit for your team. With my background in finance and technology, I am excited to contribute to your organization's success.",
-        resume: "/uploads/resumes/john-doe-resume.pdf"
-      },
-      {
-        id: 2,
-        applicantName: "Jane Smith",
-        email: "jane.smith@email.com",
-        status: "interviewed",
-        appliedDate: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-        coverLetter: "With 5 years of experience in this field, I am excited to contribute to your team. I have worked on similar projects and believe I can add significant value to your organization.",
-        resume: "/uploads/resumes/jane-smith-resume.pdf"
-      },
-      {
-        id: 3,
-        applicantName: "Mike Johnson",
-        email: "mike.johnson@email.com",
-        status: "accepted",
-        appliedDate: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-        coverLetter: "I have been following your company for a while and would love to join your team. My experience in the industry and passion for innovation make me a perfect fit for this role.",
-        resume: "/uploads/resumes/mike-johnson-resume.pdf"
-      }
-    ];
-
-    console.log('✅ Returning applications for job:', jobId, 'Count:', mockApplications.length);
+    // Verify job exists and user has permission to view applications
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: 'Job not found'
+      });
+    }
+    
+    // Check if user is the recruiter who posted this job
+    if (job.postedBy.toString() !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. You can only view applications for jobs you posted.'
+      });
+    }
+    
+    // Fetch real applications with populated data
+    const applications = await Application.find({ job: jobId })
+      .populate('applicant', 'firstName lastName email phone profileImage')
+      .populate('applicationInfo') // Populate the ApplicationInformation
+      .sort({ appliedAt: -1 });
+    
+    console.log('🔍 Found applications:', applications.length);
+    
+    // Transform applications to include all necessary data
+    const transformedApplications = applications.map(app => {
+      const applicant = app.applicant || {};
+      const appInfo = app.applicationInfo || {};
+      
+      return {
+        id: app._id,
+        applicantId: app.applicant?._id,
+        applicantName: `${applicant.firstName || ''} ${applicant.lastName || ''}`.trim() || 'Unknown Applicant',
+        email: applicant.email || 'No email provided',
+        phone: applicant.phone || 'No phone provided',
+        status: app.status,
+        appliedDate: app.appliedAt,
+        appliedAt: app.appliedAt,
+        coverLetter: app.coverLetter || 'No cover letter provided',
+        resume: app.resume,
+        
+        // Include full application info for detailed profile view
+        applicationInfo: appInfo,
+        applicationData: appInfo, // Alias for compatibility
+        
+        // Include applicant snapshot for easy access
+        applicantSnapshot: {
+          fullName: `${applicant.firstName || ''} ${applicant.lastName || ''}`.trim(),
+          email: applicant.email,
+          phone: applicant.phone,
+          profileImage: applicant.profileImage
+        },
+        
+        // Include applicant reference for compatibility
+        applicant: applicant
+      };
+    });
+    
+    console.log('✅ Returning applications for job:', jobId, 'Count:', transformedApplications.length);
+    console.log('🔍 Sample application data:', transformedApplications[0] ? {
+      id: transformedApplications[0].id,
+      applicantName: transformedApplications[0].applicantName,
+      hasApplicationInfo: !!transformedApplications[0].applicationInfo,
+      applicationInfoKeys: transformedApplications[0].applicationInfo ? Object.keys(transformedApplications[0].applicationInfo) : []
+    } : 'No applications');
 
     res.json({ 
       success: true, 
       message: `Applications for job ${jobId}`, 
       data: {
-        applications: mockApplications,
-        total: mockApplications.length
+        applications: transformedApplications,
+        total: transformedApplications.length
       }
     });
   } catch (error) {

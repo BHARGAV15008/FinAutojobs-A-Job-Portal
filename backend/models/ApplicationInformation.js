@@ -471,4 +471,4 @@ applicationInformationSchema.methods.updateFromData = function(newData) {
   return this.save();
 };
 
-export default mongoose.model('ApplicationInformation', applicationInformationSchema);
+export default mongoose.models.ApplicationInformation || mongoose.model('ApplicationInformation', applicationInformationSchema);
