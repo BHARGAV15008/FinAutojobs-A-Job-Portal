@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Container,
   Box,
@@ -89,8 +89,8 @@ const ContactPage = () => {
       icon: Email,
       title: 'Email Us',
       description: 'Get in touch via email',
-      value: 'hello@finautojobs.com',
-      action: 'mailto:hello@finautojobs.com',
+      value: 'support@finautojobs.com',
+      action: 'mailto:support@finautojobs.com',
     },
     {
       icon: Phone,
@@ -103,7 +103,7 @@ const ContactPage = () => {
       icon: LocationOn,
       title: 'Visit Us',
       description: 'Our office location',
-      value: 'Mumbai, Maharashtra, India',
+      value: 'Andheri East, Mumbai, Maharashtra',
       action: '#',
     },
     {
@@ -145,7 +145,7 @@ const ContactPage = () => {
             Get in Touch
           </Typography>
           <Typography variant="h5" sx={{ maxWidth: 600, mx: 'auto' }}>
-            Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+            Have questions about our specialized finance and automotive job portal? We're here to help you succeed in your career journey.
           </Typography>
         </Container>
       </HeroSection>

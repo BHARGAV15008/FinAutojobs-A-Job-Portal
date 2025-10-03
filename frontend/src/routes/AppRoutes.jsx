@@ -17,6 +17,8 @@ import LoginPage from '../pages/LoginPage';
 import JobsPage from '../pages/JobsPage';
 import ForgotPasswordForm from '../components/auth/ForgotPasswordForm';
 import ResetPasswordForm from '../components/auth/ResetPasswordForm';
+import OAuthCallback from '../pages/OAuthCallback';
+import OAuthError from '../pages/OAuthError';
 
 // Import existing pages with fallback handling
 const SafeImport = ({ component: Component, fallback, ...props }) => {
@@ -112,6 +114,10 @@ const AppRoutes = () => {
             <Route path="/otp-signup">{() => <OTPSignupPage />}</Route>
             <Route path="/forgot-password">{() => <ForgotPasswordForm />}</Route>
             <Route path="/reset-password">{() => <ResetPasswordForm />}</Route>
+            
+            {/* OAuth Routes */}
+            <Route path="/oauth/callback">{() => <OAuthCallback />}</Route>
+            <Route path="/oauth/error">{() => <OAuthError />}</Route>
 
             {/* Admin Login Route */}
             <Route path="/admin-login">{() => <AdminLoginPage />}</Route>

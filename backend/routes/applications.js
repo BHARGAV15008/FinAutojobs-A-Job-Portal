@@ -406,6 +406,7 @@ router.get('/', authenticateToken, async (req, res) => {
       _id: application._id,
       id: application._id,
       jobId: application.jobId?._id || application.jobId,
+      applicantId: application.applicantId?._id || application.applicantId,
       
       // Job snapshot - use populated data first, then snapshot as fallback
       jobSnapshot: {

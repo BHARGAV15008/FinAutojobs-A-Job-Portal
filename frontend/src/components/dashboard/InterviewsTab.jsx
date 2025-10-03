@@ -1,73 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useAuth } from '../../contexts/AuthContext';
+import { toast } from 'react-hot-toast';
 
 const InterviewsTab = () => {
+  const { user } = useAuth();
   const [selectedInterview, setSelectedInterview] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
+  const [interviews, setInterviews] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const interviews = [
-    {
-      id: 1,
-      candidateName: 'John Doe',
-      candidateEmail: 'john.doe@example.com',
-      position: 'Senior Frontend Developer',
-      date: '2024-03-25',
-      time: '10:00 AM',
-      duration: '1 hour',
-      type: 'Technical',
-      status: 'scheduled',
-      interviewer: 'Sarah Johnson',
-      meetingLink: 'https://meet.google.com/abc-def-ghi',
-      notes: 'Focus on React and JavaScript concepts',
-      round: 1
-    },
-    {
-      id: 2,
-      candidateName: 'Mike Wilson',
-      candidateEmail: 'mike.w@example.com',
-      position: 'Full Stack Developer',
-      date: '2024-03-26',
-      time: '2:00 PM',
-      duration: '45 minutes',
-      type: 'HR',
-      status: 'completed',
-      interviewer: 'Lisa Chen',
-      meetingLink: 'https://meet.google.com/xyz-abc-def',
-      notes: 'Cultural fit assessment completed',
-      round: 2,
-      feedback: 'Good communication skills, fits team culture well'
-    },
-    {
-      id: 3,
-      candidateName: 'Sarah Johnson',
-      candidateEmail: 'sarah.j@example.com',
-      position: 'Backend Developer',
-      date: '2024-03-27',
-      time: '11:30 AM',
-      duration: '1.5 hours',
-      type: 'System Design',
-      status: 'in_progress',
-      interviewer: 'David Kumar',
-      meetingLink: 'https://meet.google.com/def-ghi-jkl',
-      notes: 'System design round for senior position',
-      round: 3
-    },
-    {
-      id: 4,
-      candidateName: 'Lisa Chen',
-      candidateEmail: 'lisa.c@example.com',
-      position: 'DevOps Engineer',
-      date: '2024-03-24',
-      time: '3:00 PM',
-      duration: '1 hour',
-      type: 'Technical',
-      status: 'cancelled',
-      interviewer: 'John Smith',
-      meetingLink: 'https://meet.google.com/ghi-jkl-mno',
-      notes: 'Candidate requested reschedule',
-      round: 1
-    }
-  ];
+  // Fetch interviews from API
+  useEffect(() => {
+    const fetchInterviews = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/interviews', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setInterviews(data.data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching interviews:', error);
+        toast.error('Failed to load interviews');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchInterviews();
+  }, []);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -106,8 +69,19 @@ const InterviewsTab = () => {
     : interviews.filter(interview => interview.status === filterStatus);
 
   const upcomingInterviews = interviews.filter(interview => 
-    interview.status === 'scheduled' && new Date(interview.date) >= new Date()
+    interview.status === 'scheduled' && new Date(interview.scheduledDate || interview.interviewDate) >= new Date()
   );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading interviews...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -207,11 +181,11 @@ const InterviewsTab = () => {
                     {interview.candidateName}
                   </h4>
                   <span className="text-sm text-blue-600 dark:text-blue-400">
-                    {interview.date} at {interview.time}
+                    {interview.interviewDate || interview.scheduledDate} at {interview.interviewTime || interview.scheduledTime}
                   </span>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  {getTypeIcon(interview.type)} {interview.type} • Round {interview.round}
+                  {getTypeIcon(interview.interviewType || interview.type)} {interview.interviewType || interview.type} • Round {interview.round}
                 </p>
                 <div className="flex space-x-2">
                   <button className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors">
@@ -236,7 +210,8 @@ const InterviewsTab = () => {
         </div>
         
         <div className="divide-y divide-gray-200 dark:divide-gray-700">
-          {filteredInterviews.map((interview, index) => (
+          {filteredInterviews.length > 0 ? (
+            filteredInterviews.map((interview, index) => (
             <motion.div
               key={interview.id}
               className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
@@ -260,13 +235,12 @@ const InterviewsTab = () => {
                         {interview.status.replace('_', ' ')}
                       </span>
                     </div>
-                    
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                      {interview.position} • {interview.type} Interview • Round {interview.round}
+                      {interview.jobTitle || interview.position} • {interview.interviewType || interview.type} Interview • Round {interview.round}
                     </p>
                     
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                      📅 {interview.date} at {interview.time} • ⏱️ {interview.duration}
+                      📅 {interview.interviewDate || interview.scheduledDate} at {interview.interviewTime || interview.scheduledTime} • ⏱️ {interview.duration} min
                     </p>
                     
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
@@ -309,7 +283,22 @@ const InterviewsTab = () => {
                 </div>
               </div>
             </motion.div>
-          ))}
+            ))
+          ) : (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">📅</div>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No interviews scheduled</h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-4">
+                {filterStatus === 'all' 
+                  ? 'Schedule your first interview to get started' 
+                  : `No ${filterStatus.replace('_', ' ')} interviews found`
+                }
+              </p>
+              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                Schedule Interview
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

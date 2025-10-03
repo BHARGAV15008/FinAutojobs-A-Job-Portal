@@ -4,10 +4,10 @@ import apiClient from './apiClient';
 export const getDashboardAnalytics = async (role = null, retryCount = 0) => {
   try {
     const endpoint = role ? `/analytics/dashboard/${role}` : '/analytics/dashboard';
-    console.log('🔍 Fetching dashboard analytics from:', endpoint);
+    // Fetching dashboard analytics
     
     const response = await apiClient.get(endpoint);
-    console.log('✅ Dashboard analytics response:', response.data);
+    // Dashboard analytics response received
     return response.data;
   } catch (error) {
     console.error('❌ Error fetching dashboard analytics:', error);
@@ -52,10 +52,10 @@ export const getDashboardAnalytics = async (role = null, retryCount = 0) => {
 export const getRealTimeStats = async (role = null, retryCount = 0) => {
   try {
     const endpoint = role ? `/analytics/realtime/${role}` : '/analytics/realtime';
-    console.log('🔍 Fetching real-time stats from:', endpoint);
+    // Fetching real-time stats
     
     const response = await apiClient.get(endpoint);
-    console.log('✅ Real-time stats response:', response.data);
+    // Real-time stats response received
     return response.data;
   } catch (error) {
     console.error('❌ Error fetching real-time stats:', error);

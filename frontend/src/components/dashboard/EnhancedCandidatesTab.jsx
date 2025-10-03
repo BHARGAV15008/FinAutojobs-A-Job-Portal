@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../contexts/IntegratedThemeContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { candidatesAPI, interviewsAPI } from '../../services/api';
 import { applicationService } from '../../services/applicationService';
 import CandidateProfileModal from '../modals/CandidateProfileModal';
@@ -9,6 +10,7 @@ import ScheduleModal from '../modals/ScheduleModal';
 
 const EnhancedCandidatesTab = () => {
   const { darkMode } = useTheme();
+  const { user: currentUser } = useAuth();
   const [viewMode, setViewMode] = useState('table');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -29,10 +31,10 @@ const EnhancedCandidatesTab = () => {
     const fetchApplications = async () => {
       try {
         setLoading(true);
-        console.log('🔍 Fetching applications for candidates tab...');
+        // Fetching applications for candidates tab
         
         const response = await applicationService.getUserApplications(50, 1);
-        console.log('✅ Applications fetched for candidates:', response);
+        // Applications fetched successfully
         
         if (response.success) {
           setApplications(response.data?.applications || []);
@@ -55,6 +57,8 @@ const EnhancedCandidatesTab = () => {
     return applications.map(app => ({
       id: app._id,
       applicationId: app._id,
+      jobId: app.jobId,
+      candidateId: app.applicantId,
       name: app.applicantSnapshot?.fullName || 'Unknown Candidate',
       email: app.applicantSnapshot?.email || '',
       phone: app.applicantSnapshot?.phone || app.applicationData?.phone || '',
@@ -250,9 +254,27 @@ const EnhancedCandidatesTab = () => {
   // Interview scheduling handlers
   const handleScheduleNewInterview = async (interviewData) => {
     try {
-      const response = await interviewsAPI.scheduleInterview(interviewData);
+      // Format data for backend API
+      const formattedData = {
+        candidateId: interviewData.candidateId,
+        jobId: interviewData.jobId,
+        applicationId: interviewData.applicationId,
+        title: interviewData.title || `Interview for ${interviewData.candidateId}`,
+        scheduledDate: new Date(interviewData.date).toISOString(),
+        scheduledTime: interviewData.time,
+        duration: parseInt(interviewData.duration) || 60,
+        type: interviewData.type || 'video',
+        interviewType: interviewData.interviewType || 'screening',
+        location: interviewData.location || '',
+        meetingLink: interviewData.meetingLink || '',
+        description: interviewData.notes || interviewData.description || '',
+        round: interviewData.round || 1
+      };
+      
+      console.log('📅 Creating interview with data:', formattedData);
+      const response = await interviewsAPI.scheduleInterview(formattedData);
       console.log('Interview scheduled:', response.data);
-      alert('✅ Interview scheduled successfully! Notifications sent to candidate.');
+      alert('✅ Interview scheduled successfully!');
     } catch (error) {
       console.error('Failed to schedule interview:', error);
       throw error;
@@ -261,9 +283,21 @@ const EnhancedCandidatesTab = () => {
 
   const handleRescheduleInterview = async (interviewId, newDateTime) => {
     try {
-      const response = await interviewsAPI.updateInterview(interviewId, { 
-        scheduled_date: newDateTime 
-      });
+      // Extract the correct fields from newDateTime object
+      const updateData = {
+        scheduledDate: new Date(newDateTime.date || newDateTime.scheduledDate).toISOString(),
+        scheduledTime: newDateTime.time || newDateTime.scheduledTime,
+        duration: newDateTime.duration,
+        type: newDateTime.type,
+        location: newDateTime.location || '',
+        meetingLink: newDateTime.meetingLink || '',
+        description: newDateTime.notes || newDateTime.description || '',
+        status: 'rescheduled'
+      };
+      
+      console.log('🔄 Updating interview with data:', updateData);
+      
+      const response = await interviewsAPI.updateInterview(interviewId, updateData);
       console.log('Interview rescheduled:', response.data);
       alert('✅ Interview rescheduled successfully! Notifications sent to candidate.');
     } catch (error) {
@@ -500,14 +534,16 @@ const EnhancedCandidatesTab = () => {
                           >
                             📧 Contact
                           </motion.button>
-                          <motion.button
-                            className="px-2 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors duration-200 text-xs"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleScheduleInterview(candidate)}
-                          >
-                            📅 Schedule
-                          </motion.button>
+                          {selectedStatus === 'interviewed' && (
+                            <motion.button
+                              className="px-2 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors duration-200 text-xs"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => handleScheduleInterview(candidate)}
+                            >
+                              📅 Schedule
+                            </motion.button>
+                          )}
                           <motion.button
                             className={`px-2 py-1 rounded hover:bg-orange-700 transition-colors duration-200 text-xs ${
                               candidate.isShortlisted 
@@ -611,14 +647,16 @@ const EnhancedCandidatesTab = () => {
                   >
                     📧 Contact
                   </motion.button>
-                  <motion.button
-                    className="px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors duration-200 text-sm"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handleScheduleInterview(candidate)}
-                  >
-                    📅 Schedule
-                  </motion.button>
+                  {selectedStatus === 'interviewed' && (
+                    <motion.button
+                      className="px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors duration-200 text-sm"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => handleScheduleInterview(candidate)}
+                    >
+                      📅 Schedule
+                    </motion.button>
+                  )}
                   <motion.button
                     className={`px-3 py-2 rounded hover:bg-orange-700 transition-colors duration-200 text-sm ${
                       candidate.isShortlisted 
@@ -659,6 +697,7 @@ const EnhancedCandidatesTab = () => {
         onClose={() => setContactModal({ isOpen: false, candidate: null })}
         onSendEmail={handleSendEmail}
         onOpenMessaging={handleOpenMessaging}
+        currentUser={currentUser}
       />
 
       <ScheduleModal

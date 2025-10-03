@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { getProfile } from '../api/auth';
 import { apiClient } from '../api/apiClient';
 
 const AuthContext = createContext(null);
@@ -11,21 +12,16 @@ export const AuthProvider = ({ children }) => {
     const loadUser = async () => {
       const token = localStorage.getItem('token');
       console.log('🔍 AuthContext loadUser called, token:', token ? 'exists' : 'not found');
+      
       if (token) {
         try {
-          console.log('🔍 Calling profile endpoint...');
-          const response = await apiClient.get('/auth/profile');
-          console.log('✅ Profile response:', response.data);
+          const response = await getProfile();
           
-          // Backend returns { success: true, data: userObject }
-          // So response.data.data is the actual user object
-          const user = response.data.data;
-          setUser(user);
-          console.log('✅ User set:', user);
-          console.log('✅ User role:', user?.role);
+          if (response.success && response.data) {
+            const userData = response.data;
+            setUser(userData);
+          }
         } catch (error) {
-          console.error('❌ Failed to load user', error);
-          
           // If profile endpoint is disabled (503), keep user logged in with token data
           if (error.response?.status === 503) {
             // Try to decode user info from token or use stored user data
@@ -58,14 +54,15 @@ export const AuthProvider = ({ children }) => {
     loadUser();
   }, []);
 
-  const login = async (credentials) => {
+  const login = async (credentials, isOAuth = false) => {
     try {
-      const { data } = await apiClient.post('/auth/login', credentials);
+      let response;
       
-      if (data.success) {
-        const { user, token } = data.data;
+      if (isOAuth) {
+        // For OAuth login, credentials contain the auth result
+        const { token, user } = credentials.data;
         localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(user)); // Store user data for offline access
+        localStorage.setItem('user', JSON.stringify(user));
         setUser(user);
         
         // Redirect based on user role
@@ -80,7 +77,29 @@ export const AuthProvider = ({ children }) => {
         
         return { success: true };
       } else {
-        return { success: false, error: data.message || 'Login failed' };
+        // Regular email/password login
+        const { data } = await apiClient.post('/auth/login', credentials);
+        
+        if (data.success) {
+          const { user, token } = data.data;
+          localStorage.setItem('token', token);
+          localStorage.setItem('user', JSON.stringify(user)); // Store user data for offline access
+          setUser(user);
+          
+          // Redirect based on user role
+          const role = user.role;
+          if (role === 'recruiter' || role === 'employer') {
+            window.location.replace('/recruiter-dashboard');
+          } else if (role === 'admin') {
+            window.location.replace('/admin-dashboard');
+          } else {
+            window.location.replace('/applicant-dashboard');
+          }
+          
+          return { success: true };
+        } else {
+          return { success: false, error: data.message || 'Login failed' };
+        }
       }
     } catch (error) {
       console.error('Login error:', error);

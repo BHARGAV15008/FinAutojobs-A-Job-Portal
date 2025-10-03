@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import session from 'express-session';
+import MongoStore from 'connect-mongo';
 import passport from 'passport';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
@@ -163,11 +164,15 @@ app.use(preventNoSqlInjection);
 // Apply rate limiting to API routes (disabled for development)
 // app.use('/api/', apiLimiter);
 
-// Session configuration
+// Session configuration with MongoDB store
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    secret: process.env.SESSION_SECRET || 'your-secret-key-change-this-in-production',
     resave: false,
     saveUninitialized: false,
+    store: MongoStore.create({
+        mongoUrl: process.env.MONGODB_URI || 'mongodb://localhost:27017/finauto_jobs',
+        touchAfter: 24 * 3600 // lazy session update
+    }),
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         maxAge: 24 * 60 * 60 * 1000 // 24 hours
@@ -210,6 +215,8 @@ import analyticsRoutes from './routes/analytics.js';
 import applicationInformationRoutes from './routes/applicationInformation.js';
 import communicationsRoutes from './routes/communications.js';
 import jobAlertsRoutes from './routes/jobAlerts.js';
+import contactRoutes from './routes/contact.js';
+import messagesRoutes from './routes/messages.js';
 
 // Mount routes under /api
 app.use('/api/auth', authRoutes);
@@ -237,6 +244,8 @@ apiRouter.use('/analytics', analyticsRoutes);
 apiRouter.use('/application-information', applicationInformationRoutes);
 apiRouter.use('/communications', communicationsRoutes);
 apiRouter.use('/job-alerts', jobAlertsRoutes);
+apiRouter.use('/contact', contactRoutes);
+apiRouter.use('/messages', messagesRoutes);
 
 // Debug middleware to log all requests
 app.use((req, res, next) => {

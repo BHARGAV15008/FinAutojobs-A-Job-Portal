@@ -1,6 +1,6 @@
 import { apiClient } from '../api/apiClient';
 
-console.log('🔍 Application Service initialized using existing apiClient - v4 (Fixed Content-Type)');
+// Application Service initialized
 
 // Application Service
 export const applicationService = {

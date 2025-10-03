@@ -1,3 +1,4 @@
+import React from 'react';
 import { Container, Typography, Paper, Box, Divider } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
@@ -17,7 +18,7 @@ const TermsOfServicePage = () => {
                 Terms of Service
             </Typography>
             <Typography variant="subtitle1" paragraph align="center" color="text.secondary" sx={{ mb: 8 }}>
-                Last updated: September 4, 2025
+                Last updated: January 15, 2025
             </Typography>
 
             <StyledPaper elevation={3}>
@@ -26,9 +27,9 @@ const TermsOfServicePage = () => {
                         1. Agreement to Terms
                     </Typography>
                     <Typography variant="body1" paragraph>
-                        By accessing or using FinAutoJobs, you agree to be bound by these Terms of Service and all applicable
-                        laws and regulations. If you do not agree with any of these terms, you are prohibited from using or
-                        accessing this site.
+                        By accessing or using FinAutoJobs ("the Platform"), you agree to be bound by these Terms of Service and all applicable
+                        laws and regulations. FinAutoJobs is a specialized job portal focused on Finance and Automotive industries in India.
+                        If you do not agree with any of these terms, you are prohibited from using or accessing this platform.
                     </Typography>
                 </Section>
 
@@ -39,25 +40,25 @@ const TermsOfServicePage = () => {
                         2. Use License
                     </Typography>
                     <Typography variant="body1" paragraph>
-                        Permission is granted to temporarily access the materials (information or software) on FinAutoJobs's website
-                        for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title,
-                        and under this license you may not:
+                        Permission is granted to access FinAutoJobs platform for legitimate job searching, recruitment, and career development
+                        purposes. This includes creating profiles, applying for jobs, posting job opportunities (for authorized recruiters),
+                        and networking within the finance and automotive professional community. Under this license you may not:
                     </Typography>
                     <ul>
                         <Typography component="li" variant="body1" paragraph>
-                            Modify or copy the materials
+                            Use automated systems (bots, scrapers) to extract data from the platform
                         </Typography>
                         <Typography component="li" variant="body1" paragraph>
-                            Use the materials for any commercial purpose
+                            Post false, misleading, or fraudulent job listings or profile information
                         </Typography>
                         <Typography component="li" variant="body1" paragraph>
-                            Attempt to decompile or reverse engineer any software
+                            Attempt to circumvent our security measures or access unauthorized areas
                         </Typography>
                         <Typography component="li" variant="body1" paragraph>
-                            Remove any copyright or proprietary notations
+                            Use the platform for any illegal activities or spam communications
                         </Typography>
                         <Typography component="li" variant="body1" paragraph>
-                            Transfer the materials to another person or "mirror" the materials on any other server
+                            Share your account credentials or create multiple accounts without authorization
                         </Typography>
                     </ul>
                 </Section>
@@ -69,17 +70,20 @@ const TermsOfServicePage = () => {
                         3. User Accounts
                     </Typography>
                     <Typography variant="body1" paragraph>
-                        When you create an account with us, you guarantee that:
+                        When you create an account with FinAutoJobs, you guarantee that:
                     </Typography>
                     <ul>
                         <Typography component="li" variant="body1" paragraph>
-                            The information you provide is accurate, complete, and current
+                            All profile information, including work experience, education, and skills, is accurate and truthful
                         </Typography>
                         <Typography component="li" variant="body1" paragraph>
-                            You are of legal age to form a binding contract
+                            You are legally authorized to work in India (for job seekers) or recruit in India (for employers)
                         </Typography>
                         <Typography component="li" variant="body1" paragraph>
-                            Your use of the service will not violate any applicable laws or regulations
+                            You will maintain the confidentiality of your account and notify us of any unauthorized access
+                        </Typography>
+                        <Typography component="li" variant="body1" paragraph>
+                            You will not discriminate based on gender, religion, caste, or other protected characteristics
                         </Typography>
                     </ul>
                 </Section>
@@ -91,17 +95,25 @@ const TermsOfServicePage = () => {
                         4. Job Postings and Applications
                     </Typography>
                     <Typography variant="body1" paragraph>
+                        For Job Seekers: You may apply to multiple positions but must ensure each application is genuine and tailored.
+                        For Employers: Job postings must be legitimate opportunities in finance or automotive sectors with accurate
+                        job descriptions, salary ranges, and requirements.
+                    </Typography>
+                    <Typography variant="body1" paragraph>
                         FinAutoJobs does not guarantee:
                     </Typography>
                     <ul>
                         <Typography component="li" variant="body1" paragraph>
-                            The accuracy or completeness of job postings
+                            That any job application will result in interviews, offers, or employment
                         </Typography>
                         <Typography component="li" variant="body1" paragraph>
-                            That any application will result in interviews or job offers
+                            The accuracy of salary information or job descriptions provided by employers
                         </Typography>
                         <Typography component="li" variant="body1" paragraph>
-                            That jobs posted will be filled by users of the platform
+                            That posted positions will be filled or remain available
+                        </Typography>
+                        <Typography component="li" variant="body1" paragraph>
+                            The conduct or legitimacy of any employer or job seeker on the platform
                         </Typography>
                     </ul>
                 </Section>
@@ -113,10 +125,10 @@ const TermsOfServicePage = () => {
                         5. Disclaimer
                     </Typography>
                     <Typography variant="body1" paragraph>
-                        The materials on FinAutoJobs's website are provided on an 'as is' basis. FinAutoJobs makes no
-                        warranties, expressed or implied, and hereby disclaims and negates all other warranties including,
-                        without limitation, implied warranties or conditions of merchantability, fitness for a particular
-                        purpose, or non-infringement of intellectual property or other violation of rights.
+                        FinAutoJobs platform is provided on an 'as is' basis. While we strive to maintain accurate and up-to-date
+                        information, we make no warranties about the completeness, reliability, or accuracy of job listings,
+                        company information, or user profiles. We do not guarantee uninterrupted service or that the platform
+                        will be error-free. Users are responsible for verifying all information independently.
                     </Typography>
                 </Section>
 
@@ -127,9 +139,10 @@ const TermsOfServicePage = () => {
                         6. Limitations
                     </Typography>
                     <Typography variant="body1" paragraph>
-                        In no event shall FinAutoJobs or its suppliers be liable for any damages (including, without limitation,
-                        damages for loss of data or profit, or due to business interruption) arising out of the use or inability
-                        to use the materials on FinAutoJobs's website.
+                        FinAutoJobs's liability is limited to the maximum extent permitted by Indian law. We are not liable for
+                        any indirect, incidental, or consequential damages including but not limited to lost opportunities,
+                        failed job applications, hiring decisions, or business interruptions. Our total liability shall not
+                        exceed the fees paid by you (if any) in the 12 months preceding the claim.
                     </Typography>
                 </Section>
 
@@ -140,8 +153,9 @@ const TermsOfServicePage = () => {
                         7. Governing Law
                     </Typography>
                     <Typography variant="body1" paragraph>
-                        These terms and conditions are governed by and construed in accordance with the laws of India and you
-                        irrevocably submit to the exclusive jurisdiction of the courts in that location.
+                        These terms are governed by the laws of India. Any disputes arising from the use of FinAutoJobs
+                        shall be subject to the exclusive jurisdiction of courts in Mumbai, Maharashtra, India.
+                        We encourage users to first contact our support team to resolve any issues amicably.
                     </Typography>
                 </Section>
 
@@ -152,9 +166,10 @@ const TermsOfServicePage = () => {
                         8. Changes to Terms
                     </Typography>
                     <Typography variant="body1" paragraph>
-                        FinAutoJobs reserves the right, at our sole discretion, to modify or replace these Terms at any time.
-                        If a revision is material we will provide at least 30 days' notice prior to any new terms taking effect.
-                        What constitutes a material change will be determined at our sole discretion.
+                        FinAutoJobs reserves the right to modify these Terms at any time. For material changes affecting user
+                        rights or obligations, we will provide 30 days' notice via email or platform notification.
+                        Continued use of the platform after changes constitutes acceptance of the new terms.
+                        We recommend reviewing these terms periodically.
                     </Typography>
                 </Section>
 
@@ -172,10 +187,10 @@ const TermsOfServicePage = () => {
                             By email: legal@finautojobs.com
                         </Typography>
                         <Typography component="li" variant="body1" paragraph>
-                            By phone: +91 (800) 123-4567
+                            By phone: +91 98765 43210
                         </Typography>
                         <Typography component="li" variant="body1" paragraph>
-                            By mail: 123 Tech Park, Bangalore, Karnataka, India 560001
+                            By mail: FinAutoJobs Pvt Ltd, 401 Business Hub, Andheri East, Mumbai, Maharashtra 400069
                         </Typography>
                     </ul>
                 </Section>

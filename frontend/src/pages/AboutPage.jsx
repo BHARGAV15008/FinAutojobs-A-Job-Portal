@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   Container,
   Box,
@@ -19,6 +20,10 @@ import {
   LinkedIn,
   Twitter,
   Email,
+  WorkOutline,
+  PeopleOutline,
+  TrendingUpOutlined,
+  SecurityOutlined,
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 
@@ -51,62 +56,62 @@ const TeamCard = styled(Card)(({ theme }) => ({
 
 const AboutPage = () => {
   const stats = [
-    { icon: Group, label: 'Active Users', value: '2M+', color: 'primary' },
-    { icon: Business, label: 'Partner Companies', value: '50K+', color: 'secondary' },
-    { icon: TrendingUp, label: 'Jobs Posted', value: '100K+', color: 'success' },
-    { icon: Star, label: 'Success Rate', value: '95%', color: 'warning' },
+    { icon: PeopleOutline, label: 'Active Job Seekers', value: '150K+', color: 'primary' },
+    { icon: Business, label: 'Registered Companies', value: '5K+', color: 'secondary' },
+    { icon: WorkOutline, label: 'Jobs Posted Monthly', value: '25K+', color: 'success' },
+    { icon: TrendingUpOutlined, label: 'Placement Success Rate', value: '87%', color: 'warning' },
   ];
 
   const team = [
     {
-      name: 'Rajesh Kumar',
-      role: 'CEO & Founder',
-      image: 'https://i.pravatar.cc/150?img=1',
-      bio: 'Former Goldman Sachs executive with 15+ years in finance and technology.',
-      social: { linkedin: '#', twitter: '#', email: 'rajesh@finautojobs.com' },
+      name: 'Arjun Mehta',
+      role: 'CEO & Co-Founder',
+      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+      bio: 'Former HDFC Bank executive with 12+ years in financial services and fintech innovation.',
+      social: { linkedin: '#', twitter: '#', email: 'arjun@finautojobs.com' },
     },
     {
-      name: 'Priya Sharma',
-      role: 'CTO',
-      image: 'https://i.pravatar.cc/150?img=2',
-      bio: 'Ex-Google engineer specializing in AI and machine learning for recruitment.',
-      social: { linkedin: '#', twitter: '#', email: 'priya@finautojobs.com' },
+      name: 'Kavya Singh',
+      role: 'CTO & Co-Founder',
+      image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
+      bio: 'Ex-Microsoft engineer with expertise in AI-driven recruitment and scalable platforms.',
+      social: { linkedin: '#', twitter: '#', email: 'kavya@finautojobs.com' },
     },
     {
-      name: 'Amit Patel',
-      role: 'Head of Operations',
-      image: 'https://i.pravatar.cc/150?img=3',
-      bio: 'Operations expert from Tata Motors with deep automotive industry knowledge.',
-      social: { linkedin: '#', twitter: '#', email: 'amit@finautojobs.com' },
+      name: 'Rohit Sharma',
+      role: 'VP of Business Development',
+      image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
+      bio: 'Former Mahindra Group executive specializing in automotive industry partnerships.',
+      social: { linkedin: '#', twitter: '#', email: 'rohit@finautojobs.com' },
     },
     {
-      name: 'Sneha Reddy',
-      role: 'Head of Marketing',
-      image: 'https://i.pravatar.cc/150?img=4',
-      bio: 'Marketing strategist with experience at top fintech and automotive companies.',
-      social: { linkedin: '#', twitter: '#', email: 'sneha@finautojobs.com' },
+      name: 'Ananya Gupta',
+      role: 'Head of Product',
+      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
+      bio: 'Product strategist with experience at leading job portals and HR tech companies.',
+      social: { linkedin: '#', twitter: '#', email: 'ananya@finautojobs.com' },
     },
   ];
 
   const values = [
     {
       title: 'Innovation',
-      description: 'We leverage cutting-edge technology to revolutionize job matching and career development.',
+      description: 'We leverage AI and machine learning to create smarter job matching for finance and automotive sectors.',
       icon: '🚀',
     },
     {
-      title: 'Trust',
-      description: 'We maintain the highest standards of security and transparency in all our operations.',
+      title: 'Trust & Security',
+      description: 'We maintain bank-grade security and complete transparency in all recruitment processes.',
       icon: '🔒',
     },
     {
-      title: 'Excellence',
-      description: 'We strive for excellence in everything we do, from user experience to customer service.',
+      title: 'Industry Expertise',
+      description: 'Deep understanding of finance and automotive industries ensures relevant job opportunities.',
       icon: '⭐',
     },
     {
-      title: 'Diversity',
-      description: 'We believe in creating opportunities for everyone, regardless of background or experience.',
+      title: 'Equal Opportunity',
+      description: 'We promote diversity and inclusion, creating opportunities for professionals at all levels.',
       icon: '🌍',
     },
   ];
@@ -120,7 +125,7 @@ const AboutPage = () => {
             About FinAutoJobs
           </Typography>
           <Typography variant="h5" sx={{ mb: 4, maxWidth: 800, mx: 'auto' }}>
-            India's premier job platform connecting talent with opportunities in Finance and Automotive industries
+            India's leading specialized job portal connecting top talent with premier opportunities in Finance and Automotive sectors
           </Typography>
           <Button variant="contained" color="secondary" size="large">
             Join Our Mission
@@ -155,13 +160,16 @@ const AboutPage = () => {
               Our Mission
             </Typography>
             <Typography variant="h6" paragraph color="text.secondary">
-              To bridge the gap between exceptional talent and leading companies in India's Finance and Automotive sectors.
+              To revolutionize recruitment in India's Finance and Automotive sectors by connecting exceptional talent with industry-leading companies.
             </Typography>
             <Typography variant="body1" paragraph>
-              Founded in 2020, FinAutoJobs has grown to become India's most trusted platform for specialized recruitment in finance and automotive industries. We understand the unique requirements of these sectors and provide tailored solutions for both job seekers and employers.
+              Founded in 2023, FinAutoJobs emerged from the vision to create a specialized platform that understands the unique demands of finance and automotive industries. We recognized that generic job portals couldn't adequately serve these specialized sectors, leading us to build a platform tailored specifically for these industries.
             </Typography>
             <Typography variant="body1" paragraph>
-              Our AI-powered matching system, combined with industry expertise, ensures that the right talent meets the right opportunity at the right time.
+              Our intelligent matching system combines industry expertise with advanced technology to ensure precise job-candidate alignment. We serve everyone from fresh graduates to C-level executives, providing opportunities across banking, insurance, fintech, automotive manufacturing, and emerging mobility sectors.
+            </Typography>
+            <Typography variant="body1" paragraph>
+              With partnerships across India's leading financial institutions and automotive companies, we've successfully placed thousands of professionals in their dream careers while helping companies find the exact talent they need.
             </Typography>
           </Grid>
           <Grid item xs={12} md={6}>
@@ -260,11 +268,11 @@ const AboutPage = () => {
       {/* CTA Section */}
       <Box sx={{ bgcolor: 'primary.main', color: 'white', py: 8 }}>
         <Container maxWidth="lg" sx={{ textAlign: 'center' }}>
-          <Typography variant="h3" gutterBottom fontWeight="bold">
-            Ready to Transform Your Career?
+          <Typography variant="h3" gutterBottom align="center" fontWeight="bold">
+            Ready to Accelerate Your Career?
           </Typography>
           <Typography variant="h6" paragraph sx={{ mb: 4 }}>
-            Join thousands of professionals who have found their dream jobs through FinAutoJobs
+            Join over 150,000 professionals who trust FinAutoJobs for their career growth in finance and automotive industries
           </Typography>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center">
             <Button variant="contained" color="secondary" size="large">

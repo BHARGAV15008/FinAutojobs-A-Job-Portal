@@ -39,45 +39,51 @@ const ScheduleModal = ({
     round: 1
   });
 
-  // Mock existing interviews data
-  const [existingInterviews, setExistingInterviews] = useState([
-    {
-      id: 1,
-      type: 'video',
-      date: '2024-01-15',
-      time: '10:00',
-      duration: 60,
-      interviewer: 'John Smith',
-      status: 'scheduled',
-      meetingLink: 'https://zoom.us/j/123456789',
-      notes: 'Technical round - React and Node.js focus',
-      round: 1
-    },
-    {
-      id: 2,
-      type: 'phone',
-      date: '2024-01-10',
-      time: '14:30',
-      duration: 30,
-      interviewer: 'Sarah Johnson',
-      status: 'completed',
-      notes: 'Initial screening call',
-      round: 0
+  const [existingInterviews, setExistingInterviews] = useState([]);
+
+  // Fetch real interviews when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchExistingInterviews();
     }
-  ]);
+  }, [isOpen]);
+
+  const fetchExistingInterviews = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/interviews', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setExistingInterviews(data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching interviews:', error);
+    }
+  };
 
   const interviewTypes = [
     { id: 'video', label: 'Video Call', icon: VideoCameraIcon },
     { id: 'phone', label: 'Phone Call', icon: PhoneIcon },
-    { id: 'in-person', label: 'In-Person', icon: MapPinIcon }
+    { id: 'in-person', label: 'In-Person Meeting', icon: MapPinIcon },
+    { id: 'audio', label: 'Audio Call', icon: PhoneIcon },
+    { id: 'panel', label: 'Panel Interview', icon: VideoCameraIcon },
+    { id: 'technical', label: 'Technical Assessment', icon: VideoCameraIcon },
+    { id: 'behavioral', label: 'Behavioral Interview', icon: VideoCameraIcon },
+    { id: 'screening', label: 'Initial Screening', icon: PhoneIcon }
   ];
 
-  const interviewers = [
-    'John Smith - Technical Lead',
-    'Sarah Johnson - HR Manager', 
-    'Mike Davis - Senior Developer',
-    'Lisa Chen - Product Manager',
-    'David Wilson - Engineering Manager'
+  // Dynamic interviewers list - can be fetched from API or user input
+  const [customInterviewer, setCustomInterviewer] = useState('');
+  const commonInterviewers = [
+    'HR Manager',
+    'Technical Lead', 
+    'Senior Developer',
+    'Product Manager',
+    'Engineering Manager',
+    'Team Lead',
+    'Department Head'
   ];
 
   if (!isOpen || !candidate) return null;
@@ -86,7 +92,9 @@ const ScheduleModal = ({
     setLoading(true);
     try {
       const interviewData = {
-        candidateId: candidate.id,
+        candidateId: candidate.candidateId || candidate.id,
+        jobId: candidate.jobId,
+        applicationId: candidate.applicationId,
         ...newInterview,
         datetime: `${newInterview.date}T${newInterview.time}`,
         duration: parseInt(newInterview.duration)
@@ -113,14 +121,8 @@ const ScheduleModal = ({
         // Creating new interview
         await onScheduleInterview(interviewData);
         
-        // Add to existing interviews list
-        const newId = Math.max(...existingInterviews.map(i => i.id), 0) + 1;
-        setExistingInterviews([...existingInterviews, {
-          id: newId,
-          ...newInterview,
-          status: 'scheduled',
-          duration: parseInt(newInterview.duration)
-        }]);
+        // Refresh the interviews list after successful creation
+        await fetchExistingInterviews();
         
         alert('✅ New interview scheduled successfully!');
       }
@@ -666,22 +668,39 @@ const ScheduleModal = ({
                       }`}>
                         Interviewer
                       </label>
-                      <select
-                        value={newInterview.interviewer}
-                        onChange={(e) => setNewInterview({...newInterview, interviewer: e.target.value})}
-                        className={`w-full px-4 py-2 rounded-lg border ${
-                          darkMode 
-                            ? 'border-gray-600 bg-gray-700 text-white' 
-                            : 'border-gray-300 bg-white text-gray-900'
-                        }`}
-                      >
-                        <option value="">Select interviewer...</option>
-                        {interviewers.map((interviewer, index) => (
-                          <option key={index} value={interviewer}>
-                            {interviewer}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="space-y-2">
+                        <select
+                          value={newInterview.interviewer}
+                          onChange={(e) => setNewInterview({...newInterview, interviewer: e.target.value})}
+                          className={`w-full px-4 py-2 rounded-lg border ${
+                            darkMode 
+                              ? 'border-gray-600 bg-gray-700 text-white' 
+                              : 'border-gray-300 bg-white text-gray-900'
+                          }`}
+                        >
+                          <option value="">Select interviewer role...</option>
+                          {commonInterviewers.map((interviewer, index) => (
+                            <option key={index} value={interviewer}>
+                              {interviewer}
+                            </option>
+                          ))}
+                        </select>
+                        
+                        <input
+                          type="text"
+                          placeholder="Or enter custom interviewer name..."
+                          value={customInterviewer}
+                          onChange={(e) => {
+                            setCustomInterviewer(e.target.value);
+                            setNewInterview({...newInterview, interviewer: e.target.value});
+                          }}
+                          className={`w-full px-4 py-2 rounded-lg border ${
+                            darkMode 
+                              ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400' 
+                              : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'
+                          }`}
+                        />
+                      </div>
                     </div>
                   </div>
 

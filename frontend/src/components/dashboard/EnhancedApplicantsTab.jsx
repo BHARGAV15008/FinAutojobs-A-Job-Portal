@@ -326,9 +326,21 @@ const EnhancedApplicantsTab = () => {
 
   const handleRescheduleInterview = async (interviewId, newDateTime) => {
     try {
-      const response = await interviewsAPI.updateInterview(interviewId, { 
-        scheduled_date: newDateTime 
-      });
+      // Extract the correct fields from newDateTime object
+      const updateData = {
+        scheduledDate: new Date(newDateTime.date || newDateTime.scheduledDate).toISOString(),
+        scheduledTime: newDateTime.time || newDateTime.scheduledTime,
+        duration: newDateTime.duration,
+        type: newDateTime.type,
+        location: newDateTime.location || '',
+        meetingLink: newDateTime.meetingLink || '',
+        description: newDateTime.notes || newDateTime.description || '',
+        status: 'rescheduled'
+      };
+      
+      console.log('🔄 Updating interview with data:', updateData);
+      
+      const response = await interviewsAPI.updateInterview(interviewId, updateData);
       console.log('Interview rescheduled:', response.data);
       alert('✅ Interview rescheduled successfully! Notifications sent to candidate.');
     } catch (error) {

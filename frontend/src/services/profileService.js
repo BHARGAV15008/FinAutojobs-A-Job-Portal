@@ -1,6 +1,6 @@
 import { apiClient } from '../api/apiClient';
 
-console.log('🔍 Profile Service initialized using existing apiClient - v3');
+// Profile Service initialized
 
 // Profile Service
 export const profileService = {

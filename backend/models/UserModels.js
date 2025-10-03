@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import BaseUser from './unified/BaseUser.js';
 import Applicant from './unified/Applicant.js';
 import Recruiter from './unified/Recruiter.js';
+import Admin from './unified/Admin.js';
 
 /**
  * Unified User Models with Role-Based Registration and Authentication
@@ -14,7 +15,7 @@ import Recruiter from './unified/Recruiter.js';
  */
 
 // Export models
-export { BaseUser, Applicant, Recruiter };
+export { BaseUser, Applicant, Recruiter, Admin };
 
 /**
  * Create a new user based on role
@@ -27,8 +28,8 @@ export const createUserByRole = async (userData) => {
     const { role, ...data } = userData;
     
     // Validate role
-    if (!['applicant', 'recruiter'].includes(role)) {
-      throw new Error('Invalid role. Must be "applicant" or "recruiter"');
+    if (!['applicant', 'recruiter', 'admin'].includes(role)) {
+      throw new Error('Invalid role. Must be "applicant", "recruiter", or "admin"');
     }
     
     // Create user based on role
@@ -42,6 +43,11 @@ export const createUserByRole = async (userData) => {
       user = new Recruiter({
         ...data,
         role: 'recruiter'
+      });
+    } else if (role === 'admin') {
+      user = new Admin({
+        ...data,
+        role: 'admin'
       });
     }
     

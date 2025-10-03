@@ -52,6 +52,15 @@ const baseUserSchema = new mongoose.Schema({
   loginAttempts: { type: Number, default: 0 },
   lockUntil: { type: Date },
   
+  // OAuth Providers
+  oauthProviders: [{
+    provider: { type: String, enum: ['google', 'microsoft', 'apple'] },
+    providerId: { type: String },
+    accessToken: { type: String },
+    refreshToken: { type: String },
+    connectedAt: { type: Date, default: Date.now }
+  }],
+  
   // Sessions
   activeSessions: [{
     sessionId: String,

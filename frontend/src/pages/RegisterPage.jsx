@@ -4,6 +4,7 @@ import { Link, useLocation } from 'wouter'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { useToast } from '../components/ui/use-toast'
 import OTPVerification from '../components/auth/OTPVerification'
+import OAuthButton from '../components/auth/OAuthButton'
 import {
   Container,
   Box,
@@ -554,6 +555,35 @@ const RegisterPage = () => {
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue)
+  }
+
+  const handleOAuthSuccess = (authResult) => {
+    // Handle successful OAuth authentication
+    console.log('OAuth success:', authResult)
+    toast({
+      title: "Registration Successful",
+      description: `Successfully registered with ${authResult.provider}!`,
+      variant: "default"
+    })
+    
+    // The OAuthButton component already shows success toast
+    // Redirect based on user role
+    const role = authResult.user.role || (activeTab === 0 ? 'applicant' : 'recruiter')
+    if (role === 'recruiter' || role === 'employer') {
+      setLocation('/recruiter-dashboard')
+    } else {
+      setLocation('/applicant-dashboard')
+    }
+  }
+
+  const handleOAuthError = (error) => {
+    // Handle OAuth authentication error
+    console.error('OAuth error:', error)
+    toast({
+      title: "Registration Failed",
+      description: error.message || "Failed to register with OAuth provider",
+      variant: "destructive"
+    })
   }
 
   const handleGenerateUsername = async () => {
@@ -1271,20 +1301,49 @@ const RegisterPage = () => {
                 </Divider>
 
                 <Grid container spacing={2}>
-                  <Grid item xs={4}>
-                    <SocialButton fullWidth variant="outlined">
-                      <Google sx={{ color: '#4285F4' }} />
-                    </SocialButton>
+                  <Grid item xs={12}>
+                    <OAuthButton
+                      provider="google"
+                      fullWidth
+                      mode="signup"
+                      userRole={activeTab === 0 ? 'applicant' : 'recruiter'}
+                      onSuccess={handleOAuthSuccess}
+                      onError={handleOAuthError}
+                    />
                   </Grid>
-                  <Grid item xs={4}>
-                    <SocialButton fullWidth variant="outlined">
-                      <Microsoft sx={{ color: '#00BCF2' }} />
-                    </SocialButton>
+                  <Grid item xs={6}>
+                    <OAuthButton
+                      provider="microsoft"
+                      fullWidth
+                      mode="signup"
+                      userRole={activeTab === 0 ? 'applicant' : 'recruiter'}
+                      onSuccess={handleOAuthSuccess}
+                      onError={handleOAuthError}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Microsoft sx={{ fontSize: 20, mr: 1 }} />
+                        <Typography variant="button" fontWeight="inherit">
+                          Microsoft
+                        </Typography>
+                      </Box>
+                    </OAuthButton>
                   </Grid>
-                  <Grid item xs={4}>
-                    <SocialButton fullWidth variant="outlined">
-                      <Apple sx={{ color: '#000' }} />
-                    </SocialButton>
+                  <Grid item xs={6}>
+                    <OAuthButton
+                      provider="apple"
+                      fullWidth
+                      mode="signup"
+                      userRole={activeTab === 0 ? 'applicant' : 'recruiter'}
+                      onSuccess={handleOAuthSuccess}
+                      onError={handleOAuthError}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Apple sx={{ fontSize: 20, mr: 1 }} />
+                        <Typography variant="button" fontWeight="inherit">
+                          Apple
+                        </Typography>
+                      </Box>
+                    </OAuthButton>
                   </Grid>
                 </Grid>
               </Box>

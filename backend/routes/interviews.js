@@ -66,6 +66,9 @@ router.get('/', async (req, res) => {
     // Fetch interviews with populated data
     console.log('🔍 Fetching interviews with query:', query);
     const interviews = await Interview.find(query)
+      .populate('candidateId', 'firstName lastName email phone profilePicture')
+      .populate('jobId', 'title companyName location')
+      .populate('recruiterId', 'firstName lastName email')
       .sort({ scheduledDate: 1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -90,20 +93,20 @@ router.get('/', async (req, res) => {
       jobId: interview.jobId,
       applicationId: interview.applicationId,
       // Frontend expected fields
-      candidateName: interview.candidateInfo?.name || 'Test Candidate ' + (index + 1),
-      candidateEmail: interview.candidateInfo?.email || 'candidate' + (index + 1) + '@example.com',
-      jobTitle: interview.jobInfo?.title || 'Financial Analyst',
-      companyName: interview.jobInfo?.company || 'Tech Corp',
+      candidateName: interview.candidateId ? `${interview.candidateId.firstName || ''} ${interview.candidateId.lastName || ''}`.trim() : 'Unknown Candidate',
+      candidateEmail: interview.candidateId?.email || 'No email available',
+      jobTitle: interview.jobId?.title || 'Position not available',
+      companyName: interview.jobId?.companyName || 'Company not available',
       interviewDate: interview.scheduledDate.toISOString().split('T')[0],
       interviewTime: interview.scheduledTime,
       interviewer: 'John Recruiter',
       round: interview.round || 1,
       avatar: '👤',
       candidate: {
-        id: interview.candidateId,
-        name: interview.candidateInfo?.name || 'Test Candidate ' + (index + 1),
-        email: interview.candidateInfo?.email || 'candidate' + (index + 1) + '@example.com',
-        phone: interview.candidateInfo?.phone || '+91 9876543210'
+        id: interview.candidateId?._id || interview.candidateId,
+        name: interview.candidateId ? `${interview.candidateId.firstName || ''} ${interview.candidateId.lastName || ''}`.trim() : 'Unknown Candidate',
+        email: interview.candidateId?.email || 'No email available',
+        phone: interview.candidateId?.phone || 'No phone available'
       }
     }));
 
@@ -197,8 +200,12 @@ router.post('/', [
   body('duration').optional().isInt({ min: 15, max: 480 }).withMessage('Duration must be between 15 and 480 minutes')
 ], async (req, res) => {
   try {
+    console.log('📝 Creating interview with body:', req.body);
+    console.log('👤 User info:', { id: req.user.id, userId: req.user.userId, role: req.user.role });
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('❌ Validation errors:', errors.array());
       return res.status(400).json({
         success: false,
         message: 'Validation failed',
@@ -246,7 +253,7 @@ router.post('/', [
     // Create the interview
     const interview = new Interview({
       candidateId,
-      recruiterId: req.user.id,
+      recruiterId: req.user.userId || req.user.id,
       jobId,
       applicationId,
       title,
@@ -294,8 +301,12 @@ router.put('/:id', [
   body('type').optional().isIn(['video', 'phone', 'in-person', 'online']).withMessage('Invalid interview type')
 ], async (req, res) => {
   try {
+    console.log('🔄 Updating interview with body:', req.body);
+    console.log('👤 User info:', { id: req.user.id, userId: req.user.userId, role: req.user.role });
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('❌ Validation errors:', errors.array());
       return res.status(400).json({
         success: false,
         message: 'Validation failed',
@@ -304,7 +315,7 @@ router.put('/:id', [
     }
 
     const interviewId = req.params.id;
-    const userId = req.user.id;
+    const userId = req.user.userId || req.user.id;
     const userRole = req.user.role;
 
     const interview = await Interview.findById(interviewId);
@@ -385,7 +396,7 @@ router.put('/:id/feedback', [
       });
     }
 
-    if (interview.recruiterId.toString() !== req.user.id) {
+    if (interview.recruiterId.toString() !== req.user.userId) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -394,7 +405,7 @@ router.put('/:id/feedback', [
 
     // Update feedback
     interview.feedback = { ...interview.feedback, ...req.body };
-    interview.updatedBy = req.user.id;
+    interview.updatedBy = req.user.userId;
     await interview.save();
 
     res.json({
@@ -443,7 +454,7 @@ router.delete('/:id', [
       });
     }
 
-    if (interview.recruiterId.toString() !== req.user.id) {
+    if (interview.recruiterId.toString() !== req.user.userId) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'

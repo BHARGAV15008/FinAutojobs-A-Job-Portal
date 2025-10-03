@@ -1,3 +1,4 @@
+import React from 'react';
 import { Container, Typography, Paper, Box, Divider } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
@@ -17,7 +18,7 @@ const PrivacyPolicyPage = () => {
                 Privacy Policy
             </Typography>
             <Typography variant="subtitle1" paragraph align="center" color="text.secondary" sx={{ mb: 8 }}>
-                Last updated: September 4, 2025
+                Last updated: January 15, 2025
             </Typography>
 
             <StyledPaper elevation={3}>
@@ -26,9 +27,10 @@ const PrivacyPolicyPage = () => {
                         1. Introduction
                     </Typography>
                     <Typography variant="body1" paragraph>
-                        Welcome to FinAutoJobs. We respect your privacy and are committed to protecting your personal data.
-                        This privacy policy will inform you about how we look after your personal data when you visit our website
-                        and tell you about your privacy rights and how the law protects you.
+                        Welcome to FinAutoJobs, India's specialized job portal for Finance and Automotive industries. We respect your privacy
+                        and are committed to protecting your personal and professional data. This privacy policy explains how we collect,
+                        use, store, and protect your information when you use our platform, and outlines your privacy rights under
+                        Indian data protection laws.
                     </Typography>
                 </Section>
 
@@ -39,20 +41,23 @@ const PrivacyPolicyPage = () => {
                         2. Data We Collect
                     </Typography>
                     <Typography variant="body1" paragraph>
-                        We collect several different types of information for various purposes:
+                        We collect information necessary to provide our specialized recruitment services:
                     </Typography>
                     <ul>
                         <Typography component="li" variant="body1" paragraph>
-                            Personal identification information (Name, email address, phone number, etc.)
+                            <strong>Personal Information:</strong> Name, email, phone number, location, date of birth, and profile photos
                         </Typography>
                         <Typography component="li" variant="body1" paragraph>
-                            Professional information (Resume, work history, education, skills)
+                            <strong>Professional Information:</strong> Resume/CV, work experience, education, certifications, skills, salary expectations, and career preferences
                         </Typography>
                         <Typography component="li" variant="body1" paragraph>
-                            Usage data (How you use our website)
+                            <strong>Company Information:</strong> For recruiters - company name, designation, department, and recruiting authority verification
                         </Typography>
                         <Typography component="li" variant="body1" paragraph>
-                            Technical data (IP address, browser type, device information)
+                            <strong>Application Data:</strong> Job applications, interview schedules, communication history, and hiring decisions
+                        </Typography>
+                        <Typography component="li" variant="body1" paragraph>
+                            <strong>Technical Data:</strong> IP address, browser type, device information, and platform usage analytics
                         </Typography>
                     </ul>
                 </Section>
@@ -64,23 +69,26 @@ const PrivacyPolicyPage = () => {
                         3. How We Use Your Data
                     </Typography>
                     <Typography variant="body1" paragraph>
-                        We use your data for the following purposes:
+                        We use your data to provide specialized recruitment services in finance and automotive sectors:
                     </Typography>
                     <ul>
                         <Typography component="li" variant="body1" paragraph>
-                            To provide and maintain our service
+                            <strong>Job Matching:</strong> Match your profile with relevant opportunities using our AI-powered recommendation system
                         </Typography>
                         <Typography component="li" variant="body1" paragraph>
-                            To notify you about changes to our service
+                            <strong>Profile Visibility:</strong> Display your profile to relevant recruiters in finance and automotive companies
                         </Typography>
                         <Typography component="li" variant="body1" paragraph>
-                            To allow you to participate in interactive features
+                            <strong>Communication:</strong> Facilitate communication between job seekers and recruiters, including interview scheduling
                         </Typography>
                         <Typography component="li" variant="body1" paragraph>
-                            To provide customer support
+                            <strong>Analytics:</strong> Provide insights on job market trends, salary benchmarks, and career progression paths
                         </Typography>
                         <Typography component="li" variant="body1" paragraph>
-                            To gather analysis or valuable information to improve our service
+                            <strong>Verification:</strong> Verify credentials and employment history to maintain platform integrity
+                        </Typography>
+                        <Typography component="li" variant="body1" paragraph>
+                            <strong>Notifications:</strong> Send relevant job alerts, application updates, and platform announcements
                         </Typography>
                     </ul>
                 </Section>
@@ -92,11 +100,22 @@ const PrivacyPolicyPage = () => {
                         4. Data Security
                     </Typography>
                     <Typography variant="body1" paragraph>
-                        We have implemented appropriate security measures to prevent your personal data from being
-                        accidentally lost, used, accessed, altered, or disclosed in an unauthorized way. We limit
-                        access to your personal data to those employees, agents, contractors, and other third parties
-                        who have a business need to know.
+                        We implement bank-grade security measures to protect your professional and personal data:
                     </Typography>
+                    <ul>
+                        <Typography component="li" variant="body1" paragraph>
+                            <strong>Encryption:</strong> All data is encrypted in transit and at rest using industry-standard protocols
+                        </Typography>
+                        <Typography component="li" variant="body1" paragraph>
+                            <strong>Access Control:</strong> Strict role-based access controls ensure only authorized personnel can access your data
+                        </Typography>
+                        <Typography component="li" variant="body1" paragraph>
+                            <strong>Regular Audits:</strong> We conduct regular security audits and vulnerability assessments
+                        </Typography>
+                        <Typography component="li" variant="body1" paragraph>
+                            <strong>Data Backup:</strong> Secure, encrypted backups ensure data recovery in case of system failures
+                        </Typography>
+                    </ul>
                 </Section>
 
                 <Divider sx={{ my: 4 }} />
@@ -106,26 +125,26 @@ const PrivacyPolicyPage = () => {
                         5. Your Rights
                     </Typography>
                     <Typography variant="body1" paragraph>
-                        Under certain circumstances, you have rights under data protection laws in relation to your personal data:
+                        Under Indian data protection laws and our commitment to transparency, you have the following rights:
                     </Typography>
                     <ul>
                         <Typography component="li" variant="body1" paragraph>
-                            Request access to your personal data
+                            <strong>Access:</strong> Request a copy of all personal data we hold about you
                         </Typography>
                         <Typography component="li" variant="body1" paragraph>
-                            Request correction of your personal data
+                            <strong>Correction:</strong> Update or correct any inaccurate information in your profile
                         </Typography>
                         <Typography component="li" variant="body1" paragraph>
-                            Request erasure of your personal data
+                            <strong>Deletion:</strong> Request deletion of your account and associated data (subject to legal requirements)
                         </Typography>
                         <Typography component="li" variant="body1" paragraph>
-                            Object to processing of your personal data
+                            <strong>Portability:</strong> Download your profile data in a standard format
                         </Typography>
                         <Typography component="li" variant="body1" paragraph>
-                            Request restriction of processing your personal data
+                            <strong>Opt-out:</strong> Unsubscribe from marketing communications while maintaining essential service notifications
                         </Typography>
                         <Typography component="li" variant="body1" paragraph>
-                            Request transfer of your personal data
+                            <strong>Visibility Control:</strong> Control who can view your profile and contact you
                         </Typography>
                     </ul>
                 </Section>
@@ -144,10 +163,10 @@ const PrivacyPolicyPage = () => {
                             By email: privacy@finautojobs.com
                         </Typography>
                         <Typography component="li" variant="body1" paragraph>
-                            By phone: +91 (800) 123-4567
+                            By phone: +91 98765 43210
                         </Typography>
                         <Typography component="li" variant="body1" paragraph>
-                            By mail: 123 Tech Park, Bangalore, Karnataka, India 560001
+                            By mail: Data Protection Officer, FinAutoJobs Pvt Ltd, 401 Business Hub, Andheri East, Mumbai, Maharashtra 400069
                         </Typography>
                     </ul>
                 </Section>

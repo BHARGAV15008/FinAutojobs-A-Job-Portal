@@ -106,6 +106,21 @@ const OAuthButton = ({
 
   const handleClick = () => {
     if (disabled || loading) return;
+    
+    // For production OAuth, redirect to backend OAuth endpoint
+    if (process.env.NODE_ENV === 'production' || 
+        import.meta.env.VITE_USE_REAL_OAUTH === 'true' || 
+        process.env.REACT_APP_USE_REAL_OAUTH === 'true') {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 
+                        process.env.REACT_APP_BACKEND_URL || 
+                        'http://localhost:5000';
+      const oauthUrl = `${backendUrl}/api/oauth/${provider}?role=${userRole}`;
+      console.log('🔍 OAuth redirect:', oauthUrl);
+      window.location.href = oauthUrl;
+      return;
+    }
+    
+    // For development, use popup simulation
     setPopupOpen(true);
   };
 

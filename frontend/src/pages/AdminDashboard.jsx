@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useLocation } from "wouter";
+import { useLocation, useRoute } from "wouter";
 import ModernDashboardLayout from "../components/layout/ModernDashboardLayout";
 import DashboardCard from "../components/cards/DashboardCard";
 import { DashboardProvider, useDashboard } from "../contexts/RealDashboardContext";
@@ -14,17 +14,23 @@ import UserManagementTab from "../components/dashboard/UserManagementTab";
 import JobManagementTab from "../components/dashboard/JobManagementTab";
 import AnalyticsTab from "../components/dashboard/AnalyticsTab";
 import ModerationTab from "../components/dashboard/ModerationTab";
+import SystemSettingsTab from "../components/dashboard/SystemSettingsTab";
+import SystemLogsTab from "../components/dashboard/SystemLogsTab";
+import DatabaseManagementTab from "../components/dashboard/DatabaseManagementTab";
+import CompaniesManagementTab from "../components/dashboard/CompaniesManagementTab";
+import ReportsTab from "../components/dashboard/ReportsTab";
+import SecurityManagementTab from "../components/dashboard/SecurityManagementTab";
 import LoginStatusBanner from "../components/dashboard/LoginStatusBanner";
 
 const AdminDashboardContent = () => {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("dashboard");
-  const { 
-    currentUser, 
-    isAuthenticated, 
-    getStats, 
-    dashboardData, 
-    loading 
+  const {
+    currentUser,
+    isAuthenticated,
+    getStats,
+    dashboardData,
+    loading
   } = useDashboard();
 
   // Mock user data - authentication removed
@@ -41,21 +47,40 @@ const AdminDashboardContent = () => {
 
   // Extract tab from URL
   useEffect(() => {
-    const pathParts = location.split('/');
-    const tab = pathParts[pathParts.length - 1];
-    if (['profile', 'users', 'jobs', 'analytics', 'moderation', 'settings'].includes(tab)) {
+    console.log('🔍 AdminDashboard - Current location:', location);
+
+    // Extract tab from URL path - handle both /admin-dashboard and /admin-dashboard/tab
+    const pathParts = location.split('/').filter(part => part !== '');
+    console.log('🔍 AdminDashboard - Path parts:', pathParts);
+
+    let tab = 'dashboard';
+
+    // Check if we're on admin-dashboard route
+    if (pathParts.includes('admin-dashboard')) {
+      const adminIndex = pathParts.indexOf('admin-dashboard');
+      // If there's a tab after admin-dashboard, use it
+      if (adminIndex !== -1 && pathParts[adminIndex + 1]) {
+        tab = pathParts[adminIndex + 1];
+        console.log('🔍 AdminDashboard - Extracted tab:', tab);
+      }
+    }
+
+    console.log('🔍 AdminDashboard - Final tab to set:', tab);
+
+    if (['profile', 'users', 'jobs', 'analytics', 'moderation', 'settings', 'system-settings', 'logs', 'database', 'companies', 'reports', 'security'].includes(tab)) {
       setActiveTab(tab);
+      console.log('✅ AdminDashboard - Set active tab to:', tab);
     } else {
       setActiveTab('dashboard');
+      console.log('✅ AdminDashboard - Set active tab to: dashboard (default)');
     }
   }, [location]);
 
-  // Tab change handler
+  // Tab change handler (for programmatic navigation if needed)
   const handleTabChange = (tab) => {
     setActiveTab(tab);
-    const basePath = "/admin-dashboard";
-    const newPath = tab === "dashboard" ? basePath : `${basePath}/${tab}`;
-    window.history.pushState({}, "", newPath);
+    const newPath = tab === "dashboard" ? "/admin-dashboard" : `/admin-dashboard/${tab}`;
+    setLocation(newPath);
   };
 
   // Render tab content
@@ -73,6 +98,18 @@ const AdminDashboardContent = () => {
         return <AnalyticsTab />;
       case 'moderation':
         return <ModerationTab />;
+      case 'system-settings':
+        return <SystemSettingsTab />;
+      case 'logs':
+        return <SystemLogsTab />;
+      case 'database':
+        return <DatabaseManagementTab />;
+      case 'companies':
+        return <CompaniesManagementTab />;
+      case 'reports':
+        return <ReportsTab />;
+      case 'security':
+        return <SecurityManagementTab />;
       default:
         return <AdminDashboardMain user={user} />;
     }
@@ -181,14 +218,14 @@ const AdminDashboardContent = () => {
       breadcrumbs={
         activeTab !== "dashboard"
           ? [
-              { name: "Dashboard", path: "/admin-dashboard" },
-              {
-                name:
-                  activeTab.charAt(0).toUpperCase() +
-                  activeTab.slice(1).replace("-", " "),
-                path: `/${activeTab}`,
-              },
-            ]
+            { name: "Dashboard", path: "/admin-dashboard" },
+            {
+              name:
+                activeTab.charAt(0).toUpperCase() +
+                activeTab.slice(1).replace("-", " "),
+              path: `/admin-dashboard/${activeTab}`,
+            },
+          ]
           : []
       }
     >

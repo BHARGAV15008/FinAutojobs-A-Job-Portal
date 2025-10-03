@@ -30,25 +30,22 @@ const EnhancedInterviewsTab = () => {
     const fetchInterviews = async () => {
       try {
         setLoading(true);
-        console.log('🔍 Fetching interviews from API...');
+        // Fetching interviews from API
         const response = await interviewsAPI.getInterviews();
-        console.log('📊 Interviews API response:', response);
+        // Interviews API response received
         
         if (response.data.success) {
-          console.log('✅ Interviews data:', response.data.data);
+          // Interviews data loaded successfully
           setInterviews(response.data.data || []);
         } else {
           console.log('❌ API returned success: false');
           setError('Failed to fetch interviews');
-          // Fallback to mock data
-          setInterviews(mockInterviews);
+          setInterviews([]);
         }
       } catch (err) {
         console.error('❌ Error fetching interviews:', err);
-        console.log('🔄 Falling back to mock data');
-        setError('Failed to load interviews - using mock data');
-        // Fallback to mock data for now
-        setInterviews(mockInterviews);
+        setError('Failed to load interviews');
+        setInterviews([]);
       } finally {
         setLoading(false);
       }
@@ -57,88 +54,7 @@ const EnhancedInterviewsTab = () => {
     fetchInterviews();
   }, []);
 
-  // Mock interviews data (fallback)
-  const mockInterviews = [
-    {
-      id: 1,
-      candidateName: 'Priya Sharma',
-      candidateEmail: 'priya.sharma@email.com',
-      candidate: {
-        id: 1,
-        name: 'Priya Sharma',
-        email: 'priya.sharma@email.com',
-        phone: '+91 9876543211',
-        skills: ['React', 'Python', 'Django', 'PostgreSQL'],
-        education: [{
-          degree: 'MCA',
-          institution: 'National Institute of Technology',
-          year: '2021',
-          grade: '8.5 CGPA'
-        }],
-        workExperience: [{
-          company: 'Digital Solutions Ltd.',
-          position: 'Full Stack Developer',
-          duration: '2021 - Present',
-          description: 'Built web applications using Python Django and React framework.'
-        }],
-        portfolioLinks: [{
-          type: 'GitHub',
-          url: 'https://github.com/priya-sharma',
-          label: 'GitHub Profile'
-        }]
-      },
-      jobTitle: 'Full Stack Developer',
-      interviewType: 'Technical Round',
-      interviewDate: '2024-01-30',
-      interviewTime: '10:00 AM',
-      interviewer: 'John Smith',
-      status: 'scheduled',
-      round: 1,
-      duration: '60 minutes',
-      location: 'Video Call',
-      notes: 'Focus on React and Node.js skills',
-      avatar: '👩‍💻',
-      candidatePhone: '+91 9876543211',
-      resume: 'priya_sharma_resume.pdf'
-    },
-    {
-      id: 2,
-      candidateName: 'Anita Gupta',
-      candidateEmail: 'anita.gupta@email.com',
-      jobTitle: 'Data Scientist',
-      interviewType: 'Final Round',
-      interviewDate: '2024-01-29',
-      interviewTime: '2:00 PM',
-      interviewer: 'Sarah Johnson',
-      status: 'completed',
-      round: 3,
-      duration: '45 minutes',
-      location: 'Conference Room A',
-      notes: 'Excellent performance, recommended for hire',
-      avatar: '👩‍🔬',
-      candidatePhone: '+91 9876543215',
-      resume: 'anita_gupta_resume.pdf',
-      feedback: 'Strong analytical skills, great cultural fit'
-    },
-    {
-      id: 3,
-      candidateName: 'Rajesh Kumar',
-      candidateEmail: 'rajesh.kumar@email.com',
-      jobTitle: 'Senior Frontend Developer',
-      interviewType: 'HR Round',
-      interviewDate: '2024-01-31',
-      interviewTime: '11:30 AM',
-      interviewer: 'Mike Wilson',
-      status: 'rescheduled',
-      round: 2,
-      duration: '30 minutes',
-      location: 'Video Call',
-      notes: 'Candidate requested reschedule due to emergency',
-      avatar: '👨‍💻',
-      candidatePhone: '+91 9876543210',
-      resume: 'rajesh_kumar_resume.pdf'
-    }
-  ];
+  // No mock data - using real interviews from API only
 
   const statusConfig = {
     all: { label: 'All Interviews', color: 'bg-gray-100 text-gray-800', count: interviews.length },
@@ -240,9 +156,21 @@ const EnhancedInterviewsTab = () => {
 
   const handleRescheduleInterview = async (interviewId, newDateTime) => {
     try {
-      const response = await interviewsAPI.updateInterview(interviewId, { 
-        scheduled_date: newDateTime 
-      });
+      // Extract the correct fields from newDateTime object
+      const updateData = {
+        scheduledDate: new Date(newDateTime.date || newDateTime.scheduledDate).toISOString(),
+        scheduledTime: newDateTime.time || newDateTime.scheduledTime,
+        duration: newDateTime.duration,
+        type: newDateTime.type,
+        location: newDateTime.location || '',
+        meetingLink: newDateTime.meetingLink || '',
+        description: newDateTime.notes || newDateTime.description || '',
+        status: 'rescheduled'
+      };
+      
+      console.log('🔄 Updating interview with data:', updateData);
+      
+      const response = await interviewsAPI.updateInterview(interviewId, updateData);
       console.log('Interview rescheduled:', response.data);
       alert('✅ Interview rescheduled successfully! Notifications sent to candidate.');
     } catch (error) {
@@ -450,11 +378,13 @@ const EnhancedInterviewsTab = () => {
                     <tr>
                       <td colSpan="6" className="px-6 py-12 text-center">
                         <div className="text-gray-500 dark:text-gray-400">
-                          <p className="text-lg mb-2">📅 No interviews found</p>
+                          <p className="text-lg mb-2">📅 No interviews scheduled yet</p>
                           <p className="text-sm">
-                            {error ? `Error: ${error}` : 'No interviews match your current filters.'}
+                            {error ? `Error: ${error}` : interviews.length === 0 ? 'You haven\'t scheduled any interviews yet. Go to the Candidates tab to schedule interviews with applicants.' : 'No interviews match your current filters.'}
                           </p>
-                          <p className="text-xs mt-2">Total interviews in database: {interviews.length}</p>
+                          {interviews.length > 0 && (
+                            <p className="text-xs mt-2">Total interviews: {interviews.length}</p>
+                          )}
                         </div>
                       </td>
                     </tr>

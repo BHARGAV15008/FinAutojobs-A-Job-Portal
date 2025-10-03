@@ -388,20 +388,15 @@ export const DashboardProvider = ({ children }) => {
       };
     }
 
-    console.log('🔍 getStats Debug:', {
-      role,
-      statsType: typeof dashboardData.stats,
-      statsKeys: Object.keys(dashboardData.stats || {}),
-      statsData: dashboardData.stats
-    });
+    // getStats Debug info available if needed
     
     // Check if stats are nested by role or direct
     if (typeof dashboardData.stats === "object" && dashboardData.stats[role]) {
-      console.log('🔍 Returning nested stats for role:', role);
+      // Returning nested stats for role
       return dashboardData.stats[role];
     }
     
-    console.log('🔍 Returning direct stats');
+    // Returning direct stats
     return dashboardData.stats;
   };
 
@@ -446,7 +441,7 @@ export const DashboardProvider = ({ children }) => {
         console.warn('⚠️ Backend connectivity issue:', connectError.message);
       }
       
-      const response = await getRealTimeStats(currentUser.role);
+      const response = await analyticsAPI.getRealTimeStats(currentUser.role);
       
       if (response.success && response.data?.stats) {
         setDashboardData(prevData => ({

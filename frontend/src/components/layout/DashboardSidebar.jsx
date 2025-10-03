@@ -16,11 +16,11 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
     if (activeTab && tabId) {
       return activeTab === tabId;
     }
-    
+
     if (path === `/${userRole}-dashboard`) {
       return (location === `/${userRole}-dashboard` || location === '/') && (!activeTab || activeTab === 'dashboard');
     }
-    
+
     // Handle dashboard internal tabs
     if (path === '/jobs' && userRole === 'recruiter') {
       return activeTab === 'jobs' || location === `/${userRole}-dashboard/jobs` || location.includes('/jobs');
@@ -37,7 +37,7 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
     if (path === '/profile' && userRole === 'recruiter') {
       return activeTab === 'profile' || location === `/${userRole}-dashboard/profile` || location.includes('/profile');
     }
-    
+
     return location === path || location.startsWith(path + '/');
   };
 
@@ -161,6 +161,54 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
             path: `/settings`,
             tabId: 'settings',
             current: isPathActive('/settings', 'settings')
+          },
+          {
+            name: 'System Settings',
+            emoji: '🔧',
+            icon: 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4',
+            path: `/system-settings`,
+            tabId: 'system-settings',
+            current: isPathActive('/system-settings', 'system-settings')
+          },
+          {
+            name: 'System Logs',
+            emoji: '📋',
+            icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+            path: `/logs`,
+            tabId: 'logs',
+            current: isPathActive('/logs', 'logs')
+          },
+          {
+            name: 'Database',
+            emoji: '🗄️',
+            icon: 'M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4',
+            path: `/database`,
+            tabId: 'database',
+            current: isPathActive('/database', 'database')
+          },
+          {
+            name: 'Companies',
+            emoji: '🏢',
+            icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',
+            path: `/companies`,
+            tabId: 'companies',
+            current: isPathActive('/companies', 'companies')
+          },
+          {
+            name: 'Reports',
+            emoji: '📊',
+            icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+            path: `/reports`,
+            tabId: 'reports',
+            current: isPathActive('/reports', 'reports')
+          },
+          {
+            name: 'Security',
+            emoji: '🔒',
+            icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z',
+            path: `/security`,
+            tabId: 'security',
+            current: isPathActive('/security', 'security')
           }
         ];
 
@@ -172,6 +220,7 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
             emoji: '👤',
             icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
             path: `/profile`,
+            tabId: 'profile',
             current: isPathActive('/profile')
           },
           {
@@ -179,12 +228,13 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
             emoji: '👥',
             icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z',
             path: `/users`,
+            tabId: 'users',
             current: isPathActive('/users'),
             submenu: [
-              { name: 'All Users', emoji: '👤', path: `/users` },
-              { name: 'Applicants', emoji: '🔍', path: `/users` },
-              { name: 'Recruiters', emoji: '🏢', path: `/users` },
-              { name: 'Pending Approval', emoji: '⏳', path: `/users` }
+              { name: 'All Users', emoji: '👤', path: `/users`, tabId: 'users' },
+              { name: 'Applicants', emoji: '🔍', path: `/users`, tabId: 'users' },
+              { name: 'Recruiters', emoji: '🏢', path: `/users`, tabId: 'users' },
+              { name: 'Pending Approval', emoji: '⏳', path: `/users`, tabId: 'users' }
             ]
           },
           {
@@ -192,11 +242,12 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
             emoji: '💼',
             icon: 'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6',
             path: `/jobs`,
+            tabId: 'jobs',
             current: isPathActive('/jobs'),
             submenu: [
-              { name: 'All Jobs', emoji: '📋', path: `/jobs` },
-              { name: 'Pending Review', emoji: '⏳', path: `/jobs` },
-              { name: 'Flagged Jobs', emoji: '🚩', path: `/jobs` }
+              { name: 'All Jobs', emoji: '📋', path: `/jobs`, tabId: 'jobs' },
+              { name: 'Pending Review', emoji: '⏳', path: `/jobs`, tabId: 'jobs' },
+              { name: 'Flagged Jobs', emoji: '🚩', path: `/jobs`, tabId: 'jobs' }
             ]
           },
           {
@@ -204,6 +255,7 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
             emoji: '📈',
             icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
             path: `/analytics`,
+            tabId: 'analytics',
             current: isPathActive('/analytics')
           },
           {
@@ -211,6 +263,7 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
             emoji: '🛡️',
             icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
             path: `/moderation`,
+            tabId: 'moderation',
             current: isPathActive('/moderation')
           },
           {
@@ -218,6 +271,7 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
             emoji: '⚙️',
             icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z',
             path: `/settings`,
+            tabId: 'settings',
             current: isPathActive('/settings')
           }
         ];
@@ -237,21 +291,29 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
   };
 
   const handleNavigation = (path, tabId, jobTabId) => {
-    // For dashboard tabs, trigger tab change instead of navigation
-    if (tabId && userRole === 'recruiter') {
-      // Trigger custom event for tab change
-      window.dispatchEvent(new CustomEvent('dashboardTabChange', { 
-        detail: { tabId, jobTabId } 
-      }));
+    console.log('🔍 SIDEBAR:', { path, userRole, location });
+    // Always use direct URL navigation for simplicity
+    let fullPath;
+    const dashboardPrefix = `/${userRole}-dashboard`;
+
+    // Handle different path scenarios
+    if (path === `/${userRole}-dashboard`) {
+      // Main dashboard path
+      fullPath = path;
+    } else if (path.startsWith('/') && !path.includes('dashboard')) {
+      // Tab path like /profile, /users, etc.
+      fullPath = `${dashboardPrefix}${path}`;
+    } else if (path.includes(`${userRole}-dashboard`)) {
+      // Path already has dashboard prefix
+      fullPath = path;
     } else {
-      // Construct proper path with dashboard prefix
-      let fullPath = path;
-      if (path !== `/${userRole}-dashboard` && !path.startsWith(`/${userRole}-dashboard`)) {
-        fullPath = `/${userRole}-dashboard${path}`;
-      }
-      setLocation(fullPath);
+      // Default case
+      fullPath = `${dashboardPrefix}/${path}`;
     }
-    
+
+    console.log('🔗 SIDEBAR navigating to:', fullPath);
+    setLocation(fullPath);
+
     if (window.innerWidth < 1024) {
       setSidebarOpen(false);
     }
@@ -307,8 +369,8 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
               className={`
                 w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg
                 transition-colors duration-200
-                ${item.current 
-                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200' 
+                ${item.current
+                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200'
                   : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
                 }
               `}
@@ -328,9 +390,8 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
               </div>
               {item.submenu && (
                 <svg
-                  className={`w-4 h-4 transition-transform duration-200 ${
-                    expandedMenus[item.name] ? 'rotate-90' : ''
-                  }`}
+                  className={`w-4 h-4 transition-transform duration-200 ${expandedMenus[item.name] ? 'rotate-90' : ''
+                    }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -355,7 +416,7 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
                     className={`
                       w-full text-left px-3 py-2 text-sm rounded-md transition-colors duration-200 flex items-center
                       ${subItem.current || isPathActive(subItem.path)
-                        ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/50 dark:text-blue-200 font-medium' 
+                        ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/50 dark:text-blue-200 font-medium'
                         : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800'
                       }
                     `}

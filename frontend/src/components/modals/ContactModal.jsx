@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../contexts/IntegratedThemeContext';
+import { communicationsAPI } from '../../api/communications';
 import { 
   XMarkIcon, 
   EnvelopeIcon,
@@ -9,7 +10,8 @@ import {
   DocumentIcon,
   PaperClipIcon,
   ClockIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
+  DevicePhoneMobileIcon
 } from '@heroicons/react/24/outline';
 
 const ContactModal = ({ 
@@ -17,7 +19,8 @@ const ContactModal = ({
   isOpen, 
   onClose, 
   onSendEmail,
-  onOpenMessaging 
+  onOpenMessaging,
+  currentUser 
 }) => {
   const { darkMode } = useTheme();
   const [contactMode, setContactMode] = useState('selection'); // 'selection', 'email', 'messaging'
@@ -28,6 +31,10 @@ const ContactModal = ({
     attachments: [],
     scheduleSend: false,
     scheduleDate: ''
+  });
+  const [messageData, setMessageData] = useState({
+    message: '',
+    template: ''
   });
   const [loading, setLoading] = useState(false);
 
@@ -132,17 +139,36 @@ Best regards,
     });
   };
 
+  const smsTemplates = [
+    {
+      id: 'interview_reminder',
+      name: 'Interview Reminder',
+      content: `Hi {candidateName}, this is a reminder about your interview for {jobTitle} position scheduled for {interviewDate} at {interviewTime}. Please confirm your attendance. - {companyName}`
+    },
+    {
+      id: 'application_update',
+      name: 'Application Update',
+      content: `Hi {candidateName}, we have an update regarding your application for {jobTitle} position. Please check your email for details. - {companyName}`
+    },
+    {
+      id: 'quick_followup',
+      name: 'Quick Follow-up',
+      content: `Hi {candidateName}, thank you for your interest in {jobTitle} position. We will get back to you soon. - {companyName}`
+    }
+  ];
+
   const handleSendEmail = async () => {
     setLoading(true);
     try {
-      await onSendEmail({
+      await communicationsAPI.sendEmail({
         to: candidate.email,
         subject: emailData.subject,
         message: emailData.message,
-        attachments: emailData.attachments,
-        scheduleSend: emailData.scheduleSend,
-        scheduleDate: emailData.scheduleDate
+        recruiterEmail: currentUser?.email,
+        recruiterName: currentUser?.firstName ? `${currentUser.firstName} ${currentUser.lastName}` : currentUser?.name
       });
+      
+      alert('✅ Email sent successfully!');
       
       // Reset form and close modal
       setEmailData({
@@ -156,7 +182,29 @@ Best regards,
       setContactMode('selection');
       onClose();
     } catch (error) {
-      console.error('Failed to send email:', error);
+      console.error('Error sending email:', error);
+      alert('❌ Failed to send email. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    setLoading(true);
+    try {
+      await communicationsAPI.sendSMS({
+        to: candidate.phone,
+        message: messageData.message,
+        recruiterPhone: currentUser?.phone,
+        recruiterName: currentUser?.firstName ? `${currentUser.firstName} ${currentUser.lastName}` : currentUser?.name
+      });
+      alert('✅ Message sent successfully!');
+      setMessageData({ message: '', template: '' });
+      setContactMode('selection');
+      onClose();
+    } catch (error) {
+      console.error('Error sending message:', error);
+      alert('❌ Failed to send message. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -279,11 +327,11 @@ Best regards,
                       </div>
                     </motion.button>
 
-                    {/* Messaging Option */}
+                    {/* SMS/Message Option */}
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      onClick={handleOpenMessaging}
+                      onClick={() => setContactMode('messaging')}
                       className={`p-8 rounded-xl border-2 border-dashed transition-all ${
                         darkMode 
                           ? 'border-gray-600 hover:border-green-500 hover:bg-gray-700' 
@@ -292,7 +340,7 @@ Best regards,
                     >
                       <div className="text-center">
                         <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
-                          <ChatBubbleLeftRightIcon className="w-8 h-8 text-green-600" />
+                          <DevicePhoneMobileIcon className="w-8 h-8 text-green-600" />
                         </div>
                         <h4 className={`text-xl font-semibold mb-2 ${
                           darkMode ? 'text-white' : 'text-gray-900'
@@ -302,20 +350,20 @@ Best regards,
                         <p className={`text-sm ${
                           darkMode ? 'text-gray-300' : 'text-gray-600'
                         }`}>
-                          Start a real-time conversation with instant messaging, file sharing, and message history.
+                          Send SMS directly to candidate's mobile number with quick templates and instant delivery.
                         </p>
                         <div className="mt-4 flex items-center justify-center space-x-4 text-xs">
                           <span className="flex items-center space-x-1">
                             <CheckCircleIcon className="w-4 h-4" />
-                            <span>Real-time</span>
+                            <span>Instant</span>
                           </span>
                           <span className="flex items-center space-x-1">
-                            <PaperClipIcon className="w-4 h-4" />
-                            <span>File Share</span>
+                            <DocumentIcon className="w-4 h-4" />
+                            <span>Templates</span>
                           </span>
                           <span className="flex items-center space-x-1">
-                            <ClockIcon className="w-4 h-4" />
-                            <span>History</span>
+                            <DevicePhoneMobileIcon className="w-4 h-4" />
+                            <span>SMS</span>
                           </span>
                         </div>
                       </div>

@@ -1448,6 +1448,7 @@ export const EnhancedJobsTab = ({
   const [applicationsModal, setApplicationsModal] = useState({ isOpen: false, job: null, applications: [] });
   const [candidateModal, setCandidateModal] = useState({ isOpen: false, candidate: null });
   const [contactModal, setContactModal] = useState({ isOpen: false, candidate: null });
+  const [scheduleInterviewModal, setScheduleInterviewModal] = useState({ isOpen: false, candidate: null, job: null, application: null });
 
   // Filter jobs based on job type and current filters
   const getJobsByType = () => {
@@ -1781,6 +1782,10 @@ export const EnhancedJobsTab = ({
     console.log('🔍 Extracted basicInfo:', basicInfo);
     console.log('🔍 Extracted experience:', experience);
     console.log('🔍 Extracted expectedSalary:', expectedSalary);
+    console.log('🔍 Applicant yearsOfExperience:', applicant.yearsOfExperience);
+    console.log('🔍 Applicant experience_years:', applicant.experience_years);
+    console.log('🔍 Applicant expectedSalary:', applicant.expectedSalary);
+    console.log('🔍 Applicant careerInfo:', applicant.careerInfo);
     console.log('🔍 Extracted skills from appInfo:', skills);
     console.log('🔍 Extracted socialLinks from appInfo:', socialLinks);
     
@@ -1798,14 +1803,16 @@ export const EnhancedJobsTab = ({
       // Professional Information
       currentRole: experience.currentJob?.jobTitle || applicant.currentJobTitle || 'Not specified',
       
-      // Experience data - prioritize applicationInfo data
+      // Experience data - enhanced extraction
       experience: experience.totalYears 
         ? `${experience.totalYears} years`
-        : experience.rawExperienceText 
-        ? experience.rawExperienceText
+        : basicInfo.experienceYears 
+        ? `${basicInfo.experienceYears} years`
         : applicant.yearsOfExperience 
         ? `${applicant.yearsOfExperience} years`
-        : 'Not specified',
+        : applicant.experience_years 
+        ? `${applicant.experience_years} years`
+        : app.applicationData?.experience || 'Not specified',
       
       // Expected Salary - prioritize applicationInfo data
       expectedSalary: expectedSalary.displayText 
@@ -1816,7 +1823,7 @@ export const EnhancedJobsTab = ({
         ? `₹${expectedSalary.salaryRange.min}K - ₹${expectedSalary.salaryRange.max}K ${expectedSalary.salaryRange.period || 'yearly'}`
         : expectedSalary.salaryRange?.min
         ? `₹${expectedSalary.salaryRange.min}K+ ${expectedSalary.salaryRange.period || 'yearly'}`
-        : applicant.expectedSalary || 'Not specified',
+        : basicInfo.expectedSalary || applicant.expectedSalary || applicant.careerInfo?.expectedSalary || app.applicationData?.expectedSalary || 'Not specified',
       
       // Skills data - combine all skill types from multiple sources
       skills: [
@@ -1832,7 +1839,17 @@ export const EnhancedJobsTab = ({
         ...(applicant.skills || []), // If skills is a simple array
         
         // From applicant snapshot (fallback)
-        ...(app.applicantSnapshot?.skills || [])
+        ...(app.applicantSnapshot?.skills || []),
+        
+        // From basicInfo skills
+        ...(basicInfo.skills || []),
+        
+        // From application data skills
+        ...(app.applicationData?.skills || []),
+        
+        // From primary_skills field
+        ...(applicant.primary_skills || []),
+        ...(applicant.skills_array || [])
       ].filter(Boolean),
       
       // Education data
@@ -1864,7 +1881,13 @@ export const EnhancedJobsTab = ({
         
         // From application data (fallback)
         app.applicationData?.portfolioUrl && { type: 'Portfolio', url: app.applicationData.portfolioUrl, label: 'Personal Portfolio' },
-        app.applicationData?.linkedinUrl && { type: 'LinkedIn', url: app.applicationData.linkedinUrl, label: 'LinkedIn Profile' }
+        app.applicationData?.linkedinUrl && { type: 'LinkedIn', url: app.applicationData.linkedinUrl, label: 'LinkedIn Profile' },
+        app.applicationData?.githubUrl && { type: 'GitHub', url: app.applicationData.githubUrl, label: 'GitHub Profile' },
+        
+        // From basicInfo social links
+        basicInfo.linkedin && { type: 'LinkedIn', url: basicInfo.linkedin, label: 'LinkedIn Profile' },
+        basicInfo.github && { type: 'GitHub', url: basicInfo.github, label: 'GitHub Profile' },
+        basicInfo.portfolio && { type: 'Portfolio', url: basicInfo.portfolio, label: 'Personal Portfolio' }
       ].filter(Boolean),
       
       // Application specific data
@@ -1876,6 +1899,21 @@ export const EnhancedJobsTab = ({
       notes: app.notes || '',
       isShortlisted: (app.applicationStatus || app.status) === 'shortlisted'
     };
+  };
+
+  // Handle schedule interview
+  const handleScheduleInterview = (application, job) => {
+    console.log('📅 Scheduling interview for:', application, job);
+    
+    // Transform application to candidate format
+    const candidate = transformApplicationToCandidate(application);
+    
+    setScheduleInterviewModal({
+      isOpen: true,
+      candidate: candidate,
+      job: job,
+      application: application
+    });
   };
 
   // Handle view candidate profile
@@ -4580,13 +4618,19 @@ const ApplicationsModal = ({ isOpen, job, applications, onClose, onViewCandidate
                         </div>
                       )}
                       
-                      {/* View Profile Button */}
-                      <div className="mt-3 flex justify-end">
+                      {/* Action Buttons */}
+                      <div className="mt-3 flex justify-end space-x-2">
                         <button
                           onClick={() => onViewCandidate(app)}
                           className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors duration-200"
                         >
                           👤 View Profile
+                        </button>
+                        <button
+                          onClick={() => handleScheduleInterview(app, job)}
+                          className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors duration-200"
+                        >
+                          📅 Schedule Interview
                         </button>
                       </div>
                     </div>

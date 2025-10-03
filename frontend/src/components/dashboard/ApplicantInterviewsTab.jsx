@@ -22,8 +22,8 @@ const ApplicantInterviewsTab = ({ user }) => {
   const [selectedInterview, setSelectedInterview] = useState(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
-  // Mock interviews data
-  const mockInterviews = [
+  // Real interviews data from API
+  const [realInterviews, setRealInterviews] = useState([]);
     {
       id: 1,
       jobTitle: "Senior Frontend Developer",
@@ -117,8 +117,23 @@ const ApplicantInterviewsTab = ({ user }) => {
   ];
 
   useEffect(() => {
-    setInterviews(mockInterviews);
-    setFilteredInterviews(mockInterviews);
+    // Fetch real interviews from API
+    const fetchInterviews = async () => {
+      try {
+        // TODO: Replace with actual API call
+        // const response = await interviewsAPI.getApplicantInterviews();
+        // setInterviews(response.data || []);
+        // setFilteredInterviews(response.data || []);
+        setInterviews([]);
+        setFilteredInterviews([]);
+      } catch (error) {
+        console.error('Error fetching interviews:', error);
+        setInterviews([]);
+        setFilteredInterviews([]);
+      }
+    };
+    
+    fetchInterviews();
   }, []);
 
   useEffect(() => {

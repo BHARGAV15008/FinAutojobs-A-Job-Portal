@@ -87,26 +87,16 @@ const RecruiterDashboardContent = () => {
   // Real-time notifications
   const { 
     isConnected: isNotificationConnected, 
-    notifications: realTimeNotifications,
     unreadCount: realTimeUnreadCount 
   } = useRealTimeNotifications();
 
-  // Debug: Log currentUser to see what fields are available (reduced logging)
-  if (currentUser && Math.random() < 0.1) { // Only log 10% of the time to reduce spam
-    console.log('🔍 RecruiterDashboard currentUser:', currentUser?._id);
-    console.log('🔍 RecruiterDashboard editingJob state:', editingJob);
-  }
-  
+  // State declarations first
   const [profileUpdateTrigger, setProfileUpdateTrigger] = useState(0);
-  
-  // Add a state to force re-render when jobs are updated
   const [jobsRefreshTrigger, setJobsRefreshTrigger] = useState(0);
 
   // Get stats from dashboard context
   const stats = getStats ? getStats("recruiter") : {};
-  console.log('🔍 RecruiterDashboard final stats:', stats);
-  console.log('🔍 Hired count from stats:', stats?.hired);
-  console.log('🔍 Dashboard applications data:', dashboardData?.applications);
+  // Stats and dashboard data available for debugging if needed
   
   // Manual check for accepted applications
   if (dashboardData?.applications) {
@@ -116,18 +106,16 @@ const RecruiterDashboardContent = () => {
       (app.applicationStatus === "Accepted") || 
       (app.status === "Accepted")
     );
-    console.log('🔍 Manual check - Accepted applications found:', acceptedApps.length);
-    console.log('🔍 Accepted applications details:', acceptedApps);
+    // Manual check for accepted applications completed
   }
 
   // Handle job editing
   const handleEditJob = (job) => {
-    console.log('🔍 Job called with:', job);
-    console.log('🔍 Job fields:', Object.keys(job || {}));
+    // Job editing initiated
     setEditingJob(job);
     setActiveTab("jobs");
     setActiveJobTab("post");
-    console.log('✅ Set editingJob state and switched to post tab');
+    // Job editing state updated
   };
 
   // Listen for edit job events

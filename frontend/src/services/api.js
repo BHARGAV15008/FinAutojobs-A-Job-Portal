@@ -226,4 +226,22 @@ export const reportsAPI = {
   deleteReport: (id) => api.delete(`/reports/${id}`),
 };
 
+// Contact API
+export const contactAPI = {
+  sendMessage: (messageData) => api.post('/contact/send-message', messageData),
+  sendEmail: (emailData) => api.post('/contact/send-email', emailData),
+  sendBulkMessage: (bulkData) => api.post('/contact/bulk-message', bulkData),
+  getTemplates: () => api.get('/contact/templates'),
+};
+
+// Messages API
+export const messagesAPI = {
+  getConversations: () => api.get('/messages/conversations'),
+  getConversation: (userId, limit = 50) => api.get(`/messages/conversation/${userId}?limit=${limit}`),
+  sendMessage: (messageData) => api.post('/messages', messageData),
+  markAsRead: (messageId) => api.put(`/messages/${messageId}/read`),
+  deleteMessage: (messageId) => api.delete(`/messages/${messageId}`),
+  getStats: () => api.get('/messages/stats'),
+};
+
 export default api;

@@ -39,8 +39,9 @@ const StyledCard = styled(Card)(({ theme }) => ({
 const AdminLoginPage = () => {
   const theme = useTheme();
   const [formData, setFormData] = useState({
-    email: '',
+    identifier: '',
     password: '',
+    role: 'admin'
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -64,17 +65,51 @@ const AdminLoginPage = () => {
     setError('');
 
     try {
-      await login({
-        email: formData.email,
-        password: formData.password
-      }, true); // true indicates admin login
+      console.log('Admin login attempt:', { ...formData, password: '***' });
+      const result = await login(formData);
       
-      // Login successful, user will be redirected by AuthContext
+      console.log('Admin login result:', result);
+      
+      if (result.success) {
+        console.log('Admin login successful, redirecting to dashboard');
+        // Redirect to admin dashboard
+        setLocation('/admin-dashboard');
+      } else {
+        setError(result.message || 'Admin login failed');
+      }
     } catch (error) {
-      setError(error.message || 'Invalid admin credentials. Please try again.');
+      console.error('Admin login error:', error);
+      setError('Invalid admin credentials. Please try again.');
     }
 
     setLoading(false);
+  };
+
+  // Pre-filled admin credentials for easy testing
+  const fillAdminCredentials = (adminType) => {
+    const credentials = {
+      main: {
+        identifier: 'admin@finautojobs.com',
+        password: 'admin123'
+      },
+      super: {
+        identifier: 'superadmin@finautojobs.com',
+        password: 'superadmin123'
+      },
+      hr: {
+        identifier: 'hr@finautojobs.com',
+        password: 'hradmin123'
+      },
+      analytics: {
+        identifier: 'analytics@finautojobs.com',
+        password: 'analytics123'
+      }
+    };
+
+    setFormData(prev => ({
+      ...prev,
+      ...credentials[adminType]
+    }));
   };
 
   return (
@@ -173,6 +208,47 @@ const AdminLoginPage = () => {
                 </Box>
               </Paper>
 
+              {/* Quick Login Buttons */}
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle2" gutterBottom color="text.secondary">
+                  Quick Login (Development):
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => fillAdminCredentials('main')}
+                    sx={{ fontSize: '0.7rem' }}
+                  >
+                    Main Admin
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => fillAdminCredentials('super')}
+                    sx={{ fontSize: '0.7rem' }}
+                  >
+                    Super Admin
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => fillAdminCredentials('hr')}
+                    sx={{ fontSize: '0.7rem' }}
+                  >
+                    HR Admin
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => fillAdminCredentials('analytics')}
+                    sx={{ fontSize: '0.7rem' }}
+                  >
+                    Analytics Admin
+                  </Button>
+                </Box>
+              </Box>
+
               {error && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
@@ -189,10 +265,9 @@ const AdminLoginPage = () => {
               <Box component="form" onSubmit={handleSubmit}>
                 <TextField
                   fullWidth
-                  name="email"
-                  label="Admin Email"
-                  type="email"
-                  value={formData.email}
+                  name="identifier"
+                  label="Admin Email or Username"
+                  value={formData.identifier}
                   onChange={handleChange}
                   required
                   sx={{ mb: 3 }}
@@ -253,6 +328,25 @@ const AdminLoginPage = () => {
                 >
                   {loading ? 'Authenticating...' : 'Access Admin Panel'}
                 </Button>
+
+                {/* Admin Credentials Info */}
+                <Paper
+                  sx={{
+                    p: 2,
+                    mb: 3,
+                    bgcolor: 'rgba(33, 150, 243, 0.1)',
+                    border: '1px solid rgba(33, 150, 243, 0.3)',
+                    borderRadius: 2,
+                  }}
+                >
+                  <Typography variant="caption" color="info.dark">
+                    <strong>Admin Accounts Available:</strong><br/>
+                    • admin@finautojobs.com (admin123)<br/>
+                    • superadmin@finautojobs.com (superadmin123)<br/>
+                    • hr@finautojobs.com (hradmin123)<br/>
+                    • analytics@finautojobs.com (analytics123)
+                  </Typography>
+                </Paper>
 
                 {/* Back to Main Site */}
                 <Box sx={{ textAlign: 'center' }}>

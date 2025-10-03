@@ -12,7 +12,8 @@ import UserModels, {
   checkFieldAvailability,
   BaseUser,
   Applicant,
-  Recruiter
+  Recruiter,
+  Admin
 } from '../models/UserModels.js';
 import UsernameGenerator from '../utils/usernameGenerator.js';
 
@@ -341,7 +342,7 @@ router.post('/register', registerValidation, async (req, res) => {
 const loginValidation = [
   body('identifier').trim().notEmpty().withMessage('Email, username, or phone is required'),
   body('password').notEmpty().withMessage('Password is required'),
-  body('role').isIn(['applicant', 'recruiter']).withMessage('Role must be applicant or recruiter')
+  body('role').isIn(['applicant', 'recruiter', 'admin']).withMessage('Role must be applicant, recruiter, or admin')
 ];
 
 // Role-based login endpoint
