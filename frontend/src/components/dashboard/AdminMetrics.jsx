@@ -1,12 +1,23 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useDashboard } from '../../contexts/RealDashboardContext';
 
 const AdminMetrics = () => {
+  const { getStats } = useDashboard();
+  
+  // Get real stats from dashboard context
+  const stats = getStats('admin') || {
+    totalUsers: 0,
+    activeJobs: 0,
+    totalApplications: 0,
+    systemHealth: 100
+  };
+
   const metrics = [
     {
       title: 'Total Users',
-      value: '1,250',
-      change: '+45 this month',
+      value: stats.totalUsers?.toLocaleString() || '0',
+      change: `${stats.recentUsers || 0} this month`,
       changeType: 'positive',
       icon: '👥',
       bgColor: 'bg-blue-50 dark:bg-blue-900/20',
@@ -14,8 +25,8 @@ const AdminMetrics = () => {
     },
     {
       title: 'Active Jobs',
-      value: '89',
-      change: '+12 this week',
+      value: stats.activeJobs?.toLocaleString() || '0',
+      change: `${stats.totalJobs || 0} total`,
       changeType: 'positive',
       icon: '💼',
       bgColor: 'bg-green-50 dark:bg-green-900/20',
@@ -23,8 +34,8 @@ const AdminMetrics = () => {
     },
     {
       title: 'Applications',
-      value: '567',
-      change: '+23 today',
+      value: stats.totalApplications?.toLocaleString() || '0',
+      change: `${stats.pendingApplications || 0} pending`,
       changeType: 'positive',
       icon: '📄',
       bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
@@ -32,8 +43,8 @@ const AdminMetrics = () => {
     },
     {
       title: 'System Health',
-      value: '98%',
-      change: '+2% uptime',
+      value: `${stats.systemHealth || 100}%`,
+      change: 'All systems operational',
       changeType: 'positive',
       icon: '⚡',
       bgColor: 'bg-purple-50 dark:bg-purple-900/20',

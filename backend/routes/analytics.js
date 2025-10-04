@@ -312,24 +312,44 @@ async function calculateAdminAnalytics() {
       { $group: { _id: '$role', count: { $sum: 1 } } }
     ]);
 
+    // Convert role distribution to object for easier access
+    const roleStats = {};
+    roleDistribution.forEach(role => {
+      roleStats[role._id] = role.count;
+    });
+
     // Get job status distribution
     const jobStatusDistribution = await Job.aggregate([
       { $group: { _id: '$status', count: { $sum: 1 } } }
     ]);
+
+    // Convert job status distribution to object
+    const jobStats = {};
+    jobStatusDistribution.forEach(status => {
+      jobStats[status._id] = status.count;
+    });
 
     // Get application status distribution
     const applicationStatusDistribution = await Application.aggregate([
       { $group: { _id: '$status', count: { $sum: 1 } } }
     ]);
 
-    // Recent activity (last 7 days)
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    // Convert application status distribution to object
+    const appStats = {};
+    applicationStatusDistribution.forEach(status => {
+      appStats[status._id] = status.count;
+    });
 
-    const [newUsers, newJobs, newApplications] = await Promise.all([
-      BaseUser.countDocuments({ createdAt: { $gte: sevenDaysAgo } }),
-      Job.countDocuments({ createdAt: { $gte: sevenDaysAgo } }),
-      Application.countDocuments({ appliedAt: { $gte: sevenDaysAgo } })
+    // Recent activity (last 30 days for monthly stats)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const [recentUsers, newJobs, newApplications, pendingUsers, activeUsers] = await Promise.all([
+      BaseUser.countDocuments({ createdAt: { $gte: thirtyDaysAgo } }),
+      Job.countDocuments({ createdAt: { $gte: thirtyDaysAgo } }),
+      Application.countDocuments({ appliedAt: { $gte: thirtyDaysAgo } }),
+      BaseUser.countDocuments({ isVerified: false }),
+      BaseUser.countDocuments({ isActive: { $ne: false }, isVerified: true })
     ]);
 
     // System health metrics
@@ -344,7 +364,23 @@ async function calculateAdminAnalytics() {
         totalJobs,
         totalApplications,
         activeJobs,
-        systemHealth: Math.round(systemHealth)
+        systemHealth: Math.round(systemHealth),
+        // Role-specific counts for frontend
+        recruiters: roleStats.recruiter || 0,
+        applicants: roleStats.applicant || 0,
+        admins: roleStats.admin || 0,
+        // User status counts
+        pendingUsers,
+        activeUsers,
+        recentUsers,
+        // Job status counts
+        approvedJobs: jobStats.active || 0,
+        pendingJobs: jobStats.pending || 0,
+        rejectedJobs: jobStats.rejected || 0,
+        // Application status counts
+        pendingApplications: appStats.pending || 0,
+        shortlistedApplications: appStats.shortlisted || 0,
+        hiredApplications: (appStats.hired || 0) + (appStats.accepted || 0)
       },
       distributions: {
         roles: roleDistribution,
@@ -352,7 +388,7 @@ async function calculateAdminAnalytics() {
         applicationStatuses: applicationStatusDistribution
       },
       recentActivity: {
-        newUsers,
+        newUsers: recentUsers,
         newJobs,
         newApplications
       }

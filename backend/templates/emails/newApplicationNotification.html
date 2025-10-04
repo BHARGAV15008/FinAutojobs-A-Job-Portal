@@ -1,0 +1,57 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>New Application Received</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: #FF9800; color: white; padding: 20px; text-align: center; }
+            .content { padding: 20px; background: #f9f9f9; }
+            .footer { padding: 20px; text-align: center; color: #666; }
+            .button { display: inline-block; padding: 12px 24px; background: #FF9800; color: white; text-decoration: none; border-radius: 4px; }
+            .applicant-info { background: white; padding: 15px; border-radius: 8px; margin: 20px 0; }
+            .highlight { background: #FFF3E0; padding: 15px; border-radius: 8px; border-left: 4px solid #FF9800; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>New Application Received</h1>
+            </div>
+            <div class="content">
+              <h2>Dear {{recruiterName}},</h2>
+              <p>You have received a new application for your job posting.</p>
+              
+              <div class="highlight">
+                <h3>Job Details:</h3>
+                <p><strong>Position:</strong> {{jobTitle}}</p>
+                <p><strong>Application ID:</strong> {{applicationId}}</p>
+                <p><strong>Applied Date:</strong> {{appliedDate}}</p>
+              </div>
+
+              <div class="applicant-info">
+                <h3>Applicant Information:</h3>
+                <p><strong>Name:</strong> {{applicantName}}</p>
+                <p><strong>Email:</strong> {{applicantEmail}}</p>
+                <p><strong>Experience:</strong> {{experience}} years</p>
+                <p><strong>Expected Salary:</strong> ₹{{expectedSalary}}</p>
+                {{#if matchScore}}
+                <p><strong>AI Match Score:</strong> {{matchScore}}%</p>
+                {{/if}}
+              </div>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="{{applicationUrl}}" class="button">Review Application</a>
+              </div>
+
+              <p>Please review the application and update the status accordingly.</p>
+            </div>
+            <div class="footer">
+              <p>&copy; 2024 FinAutoJobs. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      

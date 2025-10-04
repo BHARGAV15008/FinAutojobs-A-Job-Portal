@@ -3,8 +3,22 @@ import { motion } from 'framer-motion';
 import AdminMetrics from './AdminMetrics';
 import AdminActivity from './AdminActivity';
 import LoginStatusBanner from './LoginStatusBanner';
+import { useDashboard } from '../../contexts/RealDashboardContext';
 
 const AdminDashboardMain = ({ user }) => {
+  const { dashboardData, getStats } = useDashboard();
+  
+  // Get real stats from dashboard context
+  const stats = getStats('admin') || {
+    totalUsers: 0,
+    activeJobs: 0,
+    totalApplications: 0,
+    systemHealth: 100,
+    pendingUsers: 0,
+    approvedJobs: 0,
+    pendingJobs: 0,
+    rejectedJobs: 0
+  };
   return (
     <div className="space-y-8">
       {/* Login Status Banner */}
@@ -45,19 +59,27 @@ const AdminDashboardMain = ({ user }) => {
             </h3>
             <div className="grid grid-cols-2 gap-6">
               <div className="text-center">
-                <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">1,250</div>
+                <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                  {stats.totalUsers?.toLocaleString() || '0'}
+                </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">Total Users</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-green-600 dark:text-green-400">89</div>
+                <div className="text-3xl font-bold text-green-600 dark:text-green-400">
+                  {stats.activeJobs?.toLocaleString() || '0'}
+                </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">Active Jobs</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">567</div>
+                <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
+                  {stats.totalApplications?.toLocaleString() || '0'}
+                </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">Applications</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">98%</div>
+                <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+                  {stats.systemHealth || 100}%
+                </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">Uptime</div>
               </div>
             </div>
@@ -88,21 +110,27 @@ const AdminDashboardMain = ({ user }) => {
                 <p className="text-sm font-medium text-gray-900 dark:text-white">Job Seekers</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Active users</p>
               </div>
-              <span className="text-lg font-bold text-blue-600 dark:text-blue-400">892</span>
+              <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                {(stats.totalUsers - (stats.recruiters || 0) - (stats.admins || 0)) || 0}
+              </span>
             </div>
             <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
               <div>
                 <p className="text-sm font-medium text-gray-900 dark:text-white">Recruiters</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Verified companies</p>
               </div>
-              <span className="text-lg font-bold text-green-600 dark:text-green-400">156</span>
+              <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                {stats.recruiters || 0}
+              </span>
             </div>
             <div className="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
               <div>
                 <p className="text-sm font-medium text-gray-900 dark:text-white">Pending</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Awaiting approval</p>
               </div>
-              <span className="text-lg font-bold text-yellow-600 dark:text-yellow-400">23</span>
+              <span className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
+                {stats.pendingUsers || 0}
+              </span>
             </div>
           </div>
         </div>
@@ -123,21 +151,27 @@ const AdminDashboardMain = ({ user }) => {
                 <p className="text-sm font-medium text-gray-900 dark:text-white">Approved</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">This month</p>
               </div>
-              <span className="text-lg font-bold text-green-600 dark:text-green-400">67</span>
+              <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                {stats.approvedJobs || stats.activeJobs || 0}
+              </span>
             </div>
             <div className="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
               <div>
                 <p className="text-sm font-medium text-gray-900 dark:text-white">Pending</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Awaiting review</p>
               </div>
-              <span className="text-lg font-bold text-yellow-600 dark:text-yellow-400">12</span>
+              <span className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
+                {stats.pendingJobs || 0}
+              </span>
             </div>
             <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
               <div>
                 <p className="text-sm font-medium text-gray-900 dark:text-white">Rejected</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">This month</p>
               </div>
-              <span className="text-lg font-bold text-red-600 dark:text-red-400">8</span>
+              <span className="text-lg font-bold text-red-600 dark:text-red-400">
+                {stats.rejectedJobs || 0}
+              </span>
             </div>
           </div>
         </div>

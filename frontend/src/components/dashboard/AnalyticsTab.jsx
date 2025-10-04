@@ -1,28 +1,115 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { adminAPI } from '../../services/api';
 
 const AnalyticsTab = () => {
-  const analyticsData = [
-    { period: 'Jan', users: 120, jobs: 45, applications: 230 },
-    { period: 'Feb', users: 150, jobs: 52, applications: 280 },
-    { period: 'Mar', users: 180, jobs: 38, applications: 320 },
-    { period: 'Apr', users: 220, jobs: 65, applications: 450 },
-    { period: 'May', users: 280, jobs: 72, applications: 520 },
-    { period: 'Jun', users: 320, jobs: 89, applications: 650 }
-  ];
+  const [analyticsData, setAnalyticsData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedPeriod, setSelectedPeriod] = useState('6months');
+  const [systemAnalytics, setSystemAnalytics] = useState({
+    overview: {},
+    monthlyData: [],
+    topCategories: [],
+    systemHealth: {}
+  });
 
-  const maxValue = Math.max(...analyticsData.flatMap(d => [d.users, d.jobs, d.applications]), 1) || 1;
+  useEffect(() => {
+    fetchSystemAnalytics();
+  }, [selectedPeriod]);
+  const fetchSystemAnalytics = async () => {
+    try {
+      setLoading(true);
+      console.log('🔍 Fetching system analytics for period:', selectedPeriod);
+      
+      const response = await adminAPI.getSystemAnalytics({ period: selectedPeriod });
+      console.log('✅ System analytics fetched:', response.data);
+      
+      if (response.data.success) {
+        setSystemAnalytics(response.data.data || {
+          overview: {
+            totalUsers: 0,
+            totalJobs: 0,
+            totalApplications: 0,
+            activeUsers: 0,
+            activeJobs: 0,
+            userGrowth: '+0%',
+            jobGrowth: '+0%',
+            applicationGrowth: '+0%'
+          },
+          monthlyData: [],
+          topCategories: [],
+          systemHealth: {
+            serverResponseTime: '125ms',
+            databaseQueries: '1,245',
+            activeSessions: 0,
+            errorRate: '0.02%'
+          }
+        });
+      } else {
+        throw new Error(response.data.message || 'Failed to fetch system analytics');
+      }
+    } catch (error) {
+      console.error('❌ Error fetching system analytics:', error);
+      // Fallback to empty data
+      setSystemAnalytics({
+        overview: {
+          totalUsers: 0,
+          totalJobs: 0,
+          totalApplications: 0,
+          activeUsers: 0,
+          activeJobs: 0,
+          userGrowth: '+0%',
+          jobGrowth: '+0%',
+          applicationGrowth: '+0%'
+        },
+        monthlyData: [],
+        topCategories: [],
+        systemHealth: {
+          serverResponseTime: '125ms',
+          databaseQueries: '1,245',
+          activeSessions: 0,
+          errorRate: '0.02%'
+        }
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  const handlePeriodChange = (period) => {
+    setSelectedPeriod(period);
+  };
+
+  const maxValue = Math.max(...analyticsData.flatMap(d => [d.users || 0, d.jobs || 0, d.applications || 0]), 1) || 1;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Analytics Dashboard</h2>
         <div className="flex space-x-3">
-          <select className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-            <option>Last 6 Months</option>
-            <option>Last Year</option>
-            <option>All Time</option>
+          <select 
+            value={selectedPeriod}
+            onChange={(e) => handlePeriodChange(e.target.value)}
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          >
+            <option value="1month">Last Month</option>
+            <option value="6months">Last 6 Months</option>
+            <option value="1year">Last Year</option>
+            <option value="all">All Time</option>
           </select>
+          <button 
+            onClick={fetchSystemAnalytics}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            Refresh Data
+          </button>
           <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
             Export Report
           </button>
@@ -38,8 +125,12 @@ const AnalyticsTab = () => {
             </div>
             <div className="ml-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Total Users</h3>
-              <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">1,270</p>
-              <p className="text-sm text-green-600 dark:text-green-400">+12% from last month</p>
+              <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                {systemAnalytics.overview?.totalUsers || 0}
+              </p>
+              <p className="text-sm text-green-600 dark:text-green-400">
+                {systemAnalytics.overview?.userGrowth || '+0%'} from last month
+              </p>
             </div>
           </div>
         </div>
@@ -51,8 +142,12 @@ const AnalyticsTab = () => {
             </div>
             <div className="ml-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Active Jobs</h3>
-              <p className="text-3xl font-bold text-green-600 dark:text-green-400">89</p>
-              <p className="text-sm text-green-600 dark:text-green-400">+8% from last month</p>
+              <p className="text-3xl font-bold text-green-600 dark:text-green-400">
+                {systemAnalytics.overview?.activeJobs || 0}
+              </p>
+              <p className="text-sm text-green-600 dark:text-green-400">
+                {systemAnalytics.overview?.jobGrowth || '+0%'} from last month
+              </p>
             </div>
           </div>
         </div>
@@ -64,8 +159,12 @@ const AnalyticsTab = () => {
             </div>
             <div className="ml-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Applications</h3>
-              <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">650</p>
-              <p className="text-sm text-green-600 dark:text-green-400">+25% from last month</p>
+              <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+                {systemAnalytics.overview?.totalApplications || 0}
+              </p>
+              <p className="text-sm text-green-600 dark:text-green-400">
+                {systemAnalytics.overview?.applicationGrowth || '+0%'} from last month
+              </p>
             </div>
           </div>
         </div>
@@ -142,33 +241,35 @@ const AnalyticsTab = () => {
             Top Performing Categories
           </h3>
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600 dark:text-gray-400">Technology</span>
-              <div className="flex items-center">
-                <div className="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-3">
-                  <div className="bg-blue-600 h-2 rounded-full" style={{ width: '85%' }}></div>
+            {systemAnalytics.topCategories && systemAnalytics.topCategories.length > 0 ? (
+              systemAnalytics.topCategories.map((category, index) => (
+                <div key={category.name} className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {category.name || 'Unknown'}
+                  </span>
+                  <div className="flex items-center">
+                    <div className="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-3">
+                      <div 
+                        className={`h-2 rounded-full ${
+                          index === 0 ? 'bg-blue-600' : 
+                          index === 1 ? 'bg-green-600' : 
+                          index === 2 ? 'bg-purple-600' : 
+                          index === 3 ? 'bg-yellow-600' : 'bg-gray-600'
+                        }`}
+                        style={{ width: `${category.percentage || 0}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      {category.percentage || 0}%
+                    </span>
+                  </div>
                 </div>
-                <span className="text-sm font-medium text-gray-900 dark:text-white">85%</span>
+              ))
+            ) : (
+              <div className="text-center text-gray-500 dark:text-gray-400 py-4">
+                No category data available
               </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600 dark:text-gray-400">Finance</span>
-              <div className="flex items-center">
-                <div className="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-3">
-                  <div className="bg-green-600 h-2 rounded-full" style={{ width: '72%' }}></div>
-                </div>
-                <span className="text-sm font-medium text-gray-900 dark:text-white">72%</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600 dark:text-gray-400">Healthcare</span>
-              <div className="flex items-center">
-                <div className="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-3">
-                  <div className="bg-purple-600 h-2 rounded-full" style={{ width: '68%' }}></div>
-                </div>
-                <span className="text-sm font-medium text-gray-900 dark:text-white">68%</span>
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -179,19 +280,27 @@ const AnalyticsTab = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600 dark:text-gray-400">Server Response Time</span>
-              <span className="text-sm font-medium text-green-600 dark:text-green-400">125ms</span>
+              <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                {systemAnalytics.systemHealth?.serverResponseTime || '125ms'}
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600 dark:text-gray-400">Database Queries/sec</span>
-              <span className="text-sm font-medium text-blue-600 dark:text-blue-400">1,245</span>
+              <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                {systemAnalytics.systemHealth?.databaseQueries || '1,245'}
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600 dark:text-gray-400">Active Sessions</span>
-              <span className="text-sm font-medium text-purple-600 dark:text-purple-400">892</span>
+              <span className="text-sm font-medium text-purple-600 dark:text-purple-400">
+                {systemAnalytics.systemHealth?.activeSessions || systemAnalytics.overview?.activeUsers || 0}
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600 dark:text-gray-400">Error Rate</span>
-              <span className="text-sm font-medium text-green-600 dark:text-green-400">0.02%</span>
+              <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                {systemAnalytics.systemHealth?.errorRate || '0.02%'}
+              </span>
             </div>
           </div>
         </div>

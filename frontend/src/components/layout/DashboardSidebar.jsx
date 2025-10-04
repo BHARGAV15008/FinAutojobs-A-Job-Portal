@@ -8,6 +8,9 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
   const [location, setLocation] = useLocation();
   const { darkMode } = useTheme();
   const { logout } = useAuth();
+
+  // Debug props
+  console.log('🔍 DashboardSidebar props:', { userRole, user: user?.name, location, activeTab });
   const [expandedMenus, setExpandedMenus] = useState({});
 
   // Helper function to check if a path is currently active
@@ -231,10 +234,10 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
             tabId: 'users',
             current: isPathActive('/users'),
             submenu: [
-              { name: 'All Users', emoji: '👤', path: `/users`, tabId: 'users' },
-              { name: 'Applicants', emoji: '🔍', path: `/users`, tabId: 'users' },
-              { name: 'Recruiters', emoji: '🏢', path: `/users`, tabId: 'users' },
-              { name: 'Pending Approval', emoji: '⏳', path: `/users`, tabId: 'users' }
+              { name: 'All Users', emoji: '👤', path: `/users`, tabId: 'users', userTab: 'all' },
+              { name: 'Applicants', emoji: '🔍', path: `/users`, tabId: 'users', userTab: 'applicant' },
+              { name: 'Recruiters', emoji: '🏢', path: `/users`, tabId: 'users', userTab: 'recruiter' },
+              { name: 'Pending Approval', emoji: '⏳', path: `/users`, tabId: 'users', userTab: 'pending' }
             ]
           },
           {
@@ -245,9 +248,11 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
             tabId: 'jobs',
             current: isPathActive('/jobs'),
             submenu: [
-              { name: 'All Jobs', emoji: '📋', path: `/jobs`, tabId: 'jobs' },
-              { name: 'Pending Review', emoji: '⏳', path: `/jobs`, tabId: 'jobs' },
-              { name: 'Flagged Jobs', emoji: '🚩', path: `/jobs`, tabId: 'jobs' }
+              { name: 'All Jobs', emoji: '📋', path: `/jobs`, tabId: 'jobs', jobTab: 'all' },
+              { name: 'Active Jobs', emoji: '✅', path: `/jobs`, tabId: 'jobs', jobTab: 'active' },
+              { name: 'Draft Jobs', emoji: '📝', path: `/jobs`, tabId: 'jobs', jobTab: 'draft' },
+              { name: 'Closed Jobs', emoji: '🔒', path: `/jobs`, tabId: 'jobs', jobTab: 'closed' },
+              { name: 'Expired Jobs', emoji: '⏰', path: `/jobs`, tabId: 'jobs', jobTab: 'expired' }
             ]
           },
           {
@@ -290,29 +295,71 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
     }));
   };
 
-  const handleNavigation = (path, tabId, jobTabId) => {
-    console.log('🔍 SIDEBAR:', { path, userRole, location });
+  const handleNavigation = (path, tabId, jobTabId, userTab) => {
+    console.log('🔍 SIDEBAR NAVIGATION CALLED:', { 
+      path, 
+      tabId, 
+      jobTabId, 
+      userTab, 
+      userRole, 
+      currentLocation: location 
+    });
+    
+    // Check if we have the required props
+    if (!userRole) {
+      console.error('❌ SIDEBAR: userRole is missing!', { userRole, user });
+      return;
+    }
+    
+    if (!setLocation) {
+      console.error('❌ SIDEBAR: setLocation function is missing!');
+      return;
+    }
+
     // Always use direct URL navigation for simplicity
     let fullPath;
     const dashboardPrefix = `/${userRole}-dashboard`;
+    console.log('🔍 SIDEBAR: Dashboard prefix:', dashboardPrefix);
 
     // Handle different path scenarios
     if (path === `/${userRole}-dashboard`) {
       // Main dashboard path
       fullPath = path;
+      console.log('🔍 SIDEBAR: Using main dashboard path');
     } else if (path.startsWith('/') && !path.includes('dashboard')) {
       // Tab path like /profile, /users, etc.
       fullPath = `${dashboardPrefix}${path}`;
+      console.log('🔍 SIDEBAR: Using tab path:', fullPath);
+      
+      // Add userTab parameter for user management
+      if (userTab && path === '/users') {
+        fullPath += `?tab=${userTab}`;
+        console.log('🔍 SIDEBAR: Added userTab parameter:', fullPath);
+      }
+      
+      // Add jobTab parameter for job management
+      if (jobTabId && path === '/jobs') {
+        fullPath += `?tab=${jobTabId}`;
+        console.log('🔍 SIDEBAR: Added jobTab parameter:', fullPath);
+      }
     } else if (path.includes(`${userRole}-dashboard`)) {
       // Path already has dashboard prefix
       fullPath = path;
+      console.log('🔍 SIDEBAR: Path already has dashboard prefix');
     } else {
       // Default case
       fullPath = `${dashboardPrefix}/${path}`;
+      console.log('🔍 SIDEBAR: Using default case:', fullPath);
     }
 
-    console.log('🔗 SIDEBAR navigating to:', fullPath);
-    setLocation(fullPath);
+    console.log('🔗 SIDEBAR NAVIGATING TO:', fullPath);
+    
+    try {
+      setLocation(fullPath);
+      console.log('✅ SIDEBAR: Navigation successful');
+    } catch (error) {
+      console.error('❌ SIDEBAR: Navigation failed:', error);
+    }
 
     if (window.innerWidth < 1024) {
       setSidebarOpen(false);
@@ -375,9 +422,12 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
                 }
               `}
               onClick={() => {
+                console.log('🔍 SIDEBAR: Main item clicked:', item.name, { hasSubmenu: !!item.submenu, path: item.path, tabId: item.tabId });
                 if (item.submenu) {
+                  console.log('🔍 SIDEBAR: Toggling submenu for:', item.name);
                   toggleSubmenu(item.name);
                 } else {
+                  console.log('🔍 SIDEBAR: Navigating to:', item.path);
                   handleNavigation(item.path, item.tabId);
                 }
               }}
@@ -420,7 +470,16 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
                         : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800'
                       }
                     `}
-                    onClick={() => handleNavigation(subItem.path, subItem.tabId, subItem.jobTabId)}
+                    onClick={() => {
+                      console.log('🔍 SIDEBAR: Submenu item clicked:', subItem.name, { 
+                        path: subItem.path, 
+                        tabId: subItem.tabId, 
+                        jobTab: subItem.jobTab,
+                        jobTabId: subItem.jobTabId, 
+                        userTab: subItem.userTab 
+                      });
+                      handleNavigation(subItem.path, subItem.tabId, subItem.jobTab || subItem.jobTabId, subItem.userTab);
+                    }}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >

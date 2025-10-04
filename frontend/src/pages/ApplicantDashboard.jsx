@@ -241,8 +241,8 @@ const ApplicantDashboardContent = () => {
     {
       title: "Profile Completion",
       value: `${stats.profileCompletion || 0}%`,
-      change: "+5% from last week",
-      changeType: "positive",
+      change: stats.profileCompletion >= 80 ? "Great progress!" : "Complete your profile",
+      changeType: stats.profileCompletion >= 80 ? "positive" : "neutral",
       gradient: "blue",
       icon: (
         <svg
@@ -263,7 +263,7 @@ const ApplicantDashboardContent = () => {
     {
       title: "Applied Jobs",
       value: stats.appliedJobs || 0,
-      change: "+3 this week",
+      change: `${stats.totalApplications || 0} total applications`,
       changeType: "positive",
       gradient: "green",
       icon: (
@@ -285,7 +285,7 @@ const ApplicantDashboardContent = () => {
     {
       title: "Shortlisted",
       value: stats.shortlisted || 0,
-      change: "+1 this week",
+      change: `${((stats.shortlisted || 0) / Math.max(1, stats.totalApplications || 1) * 100).toFixed(1)}% success rate`,
       changeType: "positive",
       gradient: "purple",
       icon: (

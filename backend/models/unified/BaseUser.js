@@ -43,14 +43,28 @@ const baseUserSchema = new mongoose.Schema({
   // Experience (Common field)
   yearsOfExperience: { type: Number, default: 0 },
   
-  // Status
+  // Status & Admin Actions
   status: { type: String, enum: ['active', 'inactive', 'suspended'], default: 'active' },
+  isActive: { type: Boolean, default: true },
+  isVerified: { type: Boolean, default: false },
   isEmailVerified: { type: Boolean, default: false },
   isPhoneVerified: { type: Boolean, default: false },
+  isDeleted: { type: Boolean, default: false },
   
-  // Security
+  // Admin Action Tracking
+  suspendedAt: { type: Date },
+  suspendedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'BaseUser' },
+  suspensionReason: { type: String },
+  activatedAt: { type: Date },
+  activatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'BaseUser' },
+  deletedAt: { type: Date },
+  deletedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'BaseUser' },
+  
+  // Security & Activity Tracking
   loginAttempts: { type: Number, default: 0 },
   lockUntil: { type: Date },
+  lastLogin: { type: Date },
+  lastActivity: { type: Date },
   
   // OAuth Providers
   oauthProviders: [{

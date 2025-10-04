@@ -7,22 +7,23 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-dotenv.config();
+// Load environment variables from config.env
+dotenv.config({ path: './config.env' });
 
 class EmailService {
   constructor() {
     this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT) || 587,
-      secure: process.env.SMTP_SECURE === 'true' || false,
+      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.EMAIL_PORT) || 587,
+      secure: false, // Use STARTTLS
       auth: {
-        user: process.env.SMTP_USER || process.env.EMAIL_USER,
-        pass: process.env.SMTP_PASS || process.env.EMAIL_PASS
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
       }
     });
 
-    this.fromEmail = process.env.FROM_EMAIL || process.env.SMTP_USER || 'noreply@finautojobs.com';
-    this.fromName = process.env.FROM_NAME || 'FinAutoJobs Team';
+    this.fromEmail = process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER || 'noreply@finautojobs.com';
+    this.fromName = process.env.EMAIL_FROM_NAME || 'FinAutoJobs Team';
     this.baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     
     // Initialize email templates
@@ -760,6 +761,33 @@ class EmailService {
   }
 
   /**
+   * Send account creation email with credentials (for admin-created users)
+   */
+  async sendAccountCreatedEmail(userEmail, userData) {
+    try {
+      const { firstName, lastName, role, password, contactNumber } = userData;
+      const fullName = `${firstName} ${lastName}`;
+      
+      const subject = `Your FinAutoJobs Account Has Been Created - Login Details Inside`;
+      const html = this.getAccountCreatedEmailTemplate(fullName, userEmail, password, role, contactNumber);
+
+      await this.transporter.sendMail({
+        from: `"${this.fromName}" <${this.fromEmail}>`,
+        to: userEmail,
+        subject: subject,
+        html: html,
+        priority: 'high'
+      });
+
+      console.log(`✅ Account creation email with credentials sent to ${userEmail}`);
+      return true;
+    } catch (error) {
+      console.error('❌ Failed to send account creation email:', error);
+      return false;
+    }
+  }
+
+  /**
    * Send email verification email
    */
   async sendEmailVerification(userEmail, userName, verificationToken) {
@@ -900,6 +928,101 @@ class EmailService {
   }
 
   // Email Templates
+  getAccountCreatedEmailTemplate(fullName, email, password, role, contactNumber) {
+    const roleMessages = {
+      applicant: 'You can now search for jobs, create your profile, and apply to positions that match your skills.',
+      recruiter: 'You can now post job openings, manage applications, and find the best talent for your company.',
+      admin: 'You have access to the admin dashboard where you can manage users, companies, and monitor platform activity.'
+    };
+
+    const dashboardUrls = {
+      applicant: `${this.baseUrl}/applicant-dashboard`,
+      recruiter: `${this.baseUrl}/recruiter-dashboard`,
+      admin: `${this.baseUrl}/admin-dashboard`
+    };
+
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Your FinAutoJobs Account is Ready</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; margin: 0; padding: 20px; }
+          .container { max-width: 600px; margin: 0 auto; background-color: white; border-radius: 10px; overflow: hidden; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+          .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+          .content { padding: 30px; }
+          .credentials-box { background-color: #f8f9fa; border: 2px solid #e9ecef; border-radius: 8px; padding: 20px; margin: 20px 0; }
+          .credential-item { margin: 10px 0; padding: 8px; background-color: white; border-radius: 4px; border-left: 4px solid #667eea; }
+          .password-highlight { background-color: #fff3cd; border-color: #ffeaa7; font-weight: bold; font-size: 16px; }
+          .cta-button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }
+          .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; }
+          .warning { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; border-radius: 5px; margin: 20px 0; }
+          .role-badge { background-color: #667eea; color: white; padding: 4px 12px; border-radius: 15px; font-size: 12px; text-transform: uppercase; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>🎉 Welcome to FinAutoJobs!</h1>
+            <p>Your <span class="role-badge">${role}</span> account has been created</p>
+          </div>
+          <div class="content">
+            <h2>Hello ${fullName}!</h2>
+            <p>Great news! An administrator has created your FinAutoJobs account. You can now access our platform and start ${roleMessages[role] || 'using our services'}.</p>
+            
+            <div class="credentials-box">
+              <h3>🔐 Your Login Credentials</h3>
+              <div class="credential-item">
+                <strong>Email:</strong> ${email}
+              </div>
+              <div class="credential-item">
+                <strong>Contact:</strong> ${contactNumber}
+              </div>
+              <div class="credential-item password-highlight">
+                <strong>Password:</strong> ${password}
+              </div>
+            </div>
+
+            <div class="warning">
+              <strong>⚠️ Important Security Notice:</strong><br>
+              • Please change your password after your first login<br>
+              • Keep your login credentials secure and confidential<br>
+              • Never share your password with anyone<br>
+              • Contact support if you suspect any unauthorized access
+            </div>
+
+            <div style="text-align: center;">
+              <a href="${dashboardUrls[role] || this.baseUrl}" class="cta-button">
+                🚀 Access Your Dashboard
+              </a>
+            </div>
+
+            <h3>What's Next?</h3>
+            <ul>
+              <li><strong>Login:</strong> Use the credentials above to access your account</li>
+              <li><strong>Complete Profile:</strong> Add your details to get the most out of our platform</li>
+              <li><strong>Change Password:</strong> Set a new password for security</li>
+              <li><strong>Explore Features:</strong> ${roleMessages[role] || 'Discover what our platform has to offer'}</li>
+            </ul>
+
+            <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
+            
+            <p>Welcome aboard!</p>
+            <p><strong>The FinAutoJobs Team</strong></p>
+          </div>
+          <div class="footer">
+            <p>This email was sent because an administrator created an account for you on FinAutoJobs.</p>
+            <p>If you believe this was sent in error, please contact our support team immediately.</p>
+            <p>&copy; 2024 FinAutoJobs. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+  }
+
   getWelcomeEmailTemplate(userName, role) {
     const roleMessages = {
       applicant: 'You can now search for jobs, create your profile, and apply to positions that match your skills.',

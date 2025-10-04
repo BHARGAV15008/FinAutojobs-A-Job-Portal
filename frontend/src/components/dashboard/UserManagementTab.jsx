@@ -1,27 +1,71 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useLocation } from 'wouter';
 import api from '../../services/api';
 
 const UserManagementTab = () => {
+  const [location] = useLocation();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterRole, setFilterRole] = useState('all');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [activeTab, setActiveTab] = useState('all');
   const [selectedUser, setSelectedUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [stats, setStats] = useState({});
+  
+  // Add User Form State
+  const [newUser, setNewUser] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    contactNumber: '',
+    role: 'applicant',
+    password: ''
+  });
+  const [formErrors, setFormErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Read tab parameter from URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    if (tabParam && ['all', 'applicant', 'recruiter', 'pending'].includes(tabParam)) {
+      setActiveTab(tabParam);
+      console.log('🔍 UserManagementTab - Set active tab from URL:', tabParam);
+    }
+  }, [location]);
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+    fetchStats();
+  }, [activeTab]);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/admin/users');
-      setUsers(response.data);
+      console.log('🔍 Fetching users for tab:', activeTab);
+      
+      // Build query parameters based on active tab
+      const params = new URLSearchParams();
+      if (activeTab !== 'all') {
+        if (activeTab === 'pending') {
+          params.append('status', 'pending');
+        } else {
+          params.append('role', activeTab);
+        }
+      }
+      
+      const response = await api.get(`/admin/users?${params.toString()}`);
+      console.log('✅ Users fetched:', response.data);
+      
+      if (response.data.success) {
+        setUsers(response.data.data || []);
+      } else {
+        throw new Error(response.data.message || 'Failed to fetch users');
+      }
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('❌ Error fetching users:', error);
       // Fallback to mock data
       setUsers([
         { id: 1, name: 'John Doe', email: 'john@example.com', role: 'applicant', status: 'active', joinDate: '2024-01-15', lastLogin: '2024-03-22', profileComplete: 85 },
@@ -35,46 +79,229 @@ const UserManagementTab = () => {
     }
   };
 
+  const fetchStats = async () => {
+    try {
+      const response = await api.get('/admin/users/stats');
+      if (response.data.success) {
+        setStats(response.data.data);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching user stats:', error);
+      // Fallback stats
+      setStats({
+        totalUsers: 0,
+        activeUsers: 0,
+        pendingUsers: 0,
+        suspendedUsers: 0,
+        usersByRole: {
+          applicants: 0,
+          recruiters: 0,
+          admins: 0
+        }
+      });
+    }
+  };
+
   const handleSuspendUser = async (userId) => {
     try {
-      await api.post(`/admin/users/${userId}/suspend`);
-      setUsers(prev => prev.map(user =>
-        user.id === userId
-          ? { ...user, status: 'suspended' }
-          : user
-      ));
-      alert('User suspended successfully!');
+      console.log('🔍 Suspending user:', userId);
+      const response = await api.post(`/admin/users/${userId}/suspend`, {
+        reason: 'Suspended by admin'
+      });
+      
+      if (response.data.success) {
+        console.log('✅ User suspended successfully');
+        // Refresh the user list to get updated data from database
+        await fetchUsers();
+        await fetchStats();
+        alert('User suspended successfully!');
+      } else {
+        throw new Error(response.data.message || 'Failed to suspend user');
+      }
     } catch (error) {
-      console.error('Error suspending user:', error);
-      alert('Error suspending user');
+      console.error('❌ Error suspending user:', error);
+      alert(`Error suspending user: ${error.response?.data?.message || error.message}`);
     }
   };
 
   const handleActivateUser = async (userId) => {
     try {
-      await api.post(`/admin/users/${userId}/activate`);
-      setUsers(prev => prev.map(user =>
-        user.id === userId
-          ? { ...user, status: 'active' }
-          : user
-      ));
-      alert('User activated successfully!');
+      console.log('🔍 Activating user:', userId);
+      const response = await api.post(`/admin/users/${userId}/activate`);
+      
+      if (response.data.success) {
+        console.log('✅ User activated successfully');
+        // Refresh the user list to get updated data from database
+        await fetchUsers();
+        await fetchStats();
+        alert('User activated successfully!');
+      } else {
+        throw new Error(response.data.message || 'Failed to activate user');
+      }
     } catch (error) {
-      console.error('Error activating user:', error);
-      alert('Error activating user');
+      console.error('❌ Error activating user:', error);
+      alert(`Error activating user: ${error.response?.data?.message || error.message}`);
+    }
+  };
+
+  const handleUpdateLogin = async (userId) => {
+    try {
+      console.log('🔍 Updating lastLogin for user:', userId);
+      const response = await api.post(`/admin/users/${userId}/update-login`);
+      
+      if (response.data.success) {
+        console.log('✅ LastLogin updated successfully');
+        // Refresh the user list to get updated data from database
+        await fetchUsers();
+        alert('Last login updated successfully!');
+      } else {
+        throw new Error(response.data.message || 'Failed to update last login');
+      }
+    } catch (error) {
+      console.error('❌ Error updating last login:', error);
+      alert(`Error updating last login: ${error.response?.data?.message || error.message}`);
     }
   };
 
   const handleDeleteUser = async (userId) => {
     if (window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
       try {
-        await api.delete(`/admin/users/${userId}`);
-        setUsers(prev => prev.filter(user => user.id !== userId));
-        alert('User deleted successfully!');
+        console.log('🔍 Deleting user:', userId);
+        const response = await api.delete(`/admin/users/${userId}`);
+        
+        if (response.data.success) {
+          console.log('✅ User deleted successfully');
+          // Refresh the user list to get updated data from database
+          await fetchUsers();
+          await fetchStats();
+          alert('User deleted successfully!');
+        } else {
+          throw new Error(response.data.message || 'Failed to delete user');
+        }
       } catch (error) {
-        console.error('Error deleting user:', error);
-        alert('Error deleting user');
+        console.error('❌ Error deleting user:', error);
+        alert(`Error deleting user: ${error.response?.data?.message || error.message}`);
       }
+    }
+  };
+
+  // Generate random password
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setNewUser(prev => ({ ...prev, password }));
+    return password;
+  };
+
+  // Validate form fields
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!newUser.firstName.trim()) {
+      errors.firstName = 'First name is required';
+    }
+    
+    if (!newUser.lastName.trim()) {
+      errors.lastName = 'Last name is required';
+    }
+    
+    if (!newUser.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newUser.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+    
+    if (!newUser.contactNumber.trim()) {
+      errors.contactNumber = 'Contact number is required';
+    } else if (!/^[\+]?[1-9][\d]{0,15}$/.test(newUser.contactNumber.replace(/[\s\-\(\)]/g, ''))) {
+      errors.contactNumber = 'Please enter a valid contact number';
+    }
+    
+    if (!newUser.role) {
+      errors.role = 'Role is required';
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Handle form input changes
+  const handleInputChange = (field, value) => {
+    setNewUser(prev => ({ ...prev, [field]: value }));
+    // Clear error for this field when user starts typing
+    if (formErrors[field]) {
+      setFormErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  // Handle add user form submission
+  const handleAddUser = async (e) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      console.log('🔍 Creating new user:', newUser);
+      
+      const response = await api.post('/admin/users', {
+        firstName: newUser.firstName.trim(),
+        lastName: newUser.lastName.trim(),
+        email: newUser.email.trim().toLowerCase(),
+        contactNumber: newUser.contactNumber.trim(),
+        role: newUser.role,
+        password: newUser.password,
+        isVerified: true // Admin-created users are pre-verified
+      });
+      
+      if (response.data.success) {
+        console.log('✅ User created successfully');
+        
+        const emailSent = response.data.emailSent;
+        const successMessage = emailSent 
+          ? `✅ User created successfully!\n\n📧 Login credentials have been sent to: ${newUser.email}\n\nThe user will receive:\n• Email: ${newUser.email}\n• Password: ${newUser.password}\n• Role: ${newUser.role}\n\nThey can now login and should change their password on first login.`
+          : `✅ User created successfully!\n\nEmail: ${newUser.email}\nPassword: ${newUser.password}\n\nPlease share these credentials with the user manually (email sending failed).`;
+        
+        alert(successMessage);
+        
+        // Reset form and close modal
+        setNewUser({
+          firstName: '',
+          lastName: '',
+          email: '',
+          contactNumber: '',
+          role: 'applicant',
+          password: ''
+        });
+        setShowAddUserModal(false);
+        
+        // Refresh user list and stats
+        await fetchUsers();
+        await fetchStats();
+      } else {
+        throw new Error(response.data.message || 'Failed to create user');
+      }
+    } catch (error) {
+      console.error('❌ Error creating user:', error);
+      
+      let errorMessage = 'Failed to create user';
+      if (error.response?.status === 409) {
+        errorMessage = 'A user with this email already exists';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(`❌ Error creating user: ${errorMessage}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -94,10 +321,15 @@ const UserManagementTab = () => {
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = filterRole === 'all' || user.role === filterRole;
-    const matchesStatus = filterStatus === 'all' || user.status === filterStatus;
-    return matchesSearch && matchesRole && matchesStatus;
+    return matchesSearch;
   });
+
+  const tabs = [
+    { id: 'all', label: 'All Users', count: stats.totalUsers || 0 },
+    { id: 'applicant', label: 'Applicants', count: stats.usersByRole?.applicants || 0 },
+    { id: 'recruiter', label: 'Recruiters', count: stats.usersByRole?.recruiters || 0 },
+    { id: 'pending', label: 'Pending Approval', count: stats.pendingUsers || 0 }
+  ];
 
   if (loading) {
     return (
@@ -115,10 +347,42 @@ const UserManagementTab = () => {
           <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
             Export Users
           </button>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          <button 
+            onClick={() => {
+              setShowAddUserModal(true);
+              generatePassword();
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
             Add User
           </button>
         </div>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="border-b border-gray-200 dark:border-gray-700">
+        <nav className="-mb-px flex space-x-8">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                activeTab === tab.id
+                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+              }`}
+            >
+              {tab.label}
+              <span className={`ml-2 py-0.5 px-2 rounded-full text-xs ${
+                activeTab === tab.id
+                  ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400'
+                  : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+              }`}>
+                {tab.count}
+              </span>
+            </button>
+          ))}
+        </nav>
       </div>
 
       {/* Stats Cards */}
@@ -130,7 +394,7 @@ const UserManagementTab = () => {
             </div>
             <div className="ml-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Total Users</h3>
-              <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{users.length}</p>
+              <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{stats.totalUsers || 0}</p>
             </div>
           </div>
         </div>
@@ -143,7 +407,7 @@ const UserManagementTab = () => {
             <div className="ml-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Active Users</h3>
               <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-                {users.filter(u => u.status === 'active').length}
+                {stats.activeUsers || 0}
               </p>
             </div>
           </div>
@@ -157,7 +421,7 @@ const UserManagementTab = () => {
             <div className="ml-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Pending</h3>
               <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
-                {users.filter(u => u.status === 'pending').length}
+                {stats.pendingUsers || 0}
               </p>
             </div>
           </div>
@@ -171,57 +435,32 @@ const UserManagementTab = () => {
             <div className="ml-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Applicants</h3>
               <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">
-                {users.filter(u => u.role === 'applicant').length}
+                {stats.usersByRole?.applicants || 0}
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Search */}
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Filters</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Search Users
-            </label>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            {activeTab === 'all' ? 'All Users' : 
+             activeTab === 'applicant' ? 'Applicants' :
+             activeTab === 'recruiter' ? 'Recruiters' : 'Pending Approval'}
+          </h3>
+          <div className="flex items-center space-x-4">
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search by name or email..."
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white w-64"
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Filter by Role
-            </label>
-            <select
-              value={filterRole}
-              onChange={(e) => setFilterRole(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            >
-              <option value="all">All Roles</option>
-              <option value="applicant">Applicants</option>
-              <option value="recruiter">Recruiters</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Filter by Status
-            </label>
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="pending">Pending</option>
-              <option value="suspended">Suspended</option>
-            </select>
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              {filteredUsers.length} users found
+            </span>
           </div>
         </div>
       </div>
@@ -326,6 +565,13 @@ const UserManagementTab = () => {
                       </button>
                     ) : null}
                     <button
+                      onClick={() => handleUpdateLogin(user.id)}
+                      className="text-purple-600 hover:text-purple-900 dark:text-purple-400 mr-3"
+                      title="Update Last Login (Test)"
+                    >
+                      Update Login
+                    </button>
+                    <button
                       onClick={() => handleDeleteUser(user.id)}
                       className="text-red-600 hover:text-red-900 dark:text-red-400"
                     >
@@ -387,6 +633,172 @@ const UserManagementTab = () => {
                   Close
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add User Modal */}
+      {showAddUserModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white dark:bg-gray-800">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                Add New User
+              </h3>
+              <form onSubmit={handleAddUser} className="space-y-4">
+                {/* First Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    First Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={newUser.firstName}
+                    onChange={(e) => handleInputChange('firstName', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
+                      formErrors.firstName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    }`}
+                    placeholder="Enter first name"
+                  />
+                  {formErrors.firstName && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.firstName}</p>
+                  )}
+                </div>
+
+                {/* Last Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Last Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={newUser.lastName}
+                    onChange={(e) => handleInputChange('lastName', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
+                      formErrors.lastName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    }`}
+                    placeholder="Enter last name"
+                  />
+                  {formErrors.lastName && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.lastName}</p>
+                  )}
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    value={newUser.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
+                      formErrors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    }`}
+                    placeholder="Enter email address"
+                  />
+                  {formErrors.email && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>
+                  )}
+                </div>
+
+                {/* Contact Number */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Contact Number *
+                  </label>
+                  <input
+                    type="tel"
+                    value={newUser.contactNumber}
+                    onChange={(e) => handleInputChange('contactNumber', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
+                      formErrors.contactNumber ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    }`}
+                    placeholder="Enter contact number"
+                  />
+                  {formErrors.contactNumber && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.contactNumber}</p>
+                  )}
+                </div>
+
+                {/* Role */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Role *
+                  </label>
+                  <select
+                    value={newUser.role}
+                    onChange={(e) => handleInputChange('role', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
+                      formErrors.role ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    }`}
+                  >
+                    <option value="applicant">Applicant</option>
+                    <option value="recruiter">Recruiter</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                  {formErrors.role && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.role}</p>
+                  )}
+                </div>
+
+                {/* Generated Password */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Generated Password
+                  </label>
+                  <div className="flex space-x-2">
+                    <input
+                      type="text"
+                      value={newUser.password}
+                      readOnly
+                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={generatePassword}
+                      className="px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                    >
+                      🔄
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Password will be shared with the user after creation
+                  </p>
+                </div>
+
+                {/* Form Actions */}
+                <div className="flex justify-end space-x-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddUserModal(false);
+                      setNewUser({
+                        firstName: '',
+                        lastName: '',
+                        email: '',
+                        contactNumber: '',
+                        role: 'applicant',
+                        password: ''
+                      });
+                      setFormErrors({});
+                    }}
+                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                    disabled={isSubmitting}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Creating...' : 'Create User'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>

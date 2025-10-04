@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useLocation, useRoute } from "wouter";
+import { useLocation, useRoute, useParams } from "wouter";
 import ModernDashboardLayout from "../components/layout/ModernDashboardLayout";
 import DashboardCard from "../components/cards/DashboardCard";
-import { DashboardProvider, useDashboard } from "../contexts/RealDashboardContext";
+import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/IntegratedThemeContext";
 import {
   EnhancedProfileTab,
@@ -24,17 +24,12 @@ import LoginStatusBanner from "../components/dashboard/LoginStatusBanner";
 
 const AdminDashboardContent = () => {
   const [location, setLocation] = useLocation();
+  const params = useParams();
   const [activeTab, setActiveTab] = useState("dashboard");
-  const {
-    currentUser,
-    isAuthenticated,
-    getStats,
-    dashboardData,
-    loading
-  } = useDashboard();
+  const { user: currentUser, isAuthenticated } = useAuth();
 
-  // Mock user data - authentication removed
-  const user = {
+  // Use real authenticated user data
+  const user = currentUser || {
     id: 3,
     name: "Admin User",
     email: "admin@finautojobs.com",
@@ -45,27 +40,17 @@ const AdminDashboardContent = () => {
     profileComplete: 100,
   };
 
-  // Extract tab from URL
+  console.log('🔍 AdminDashboard - Using user data:', user);
+  console.log('🔍 AdminDashboard - currentUser from context:', currentUser);
+
+  // Extract tab from URL params
   useEffect(() => {
     console.log('🔍 AdminDashboard - Current location:', location);
+    console.log('🔍 AdminDashboard - URL params:', params);
 
-    // Extract tab from URL path - handle both /admin-dashboard and /admin-dashboard/tab
-    const pathParts = location.split('/').filter(part => part !== '');
-    console.log('🔍 AdminDashboard - Path parts:', pathParts);
-
-    let tab = 'dashboard';
-
-    // Check if we're on admin-dashboard route
-    if (pathParts.includes('admin-dashboard')) {
-      const adminIndex = pathParts.indexOf('admin-dashboard');
-      // If there's a tab after admin-dashboard, use it
-      if (adminIndex !== -1 && pathParts[adminIndex + 1]) {
-        tab = pathParts[adminIndex + 1];
-        console.log('🔍 AdminDashboard - Extracted tab:', tab);
-      }
-    }
-
-    console.log('🔍 AdminDashboard - Final tab to set:', tab);
+    // Get tab from URL params or default to dashboard
+    const tab = params.tab || 'dashboard';
+    console.log('🔍 AdminDashboard - Tab from params:', tab);
 
     if (['profile', 'users', 'jobs', 'analytics', 'moderation', 'settings', 'system-settings', 'logs', 'database', 'companies', 'reports', 'security'].includes(tab)) {
       setActiveTab(tab);
@@ -74,7 +59,12 @@ const AdminDashboardContent = () => {
       setActiveTab('dashboard');
       console.log('✅ AdminDashboard - Set active tab to: dashboard (default)');
     }
-  }, [location]);
+  }, [location, params]);
+
+  // Re-render when currentUser changes (for profile updates)
+  useEffect(() => {
+    console.log('🔍 AdminDashboard - currentUser changed:', currentUser);
+  }, [currentUser]);
 
   // Tab change handler (for programmatic navigation if needed)
   const handleTabChange = (tab) => {
@@ -85,37 +75,74 @@ const AdminDashboardContent = () => {
 
   // Render tab content
   const renderTabContent = () => {
-    switch (activeTab) {
-      case 'profile':
-        return <EnhancedProfileTab user={user} userRole="admin" />;
-      case 'settings':
-        return <EnhancedSettingsTab user={user} userRole="admin" />;
-      case 'users':
-        return <UserManagementTab />;
-      case 'jobs':
-        return <JobManagementTab />;
-      case 'analytics':
-        return <AnalyticsTab />;
-      case 'moderation':
-        return <ModerationTab />;
-      case 'system-settings':
-        return <SystemSettingsTab />;
-      case 'logs':
-        return <SystemLogsTab />;
-      case 'database':
-        return <DatabaseManagementTab />;
-      case 'companies':
-        return <CompaniesManagementTab />;
-      case 'reports':
-        return <ReportsTab />;
-      case 'security':
-        return <SecurityManagementTab />;
-      default:
-        return <AdminDashboardMain user={user} />;
+    console.log('🔍 AdminDashboard - Rendering tab content for:', activeTab);
+    
+    try {
+      switch (activeTab) {
+        case 'profile':
+          console.log('✅ AdminDashboard - Rendering EnhancedProfileTab');
+          return <EnhancedProfileTab user={user} userRole="admin" />;
+        case 'settings':
+          console.log('✅ AdminDashboard - Rendering EnhancedSettingsTab');
+          return <EnhancedSettingsTab user={user} userRole="admin" />;
+        case 'users':
+          console.log('✅ AdminDashboard - Rendering UserManagementTab');
+          return <UserManagementTab />;
+        case 'jobs':
+          console.log('✅ AdminDashboard - Rendering JobManagementTab');
+          return <JobManagementTab />;
+        case 'analytics':
+          console.log('✅ AdminDashboard - Rendering AnalyticsTab');
+          return <AnalyticsTab />;
+        case 'moderation':
+          console.log('✅ AdminDashboard - Rendering ModerationTab');
+          return <ModerationTab />;
+        case 'system-settings':
+          console.log('✅ AdminDashboard - Rendering SystemSettingsTab');
+          return <SystemSettingsTab />;
+        case 'logs':
+          console.log('✅ AdminDashboard - Rendering SystemLogsTab');
+          return <SystemLogsTab />;
+        case 'database':
+          console.log('✅ AdminDashboard - Rendering DatabaseManagementTab');
+          return <DatabaseManagementTab />;
+        case 'companies':
+          console.log('✅ AdminDashboard - Rendering CompaniesManagementTab');
+          return <CompaniesManagementTab />;
+        case 'reports':
+          console.log('✅ AdminDashboard - Rendering ReportsTab');
+          return <ReportsTab />;
+        case 'security':
+          console.log('✅ AdminDashboard - Rendering SecurityManagementTab');
+          return <SecurityManagementTab />;
+        default:
+          console.log('✅ AdminDashboard - Rendering AdminDashboardMain (default)');
+          return <AdminDashboardMain user={user} />;
+      }
+    } catch (error) {
+      console.error('❌ AdminDashboard - Error rendering tab content:', error);
+      return (
+        <div className="p-6 text-center">
+          <h2 className="text-xl font-semibold text-red-600 mb-2">Error Loading Tab</h2>
+          <p className="text-gray-600">There was an error loading the {activeTab} tab.</p>
+          <button 
+            onClick={() => setActiveTab('dashboard')}
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Return to Dashboard
+          </button>
+        </div>
+      );
     }
   };
 
-  const stats = getStats('admin');
+  // Simple admin stats - can be enhanced later with real admin analytics
+  const stats = {
+    totalUsers: 150,
+    totalJobs: 45,
+    totalApplications: 320,
+    totalRecruiters: 25
+  };
 
   // Dashboard overview cards
   const overviewCards = [

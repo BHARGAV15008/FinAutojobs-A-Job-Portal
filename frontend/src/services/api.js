@@ -244,4 +244,43 @@ export const messagesAPI = {
   getStats: () => api.get('/messages/stats'),
 };
 
+// Admin API
+export const adminAPI = {
+  // User Management
+  getUsers: (params) => api.get('/admin/users', { params }),
+  getUser: (id) => api.get(`/admin/users/${id}`),
+  updateUser: (id, userData) => api.put(`/admin/users/${id}`, userData),
+  deleteUser: (id) => api.delete(`/admin/users/${id}`),
+  suspendUser: (id, reason) => api.post(`/admin/users/${id}/suspend`, { reason }),
+  activateUser: (id) => api.post(`/admin/users/${id}/activate`),
+  getUserStats: () => api.get('/admin/users/stats'),
+  
+  // Job Management
+  getJobs: (params) => api.get('/admin/jobs', { params }),
+  getJob: (id) => api.get(`/admin/jobs/${id}`),
+  updateJob: (id, jobData) => api.put(`/admin/jobs/${id}`, jobData),
+  deleteJob: (id) => api.delete(`/admin/jobs/${id}`),
+  approveJob: (id) => api.post(`/admin/jobs/${id}/approve`),
+  rejectJob: (id, reason) => api.post(`/admin/jobs/${id}/reject`, { reason }),
+  getJobStats: () => api.get('/admin/jobs/stats'),
+  
+  // System Analytics
+  getSystemAnalytics: (params) => api.get('/admin/analytics/system', { params }),
+  
+  // Content Moderation
+  getModerationItems: (params) => api.get('/admin/moderation/items', { params }),
+  approveModerationItem: (id, data) => api.post(`/admin/moderation/${id}/approve`, data),
+  rejectModerationItem: (id, data) => api.post(`/admin/moderation/${id}/reject`, data),
+  
+  // System Settings
+  getSettings: () => api.get('/admin/settings'),
+  updateSettings: (settings) => api.put('/admin/settings', settings),
+  createBackup: () => api.post('/admin/settings/backup'),
+  restoreBackup: (backupId) => api.post('/admin/settings/restore', { backupId }),
+  
+  // Dashboard
+  getDashboard: () => api.get('/admin/dashboard'),
+  getStats: () => api.get('/admin/stats'),
+};
+
 export default api;

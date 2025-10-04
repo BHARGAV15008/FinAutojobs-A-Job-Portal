@@ -317,6 +317,17 @@ const JobSchema = new mongoose.Schema({
     default: 0
   },
   
+  // Admin Action Tracking
+  approvedAt: { type: Date },
+  approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'BaseUser' },
+  approvalReason: { type: String },
+  rejectedAt: { type: Date },
+  rejectedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'BaseUser' },
+  rejectionReason: { type: String },
+  deletedAt: { type: Date },
+  deletedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'BaseUser' },
+  isDeleted: { type: Boolean, default: false },
+  
   // Timestamps
   createdAt: {
     type: Date,

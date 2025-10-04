@@ -6,6 +6,9 @@ import session from 'express-session';
 import MongoStore from 'connect-mongo';
 import passport from 'passport';
 import dotenv from 'dotenv';
+
+// Load environment variables from config.env
+dotenv.config({ path: './config.env' });
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import path from 'path';
@@ -217,6 +220,7 @@ import communicationsRoutes from './routes/communications.js';
 import jobAlertsRoutes from './routes/jobAlerts.js';
 import contactRoutes from './routes/contact.js';
 import messagesRoutes from './routes/messages.js';
+import adminRoutes from './routes/admin.js';
 
 // Mount routes under /api
 app.use('/api/auth', authRoutes);
@@ -246,6 +250,7 @@ apiRouter.use('/communications', communicationsRoutes);
 apiRouter.use('/job-alerts', jobAlertsRoutes);
 apiRouter.use('/contact', contactRoutes);
 apiRouter.use('/messages', messagesRoutes);
+apiRouter.use('/admin', adminRoutes);
 
 // Debug middleware to log all requests
 app.use((req, res, next) => {

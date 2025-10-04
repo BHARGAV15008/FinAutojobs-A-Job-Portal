@@ -112,12 +112,12 @@ export const authenticateUser = async (identifier, password, role) => {
       throw new Error('Invalid password');
     }
     
-    // Reset login attempts on successful login
-    if (user.loginAttempts > 0) {
-      user.loginAttempts = 0;
-      user.lockUntil = undefined;
-      await user.save();
-    }
+    // Reset login attempts and update lastLogin on successful login
+    user.loginAttempts = 0;
+    user.lockUntil = undefined;
+    user.lastLogin = new Date();
+    user.lastActivity = new Date();
+    await user.save();
     
     // Return user without password
     const userObj = user.toObject();

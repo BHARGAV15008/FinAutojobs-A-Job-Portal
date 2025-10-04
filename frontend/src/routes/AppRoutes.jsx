@@ -186,18 +186,16 @@ const AppRoutes = () => {
               </ProtectedRoute>
             )}</Route>
 
-            <Route path="/admin-dashboard" nest>
-              <Route path="/">{() => (
-                <ProtectedRoute requiredRole="admin">
-                  <AdminDashboard />
-                </ProtectedRoute>
-              )}</Route>
-              <Route path="/:tab">{() => (
-                <ProtectedRoute requiredRole="admin">
-                  <AdminDashboard />
-                </ProtectedRoute>
-              )}</Route>
-            </Route>
+            <Route path="/admin-dashboard">{() => (
+              <ProtectedRoute requiredRole="admin">
+                <AdminDashboard />
+              </ProtectedRoute>
+            )}</Route>
+            <Route path="/admin-dashboard/:tab">{() => (
+              <ProtectedRoute requiredRole="admin">
+                <AdminDashboard />
+              </ProtectedRoute>
+            )}</Route>
 
             {/* 404 Route */}
             <Route path="/:rest*">{() => (
