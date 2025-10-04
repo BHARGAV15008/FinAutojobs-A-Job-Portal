@@ -2,10 +2,12 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 
 // Load environment variables
-dotenv.config();
+dotenv.config({ path: './config.env' });
 
-// MongoDB connection string
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/finautojobs';
+// MongoDB connection string with fallback
+const MONGODB_URI = process.env.MONGODB_URI || 
+                   process.env.DATABASE_URL || 
+                   'mongodb://localhost:27017/finautojobs';
 
 // Initialize database connection
 const initializeDatabase = async () => {

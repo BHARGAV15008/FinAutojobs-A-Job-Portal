@@ -19,8 +19,14 @@ class EmailService {
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
+      },
+      tls: {
+        rejectUnauthorized: false
       }
     });
+
+    // Test email configuration on startup
+    this.testConnection();
 
     this.fromEmail = process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER || 'noreply@finautojobs.com';
     this.fromName = process.env.EMAIL_FROM_NAME || 'FinAutoJobs Team';
@@ -1324,6 +1330,17 @@ class EmailService {
       </body>
       </html>
     `;
+  }
+
+  // Test email connection
+  async testConnection() {
+    try {
+      await this.transporter.verify();
+      console.log('✅ Email service connected successfully');
+    } catch (error) {
+      console.error('❌ Email service connection failed:', error.message);
+      console.error('Please check your email configuration in environment variables');
+    }
   }
 }
 

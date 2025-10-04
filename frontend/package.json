@@ -102,6 +102,10 @@
     "tailwindcss": "^3.4.1",
     "vite": "^5.4.19"
   },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "keywords": [
     "react",
     "tailwind",

@@ -1,0 +1,52 @@
+# FinAutoJobs - Netlify Environment Variables Template
+# Copy these variables to your Netlify site's Environment Variables section
+# Site Settings > Environment Variables
+
+# =============================================================================
+# DATABASE CONFIGURATION
+# =============================================================================
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/finautojobs?retryWrites=true&w=majority
+
+# =============================================================================
+# JWT & SECURITY
+# =============================================================================
+JWT_SECRET=your-super-secret-jwt-key-change-this-in-production-123456789
+SESSION_SECRET=your-super-secret-session-key-change-this-in-production-987654321
+NODE_ENV=production
+
+# =============================================================================
+# EMAIL CONFIGURATION
+# =============================================================================
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=hiddenshadow032025@gmail.com
+EMAIL_PASS=rxdn afad anzi obxx
+EMAIL_FROM_NAME=FinAutoJobs
+EMAIL_FROM_ADDRESS=hiddenshadow032025@gmail.com
+
+# =============================================================================
+# OTP CONFIGURATION
+# =============================================================================
+OTP_EXPIRY_MINUTES=10
+OTP_LENGTH=6
+OTP_ENABLED=true
+
+# =============================================================================
+# FRONTEND URL (UPDATE WITH YOUR ACTUAL NETLIFY URL)
+# =============================================================================
+FRONTEND_URL=https://your-app-name.netlify.app
+CORS_ORIGINS=https://your-app-name.netlify.app
+
+# =============================================================================
+# OPTIONAL: CUSTOM DOMAIN (IF YOU HAVE ONE)
+# =============================================================================
+# FRONTEND_URL=https://yourdomain.com
+# CORS_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+
+# =============================================================================
+# INSTRUCTIONS:
+# =============================================================================
+# 1. Replace 'your-app-name' with your actual Netlify subdomain
+# 2. Replace MongoDB URI with your actual MongoDB Atlas connection string
+# 3. Generate strong JWT and Session secrets (use: openssl rand -base64 32)
+# 4. Add all these variables in Netlify Dashboard > Site Settings > Environment Variables
