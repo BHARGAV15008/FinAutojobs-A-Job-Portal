@@ -4,12 +4,12 @@ import bcrypt from 'bcryptjs';
 // Enhanced Base User Schema with all required fields for registration
 const baseUserSchema = new mongoose.Schema({
   // Standard IDs
-  userId: { type: mongoose.Schema.Types.ObjectId, default: () => new mongoose.Types.ObjectId(), unique: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, default: () => new mongoose.Types.ObjectId() },
   
   // Personal Info (Required for registration)
   firstName: { type: String, required: true, trim: true },
   lastName: { type: String, required: true, trim: true },
-  username: { type: String, required: true, unique: true, trim: true, lowercase: true },
+  username: { type: String, required: true, trim: true, lowercase: true },
   fullName: { type: String, trim: true },
   email: { type: String, required: true, lowercase: true, trim: true },
   phone: { type: String, required: true, trim: true },

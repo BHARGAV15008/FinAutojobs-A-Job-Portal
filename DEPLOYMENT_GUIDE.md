@@ -1,14 +1,30 @@
-# FinAutoJobs Deployment Guide
+# FinAutoJobs Cloud Deployment Guide
 
-## 🚀 Render Deployment Fix
+## 🚀 Production Deployment (No Localhost Configuration)
 
-The deployment issue has been resolved. The error was caused by Render trying to run `node server.js` from the root directory, but the actual server was located in the `backend/` directory.
+This guide covers deploying FinAutoJobs to cloud platforms without any localhost dependencies.
 
-### ✅ Changes Made
+## 📋 Prerequisites
 
-1. **Created Root Server Proxy** (`/server.js`)
-   - Entry point that changes to backend directory and imports the actual server
-   - Handles environment variables and logging
+### 1. MongoDB Atlas Setup
+- Create a free MongoDB Atlas cluster
+- Get connection string: `mongodb+srv://username:password@cluster.mongodb.net/finautojobs`
+- Whitelist all IP addresses (0.0.0.0/0) for Render deployment
+
+### 2. Environment Configuration
+
+**Production Environment Variables (Required):**
+```env
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/finautojobs
+NODE_ENV=production
+PORT=5000
+JWT_SECRET=your-production-jwt-secret-change-this
+SESSION_SECRET=your-production-session-secret-change-this
+FRONTEND_URL=https://your-frontend-domain.onrender.com
+CORS_ORIGINS=https://your-frontend-domain.onrender.com
+```
+
+## 🔧 Configuration Changes Made
 
 2. **Updated Package.json**
    - Fixed start script: `"start": "node server.js"`

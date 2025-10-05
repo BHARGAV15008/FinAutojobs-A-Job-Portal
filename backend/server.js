@@ -7,8 +7,13 @@ import MongoStore from 'connect-mongo';
 import passport from 'passport';
 import dotenv from 'dotenv';
 
-// Load environment variables from config.env
-dotenv.config({ path: './config.env' });
+// Load environment variables based on NODE_ENV
+const envFile = process.env.NODE_ENV === 'production' ? './config.env' : 
+                process.env.NODE_ENV === 'development' ? './.env.local' : 
+                './config.env';
+
+console.log('🔧 Loading environment from:', envFile);
+dotenv.config({ path: envFile });
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import path from 'path';

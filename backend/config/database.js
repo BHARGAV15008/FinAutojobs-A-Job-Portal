@@ -1,13 +1,25 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 
-// Load environment variables
-dotenv.config({ path: './config.env' });
+// Environment variables should already be loaded by server.js
+// This is just a fallback in case database.js is called directly
+if (!process.env.MONGODB_URI && !process.env.DATABASE_URL) {
+  dotenv.config({ path: './config.env' });
+}
 
-// MongoDB connection string with fallback
+// MongoDB connection string with cloud-first fallback
 const MONGODB_URI = process.env.MONGODB_URI || 
                    process.env.DATABASE_URL || 
-                   'mongodb://localhost:27017/finautojobs';
+                   process.env.MONGO_URL ||
+                   // Only use localhost as last resort for development
+                   (process.env.NODE_ENV === 'development' ? 'mongodb://localhost:27017/finautojobs' : null);
+
+// Validate MongoDB URI exists
+if (!MONGODB_URI) {
+  console.error('❌ No MongoDB URI found in environment variables');
+  console.error('Required environment variables: MONGODB_URI, DATABASE_URL, or MONGO_URL');
+  process.exit(1);
+}
 
 // Database connection instance
 let db = null;

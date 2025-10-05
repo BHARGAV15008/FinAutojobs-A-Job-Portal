@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 // Unified Application Schema with consistent naming and linking
 const applicationSchema = new mongoose.Schema({
   // Application ID (consistent with naming convention)
-  applicationId: { type: mongoose.Schema.Types.ObjectId, default: () => new mongoose.Types.ObjectId(), unique: true },
+  applicationId: { type: mongoose.Schema.Types.ObjectId, default: () => new mongoose.Types.ObjectId() },
   
   // References (consistent ID linking)
   applicantId: { type: mongoose.Schema.Types.ObjectId, ref: 'BaseUser', required: true },
@@ -118,8 +118,7 @@ const applicationSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Indexes for performance
-applicationSchema.index({ applicationId: 1 }, { unique: true });
+// Indexes for performance (removed duplicate unique indexes)
 applicationSchema.index({ applicantId: 1, jobId: 1 }, { unique: true }); // Prevent duplicate applications
 applicationSchema.index({ jobId: 1, applicationStatus: 1 });
 applicationSchema.index({ recruiterId: 1, applicationStatus: 1 });
