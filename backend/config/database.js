@@ -24,28 +24,39 @@ if (!MONGODB_URI) {
 // Database connection instance
 let db = null;
 
-// Initialize database connection
 const initializeDatabase = async () => {
   try {
     console.log('🔄 Connecting to MongoDB...');
     console.log('📍 MongoDB URI:', MONGODB_URI.replace(/\/\/.*:.*@/, '//***:***@'));
     
-    // Updated connection without deprecated options
-    await mongoose.connect(MONGODB_URI);
-    
-    db = mongoose.connection;
-    console.log('✅ Database connected successfully');
-    
-    // Handle connection events
-    db.on('error', (error) => {
-      console.error('❌ Database connection error:', error);
-    });
+    // Connect to MongoDB with enhanced options for cloud deployment
+    const connectionOptions = {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 30000, // 30 seconds
+      socketTimeoutMS: 45000, // 45 seconds
+      bufferCommands: false,
+      maxPoolSize: 10,
+      minPoolSize: 2,
+      maxIdleTimeMS: 30000,
+      retryWrites: true,
+      w: 'majority'
+    };
+
+    // Add SSL options for cloud deployment
+    if (process.env.NODE_ENV === 'production') {
+      connectionOptions.ssl = true;
+      connectionOptions.sslValidate = true;
+      connectionOptions.tlsAllowInvalidCertificates = false;
+      connectionOptions.tlsAllowInvalidHostnames = false;
+    }
+
+    await mongoose.connect(MONGODB_URI, connectionOptions);
     
     db.on('disconnected', () => {
       console.log('⚠️ Database disconnected');
     });
     
-    return db;
     
   } catch (error) {
     console.error('❌ Database connection failed:', error);
