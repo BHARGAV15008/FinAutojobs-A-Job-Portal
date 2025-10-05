@@ -1,9 +1,19 @@
 import axios from 'axios';
 
 // Create axios instance with base configuration
+const getBaseURL = () => {
+  // Priority: Environment variable > Default localhost
+  const envURL = import.meta.env.VITE_API_URL;
+  const defaultURL = 'http://localhost:5000/api';
+  
+  const baseURL = envURL || defaultURL;
+  console.log('🔗 API Base URL:', baseURL);
+  return baseURL;
+};
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5001/api',
-  timeout: 10000,
+  baseURL: getBaseURL(),
+  timeout: 15000, // Increased timeout for network requests
   headers: {
     'Content-Type': 'application/json',
   },

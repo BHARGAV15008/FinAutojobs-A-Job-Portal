@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "start": "NODE_ENV=production node server.js",
-    "dev": "nodemon server.js",
+    "dev": "nodemon server-simple.js",
+    "dev:network": "HOST=0.0.0.0 nodemon server-simple.js",
+    "dev:full": "nodemon server.js",
     "build": "echo 'No build step required for Node.js'",
     "test": "mkdir -p ./data && cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "lint": "eslint . --ext .js",
@@ -16,7 +18,9 @@
     "test:oauth": "node scripts/test-oauth.js",
     "check:oauth": "node scripts/check-oauth-config.js",
     "oauth:status": "node scripts/test-oauth.js --status",
-    "oauth:config": "node scripts/check-oauth-config.js --deps"
+    "oauth:config": "node scripts/check-oauth-config.js --deps",
+    "network:setup": "node scripts/setup-network.js",
+    "network:info": "node -e \"console.log('Network Info:'); const os = require('os'); const interfaces = os.networkInterfaces(); Object.keys(interfaces).forEach(name => { interfaces[name].forEach(iface => { if (iface.family === 'IPv4' && !iface.internal) console.log(name + ':', iface.address); }); });\""
   },
   "keywords": [
     "job-portal",

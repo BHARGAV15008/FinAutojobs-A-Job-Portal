@@ -7,13 +7,9 @@ import MongoStore from 'connect-mongo';
 import passport from 'passport';
 import dotenv from 'dotenv';
 
-// Load environment variables based on NODE_ENV
-const envFile = process.env.NODE_ENV === 'production' ? './config.env' : 
-                process.env.NODE_ENV === 'development' ? './.env.local' : 
-                './config.env';
-
-console.log('🔧 Loading environment from:', envFile);
-dotenv.config({ path: envFile });
+// Load environment variables
+console.log('🔧 Loading environment variables...');
+dotenv.config();
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import path from 'path';
@@ -31,10 +27,9 @@ import { xssMiddleware, sqlInjectionMiddleware, payloadSizeMiddleware } from './
 import { apiLimiter } from './middlewares/Others/rateLimiter.js';
 import { sanitizeRequest, sqlInjectionPrevention, preventNoSqlInjection } from './middlewares/Others/sanitization.js';
 
-// Configure dotenv with proper file path
+// Configure file paths
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -313,11 +308,18 @@ app.use(errorMonitor);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-// Start server with proper error handling
-server.listen(PORT, () => {
-    console.log(`🚀 FinAutoJobs Backend Server running on port ${PORT}`);
+// Import network configuration
+import { displayNetworkInfo, getNetworkConfig } from './config/network.js';
+
+// Start server with proper error handling and network access
+const HOST = process.env.HOST || '0.0.0.0'; // Bind to all network interfaces
+server.listen(PORT, HOST, () => {
+    console.log(`🚀 FinAutoJobs Backend Server running on ${HOST}:${PORT}`);
     console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
     console.log(`🛡️ Enhanced error handling enabled`);
+    
+    // Display network access information
+    displayNetworkInfo();
 }).on('error', (error) => {
     if (error.code === 'EADDRINUSE') {
         console.error(`❌ Port ${PORT} is already in use. Please try a different port.`);

@@ -1,137 +1,85 @@
 import express from 'express';
 import cors from 'cors';
-import helmet from 'helmet';
-import compression from 'compression';
-import rateLimit from 'express-rate-limit';
-import session from 'express-session';
-import passport from 'passport';
 import dotenv from 'dotenv';
-import mongoose from 'mongoose';
 
-// Import routes
-import authRoutes from './routes/auth.js';
-
+// Load environment variables
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Security middleware
-app.use(helmet());
-app.use(compression());
-
-// Rate limiting
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100 // limit each IP to 100 requests per windowMs
-});
-app.use('/api/', limiter);
-
 // CORS configuration
-const allowedOrigins = [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://localhost:5173',
-    'http://localhost:4173',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:3001',
-    'http://127.0.0.1:5173'
-];
-
-app.use(cors({
-    origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
-            return callback(null, true);
-        }
-        return callback(new Error('Not allowed by CORS'));
-    },
+const corsOptions = {
+    origin: [
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'http://192.168.41.134:3000',
+        process.env.FRONTEND_URL
+    ].filter(Boolean),
     credentials: true,
-    optionsSuccessStatus: 200
-}));
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+};
 
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
+// Middleware
+app.use(cors(corsOptions));
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Session configuration
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'your-secret-key',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    }
-}));
-
-// Passport middleware
-app.use(passport.initialize());
-app.use(passport.session());
-
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/finautojobs')
-  .then(() => {
-    console.log('✅ Database connected successfully');
-  })
-  .catch((error) => {
-    console.error('❌ Database connection failed:', error);
-    process.exit(1);
-  });
-
-// Routes
-app.use('/api/auth', authRoutes);
-
-// Basic job endpoints to prevent 404 errors
-app.get('/api/jobs', (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      jobs: [],
-      total: 0,
-      page: 1,
-      limit: parseInt(req.query.limit) || 10
-    }
-  });
+// Basic routes
+app.get('/', (req, res) => {
+    res.json({
+        message: 'FinAutoJobs API Service',
+        timestamp: new Date().toISOString(),
+        status: 'running',
+        version: '1.0.0'
+    });
 });
 
-// Basic company endpoints to prevent 404 errors
-app.get('/api/companies', (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      companies: [],
-      total: 0,
-      page: 1,
-      limit: parseInt(req.query.limit) || 10
-    }
-  });
-});
-
-// Health check endpoint
 app.get('/api/health', (req, res) => {
     res.json({
         status: 'OK',
         message: 'FinAutoJobs API is running',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        env: process.env.NODE_ENV || 'development',
+        cors: 'enabled',
+        database: 'not connected (simple mode)'
     });
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({
-        message: 'Something went wrong!',
-        error: process.env.NODE_ENV === 'development' ? err.message : {}
+// Test API endpoints
+app.get('/api/test', (req, res) => {
+    res.json({
+        message: 'API test successful',
+        timestamp: new Date().toISOString(),
+        headers: req.headers
+    });
+});
+
+app.post('/api/test', (req, res) => {
+    res.json({
+        message: 'POST test successful',
+        body: req.body,
+        timestamp: new Date().toISOString()
     });
 });
 
 // 404 handler
 app.use('*', (req, res) => {
-    res.status(404).json({ message: 'Route not found' });
+    res.status(404).json({
+        error: 'Route not found',
+        path: req.originalUrl,
+        method: req.method,
+        timestamp: new Date().toISOString()
+    });
 });
 
 // Start server
-app.listen(PORT, () => {
-    console.log(`🚀 FinAutoJobs Backend Server running on port ${PORT}`);
+const HOST = process.env.HOST || '0.0.0.0';
+app.listen(PORT, HOST, () => {
+    console.log(`🚀 FinAutoJobs Simple Backend running on ${HOST}:${PORT}`);
     console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+    console.log(`🌐 Network access: http://192.168.41.134:${PORT}/api/health`);
+    console.log(`🧪 Test endpoint: http://localhost:${PORT}/api/test`);
+    console.log(`✅ Server started successfully (MongoDB not required)`);
 });
