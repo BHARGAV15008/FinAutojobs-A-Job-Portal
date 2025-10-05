@@ -9,20 +9,35 @@ const MONGODB_URI = process.env.MONGODB_URI ||
                    process.env.DATABASE_URL || 
                    'mongodb://localhost:27017/finautojobs';
 
+// Database connection instance
+let db = null;
+
 // Initialize database connection
 const initializeDatabase = async () => {
   try {
     console.log('🔄 Connecting to MongoDB...');
+    console.log('📍 MongoDB URI:', MONGODB_URI.replace(/\/\/.*:.*@/, '//***:***@'));
     
-    await mongoose.connect(MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+    // Updated connection without deprecated options
+    await mongoose.connect(MONGODB_URI);
+    
+    db = mongoose.connection;
+    console.log('✅ Database connected successfully');
+    
+    // Handle connection events
+    db.on('error', (error) => {
+      console.error('❌ Database connection error:', error);
     });
     
-    console.log('✅ Database connected successfully');
+    db.on('disconnected', () => {
+      console.log('⚠️ Database disconnected');
+    });
+    
+    return db;
     
   } catch (error) {
     console.error('❌ Database connection failed:', error);
+    console.error('Error details:', error.message);
     throw error;
   }
 };
@@ -40,38 +55,9 @@ const checkDatabaseHealth = async () => {
   }
 };
 
-// Get database statistics
-const getDatabaseStats = async () => {
-  try {
-    const stats = {};
-    
-    // Get collection counts
-    const collections = await mongoose.connection.db.listCollections().toArray();
-    for (const collection of collections) {
-      const count = await mongoose.connection.db.collection(collection.name).countDocuments();
-      stats[collection.name] = count;
-    }
-    
-    return stats;
-  } catch (error) {
-    console.error('Error getting database stats:', error);
-    return {};
-  }
-};
-
-// Cleanup function for graceful shutdown
-const closeDatabase = async () => {
-  try {
-    await mongoose.connection.close();
-    console.log('📊 Database connection closed');
-  } catch (error) {
-    console.error('Error closing database:', error);
-  }
-};
-
+// Export functions
 export { 
+  db,
   initializeDatabase, 
-  checkDatabaseHealth, 
-  getDatabaseStats, 
-  closeDatabase 
+  checkDatabaseHealth
 };
