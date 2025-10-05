@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: finautojobs-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://finautojobs-frontend.onrender.com
+    # Environment variables that need to be set manually in Render dashboard:
+    # - MONGODB_URI (MongoDB connection string)
+    # - EMAIL_HOST, EMAIL_USER, EMAIL_PASS (for email notifications)
+    # - GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET (for OAuth)
