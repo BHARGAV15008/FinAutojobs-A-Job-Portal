@@ -19,8 +19,14 @@ import UsernameGenerator from '../utils/usernameGenerator.js';
 
 const router = express.Router();
 
-// JWT Secret
-const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret-key-change-this-in-production';
+// JWT Secret - get it dynamically to ensure env vars are loaded
+const getJWTSecret = () => {
+  const secret = process.env.JWT_SECRET || 'your-jwt-secret-key-change-this-in-production';
+  return secret;
+};
+
+// Log JWT secret info
+console.log('🔍 JWT_SECRET loaded:', getJWTSecret().substring(0, 10) + '... (length:', getJWTSecret().length + ')');
 
 // Enhanced authentication middleware
 const authenticateToken = async (req, res, next) => {
@@ -38,12 +44,17 @@ const authenticateToken = async (req, res, next) => {
       });
     }
 
+    // Add more detailed token verification logging
+    const JWT_SECRET = getJWTSecret();
+    console.log('🔍 Verifying token with JWT_SECRET length:', JWT_SECRET.length);
     const decoded = jwt.verify(token, JWT_SECRET);
+    console.log('✅ Token decoded successfully:', { userId: decoded.id || decoded.userId, role: decoded.role, exp: new Date(decoded.exp * 1000) });
     
     // Find user with role validation
     const user = await findUserByIdAndRole(decoded.id || decoded.userId, decoded.role);
     
     if (!user) {
+      console.log('❌ User not found for decoded token:', { userId: decoded.id || decoded.userId, role: decoded.role });
       return res.status(404).json({
         success: false,
         message: 'User not found',
@@ -51,12 +62,34 @@ const authenticateToken = async (req, res, next) => {
       });
     }
 
+    console.log('✅ User authenticated successfully:', { userId: user._id, role: user.role, email: user.email });
     req.user = user;
     req.userId = user._id;
     req.userRole = user.role;
     next();
   } catch (error) {
     console.error('❌ Auth middleware error:', error.message);
+    
+    // Check if it's a token expiry issue
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Token expired',
+        code: 'TOKEN_EXPIRED',
+        error: error.message
+      });
+    }
+    
+    // Check if it's a malformed token
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token format',
+        code: 'INVALID_TOKEN_FORMAT',
+        error: error.message
+      });
+    }
+    
     return res.status(403).json({
       success: false,
       message: 'Invalid token',
@@ -302,6 +335,7 @@ router.post('/register', registerValidation, async (req, res) => {
     const user = await createUserByRole(userData);
 
     // Generate JWT token
+    const JWT_SECRET = getJWTSecret();
     const token = jwt.sign(
       { 
         id: user._id, 
@@ -367,6 +401,7 @@ router.post('/login', loginValidation, async (req, res) => {
     const user = await authenticateUser(identifier, password, role);
 
     // Generate JWT token
+    const JWT_SECRET = getJWTSecret();
     const token = jwt.sign(
       { 
         id: user._id, 
@@ -438,6 +473,20 @@ router.post('/login', loginValidation, async (req, res) => {
 router.post('/logout', (req, res) => {
   // Since JWT is stateless, logout is handled client-side by removing token
   res.json({ message: 'Logout successful' });
+});
+
+// Token validation endpoint for debugging
+router.get('/validate-token', authenticateToken, (req, res) => {
+  res.json({
+    success: true,
+    message: 'Token is valid',
+    data: {
+      userId: req.user._id,
+      role: req.user.role,
+      email: req.user.email,
+      tokenValid: true
+    }
+  });
 });
 
 // Forgot password

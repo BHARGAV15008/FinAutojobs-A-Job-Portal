@@ -35,21 +35,52 @@ apiClient.interceptors.response.use(
   (error) => {
     // Handle common errors
     if (error.response?.status === 401) {
-      // Only logout for auth-related endpoints, not for optional features
+      const errorCode = error.response?.data?.code;
       const url = error.config?.url || '';
-      const isAuthEndpoint = url.includes('/auth/') || url.includes('/profile');
       
-      if (isAuthEndpoint) {
-        // Token expired or invalid for critical auth endpoints
+      console.log('🔍 401 Error Details:', {
+        url,
+        code: errorCode,
+        message: error.response?.data?.message
+      });
+      
+      // Check if it's a token expiry or invalid token
+      if (errorCode === 'TOKEN_EXPIRED' || errorCode === 'INVALID_TOKEN' || errorCode === 'INVALID_TOKEN_FORMAT') {
+        console.log('🔄 Token issue detected, clearing auth data and redirecting to login');
+        
+        // Clear all auth data
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        
+        // Show user-friendly message
+        if (errorCode === 'TOKEN_EXPIRED') {
+          alert('Your session has expired. Please log in again.');
+        } else {
+          alert('Authentication error. Please log in again.');
+        }
+        
         // Redirect to login if not already there
         if (window.location.pathname !== '/login') {
           window.location.href = '/login';
         }
       } else {
-        // For optional features like job-alerts, just log the error
-        console.warn('401 error for optional feature:', url);
+        // Only logout for auth-related endpoints, not for optional features
+        const isAuthEndpoint = url.includes('/auth/') || url.includes('/profile');
+        
+        if (isAuthEndpoint) {
+          // Token expired or invalid for critical auth endpoints
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+          // Redirect to login if not already there
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+          }
+        } else {
+          // For optional features like job-alerts, just log the error
+          console.warn('401 error for optional feature:', url);
+        }
       }
     }
     

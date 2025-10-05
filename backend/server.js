@@ -2,16 +2,14 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
+import rateLimit from 'express-rate-limit';
 import session from 'express-session';
-import MongoStore from 'connect-mongo';
 import passport from 'passport';
 import dotenv from 'dotenv';
+import MongoStore from 'connect-mongo';
 
-// Load environment variables based on NODE_ENV
-const envFile = process.env.NODE_ENV === 'production' ? './config.env' : 
-                process.env.NODE_ENV === 'development' ? './.env.local' : 
-                './config.env';
-
+// Load environment variables
+const envFile = process.env.NODE_ENV === 'development' ? './.env.local' : './config.env';
 console.log('🔧 Loading environment from:', envFile);
 dotenv.config({ path: envFile });
 import { createServer } from 'http';
@@ -19,6 +17,7 @@ import { Server } from 'socket.io';
 import path from 'path';
 // Server restart trigger - fix backend crash
 import { fileURLToPath } from 'url';
+import os from 'os';
 
 // Import configurations
 import corsOptions from './config/cors.js';
@@ -209,55 +208,51 @@ import companyRoutes from './routes/companies.js';
 console.log('🔄 Loading applications routes...');
 import applicationRoutes from './routes/applications.js';
 console.log('✅ Applications routes loaded successfully');
-import oauthRoutes from './routes/oauth.js';
+import oauthRoutes, { initializeOAuth } from './routes/oauth.js';
 import notificationsRoutes from './routes/notifications.js';
 import usersRoutes from './routes/users.js';
 import savedJobsRoutes from './routes/savedJobs.js';
 import recruiterRoutes from './routes/recruiters.js';
-import candidatesRoutes from './routes/candidates.js';
-import interviewsRoutes from './routes/interviews.js';
-import enhancedApplicationsRoutes from './routes/enhancedApplications.js';
-import fileUploadRoutes from './routes/fileUpload.js';
-import recommendationsRoutes from './routes/recommendations.js';
-import analyticsRoutes from './routes/analytics.js';
-import applicationInformationRoutes from './routes/applicationInformation.js';
-import communicationsRoutes from './routes/communications.js';
-import jobAlertsRoutes from './routes/jobAlerts.js';
-import contactRoutes from './routes/contact.js';
-import messagesRoutes from './routes/messages.js';
 import adminRoutes from './routes/admin.js';
+import analyticsRoutes from './routes/analytics.js';
+import recommendationsRoutes from './routes/recommendations.js';
+import messagesRoutes from './routes/messages.js';
+import jobAlertsRoutes from './routes/jobAlerts.js';
 import smsOtpRoutes from './routes/smsOtp.js';
+import phoneAuthRoutes from './routes/phoneAuth.js';
 
 // Mount routes under /api
-app.use('/api/auth', authRoutes);
-
 const apiRouter = express.Router();
+apiRouter.use('/auth', authRoutes);
+apiRouter.use('/oauth', oauthRoutes);
 apiRouter.use('/jobs', jobRoutes);
 apiRouter.use('/dashboard', dashboardRoutes);
 // Add placeholder routes to prevent 404 errors
-
-apiRouter.use('/oauth', oauthRoutes);
-apiRouter.use('/companies', companyRoutes);
 console.log('🔄 Registering /api/applications routes...');
 apiRouter.use('/applications', applicationRoutes);
 console.log('✅ /api/applications routes registered successfully');
-apiRouter.use('/enhanced-applications', enhancedApplicationsRoutes);
-apiRouter.use('/upload', fileUploadRoutes);
 apiRouter.use('/users', usersRoutes);
 apiRouter.use('/saved-jobs', savedJobsRoutes);
 apiRouter.use('/notifications', notificationsRoutes);
 apiRouter.use('/recruiters', recruiterRoutes);
-apiRouter.use('/candidates', candidatesRoutes);
-apiRouter.use('/interviews', interviewsRoutes);
 apiRouter.use('/recommendations', recommendationsRoutes);
 apiRouter.use('/analytics', analyticsRoutes);
-apiRouter.use('/application-information', applicationInformationRoutes);
-apiRouter.use('/communications', communicationsRoutes);
-apiRouter.use('/job-alerts', jobAlertsRoutes);
-apiRouter.use('/contact', contactRoutes);
-apiRouter.use('/messages', messagesRoutes);
 apiRouter.use('/admin', adminRoutes);
-apiRouter.use('/otp', smsOtpRoutes);
+apiRouter.use('/messages', messagesRoutes);
+apiRouter.use('/job-alerts', jobAlertsRoutes);
+apiRouter.use('/sms-otp', smsOtpRoutes);
+apiRouter.use('/phone-auth', phoneAuthRoutes);
+
+// Initialize OAuth strategies after environment variables are loaded
+console.log('🔧 Initializing OAuth strategies after env load...');
+initializeOAuth();
+
+// Initialize Firebase for phone authentication
+console.log('🔧 Initializing Firebase for phone authentication...');
+import { initializeFirebase } from './config/firebase.js';
+initializeFirebase().catch(error => {
+  console.error('❌ Firebase initialization failed:', error);
+});
 
 // Debug middleware to log all requests
 app.use((req, res, next) => {
@@ -313,11 +308,28 @@ app.use(errorMonitor);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-// Start server with proper error handling
-server.listen(PORT, () => {
+// Start server with proper error handling - bind to 0.0.0.0 for network access
+server.listen(PORT, '0.0.0.0', () => {
+    const networkInterfaces = os.networkInterfaces();
+    let localIP = 'localhost';
+    
+    // Find the local IP address
+    Object.keys(networkInterfaces).forEach(interfaceName => {
+        const interfaces = networkInterfaces[interfaceName];
+        interfaces.forEach(interfaceInfo => {
+            if (interfaceInfo.family === 'IPv4' && !interfaceInfo.internal) {
+                localIP = interfaceInfo.address;
+            }
+        });
+    });
+    
     console.log(`🚀 FinAutoJobs Backend Server running on port ${PORT}`);
-    console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+    console.log(`🌐 Network Access:`);
+    console.log(`   📱 Local: http://localhost:${PORT}`);
+    console.log(`   🌍 Network: http://${localIP}:${PORT}`);
+    console.log(`   📊 Health check: http://${localIP}:${PORT}/api/health`);
     console.log(`🛡️ Enhanced error handling enabled`);
+    console.log(`📡 Server accessible from any device on the network`);
 }).on('error', (error) => {
     if (error.code === 'EADDRINUSE') {
         console.error(`❌ Port ${PORT} is already in use. Please try a different port.`);

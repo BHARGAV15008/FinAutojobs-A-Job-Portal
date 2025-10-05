@@ -15,13 +15,21 @@ export const AuthProvider = ({ children }) => {
       
       if (token) {
         try {
+          // First try to validate the token
+          const validateResponse = await apiClient.get('/auth/validate-token');
+          console.log('✅ Token validation successful:', validateResponse.data);
+          
+          // If token is valid, get full profile
           const response = await getProfile();
           
           if (response.success && response.data) {
             const userData = response.data;
             setUser(userData);
+            console.log('✅ User profile loaded successfully:', userData.email);
           }
         } catch (error) {
+          console.error('❌ Error during user load:', error.response?.data || error.message);
+          
           // If profile endpoint is disabled (503), keep user logged in with token data
           if (error.response?.status === 503) {
             // Try to decode user info from token or use stored user data
@@ -29,18 +37,29 @@ export const AuthProvider = ({ children }) => {
             if (storedUser) {
               try {
                 setUser(JSON.parse(storedUser));
+                console.log('✅ Using stored user data due to 503 error');
               } catch (parseError) {
                 console.error('Failed to parse stored user', parseError);
                 localStorage.removeItem('token');
                 localStorage.removeItem('refreshToken');
                 localStorage.removeItem('user');
+                setUser(null);
               }
             }
-          } else {
-            // For other errors, clear tokens
+          } else if (error.response?.status === 401) {
+            // Token is invalid or expired
+            console.log('🔄 Token invalid/expired, clearing auth data');
             localStorage.removeItem('token');
             localStorage.removeItem('refreshToken');
             localStorage.removeItem('user');
+            setUser(null);
+          } else {
+            // For other errors, clear tokens
+            console.log('🔄 Other error, clearing auth data');
+            localStorage.removeItem('token');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('user');
+            setUser(null);
           }
         }
       } else {

@@ -95,8 +95,8 @@ JWT_EXPIRES_IN=24h
 # Email Configuration (for notifications and OTP)
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
-EMAIL_USER=your-email@gmail.com
-EMAIL_PASS=your-app-password
+EMAIL_USER=hiddenshadow032025@gmail.com
+EMAIL_PASS=rxdn afad anzi obxx
 EMAIL_FROM="FinAutoJobs" <no-reply@finautojobs.com>
 
 # SMS Configuration (Twilio for OTP)

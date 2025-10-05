@@ -54,7 +54,7 @@ const createEmailTransporter = () => {
     service: 'gmail', // You can change this to your email service
     auth: {
       user: process.env.EMAIL_USER || 'noreply@finautojobs.com',
-      pass: process.env.EMAIL_PASS || 'your-app-password'
+      pass: process.env.EMAIL_PASS || 'rxdn afad anzi obxx'
     }
   });
 };

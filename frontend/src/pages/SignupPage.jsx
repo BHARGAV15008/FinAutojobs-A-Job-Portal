@@ -2,8 +2,9 @@ import React, { useState } from 'react'
 import { Link, useLocation } from 'wouter'
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../components/ui/use-toast'
-import { Eye, EyeOff, Mail, Lock, User, Building2, Car, Calculator, TrendingUp, Shield, Users } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, User, Building2, Car, Calculator, TrendingUp, Shield, Users, Phone } from 'lucide-react'
 import OAuthPopup from '../components/auth/OAuthPopup'
+import PhoneVerification from '../components/auth/PhoneVerification'
 
 const SignupPage = () => {
   const [formData, setFormData] = useState({
@@ -18,6 +19,8 @@ const SignupPage = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [oauthPopupOpen, setOauthPopupOpen] = useState(false)
+  const [phoneVerificationOpen, setPhoneVerificationOpen] = useState(false)
+  const [registrationStep, setRegistrationStep] = useState('form') // 'form', 'phone-verify', 'complete'
   const { signup } = useAuth()
   const { toast } = useToast()
   const [, setLocation] = useLocation()
@@ -36,7 +39,7 @@ const SignupPage = () => {
     const role = roleFromUrl || formData.role
     
     // Open OAuth popup with role parameter
-    const oauthUrl = `http://localhost:5001/api/oauth/${provider}?role=${role}`
+    const oauthUrl = `http://localhost:5000/api/oauth/${provider}?role=${role}`
     const popup = window.open(
       oauthUrl,
       'oauth-popup',
@@ -45,7 +48,7 @@ const SignupPage = () => {
 
     // Listen for popup messages
     const messageListener = (event) => {
-      if (event.origin !== 'http://localhost:5001') return
+      if (event.origin !== 'http://localhost:5000') return
 
       if (event.data.type === 'OAUTH_SUCCESS') {
         popup.close()
@@ -143,6 +146,43 @@ const SignupPage = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handlePhoneSignup = () => {
+    // Open phone verification for signup
+    setPhoneVerificationOpen(true)
+  }
+
+  const handlePhoneVerificationSuccess = (authResult) => {
+    console.log('Phone verification success during signup:', authResult)
+    
+    // Store token if provided
+    if (authResult.token) {
+      localStorage.setItem('token', authResult.token)
+    }
+    
+    // Redirect based on user role
+    const role = authResult.user.role || 'applicant'
+    if (role === 'recruiter' || role === 'employer') {
+      setLocation('/recruiter-dashboard')
+    } else {
+      setLocation('/applicant-dashboard')
+    }
+    
+    toast({
+      title: "Registration Successful!",
+      description: "Your account has been created and phone number verified.",
+      variant: "default"
+    })
+  }
+
+  const handlePhoneVerificationError = (error) => {
+    console.error('Phone verification error during signup:', error)
+    toast({
+      title: "Phone Verification Failed",
+      description: error.message || "Failed to verify phone number. Please try again.",
+      variant: "destructive"
+    })
   }
 
   return (
@@ -269,6 +309,18 @@ const SignupPage = () => {
                   <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
                 </svg>
                 Apple
+              </button>
+            </div>
+
+            {/* Phone Verification Button */}
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={handlePhoneSignup}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-blue-500 rounded-xl hover:bg-blue-50 transition-colors duration-200 text-blue-600 font-semibold"
+              >
+                <Phone className="w-5 h-5" />
+                Sign up with Phone Number
               </button>
             </div>
           </div>
@@ -468,6 +520,16 @@ const SignupPage = () => {
         onClose={() => setOauthPopupOpen(false)}
         onSuccess={handleOAuthSuccess}
         title="Sign up for FinAutoJobs"
+      />
+
+      {/* Phone Verification Dialog */}
+      <PhoneVerification
+        open={phoneVerificationOpen}
+        onClose={() => setPhoneVerificationOpen(false)}
+        onSuccess={handlePhoneVerificationSuccess}
+        onError={handlePhoneVerificationError}
+        userRole="applicant"
+        isRegistration={true}
       />
     </div>
   )

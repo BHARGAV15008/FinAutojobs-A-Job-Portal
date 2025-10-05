@@ -4,7 +4,7 @@ import { Link, useLocation } from 'wouter'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { useToast } from '../components/ui/use-toast'
 import OTPVerification from '../components/auth/OTPVerification'
-import OAuthButton from '../components/auth/OAuthButton'
+import OAuthButtons from '../components/auth/OAuthButtons'
 import {
   Container,
   Box,
@@ -1300,52 +1300,11 @@ const RegisterPage = () => {
                   </Typography>
                 </Divider>
 
-                <Grid container spacing={2}>
-                  <Grid item xs={12}>
-                    <OAuthButton
-                      provider="google"
-                      fullWidth
-                      mode="signup"
-                      userRole={activeTab === 0 ? 'applicant' : 'recruiter'}
-                      onSuccess={handleOAuthSuccess}
-                      onError={handleOAuthError}
-                    />
-                  </Grid>
-                  <Grid item xs={6}>
-                    <OAuthButton
-                      provider="microsoft"
-                      fullWidth
-                      mode="signup"
-                      userRole={activeTab === 0 ? 'applicant' : 'recruiter'}
-                      onSuccess={handleOAuthSuccess}
-                      onError={handleOAuthError}
-                    >
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Microsoft sx={{ fontSize: 20, mr: 1 }} />
-                        <Typography variant="button" fontWeight="inherit">
-                          Microsoft
-                        </Typography>
-                      </Box>
-                    </OAuthButton>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <OAuthButton
-                      provider="apple"
-                      fullWidth
-                      mode="signup"
-                      userRole={activeTab === 0 ? 'applicant' : 'recruiter'}
-                      onSuccess={handleOAuthSuccess}
-                      onError={handleOAuthError}
-                    >
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Apple sx={{ fontSize: 20, mr: 1 }} />
-                        <Typography variant="button" fontWeight="inherit">
-                          Apple
-                        </Typography>
-                      </Box>
-                    </OAuthButton>
-                  </Grid>
-                </Grid>
+                <OAuthButtons
+                  role={activeTab === 0 ? 'applicant' : 'recruiter'}
+                  onSuccess={handleOAuthSuccess}
+                  onError={handleOAuthError}
+                />
               </Box>
             </CardContent>
           </StyledCard>

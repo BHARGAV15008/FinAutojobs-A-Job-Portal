@@ -10,33 +10,40 @@ const router = express.Router();
 // JWT Secret
 const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret-key-change-this-in-production';
 
-// OAuth Configuration
-const OAUTH_CONFIG = {
-  google: {
-    clientID: process.env.GOOGLE_CLIENT_ID || 'your-google-client-id',
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'your-google-client-secret',
-    callbackURL: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:5000/api/oauth/google/callback'
-  },
-  microsoft: {
-    clientID: process.env.MICROSOFT_CLIENT_ID || 'your-microsoft-client-id',
-    clientSecret: process.env.MICROSOFT_CLIENT_SECRET || 'your-microsoft-client-secret',
-    callbackURL: process.env.MICROSOFT_CALLBACK_URL || 'http://localhost:5000/api/oauth/microsoft/callback',
-    scope: ['user.read']
-  },
-  apple: {
-    clientID: process.env.APPLE_CLIENT_ID || 'your-apple-client-id',
-    teamID: process.env.APPLE_TEAM_ID || 'your-apple-team-id',
-    keyID: process.env.APPLE_KEY_ID || 'your-apple-key-id',
-    privateKeyPath: process.env.APPLE_PRIVATE_KEY_PATH || './apple-private-key.p8',
-    callbackURL: process.env.APPLE_CALLBACK_URL || 'http://localhost:5000/api/oauth/apple/callback'
-  }
+// OAuth Configuration - Lazy loaded to ensure env vars are available
+const getOAuthConfig = () => {
+  console.log('🔍 Loading OAuth config - Google Client ID:', process.env.GOOGLE_CLIENT_ID ? 'Found' : 'Not found');
+  console.log('🔍 Loading OAuth config - Google Client Secret:', process.env.GOOGLE_CLIENT_SECRET ? 'Found' : 'Not found');
+  
+  return {
+    google: {
+      clientID: process.env.GOOGLE_CLIENT_ID || 'your-google-client-id',
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'your-google-client-secret',
+      callbackURL: process.env.GOOGLE_CALLBACK_URL || '/api/oauth/google/callback'  // Relative path as recommended
+    },
+    microsoft: {
+      clientID: process.env.MICROSOFT_CLIENT_ID || 'your-microsoft-client-id',
+      clientSecret: process.env.MICROSOFT_CLIENT_SECRET || 'your-microsoft-client-secret',
+      callbackURL: process.env.MICROSOFT_CALLBACK_URL || 'http://localhost:5000/api/oauth/microsoft/callback',
+      scope: ['user.read']
+    },
+    apple: {
+      clientID: process.env.APPLE_CLIENT_ID || 'your-apple-client-id',
+      teamID: process.env.APPLE_TEAM_ID || 'your-apple-team-id',
+      keyID: process.env.APPLE_KEY_ID || 'your-apple-key-id',
+      privateKeyPath: process.env.APPLE_PRIVATE_KEY_PATH || './apple-private-key.p8',
+      callbackURL: process.env.APPLE_CALLBACK_URL || 'http://localhost:5000/api/oauth/apple/callback'
+    }
+  };
 };
 
-// Configure Google OAuth Strategy
-passport.use(new GoogleStrategy({
-  clientID: OAUTH_CONFIG.google.clientID,
-  clientSecret: OAUTH_CONFIG.google.clientSecret,
-  callbackURL: OAUTH_CONFIG.google.callbackURL
+// Configure Google OAuth Strategy - Lazy initialization
+const initializeGoogleStrategy = () => {
+  const OAUTH_CONFIG = getOAuthConfig();
+  passport.use(new GoogleStrategy({
+    clientID: OAUTH_CONFIG.google.clientID,
+    clientSecret: OAUTH_CONFIG.google.clientSecret,
+    callbackURL: OAUTH_CONFIG.google.callbackURL
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     console.log('🔍 Google OAuth Profile:', JSON.stringify(profile, null, 2));
@@ -60,13 +67,16 @@ passport.use(new GoogleStrategy({
     return done(error, null);
   }
 }));
+};
 
-// Configure Microsoft OAuth Strategy
-passport.use(new MicrosoftStrategy({
-  clientID: OAUTH_CONFIG.microsoft.clientID,
-  clientSecret: OAUTH_CONFIG.microsoft.clientSecret,
-  callbackURL: OAUTH_CONFIG.microsoft.callbackURL,
-  scope: OAUTH_CONFIG.microsoft.scope
+// Configure Microsoft OAuth Strategy - Lazy initialization
+const initializeMicrosoftStrategy = () => {
+  const OAUTH_CONFIG = getOAuthConfig();
+  passport.use(new MicrosoftStrategy({
+    clientID: OAUTH_CONFIG.microsoft.clientID,
+    clientSecret: OAUTH_CONFIG.microsoft.clientSecret,
+    callbackURL: OAUTH_CONFIG.microsoft.callbackURL,
+    scope: OAUTH_CONFIG.microsoft.scope
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     console.log('🔍 Microsoft OAuth Profile:', JSON.stringify(profile, null, 2));
@@ -91,6 +101,15 @@ passport.use(new MicrosoftStrategy({
     return done(error, null);
   }
 }));
+};
+
+// Initialize OAuth strategies when environment is ready
+const initializeOAuth = () => {
+  console.log('🔧 Initializing OAuth strategies...');
+  initializeGoogleStrategy();
+  initializeMicrosoftStrategy();
+  console.log('✅ OAuth strategies initialized');
+};
 
 // Serialize/Deserialize user for session
 passport.serializeUser((user, done) => {
@@ -351,6 +370,7 @@ router.post('/apple/callback', async (req, res) => {
 
 // OAuth status endpoint
 router.get('/status', (req, res) => {
+  const OAUTH_CONFIG = getOAuthConfig();
   res.json({
     success: true,
     message: 'OAuth service is running',
@@ -370,5 +390,48 @@ router.get('/status', (req, res) => {
     }
   });
 });
+
+// OAuth config endpoint (for frontend compatibility)
+router.get('/config', (req, res) => {
+  const OAUTH_CONFIG = getOAuthConfig();
+  res.json({
+    success: true,
+    google: {
+      enabled: !!OAUTH_CONFIG.google.clientID && OAUTH_CONFIG.google.clientID !== 'your-google-client-id',
+      clientId: OAUTH_CONFIG.google.clientID !== 'your-google-client-id' ? OAUTH_CONFIG.google.clientID : null
+    },
+    microsoft: {
+      enabled: !!OAUTH_CONFIG.microsoft.clientID && OAUTH_CONFIG.microsoft.clientID !== 'your-microsoft-client-id',
+      clientId: OAUTH_CONFIG.microsoft.clientID !== 'your-microsoft-client-id' ? OAUTH_CONFIG.microsoft.clientID : null
+    },
+    apple: {
+      enabled: !!OAUTH_CONFIG.apple.clientID && OAUTH_CONFIG.apple.clientID !== 'your-apple-client-id',
+      clientId: OAUTH_CONFIG.apple.clientID !== 'your-apple-client-id' ? OAUTH_CONFIG.apple.clientID : null
+    }
+  });
+});
+
+// Debug endpoint to check OAuth configuration
+router.get('/debug', (req, res) => {
+  const OAUTH_CONFIG = getOAuthConfig();
+  res.json({
+    success: true,
+    debug: {
+      googleClientId: OAUTH_CONFIG.google.clientID,
+      googleCallbackUrl: OAUTH_CONFIG.google.callbackURL,
+      environment: process.env.NODE_ENV,
+      serverUrl: `http://localhost:${process.env.PORT || 5000}`,
+      expectedRedirectUri: OAUTH_CONFIG.google.callbackURL
+    },
+    instructions: {
+      message: "Add this EXACT redirect URI to your Google Cloud Console:",
+      redirectUri: OAUTH_CONFIG.google.callbackURL,
+      googleConsoleUrl: "https://console.cloud.google.com/apis/credentials"
+    }
+  });
+});
+
+// Export initialization function to be called after env vars are loaded
+export { initializeOAuth };
 
 export default router;

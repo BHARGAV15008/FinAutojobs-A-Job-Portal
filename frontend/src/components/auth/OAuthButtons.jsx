@@ -1,55 +1,35 @@
 import React, { useState } from 'react';
 import { Button, Box, Typography, Alert, CircularProgress } from '@mui/material';
 import { Google, Microsoft, Apple } from '@mui/icons-material';
-import { useAuth } from '../../contexts/AuthContext.jsx';
 
-const OAuthButtons = ({ onSuccess, onError }) => {
+const OAuthButtons = ({ role = 'applicant', onSuccess, onError }) => {
     const [loading, setLoading] = useState({});
     const [error, setError] = useState('');
-    const { login } = useAuth();
 
-    const handleOAuthLogin = async (provider) => {
+    const handleOAuthLogin = (provider) => {
         setLoading(prev => ({ ...prev, [provider]: true }));
         setError('');
 
         try {
-            // Mock OAuth token for testing
-            const mockToken = `mock-${provider}-token-${Date.now()}`;
+            // Get the backend URL
+            const backendUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
             
-            const response = await fetch(`http://localhost:5000/api/oauth/${provider}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ token: mockToken })
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                // Store the token and user data
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('user', JSON.stringify(data.user));
-                
-                // Update auth context
-                if (login) {
-                    login(data.user, data.token);
-                }
-                
-                if (onSuccess) {
-                    onSuccess(data);
-                }
-            } else {
-                throw new Error(data.message || `${provider} OAuth failed`);
-            }
+            // Redirect to OAuth provider with role parameter
+            const oauthUrl = `${backendUrl}/api/oauth/${provider}?role=${role}`;
+            
+            // Store the intended role for after OAuth callback
+            sessionStorage.setItem('oauth_role', role);
+            
+            // Redirect to OAuth provider
+            window.location.href = oauthUrl;
+            
         } catch (err) {
-            const errorMessage = err.message || `Failed to authenticate with ${provider}`;
+            const errorMessage = err.message || `Failed to initiate ${provider} OAuth`;
             setError(errorMessage);
+            setLoading(prev => ({ ...prev, [provider]: false }));
             if (onError) {
                 onError(errorMessage);
             }
-        } finally {
-            setLoading(prev => ({ ...prev, [provider]: false }));
         }
     };
 

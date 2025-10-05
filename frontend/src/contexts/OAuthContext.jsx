@@ -58,7 +58,8 @@ export const OAuthProvider = ({ children }) => {
           callback: async (response) => {
             try {
               // Send the credential to backend
-              const result = await fetch('/api/oauth/google', {
+              const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+              const result = await fetch(`${baseURL}/oauth/google`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
@@ -123,7 +124,8 @@ export const OAuthProvider = ({ children }) => {
       const response = await msalInstance.loginPopup(loginRequest);
       
       // Send the access token to backend
-      const result = await fetch('/api/oauth/microsoft', {
+      const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const result = await fetch(`${baseURL}/oauth/microsoft`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -172,7 +174,8 @@ export const OAuthProvider = ({ children }) => {
       });
 
       // Send the identity token to backend
-      const result = await fetch('/api/oauth/apple', {
+      const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const result = await fetch(`${baseURL}/oauth/apple`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -204,7 +207,8 @@ export const OAuthProvider = ({ children }) => {
   // Get OAuth configuration
   const getOAuthConfig = useCallback(async () => {
     try {
-      const response = await fetch('/api/oauth/config');
+      const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${baseURL}/oauth/config`);
       const data = await response.json();
       
       if (!response.ok) {

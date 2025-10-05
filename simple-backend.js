@@ -596,7 +596,7 @@ app.get('/api/oauth/config', (req, res) => {
             apple: true
         },
         config: {
-            google: { enabled: true, clientId: 'mock-google-client-id' },
+            google: { enabled: true, clientId: '694673409935-td8q4m1qlvnf6ddfbnn3o9sljpirhpeh.apps.googleusercontent.com' },
             microsoft: { enabled: true, clientId: 'mock-microsoft-client-id' },
             apple: { enabled: true, clientId: 'mock-apple-client-id' }
         }
