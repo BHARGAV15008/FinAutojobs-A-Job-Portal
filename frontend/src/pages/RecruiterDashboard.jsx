@@ -232,22 +232,50 @@ const RecruiterDashboardContent = () => {
   ];
 
   // Handle tab changes - moved before useEffect to avoid hoisting issues
-  const handleTabChange = useCallback((tabId) => {
+  const handleTabChange = useCallback((tabId, subTabId = null) => {
     setActiveTab(tabId);
+    if (subTabId) {
+      setActiveJobTab(subTabId);
+    }
     const basePath = "/recruiter-dashboard";
-    const newPath = tabId === "dashboard" ? basePath : `${basePath}/${tabId}`;
+    let newPath;
+    if (tabId === "dashboard") {
+      newPath = basePath;
+    } else if (tabId === "jobs" && subTabId) {
+      newPath = `${basePath}/${tabId}/${subTabId}`;
+    } else {
+      newPath = `${basePath}/${tabId}`;
+    }
     window.history.pushState({}, "", newPath);
   }, []);
 
-  // Extract tab from URL
+  // Extract tab from URL with support for nested job tabs
   useEffect(() => {
     const pathParts = location.split("/");
-    const tab = pathParts[pathParts.length - 1];
     const validTabs = dashboardTabs.map((t) => t.id);
-    if (validTabs.includes(tab)) {
-      setActiveTab(tab);
-    } else if (location === "/recruiter-dashboard") {
+    
+    if (location === "/recruiter-dashboard") {
       setActiveTab("dashboard");
+    } else if (pathParts.length >= 3) {
+      const mainTab = pathParts[2]; // recruiter-dashboard/[mainTab]/[subTab]
+      const subTab = pathParts[3];
+      
+      // Handle nested job tabs (e.g., /recruiter-dashboard/jobs/active)
+      if (mainTab === "jobs" && subTab) {
+        const validJobTabs = ["post", "active", "draft", "closed"];
+        if (validJobTabs.includes(subTab)) {
+          setActiveTab("jobs");
+          setActiveJobTab(subTab);
+        }
+      } else if (validTabs.includes(mainTab)) {
+        setActiveTab(mainTab);
+      }
+    } else {
+      // Handle single-level tabs (e.g., /recruiter-dashboard/profile)
+      const tab = pathParts[pathParts.length - 1];
+      if (validTabs.includes(tab)) {
+        setActiveTab(tab);
+      }
     }
   }, [location, dashboardTabs]);
 
@@ -448,7 +476,10 @@ const RecruiterDashboardContent = () => {
                     }`}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => setActiveJobTab(tab.id)}
+                  onClick={() => {
+                    setActiveJobTab(tab.id);
+                    handleTabChange("jobs", tab.id);
+                  }}
                 >
                   <span className="mr-2">{tab.icon}</span>
                   {tab.label}

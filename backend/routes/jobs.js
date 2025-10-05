@@ -116,6 +116,8 @@ router.get('/', async (req, res) => {
       company, 
       status,
       recruiterId,
+      companyName,
+      recruiterAndCompany,
       page = 1, 
       limit = 20,
       sort = 'createdAt',
@@ -125,14 +127,34 @@ router.get('/', async (req, res) => {
     // Build query - if recruiterId is provided, include all statuses for recruiter's dashboard
     const query = {};
     
-    // Filter by recruiter ID (for recruiter's own jobs)
-    if (recruiterId) {
+    // Filter by recruiter ID AND company (for recruiter's own jobs + company jobs)
+    if (recruiterAndCompany) {
+      const [currentRecruiterId, currentCompanyName] = recruiterAndCompany.split('|');
+      if (currentRecruiterId && currentCompanyName) {
+        query.$or = [
+          { postedBy: currentRecruiterId }, // Jobs posted by the recruiter themselves
+          { companyName: currentCompanyName } // Jobs posted by anyone from the same company
+        ];
+        // For recruiter dashboard, include all statuses unless specifically filtered
+        if (status) {
+          query.status = status;
+        }
+      }
+    } else if (recruiterId) {
+      // Filter by recruiter ID only (for recruiter's own jobs)
       query.postedBy = recruiterId;
       // For recruiters viewing their own jobs, include all statuses unless specifically filtered
       if (status) {
         query.status = status;
       }
       // Don't filter by status if recruiter wants to see all their jobs
+    } else if (companyName) {
+      // Filter by company name only (for company-specific jobs)
+      query.companyName = companyName;
+      // For company-based filtering, include all statuses unless specifically filtered
+      if (status) {
+        query.status = status;
+      }
     } else {
       // For public job listings, only show active jobs
       query.status = status || 'active';

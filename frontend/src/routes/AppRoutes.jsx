@@ -185,6 +185,11 @@ const AppRoutes = () => {
                 <RecruiterDashboard />
               </ProtectedRoute>
             )}</Route>
+            <Route path="/recruiter-dashboard/:tab/:subtab">{() => (
+              <ProtectedRoute allowedRoles={['recruiter']}>
+                <RecruiterDashboard />
+              </ProtectedRoute>
+            )}</Route>
 
             <Route path="/admin-dashboard">{() => (
               <ProtectedRoute requiredRole="admin">

@@ -1338,23 +1338,43 @@ export const EnhancedJobsTab = ({
     fetchRecommendedJobs();
   }, [userRole, jobType, currentUser?._id]);
 
-  // For recruiters, fetch their specific jobs
+  // For recruiters, fetch their company's jobs
   useEffect(() => {
     const fetchRecruiterJobs = async () => {
       if (userRole === "recruiter" && currentUser?._id) {
         try {
           setJobsLoading(true);
-          console.log('🔍 Fetching jobs for recruiter:', currentUser._id);
+          
+          // Get company name from current user
+          const companyName = currentUser.companyInfo?.companyName || 
+                             currentUser.companyName || 
+                             currentUser.company;
+          
+          console.log('🔍 Fetching jobs for recruiter and company:', {
+            recruiterId: currentUser._id,
+            companyName: companyName
+          });
           
           // Import jobsAPI dynamically to avoid circular imports
           const { jobsAPI } = await import("../../services/api");
-          const response = await jobsAPI.getJobs({ 
-            recruiterId: currentUser._id,
-            limit: 100 // Get more jobs for recruiter's own jobs
-          });
+          
+          // Use combined filtering: recruiter's own jobs + company jobs
+          const queryParams = companyName ? 
+            { 
+              recruiterAndCompany: `${currentUser._id}|${companyName}`,
+              limit: 100 
+            } : 
+            { 
+              recruiterId: currentUser._id, 
+              limit: 100 
+            };
+          
+          console.log('🔍 Query parameters:', queryParams);
+          
+          const response = await jobsAPI.getJobs(queryParams);
           
           const fetchedJobs = response.data.data?.jobs || response.data.jobs || [];
-          console.log(`✅ Fetched recruiter jobs: ${fetchedJobs.length} for jobType: ${jobType}`);
+          console.log(`✅ Fetched company jobs: ${fetchedJobs.length} for jobType: ${jobType}`);
           console.log('🔍 Sample job data:', fetchedJobs[0]);
           if (fetchedJobs[0]) {
             console.log('🔍 Job fields:', Object.keys(fetchedJobs[0]));
@@ -1366,7 +1386,7 @@ export const EnhancedJobsTab = ({
           }
           setRecruiterJobs(fetchedJobs);
         } catch (error) {
-          console.error('Error fetching recruiter jobs:', error);
+          console.error('Error fetching company jobs:', error);
           setRecruiterJobs([]);
         } finally {
           setJobsLoading(false);
@@ -1375,7 +1395,7 @@ export const EnhancedJobsTab = ({
     };
 
     fetchRecruiterJobs();
-  }, [userRole, currentUser?._id]);
+  }, [userRole, currentUser?._id, currentUser?.companyInfo?.companyName, currentUser?.companyName, currentUser?.company]);
 
   // Handle view job details
   const handleViewJobDetails = (job) => {
