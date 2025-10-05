@@ -145,8 +145,7 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
             submenu: [
               { name: 'All Applications', emoji: '📋', path: `/applicants`, tabId: 'applicants', current: isPathActive('/applicants', 'applicants') },
               { name: 'Candidates', emoji: '🎯', path: `/candidates`, tabId: 'candidates', current: isPathActive('/candidates', 'candidates') },
-              { name: 'Interviews', emoji: '🗣️', path: `/interviews`, tabId: 'interviews', current: isPathActive('/interviews', 'interviews') },
-              { name: 'Reports', emoji: '📊', path: `/reports`, tabId: 'reports', current: isPathActive('/reports', 'reports') }
+              { name: 'Interviews', emoji: '🗣️', path: `/interviews`, tabId: 'interviews', current: isPathActive('/interviews', 'interviews') }
             ]
           },
           {
@@ -164,54 +163,6 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
             path: `/settings`,
             tabId: 'settings',
             current: isPathActive('/settings', 'settings')
-          },
-          {
-            name: 'System Settings',
-            emoji: '🔧',
-            icon: 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4',
-            path: `/system-settings`,
-            tabId: 'system-settings',
-            current: isPathActive('/system-settings', 'system-settings')
-          },
-          {
-            name: 'System Logs',
-            emoji: '📋',
-            icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
-            path: `/logs`,
-            tabId: 'logs',
-            current: isPathActive('/logs', 'logs')
-          },
-          {
-            name: 'Database',
-            emoji: '🗄️',
-            icon: 'M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4',
-            path: `/database`,
-            tabId: 'database',
-            current: isPathActive('/database', 'database')
-          },
-          {
-            name: 'Companies',
-            emoji: '🏢',
-            icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',
-            path: `/companies`,
-            tabId: 'companies',
-            current: isPathActive('/companies', 'companies')
-          },
-          {
-            name: 'Reports',
-            emoji: '📊',
-            icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
-            path: `/reports`,
-            tabId: 'reports',
-            current: isPathActive('/reports', 'reports')
-          },
-          {
-            name: 'Security',
-            emoji: '🔒',
-            icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z',
-            path: `/security`,
-            tabId: 'security',
-            current: isPathActive('/security', 'security')
           }
         ];
 

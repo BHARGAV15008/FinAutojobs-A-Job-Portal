@@ -21,7 +21,9 @@
     "deploy": "npm run build && npm run deploy:netlify",
     "deploy:netlify": "netlify deploy --prod --dir=dist",
     "deploy:vercel": "vercel --prod",
-    "clean": "rm -rf dist node_modules/.vite"
+    "clean": "rm -rf dist node_modules/.vite",
+    "build:production": "NODE_ENV=production npm run build",
+    "preview:production": "npm run build:production && npm run preview"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

@@ -101,23 +101,32 @@ export const authenticateUser = async (identifier, password, role) => {
     
     if (!isPasswordValid) {
       // Increment login attempts
-      user.loginAttempts += 1;
+      const updateData = {
+        loginAttempts: user.loginAttempts + 1
+      };
       
       // Lock account after 5 failed attempts
-      if (user.loginAttempts >= 5) {
-        user.lockUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+      if (user.loginAttempts >= 4) { // >= 4 because we're incrementing by 1
+        updateData.lockUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
       }
       
-      await user.save();
+      await BaseUser.findByIdAndUpdate(user._id, updateData, { 
+        validateBeforeSave: false,
+        runValidators: false 
+      });
       throw new Error('Invalid password');
     }
     
     // Reset login attempts and update lastLogin on successful login
-    user.loginAttempts = 0;
-    user.lockUntil = undefined;
-    user.lastLogin = new Date();
-    user.lastActivity = new Date();
-    await user.save();
+    await BaseUser.findByIdAndUpdate(user._id, {
+      loginAttempts: 0,
+      $unset: { lockUntil: 1 },
+      lastLogin: new Date(),
+      lastActivity: new Date()
+    }, { 
+      validateBeforeSave: false,
+      runValidators: false 
+    });
     
     // Return user without password
     const userObj = user.toObject();

@@ -13,6 +13,8 @@
   NPM_FLAGS = "--legacy-peer-deps"
   # Increase memory limit for large builds
   NODE_OPTIONS = "--max-old-space-size=4096"
+  # Production environment
+  NODE_ENV = "production"
 
 # Netlify Functions for backend API
 [functions]

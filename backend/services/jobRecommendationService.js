@@ -273,8 +273,9 @@ class JobRecommendationService {
     // Partial match
     if (app.includes(job) || job.includes(app)) return true;
     
-    // Common skill aliases
+    // Common skill aliases and related skills
     const skillAliases = {
+      // Technology skills
       'javascript': ['js', 'node.js', 'nodejs', 'react', 'vue', 'angular'],
       'python': ['django', 'flask', 'fastapi'],
       'java': ['spring', 'hibernate'],
@@ -282,7 +283,32 @@ class JobRecommendationService {
       'node.js': ['nodejs', 'node'],
       'mongodb': ['mongo'],
       'postgresql': ['postgres'],
-      'machine learning': ['ml', 'ai', 'artificial intelligence']
+      'machine learning': ['ml', 'ai', 'artificial intelligence'],
+      
+      // Finance and accounting skills
+      'financial analysis': ['finance', 'financial modeling', 'financial planning', 'budgeting', 'forecasting', 'financial reporting'],
+      'accounting': ['bookkeeping', 'financial reporting', 'tax preparation', 'audit', 'tally'],
+      'investment analysis': ['portfolio management', 'asset management', 'equity research', 'valuation'],
+      'risk assessment': ['risk management', 'credit analysis', 'compliance', 'regulatory', 'kyc', 'aml', 'regulatory compliance'],
+      'financial modeling': ['excel modeling', 'dcf', 'valuation models'],
+      'budgeting': ['budget planning', 'cost control', 'financial planning'],
+      'taxation': ['tax planning', 'tax compliance', 'gst'],
+      'audit': ['internal audit', 'external audit', 'compliance audit'],
+      'banking': ['retail banking', 'corporate banking', 'investment banking'],
+      'insurance': ['underwriting', 'claims', 'actuarial'],
+      'compliance': ['regulatory compliance', 'kyc', 'aml', 'risk management'],
+      'tally': ['accounting', 'bookkeeping', 'financial software'],
+      'kyc/aml': ['compliance', 'regulatory', 'risk assessment', 'kyc', 'aml'],
+      
+      // Business skills
+      'project management': ['pmp', 'agile', 'scrum', 'waterfall'],
+      'data analysis': ['excel', 'sql', 'tableau', 'power bi', 'analytics'],
+      'marketing': ['digital marketing', 'social media', 'content marketing', 'seo'],
+      'sales': ['business development', 'lead generation', 'crm'],
+      
+      // Soft skills
+      'communication': ['presentation', 'writing', 'public speaking'],
+      'leadership': ['team management', 'people management', 'mentoring']
     };
     
     for (const [mainSkill, aliases] of Object.entries(skillAliases)) {

@@ -95,6 +95,33 @@ const checkSkillAliases = (applicantSkill, jobSkill) => {
     'jest': ['javascript testing', 'testing'],
     'cypress': ['e2e testing', 'testing'],
     
+    // Finance and Accounting Skills
+    'financial analysis': ['finance', 'financial modeling', 'financial planning', 'budgeting', 'forecasting', 'financial reporting'],
+    'finance': ['financial analysis', 'financial planning', 'budgeting', 'accounting'],
+    'accounting': ['bookkeeping', 'financial reporting', 'tax preparation', 'audit', 'tally'],
+    'investment analysis': ['portfolio management', 'asset management', 'equity research', 'valuation'],
+    'risk assessment': ['risk management', 'credit analysis', 'compliance', 'regulatory', 'kyc', 'aml', 'regulatory compliance'],
+    'risk management': ['risk assessment', 'compliance', 'regulatory'],
+    'financial modeling': ['excel modeling', 'dcf', 'valuation models', 'financial analysis'],
+    'budgeting': ['budget planning', 'cost control', 'financial planning', 'finance'],
+    'taxation': ['tax planning', 'tax compliance', 'gst'],
+    'audit': ['internal audit', 'external audit', 'compliance audit', 'accounting'],
+    'banking': ['retail banking', 'corporate banking', 'investment banking', 'finance'],
+    'insurance': ['underwriting', 'claims', 'actuarial'],
+    'compliance': ['regulatory compliance', 'kyc', 'aml', 'risk management', 'regulatory'],
+    'regulatory compliance': ['compliance', 'kyc', 'aml', 'risk assessment', 'regulatory'],
+    'tally': ['accounting', 'bookkeeping', 'financial software'],
+    'kyc/aml': ['compliance', 'regulatory', 'risk assessment', 'kyc', 'aml'],
+    'kyc': ['compliance', 'regulatory', 'aml', 'risk assessment'],
+    'aml': ['compliance', 'regulatory', 'kyc', 'risk assessment'],
+    'regulatory': ['compliance', 'regulatory compliance', 'risk management'],
+    
+    // Business Skills
+    'project management': ['pmp', 'agile', 'scrum', 'waterfall'],
+    'data analysis': ['excel', 'sql', 'tableau', 'power bi', 'analytics'],
+    'marketing': ['digital marketing', 'social media', 'content marketing', 'seo'],
+    'sales': ['business development', 'lead generation', 'crm'],
+    
     // Other
     'agile': ['scrum', 'methodology'],
     'scrum': ['agile', 'methodology'],
@@ -104,12 +131,14 @@ const checkSkillAliases = (applicantSkill, jobSkill) => {
   // Check if applicant skill matches any aliases of job skill
   const jobAliases = skillAliases[jobSkill] || [];
   if (jobAliases.includes(applicantSkill)) {
+    console.log(`🔍 ALIAS MATCH: "${applicantSkill}" matches "${jobSkill}" via aliases: [${jobAliases.join(', ')}]`);
     return true;
   }
 
   // Check if job skill matches any aliases of applicant skill
   const applicantAliases = skillAliases[applicantSkill] || [];
   if (applicantAliases.includes(jobSkill)) {
+    console.log(`🔍 REVERSE ALIAS MATCH: "${applicantSkill}" matches "${jobSkill}" via applicant aliases: [${applicantAliases.join(', ')}]`);
     return true;
   }
 
@@ -469,24 +498,9 @@ router.get('/jobs', authenticateToken, async (req, res) => {
 
     console.log('🔍 Final recommended jobs:', recommendedJobs.length);
 
-    // If no recommendations found, show recent/popular jobs as fallback
+    // Only show jobs with actual skill matches - no fallback jobs
     if (recommendedJobs.length === 0) {
-      console.log('🔍 No skill-matched jobs found, showing recent jobs as fallback');
-      const fallbackJobs = jobs
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sort by newest first
-        .slice(0, Math.min(parseInt(limit), 10)) // Limit fallback jobs
-        .map(job => ({
-          ...job,
-          matchScore: {
-            overall: 15, // Low but positive score
-            skills: { matchPercentage: 0, matchedSkills: [], missingSkills: job.requiredSkills || [] },
-            location: 0,
-            experience: 50 // Neutral experience score
-          }
-        }));
-      
-      recommendedJobs.push(...fallbackJobs);
-      console.log('🔍 Added fallback jobs:', fallbackJobs.length);
+      console.log('🔍 No skill-matched jobs found. Showing empty results (no fallback jobs).');
     }
 
     // Format response

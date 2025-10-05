@@ -20,7 +20,7 @@ const api = {
   },
   getProfile: () => handleResponse(apiRequest('GET', '/api/auth/profile')),
   updateProfile: (data) => handleResponse(apiRequest('PUT', '/api/auth/profile', data)),
-  changePassword: (data) => handleResponse(apiRequest('PUT', '/api/users/change-password', data)),
+  changePassword: (data) => handleResponse(apiRequest('PUT', '/api/auth/change-password', data)),
   getProfileAnalytics: () => handleResponse(apiRequest('GET', '/api/users/profile/analytics')),
   getProfileActivity: () => handleResponse(apiRequest('GET', '/api/users/profile/activity')),
   

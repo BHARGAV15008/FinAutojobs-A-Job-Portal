@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'wouter';
 import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, Shield } from 'lucide-react';
 
 const ResetPasswordForm = () => {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const token = searchParams.get('token');
+  const [location, setLocation] = useLocation();
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get('token');
 
   const [formData, setFormData] = useState({
     password: '',
@@ -22,8 +22,15 @@ const ResetPasswordForm = () => {
   });
 
   useEffect(() => {
+    console.log('🔍 ResetPasswordForm - Current URL:', window.location.href);
+    console.log('🔍 ResetPasswordForm - URL search params:', window.location.search);
+    console.log('🔍 ResetPasswordForm - Extracted token:', token);
+    
     if (!token) {
+      console.log('❌ No token found in URL parameters');
       setError('Invalid reset link. Please request a new password reset.');
+    } else {
+      console.log('✅ Token found:', token.substring(0, 8) + '...');
     }
   }, [token]);
 
@@ -111,7 +118,7 @@ const ResetPasswordForm = () => {
         setIsSuccess(true);
         // Redirect to login after 3 seconds
         setTimeout(() => {
-          navigate('/login');
+          setLocation('/login');
         }, 3000);
       } else {
         setError(data.message || 'Failed to reset password');

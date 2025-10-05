@@ -24,8 +24,10 @@ import {
     Email,
     Save,
     Cancel,
+    Security as SecurityIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext.jsx';
+import ChangePasswordModal from '../components/profile/ChangePasswordModal';
 
 const RecruiterProfilePage = () => {
     const { user, updateProfile } = useAuth();
@@ -36,6 +38,7 @@ const RecruiterProfilePage = () => {
     };
     const [isEditing, setIsEditing] = useState(false);
     const [showOtpDialog, setShowOtpDialog] = useState(false);
+    const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
     const [otpType, setOtpType] = useState(''); // 'email' or 'phone'
     const [otp, setOtp] = useState('');
 
@@ -138,13 +141,23 @@ const RecruiterProfilePage = () => {
                                             <Chip icon={<Work />} label={user?.companyInfo?.designation || 'Role'} />
                                         </Box>
                                     </Box>
-                                    <Button
-                                        variant="contained"
-                                        startIcon={<EditIcon />}
-                                        onClick={() => setIsEditing(!isEditing)}
-                                    >
-                                        {isEditing ? 'Cancel Edit' : 'Edit Profile'}
-                                    </Button>
+                                    <Box sx={{ display: 'flex', gap: 1 }}>
+                                        <Button
+                                            variant="contained"
+                                            startIcon={<EditIcon />}
+                                            onClick={() => setIsEditing(!isEditing)}
+                                        >
+                                            {isEditing ? 'Cancel Edit' : 'Edit Profile'}
+                                        </Button>
+                                        <Button
+                                            variant="outlined"
+                                            startIcon={<SecurityIcon />}
+                                            onClick={() => setShowChangePasswordModal(true)}
+                                            color="secondary"
+                                        >
+                                            Change Password
+                                        </Button>
+                                    </Box>
                                 </Box>
                             </Box>
                         </Box>
@@ -495,6 +508,12 @@ const RecruiterProfilePage = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Change Password Modal */}
+            <ChangePasswordModal
+                open={showChangePasswordModal}
+                onClose={() => setShowChangePasswordModal(false)}
+            />
         </Container>
     );
 };

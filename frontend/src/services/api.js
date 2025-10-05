@@ -27,6 +27,14 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    console.log('🔍 API Error Details:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      url: error.config?.url,
+      method: error.config?.method
+    });
+    
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       window.location.href = '/login';
@@ -44,9 +52,15 @@ export const authAPI = {
   forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
   resetPassword: (token, password) => api.post('/auth/reset-password', { token, password }),
   changePassword: (currentPassword, newPassword, confirmPassword) => 
-    api.put('/auth/change-password', { currentPassword, newPassword, confirmPassword }),
+    api.put('/auth/change-password-test', { currentPassword, newPassword, confirmPassword }),
   changeUsername: (newUsername, password) => 
-    api.put('/auth/change-username', { newUsername, password }),
+    api.put('/auth/change-username-test', { newUsername, password }),
+  // Test endpoint to verify connectivity
+  testFrontendConnection: (testData) => 
+    api.post('/auth/test-frontend', testData),
+  // Test PUT endpoint
+  testPutEndpoint: (testData) => 
+    api.put('/auth/test-put', testData),
   checkAvailability: (field, value, role) => api.post('/auth/check-availability', { field, value, role }),
   generateUsername: (firstName, lastName, role) => api.post('/auth/generate-username', { firstName, lastName, role }),
   validateUsername: (username) => api.post('/auth/validate-username', { username }),

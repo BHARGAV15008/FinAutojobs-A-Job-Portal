@@ -262,6 +262,28 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const resetPassword = async (token, newPassword) => {
+    try {
+      console.log('🔍 Resetting password with token:', token);
+      const response = await apiClient.post('/auth/reset-password', { 
+        token, 
+        password: newPassword 
+      });
+      console.log('✅ Password reset response:', response.data);
+      
+      return { 
+        success: true, 
+        message: response.data.message || 'Password reset successfully'
+      };
+    } catch (error) {
+      console.error('❌ Password reset failed:', error);
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to reset password' 
+      };
+    }
+  };
+
   const updateProfile = async (profileData) => {
     try {
       console.log('🔍 Updating profile with data:', profileData);
@@ -327,6 +349,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    resetPassword,
     updateProfile,
     updateProfileWithFile,
     sendEmailOTP,

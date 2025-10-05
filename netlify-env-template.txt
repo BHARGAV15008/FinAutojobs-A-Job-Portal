@@ -3,20 +3,35 @@
 # Site Settings > Environment Variables
 
 # =============================================================================
-# DATABASE CONFIGURATION
+# CRITICAL PRODUCTION VARIABLES (REQUIRED)
 # =============================================================================
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/finautojobs?retryWrites=true&w=majority
 
-# =============================================================================
-# JWT & SECURITY
-# =============================================================================
-JWT_SECRET=your-super-secret-jwt-key-change-this-in-production-123456789
-SESSION_SECRET=your-super-secret-session-key-change-this-in-production-987654321
+# Database Configuration (MongoDB Atlas)
+# Your actual MongoDB Atlas connection string
+MONGODB_URI=mongodb+srv://technogenius1500_db_user:30SNKn8r6dIagg3E@cluster0.e8nknea.mongodb.net/finautojobs?retryWrites=true&w=majority&appName=Cluster0
+DATABASE_URL=mongodb+srv://technogenius1500_db_user:30SNKn8r6dIagg3E@cluster0.e8nknea.mongodb.net/finautojobs?retryWrites=true&w=majority&appName=Cluster0
+
+# Server Configuration
 NODE_ENV=production
+PORT=8888
+
+# JWT Configuration (Use the generated secrets below - DO NOT CHANGE)
+JWT_SECRET=31bf748d8d2c77a9fa390d0f1da642e3ba8d60fcf18245fef848828d4c24dff22681a2c6e0cd80a260722056a0dec1bd1c4da462d59f46f916029688cd568a62
+JWT_EXPIRES_IN=24h
+
+# Session Configuration (Use the generated secrets below - DO NOT CHANGE)
+SESSION_SECRET=session_ee82eabfa45c6e84a7244465b0baa0c43db0f3a479079d96e04ea459f8965b78c6ceb8ad9a2675885ee0bba87831ea19738ffe891d5358b9ea5ed7bcde242e58
+
+# Frontend URL (Replace with your actual Netlify domain after deployment)
+FRONTEND_URL=https://finautojobs.netlify.app
+
+# CORS Origins (Replace with your actual Netlify domain after deployment)
+CORS_ORIGINS=https://finautojobs.netlify.app
 
 # =============================================================================
-# EMAIL CONFIGURATION
+# EMAIL CONFIGURATION (ALREADY CONFIGURED)
 # =============================================================================
+
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 EMAIL_USER=hiddenshadow032025@gmail.com
@@ -25,28 +40,32 @@ EMAIL_FROM_NAME=FinAutoJobs
 EMAIL_FROM_ADDRESS=hiddenshadow032025@gmail.com
 
 # =============================================================================
-# OTP CONFIGURATION
+# OPTIONAL CONFIGURATIONS
 # =============================================================================
+
+# OTP Configuration
 OTP_EXPIRY_MINUTES=10
 OTP_LENGTH=6
 OTP_ENABLED=true
 
-# =============================================================================
-# FRONTEND URL (UPDATE WITH YOUR ACTUAL NETLIFY URL)
-# =============================================================================
-FRONTEND_URL=https://your-app-name.netlify.app
-CORS_ORIGINS=https://your-app-name.netlify.app
+# File Upload Configuration
+UPLOAD_PATH=./uploads
+MAX_FILE_SIZE=10485760
+
+# Rate Limiting
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+
+# WebSocket Configuration
+WEBSOCKET_ENABLED=true
 
 # =============================================================================
-# OPTIONAL: CUSTOM DOMAIN (IF YOU HAVE ONE)
+# DEPLOYMENT INSTRUCTIONS
 # =============================================================================
-# FRONTEND_URL=https://yourdomain.com
-# CORS_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
-
-# =============================================================================
-# INSTRUCTIONS:
-# =============================================================================
-# 1. Replace 'your-app-name' with your actual Netlify subdomain
-# 2. Replace MongoDB URI with your actual MongoDB Atlas connection string
+# 1. Create MongoDB Atlas account and cluster
+# 2. Replace MONGODB_URI with your actual connection string
+# 3. Replace FRONTEND_URL and CORS_ORIGINS with your Netlify domain
+# 4. Keep JWT_SECRET and SESSION_SECRET as generated (secure)
+# 5. Add each variable to Netlify: Site Settings > Environment Variables
 # 3. Generate strong JWT and Session secrets (use: openssl rand -base64 32)
 # 4. Add all these variables in Netlify Dashboard > Site Settings > Environment Variables
