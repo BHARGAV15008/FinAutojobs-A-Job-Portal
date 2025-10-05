@@ -41,9 +41,18 @@ const initializeDatabase = async () => {
 
     await mongoose.connect(MONGODB_URI, connectionOptions);
     
+    // Set up database connection event listeners
+    db = mongoose.connection;
+    
     db.on('disconnected', () => {
       console.log('⚠️ Database disconnected');
     });
+    
+    db.on('error', (error) => {
+      console.error('❌ Database error:', error);
+    });
+    
+    console.log('✅ Database connected successfully to MongoDB Atlas');
     
     
   } catch (error) {

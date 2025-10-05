@@ -226,6 +226,7 @@ import jobAlertsRoutes from './routes/jobAlerts.js';
 import contactRoutes from './routes/contact.js';
 import messagesRoutes from './routes/messages.js';
 import adminRoutes from './routes/admin.js';
+import smsOtpRoutes from './routes/smsOtp.js';
 
 // Mount routes under /api
 app.use('/api/auth', authRoutes);
@@ -256,6 +257,7 @@ apiRouter.use('/job-alerts', jobAlertsRoutes);
 apiRouter.use('/contact', contactRoutes);
 apiRouter.use('/messages', messagesRoutes);
 apiRouter.use('/admin', adminRoutes);
+apiRouter.use('/otp', smsOtpRoutes);
 
 // Debug middleware to log all requests
 app.use((req, res, next) => {

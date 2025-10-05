@@ -1953,4 +1953,133 @@ router.put('/test-put', (req, res) => {
   });
 });
 
+// Import SMS OTP functions for backward compatibility
+import { 
+  generateAndSendSMSOTP, 
+  verifySMSOTP, 
+  sendOTPViaPreferredMethod,
+  verifyOTPAnyMethod 
+} from '../services/smsOtpService.js';
+
+// Send OTP endpoint (backward compatibility)
+router.post('/send-otp', [
+  body('phoneNumber')
+    .optional()
+    .matches(/^(\+91|91)?[6-9]\d{9}$/)
+    .withMessage('Please provide a valid Indian mobile number'),
+  body('email')
+    .optional()
+    .isEmail()
+    .withMessage('Please provide a valid email address'),
+  body('method')
+    .optional()
+    .isIn(['sms', 'email'])
+    .withMessage('Method must be either "sms" or "email"')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { phoneNumber, email, method = 'sms' } = req.body;
+    const contact = phoneNumber || email;
+
+    if (!contact) {
+      return res.status(400).json({
+        success: false,
+        message: 'Either phoneNumber or email is required'
+      });
+    }
+
+    const result = await sendOTPViaPreferredMethod(contact, method, 'verification');
+
+    res.json({
+      success: true,
+      message: result.message,
+      data: {
+        method: method,
+        expiresIn: result.expiresIn,
+        mock: result.mock || false
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Send OTP error:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to send OTP',
+      error: error.message
+    });
+  }
+});
+
+// Verify OTP endpoint (backward compatibility)
+router.post('/verify-otp', [
+  body('phoneNumber')
+    .optional()
+    .matches(/^(\+91|91)?[6-9]\d{9}$/)
+    .withMessage('Please provide a valid Indian mobile number'),
+  body('email')
+    .optional()
+    .isEmail()
+    .withMessage('Please provide a valid email address'),
+  body('otp')
+    .isLength({ min: 6, max: 6 })
+    .isNumeric()
+    .withMessage('OTP must be a 6-digit number'),
+  body('method')
+    .optional()
+    .isIn(['sms', 'email'])
+    .withMessage('Method must be either "sms" or "email"')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { phoneNumber, email, otp, method = 'sms' } = req.body;
+    const contact = phoneNumber || email;
+
+    if (!contact) {
+      return res.status(400).json({
+        success: false,
+        message: 'Either phoneNumber or email is required'
+      });
+    }
+
+    const result = verifyOTPAnyMethod(contact, otp, method, 'verification');
+
+    if (result.success) {
+      res.json({
+        success: true,
+        message: result.message
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: result.message,
+        attemptsLeft: result.attemptsLeft
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Verify OTP error:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to verify OTP',
+      error: error.message
+    });
+  }
+});
+
 export default router;
