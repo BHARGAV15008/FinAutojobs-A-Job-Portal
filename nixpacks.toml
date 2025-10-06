@@ -1,13 +1,13 @@
 # Full-stack deployment configuration for Railway
 [phases.setup]
-nixPkgs = ['nodejs-18_x', 'npm-9_x']
+nixPkgs = ['nodejs-20_x', 'npm-10_x']
 
 [phases.install]
 cmds = [
   'echo "📦 Installing backend dependencies..."',
-  'cd backend && npm ci',
+  'cd backend && npm install',
   'echo "📦 Installing frontend dependencies..."', 
-  'cd frontend && npm ci'
+  'cd frontend && npm install'
 ]
 
 [phases.build]
