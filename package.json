@@ -4,11 +4,15 @@
   "description": "FinAutoJobs - Job Portal Application",
   "type": "module",
   "scripts": {
-    "start": "node server.js",
+    "start": "cd backend && npm start",
     "backend": "cd backend && node start-server.js",
     "frontend": "cd frontend && npm start",
     "test": "node test-api.js",
     "dev": "concurrently \"npm run backend\" \"npm run frontend\""
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
   },
   "dependencies": {
     "cors": "^2.8.5",
