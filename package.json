@@ -4,7 +4,10 @@
   "description": "FinAutoJobs - Job Portal Application",
   "type": "module",
   "scripts": {
-    "build": "./railway-build.sh",
+    "build": "npm run build:frontend",
+    "build:frontend": "cd frontend && npm install && npm run build",
+    "build:backend": "cd backend && npm install",
+    "postinstall": "npm run build:backend && npm run build:frontend",
     "start": "cd backend && npm start",
     "backend": "cd backend && node start-server.js",
     "frontend": "cd frontend && npm start",
