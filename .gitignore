@@ -27,7 +27,18 @@ yarn-error.log*
 .env.local
 .env.production
 backend/.env.local
-backend/.env.render
+backend/.env.production
+
+# Deployment configurations (keep only Vercel)
+netlify.toml
+render.yaml
+docker-compose.yml
+Dockerfile
+.netlify/
+.render/
+
+# Vercel deployment
+.vercel
 
 # Firebase service account (contains private keys)
 *firebase-service-account.json

@@ -37,6 +37,6 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
-    "netlify-cli": "^23.9.1"
+    "vercel": "^37.6.1"
   }
 }
