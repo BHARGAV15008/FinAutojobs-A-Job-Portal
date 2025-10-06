@@ -4,7 +4,7 @@ import BaseUser from './BaseUser.js';
 // Enhanced Applicant Schema with all registration fields
 const applicantSchema = new mongoose.Schema({
   // Applicant ID (consistent with naming convention)
-  applicantId: { type: mongoose.Schema.Types.ObjectId, default: () => new mongoose.Types.ObjectId(), unique: true },
+  applicantId: { type: mongoose.Schema.Types.ObjectId, default: () => new mongoose.Types.ObjectId() },
   
   // Current Location (for applicants)
   currentLocation: {

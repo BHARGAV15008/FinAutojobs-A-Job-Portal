@@ -14,22 +14,19 @@ const EnhancedApplicationSchema = new mongoose.Schema({
   jobId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Job',
-    required: [true, 'Job ID is required'],
-    index: true
+    required: [true, 'Job ID is required']
   },
   
   applicantId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'BaseUser',
-    required: [true, 'Applicant ID is required'],
-    index: true
+    required: [true, 'Applicant ID is required']
   },
   
   recruiterId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'BaseUser',
-    required: [true, 'Recruiter ID is required'],
-    index: true
+    required: [true, 'Recruiter ID is required']
   },
   
   // Application Status Management

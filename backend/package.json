@@ -71,6 +71,7 @@
     "xss": "^1.0.14"
   },
   "devDependencies": {
+    "@babel/core": "^7.23.6",
     "@babel/preset-env": "^7.23.6",
     "babel-jest": "^29.7.0",
     "drizzle-kit": "^0.31.5",
