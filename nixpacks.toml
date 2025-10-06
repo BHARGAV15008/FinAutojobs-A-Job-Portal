@@ -1,15 +1,21 @@
+# Full-stack deployment configuration for Railway
 [phases.setup]
 nixPkgs = ['nodejs-18_x', 'npm-9_x']
 
 [phases.install]
 cmds = [
+  'echo "📦 Installing backend dependencies..."',
   'cd backend && npm ci',
+  'echo "📦 Installing frontend dependencies..."', 
   'cd frontend && npm ci'
 ]
 
 [phases.build]
 cmds = [
-  'cd frontend && npm run build'
+  'echo "🏗️ Building React frontend..."',
+  'cd frontend && npm run build',
+  'echo "✅ Frontend build complete - files in frontend/dist/"',
+  'ls -la frontend/dist/ || echo "Build directory not found"'
 ]
 
 [start]
