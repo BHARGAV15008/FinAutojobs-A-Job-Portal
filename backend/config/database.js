@@ -29,23 +29,14 @@ const initializeDatabase = async () => {
     console.log('🔄 Connecting to MongoDB...');
     console.log('📍 MongoDB URI:', MONGODB_URI.replace(/\/\/.*:.*@/, '//***:***@'));
     
-    // Connect to MongoDB with Render-compatible options
+    // Minimal connection options for Render compatibility
     const connectionOptions = {
-      serverSelectionTimeoutMS: 30000, // 30 seconds
-      socketTimeoutMS: 45000, // 45 seconds
-      connectTimeoutMS: 30000, // 30 seconds
+      serverSelectionTimeoutMS: 30000,
+      socketTimeoutMS: 45000,
       bufferCommands: false,
       maxPoolSize: 10,
-      minPoolSize: 2,
-      maxIdleTimeMS: 30000,
-      // SSL/TLS configuration for cloud deployment
-      tls: true,
-      tlsAllowInvalidCertificates: false,
       retryWrites: true,
-      w: 'majority',
-      // Additional stability options
-      heartbeatFrequencyMS: 10000,
-      maxStalenessSeconds: 90
+      w: 'majority'
     };
 
     await mongoose.connect(MONGODB_URI, connectionOptions);
