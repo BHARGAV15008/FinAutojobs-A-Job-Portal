@@ -29,8 +29,11 @@ if (!process.env.MONGODB_URI) {
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import path from 'path';
-// Server restart trigger - fix backend crash
 import { fileURLToPath } from 'url';
+
+// ES module equivalent of __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 import os from 'os';
 
 // Import configurations
@@ -292,15 +295,37 @@ app.get('/', (req, res) => {
     });
 });
 
-// Catch-all 404 handler for debugging (must be last)
-app.use('*', (req, res) => {
-  console.log(`❌ 404 - Route not found: ${req.method} ${req.originalUrl}`);
-  res.status(404).json({
-    success: false,
-    message: `Route not found: ${req.method} ${req.originalUrl}`,
-    availableRoutes: ['/api/applications', '/api/jobs', '/api/auth', '/api/health']
+// Serve static files from React build (for Railway deployment)
+if (process.env.NODE_ENV === 'production') {
+  const frontendBuildPath = path.join(__dirname, '../frontend/dist');
+  app.use(express.static(frontendBuildPath));
+  
+  // Handle React Router - send all non-API requests to index.html
+  app.get('*', (req, res) => {
+    // Skip API routes
+    if (req.path.startsWith('/api')) {
+      return res.status(404).json({
+        success: false,
+        message: `API route not found: ${req.method} ${req.originalUrl}`,
+        availableRoutes: ['/api/applications', '/api/jobs', '/api/auth', '/api/health']
+      });
+    }
+    
+    // Serve React app for all other routes
+    res.sendFile(path.join(frontendBuildPath, 'index.html'));
   });
-});
+} else {
+  // Development mode - show available routes
+  app.use('*', (req, res) => {
+    console.log(`❌ 404 - Route not found: ${req.method} ${req.originalUrl}`);
+    res.status(404).json({
+      success: false,
+      message: `Route not found: ${req.method} ${req.originalUrl}`,
+      availableRoutes: ['/api/applications', '/api/jobs', '/api/auth', '/api/health'],
+      note: 'In development mode. Frontend should be served separately on port 5173.'
+    });
+  });
+}
 
 // Add health check endpoint under /api 
 apiRouter.get('/health', (req, res) => {

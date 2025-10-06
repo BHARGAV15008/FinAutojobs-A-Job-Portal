@@ -18,8 +18,8 @@
     "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,json,css,md}\"",
     "analyze": "npm run build && npx vite-bundle-analyzer dist/stats.html",
     "start": "npm run dev",
-    "deploy": "npm run build && vercel --prod",
-    "deploy:vercel": "vercel --prod",
+    "deploy": "npm run build",
+    "deploy:railway": "npm run build",
     "clean": "rm -rf dist node_modules/.vite",
     "build:production": "NODE_ENV=production npm run build",
     "preview:production": "npm run build:production && npm run preview"
