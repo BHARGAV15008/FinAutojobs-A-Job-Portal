@@ -366,7 +366,7 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log(`   🌍 Network: http://${localIP}:${PORT}`);
     console.log(`   📊 Health check: http://${localIP}:${PORT}/api/health`);
     console.log(`🛡️ Enhanced error handling enabled`);
-{{ ... }}
+    console.log(`📡 Server accessible from any device on the network`);
 }).on('error', (error) => {
     if (error.code === 'EADDRINUSE') {
         console.error(`❌ Port ${PORT} is already in use. Please try a different port.`);
