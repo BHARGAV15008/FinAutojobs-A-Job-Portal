@@ -8,10 +8,24 @@ import passport from 'passport';
 import dotenv from 'dotenv';
 import MongoStore from 'connect-mongo';
 
-// Load environment variables
-const envFile = process.env.NODE_ENV === 'development' ? './.env.local' : './config.env';
+// Load environment variables based on NODE_ENV
+let envFile;
+if (process.env.NODE_ENV === 'production') {
+  envFile = './.env.production';
+} else if (process.env.NODE_ENV === 'development') {
+  envFile = './.env.development';
+} else {
+  envFile = './.env';
+}
+
 console.log('🔧 Loading environment from:', envFile);
 dotenv.config({ path: envFile });
+
+// Fallback to .env if specific environment file doesn't exist
+if (!process.env.MONGODB_URI) {
+  console.log('🔄 Fallback to .env file...');
+  dotenv.config({ path: './.env' });
+}
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import path from 'path';

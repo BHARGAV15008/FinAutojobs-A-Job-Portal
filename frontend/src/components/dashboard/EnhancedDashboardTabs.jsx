@@ -577,17 +577,19 @@ export const EnhancedProfileTab = ({
           delete transformedData.experience_years;
         }
         
-        // Handle location field - map to officeLocation.city
+        // Handle location field
         if (formData.location !== undefined) {
+          // Parse location string if it contains comma-separated values
+          const locationParts = formData.location.split(',').map(part => part.trim());
+          
           transformedData.officeLocation = {
-            city: formData.location || '',
-            state: 'Maharashtra', // Default state
-            country: 'India' // Default country
+            city: locationParts[0] || formData.location || '',
+            state: locationParts[1] || '', // Don't default to Maharashtra
+            country: locationParts[2] || 'India' // Default to India only
           };
           console.log('🔍 Created officeLocation:', transformedData.officeLocation);
           delete transformedData.location; // Remove the location field
         }
-        
         // Handle professional links for recruiters - store in both places
         console.log('🔍 Processing professional links - linkedin:', formData.linkedin_url, 'github:', formData.github_url, 'portfolio:', formData.portfolio_url);
         
@@ -636,10 +638,13 @@ export const EnhancedProfileTab = ({
         
         // Handle location for applicants
         if (formData.location) {
+          // Parse location string if it contains comma-separated values
+          const locationParts = formData.location.split(',').map(part => part.trim());
+          
           transformedData.currentLocation = {
-            city: formData.location,
-            state: 'Maharashtra',
-            country: 'India'
+            city: locationParts[0] || formData.location || '',
+            state: locationParts[1] || '', // Don't default to Maharashtra
+            country: locationParts[2] || 'India' // Default to India only
           };
           delete transformedData.location;
         }

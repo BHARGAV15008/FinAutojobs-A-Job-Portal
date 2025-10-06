@@ -3,7 +3,6 @@ import { Link, useLocation } from 'wouter'
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../components/ui/use-toast'
 import OAuthButtons from '../components/auth/OAuthButtons'
-import PhoneVerification from '../components/auth/PhoneVerification'
 import {
   Container,
   Box,
@@ -42,7 +41,6 @@ import {
   Google,
   Microsoft,
   Apple,
-  Phone,
 } from '@mui/icons-material'
 import { styled } from '@mui/material/styles'
 
@@ -106,7 +104,6 @@ const LoginPage = () => {
   const [rememberMe, setRememberMe] = useState(false)
   const [errors, setErrors] = useState({})
   const [loginError, setLoginError] = useState('')
-  const [phoneVerificationOpen, setPhoneVerificationOpen] = useState(false)
 
   const { login } = useAuth()
   const [, setLocation] = useLocation()
@@ -219,37 +216,6 @@ const LoginPage = () => {
     // The OAuthButton component already shows error toast
   }
 
-  const handlePhoneVerificationSuccess = (authResult) => {
-    console.log('Phone verification success:', authResult)
-    
-    // Store token if provided
-    if (authResult.token) {
-      localStorage.setItem('token', authResult.token)
-    }
-    
-    // Redirect based on user role
-    const role = authResult.user.role || (activeTab === 0 ? 'applicant' : 'recruiter')
-    if (role === 'recruiter' || role === 'employer') {
-      setLocation('/recruiter-dashboard')
-    } else {
-      setLocation('/applicant-dashboard')
-    }
-    
-    toast({
-      title: "Login Successful",
-      description: "Welcome! You've been logged in with your phone number.",
-      variant: "default"
-    })
-  }
-
-  const handlePhoneVerificationError = (error) => {
-    console.error('Phone verification error:', error)
-    toast({
-      title: "Phone Verification Failed",
-      description: error.message || "Failed to verify phone number. Please try again.",
-      variant: "destructive"
-    })
-  }
 
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex' }}>
@@ -602,41 +568,12 @@ const LoginPage = () => {
                   onSuccess={handleOAuthSuccess}
                   onError={handleOAuthError}
                 />
-
-                {/* Phone Verification Button */}
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  startIcon={<Phone />}
-                  onClick={() => setPhoneVerificationOpen(true)}
-                  sx={{
-                    mt: 2,
-                    borderRadius: 2,
-                    py: 1.5,
-                    borderColor: 'primary.main',
-                    color: 'primary.main',
-                    '&:hover': {
-                      backgroundColor: 'primary.main',
-                      color: 'white',
-                    }
-                  }}
-                >
-                  Continue with Phone Number
-                </Button>
               </Box>
             </CardContent>
           </StyledCard>
         </Container>
       </Box>
 
-      {/* Phone Verification Dialog */}
-      <PhoneVerification
-        open={phoneVerificationOpen}
-        onClose={() => setPhoneVerificationOpen(false)}
-        onSuccess={handlePhoneVerificationSuccess}
-        onError={handlePhoneVerificationError}
-        userRole={activeTab === 0 ? 'applicant' : 'recruiter'}
-      />
     </Box>
   )
 }

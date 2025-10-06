@@ -311,14 +311,7 @@ const RegisterPage = () => {
       return
     }
 
-    if (!phoneVerified) {
-      toast({
-        title: "Error",
-        description: "Please verify your phone number",
-        variant: "destructive"
-      })
-      return
-    }
+    // Phone verification is optional - removed requirement
 
     if (formData.password !== formData.confirmPassword) {
       toast({
@@ -977,10 +970,10 @@ const RegisterPage = () => {
                         whiteSpace: 'nowrap'
                       }}
                     >
-                      {phoneVerified ? 'Verified' : phoneOTPSent ? 'OTP Sent' : 'Verify Phone'}
+                      {phoneVerified ? 'Verified' : phoneOTPSent ? 'OTP Sent' : 'Verify (Optional)'}
                     </Button>
                   </Box>
-                  {phoneVerified && (
+                  {phoneVerified ? (
                     <Box sx={{ mt: 1 }}>
                       <Chip
                         label="Phone Verified"
@@ -989,6 +982,10 @@ const RegisterPage = () => {
                         icon={<CheckCircle />}
                       />
                     </Box>
+                  ) : (
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                      Phone verification is optional but recommended for better security
+                    </Typography>
                   )}
                 </Box>
 

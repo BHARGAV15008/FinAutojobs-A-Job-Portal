@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 // Environment variables should already be loaded by server.js
 // This is just a fallback in case database.js is called directly
 if (!process.env.MONGODB_URI && !process.env.DATABASE_URL) {
-  dotenv.config({ path: './config.env' });
+  dotenv.config({ path: './.env' });
 }
 
 // MongoDB connection string with cloud-first fallback

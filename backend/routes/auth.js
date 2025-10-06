@@ -16,6 +16,11 @@ import UserModels, {
   Admin
 } from '../models/UserModels.js';
 import UsernameGenerator from '../utils/usernameGenerator.js';
+import { 
+  sanitizeSocialLinks, 
+  sanitizeBio, 
+  isValidBio 
+} from '../utils/urlValidator.js';
 
 const router = express.Router();
 
@@ -851,22 +856,41 @@ router.put('/profile', authenticateToken, async (req, res) => {
     if (updateData.firstName) transformedData.firstName = updateData.firstName;
     if (updateData.lastName) transformedData.lastName = updateData.lastName;
     if (updateData.phone) transformedData.phone = updateData.phone;
-    if (updateData.bio) transformedData.bio = updateData.bio;
+    if (updateData.bio) {
+      // Validate and sanitize bio to prevent URLs
+      if (!isValidBio(updateData.bio)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Bio cannot contain URLs. Please enter a proper bio description.',
+          field: 'bio'
+        });
+      }
+      transformedData.bio = sanitizeBio(updateData.bio);
+    }
     if (updateData.location) transformedData.location = updateData.location;
     if (updateData.profileImage) transformedData.profileImage = updateData.profileImage;
     
-    // Social links - save to both BaseUser fields and nested objects
+    // Social links - validate and sanitize URLs
+    const socialLinksToValidate = {
+      linkedin_url: updateData.linkedin_url,
+      github_url: updateData.github_url,
+      portfolio_url: updateData.portfolio_url
+    };
+    
+    const sanitizedSocialLinks = sanitizeSocialLinks(socialLinksToValidate);
+    
+    // Apply sanitized social links
     if (updateData.linkedin_url !== undefined) {
-      transformedData.linkedin_url = updateData.linkedin_url;
-      transformedData['socialLinks.linkedinUrl'] = updateData.linkedin_url;
+      transformedData.linkedin_url = sanitizedSocialLinks.linkedin_url || '';
+      transformedData['socialLinks.linkedinUrl'] = sanitizedSocialLinks.linkedin_url || '';
     }
     if (updateData.github_url !== undefined) {
-      transformedData.github_url = updateData.github_url;
-      transformedData['socialLinks.githubUrl'] = updateData.github_url;
+      transformedData.github_url = sanitizedSocialLinks.github_url || '';
+      transformedData['socialLinks.githubUrl'] = sanitizedSocialLinks.github_url || '';
     }
     if (updateData.portfolio_url !== undefined) {
-      transformedData.portfolio_url = updateData.portfolio_url;
-      transformedData['socialLinks.portfolioUrl'] = updateData.portfolio_url;
+      transformedData.portfolio_url = sanitizedSocialLinks.portfolio_url || '';
+      transformedData['socialLinks.portfolioUrl'] = sanitizedSocialLinks.portfolio_url || '';
     }
     
     // Years of experience

@@ -28,6 +28,7 @@ yarn-error.log*
 .env.production
 backend/.env.local
 backend/.env.production
+*env*
 
 # Deployment configurations (keep only Vercel)
 netlify.toml
