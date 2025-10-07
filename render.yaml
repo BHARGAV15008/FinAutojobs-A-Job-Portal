@@ -67,19 +67,18 @@ services:
         sync: false
       - key: FRONTEND_URL
         fromService:
-          type: static_site
+          type: static
           name: finautojobs-frontend
           property: url
-  - type: static_site
+  - type: static
     name: finautojobs-frontend
-    env: node
     plan: free
     rootDir: frontend
-    buildCommand: "npm install && npm run build"
+    buildCommand: "npm install --production=false && npm run build"
     staticPublishPath: dist
     envVars:
       - key: NODE_VERSION
-        value: 20
+        value: "20"
       - key: VITE_API_URL
         fromService:
           type: web
