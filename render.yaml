@@ -67,15 +67,15 @@ services:
         sync: false
       - key: FRONTEND_URL
         fromService:
-          type: static
+          type: web
           name: finautojobs-frontend
           property: url
-  - type: static
+  - type: web
     name: finautojobs-frontend
     plan: free
     rootDir: frontend
     buildCommand: "npm install --production=false && npm run build"
-    staticPublishPath: dist
+    startCommand: "npx serve -s dist -l 3000"
     envVars:
       - key: NODE_VERSION
         value: "20"
