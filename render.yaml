@@ -1,10 +1,20 @@
 services:
-  # Backend API Service
+  # Full-Stack MERN Application (Single Service)
   - type: web
-    name: finautojobs-backend
+    name: finautojobs-fullstack
     runtime: node
     plan: starter
-    buildCommand: cd backend && npm install
+    buildCommand: |
+      # Install backend dependencies
+      cd backend && npm install
+      # Install frontend dependencies and build with production config
+      cd ../frontend
+      npm install
+      # Set environment variables for build
+      export VITE_API_URL="/api"
+      export VITE_APP_URL="https://finautojobs-fullstack.onrender.com"
+      npm run build
+      # Frontend build is in frontend/dist, backend will serve it directly
     startCommand: cd backend && npm start
     healthCheckPath: /api/health
     envVars:
@@ -14,28 +24,6 @@ services:
         value: production
       - key: PORT
         value: 10000
-    
-  # Frontend Static Site
-  - type: web
-    name: finautojobs-frontend
-    runtime: static
-    plan: starter
-    buildCommand: cd frontend && npm install && npm run build
-    staticPublishPath: ./frontend/dist
-    pullRequestPreviewsEnabled: false
-    headers:
-      - path: /*
-        name: X-Robots-Tag
-        value: noindex
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-    envVars:
-      # All environment variables must be set manually in Render dashboard
-      # See deployment documentation for required variables
-      - key: NODE_ENV
-        value: production
 
 # Database: Using MongoDB Atlas (configured via environment variables)
 # No Render database service needed
