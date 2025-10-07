@@ -4,6 +4,7 @@ import { Google, Microsoft, Apple } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import OAuthPopup from './OAuthPopup';
 import { useToast } from '../ui/use-toast';
+import { SOCKET_URL } from '../../services/apiConfig';
 
 const StyledOAuthButton = styled(Button)(({ theme, provider }) => {
   const colors = {
@@ -111,9 +112,7 @@ const OAuthButton = ({
     if (process.env.NODE_ENV === 'production' || 
         import.meta.env.VITE_USE_REAL_OAUTH === 'true' || 
         process.env.REACT_APP_USE_REAL_OAUTH === 'true') {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 
-                        process.env.REACT_APP_BACKEND_URL || 
-                        'http://localhost:5000';
+      const backendUrl = SOCKET_URL;
       const oauthUrl = `${backendUrl}/api/oauth/${provider}?role=${userRole}`;
       console.log('🔍 OAuth redirect:', oauthUrl);
       window.location.href = oauthUrl;

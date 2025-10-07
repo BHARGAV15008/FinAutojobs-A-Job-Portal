@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
+import { SOCKET_URL } from '../services/apiConfig';
 import { useAuth } from '../contexts/AuthContext';
 import { useDashboard } from '../contexts/RealDashboardContext';
 
@@ -24,11 +25,7 @@ export const useRealTimeNotifications = () => {
 
     // Initialize socket connection
     if (!socket) {
-      // Temporarily disable WebSocket to reduce console noise
-      // TODO: Fix WebSocket connection issues
-      return;
-      
-      socket = io(import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000', {
+      socket = io(SOCKET_URL, {
         transports: ['websocket', 'polling'],
         withCredentials: true
       });

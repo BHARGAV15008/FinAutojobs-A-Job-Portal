@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useRoute } from 'wouter'
+import API_BASE_URL from '../services/apiConfig'
 import {
   Container,
   Typography,
@@ -91,7 +92,7 @@ function CompanyDetailPage() {
 
   const fetchCompanyDetails = async (companyId) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/companies/${companyId}`)
+      const response = await fetch(`${API_BASE_URL}/companies/${companyId}`)
       if (response.ok) {
         const data = await response.json()
         setCompany(data)
@@ -105,7 +106,7 @@ function CompanyDetailPage() {
 
   const fetchCompanyJobs = async (companyId) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/jobs?company=${companyId}`)
+      const response = await fetch(`${API_BASE_URL}/jobs?company=${companyId}`)
       if (response.ok) {
         const data = await response.json()
         setJobs(data.jobs || [])
@@ -117,7 +118,7 @@ function CompanyDetailPage() {
 
   const fetchCompanyReviews = async (companyId) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/companies/${companyId}/reviews`)
+      const response = await fetch(`${API_BASE_URL}/companies/${companyId}/reviews`)
       if (response.ok) {
         const data = await response.json()
         setReviews(data || [])

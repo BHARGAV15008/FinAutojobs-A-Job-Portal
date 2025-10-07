@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Box, Typography, Alert, CircularProgress } from '@mui/material';
 import { Google, Microsoft, Apple } from '@mui/icons-material';
+import API_BASE_URL from '../../services/apiConfig';
 
 const OAuthButtons = ({ role = 'applicant', onSuccess, onError }) => {
     const [loading, setLoading] = useState({});
@@ -11,11 +12,7 @@ const OAuthButtons = ({ role = 'applicant', onSuccess, onError }) => {
         setError('');
 
         try {
-            // Get the backend URL
-            const backendUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-            
-            // Redirect to OAuth provider with role parameter
-            const oauthUrl = `${backendUrl}/api/oauth/${provider}?role=${role}`;
+            const oauthUrl = `${API_BASE_URL}/oauth/${provider}?role=${role}`;
             
             // Store the intended role for after OAuth callback
             sessionStorage.setItem('oauth_role', role);

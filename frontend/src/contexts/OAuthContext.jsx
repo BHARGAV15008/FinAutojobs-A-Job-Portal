@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { useAuth } from './AuthContext.jsx';
+import API_BASE_URL from '../services/apiConfig';
 
 const OAuthContext = createContext();
 
@@ -57,9 +58,7 @@ export const OAuthProvider = ({ children }) => {
           client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
           callback: async (response) => {
             try {
-              // Send the credential to backend
-              const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-              const result = await fetch(`${baseURL}/oauth/google`, {
+              const result = await fetch(`${API_BASE_URL}/oauth/google`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
@@ -123,9 +122,7 @@ export const OAuthProvider = ({ children }) => {
 
       const response = await msalInstance.loginPopup(loginRequest);
       
-      // Send the access token to backend
-      const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-      const result = await fetch(`${baseURL}/oauth/microsoft`, {
+      const result = await fetch(`${API_BASE_URL}/oauth/microsoft`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -173,9 +170,7 @@ export const OAuthProvider = ({ children }) => {
         usePopup: true
       });
 
-      // Send the identity token to backend
-      const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-      const result = await fetch(`${baseURL}/oauth/apple`, {
+      const result = await fetch(`${API_BASE_URL}/oauth/apple`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -207,8 +202,7 @@ export const OAuthProvider = ({ children }) => {
   // Get OAuth configuration
   const getOAuthConfig = useCallback(async () => {
     try {
-      const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-      const response = await fetch(`${baseURL}/oauth/config`);
+      const response = await fetch(`${API_BASE_URL}/oauth/config`);
       const data = await response.json();
       
       if (!response.ok) {

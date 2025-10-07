@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'wouter';
+import API_BASE_URL from '../services/apiConfig';
 import { 
   Container, 
   Box, 
@@ -54,7 +55,7 @@ const OTPLoginPage = () => {
       const endpoint = isEmail ? 'send-otp-email' : 'send-otp-sms';
       const body = isEmail ? { email: identifier } : { phone: identifier };
 
-      const response = await fetch(`http://localhost:5000/api/auth/${endpoint}`, {
+      const response = await fetch(`${API_BASE_URL}/auth/${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

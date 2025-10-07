@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'wouter';
+import API_BASE_URL from '../services/apiConfig';
 import JobDetailsModal from '../components/modals/JobDetailsModal';
 import AuthModal from '../components/modals/AuthModal';
 import JobApplicationModal from '../components/modals/JobApplicationModal';
@@ -178,7 +179,7 @@ const JobsPage = () => {
                 console.log('🔍 Fetching jobs from comprehensive API...');
                 
                 // Use fetch directly to call our comprehensive job API
-                const response = await fetch(`http://localhost:5000/api/jobs?${new URLSearchParams({
+                const response = await fetch(`${API_BASE_URL}/jobs?${new URLSearchParams({
                     search: searchQuery || '',
                     location: selectedLocation || '',
                     jobType: selectedJobType || '',

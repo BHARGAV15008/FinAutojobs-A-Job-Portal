@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useLocation } from 'wouter'
+import API_BASE_URL, { SOCKET_URL } from '../services/apiConfig'
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../components/ui/use-toast'
 import { Eye, EyeOff, Mail, Lock, User, Building2, Car, Calculator, TrendingUp, Shield, Users, Phone } from 'lucide-react'
@@ -39,7 +40,7 @@ const SignupPage = () => {
     const role = roleFromUrl || formData.role
     
     // Open OAuth popup with role parameter
-    const oauthUrl = `http://localhost:5000/api/oauth/${provider}?role=${role}`
+    const oauthUrl = `${API_BASE_URL}/oauth/${provider}?role=${role}`
     const popup = window.open(
       oauthUrl,
       'oauth-popup',
@@ -48,7 +49,7 @@ const SignupPage = () => {
 
     // Listen for popup messages
     const messageListener = (event) => {
-      if (event.origin !== 'http://localhost:5000') return
+      if (event.origin !== SOCKET_URL) return
 
       if (event.data.type === 'OAUTH_SUCCESS') {
         popup.close()

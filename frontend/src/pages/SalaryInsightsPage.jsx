@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import API_BASE_URL from '../services/apiConfig';
 import {
     Container,
     Box,
@@ -61,8 +62,7 @@ const SalaryInsightsPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // API base URL
-    const API_BASE_URL = 'http://localhost:5000/api';
+import API_BASE_URL from '../services/apiConfig';
 
     // Fetch dashboard data
     const fetchDashboardData = async () => {

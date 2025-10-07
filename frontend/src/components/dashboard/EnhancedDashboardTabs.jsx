@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import API_BASE_URL from '../../services/apiConfig';
 import EditJobModal from '../modals/EditJobModal';
 import JobDetailsModal from '../modals/JobDetailsModal';
 import CandidateProfileModal from '../modals/CandidateProfileModal';
@@ -393,11 +394,8 @@ export const EnhancedProfileTab = ({
               const resumeUrl = user?.resume_url || user?.documents?.resumeUrl || '';
               console.log('🔍 Resume debug - user.resume_url:', user?.resume_url);
               console.log('🔍 Resume debug - user.documents?.resumeUrl:', user?.documents?.resumeUrl);
-              console.log('🔍 Resume debug - final resumeUrl:', resumeUrl);
-              
-              return resumeUrl ? (
                 <a 
-                  href={resumeUrl.startsWith('http') ? resumeUrl : `http://localhost:5000${resumeUrl}`} 
+                  href={resumeUrl.startsWith('http') ? resumeUrl : `${API_BASE_URL}${resumeUrl}`} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
@@ -467,7 +465,7 @@ export const EnhancedProfileTab = ({
               
               return resumeUrl ? (
                 <a 
-                  href={resumeUrl.startsWith('http') ? resumeUrl : `http://localhost:5000${resumeUrl}`} 
+                  href={resumeUrl.startsWith('http') ? resumeUrl : `${API_BASE_URL}${resumeUrl}`} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
@@ -1697,7 +1695,7 @@ export const EnhancedJobsTab = ({
       setUpdating(prev => ({ ...prev, [jobId]: true }));
       
       // Call API to update job
-      const response = await fetch(`http://localhost:5000/api/jobs/${jobId}`, {
+      const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

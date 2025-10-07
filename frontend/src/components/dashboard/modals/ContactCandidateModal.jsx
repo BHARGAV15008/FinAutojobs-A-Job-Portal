@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import API_BASE_URL from "../../../services/apiConfig";
 import {
   Dialog,
   DialogTitle,
@@ -66,7 +67,6 @@ const ContactCandidateModal = ({ open, onClose, candidate, relatedJobId, related
       
       setLoadingTemplates(true);
       try {
-        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
         const response = await fetch(`${API_BASE_URL}/contact/templates`, {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -158,7 +158,6 @@ const ContactCandidateModal = ({ open, onClose, candidate, relatedJobId, related
         return;
       }
 
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
       const endpoint = activeTab === 0 ? `${API_BASE_URL}/contact/send-email` : `${API_BASE_URL}/contact/send-message`;
       const payload = {
         receiverId: candidate.id || candidate._id,

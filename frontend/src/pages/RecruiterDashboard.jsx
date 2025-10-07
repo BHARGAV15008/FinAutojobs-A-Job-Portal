@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import API_BASE_URL from "../services/apiConfig";
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import ModernDashboardLayout from "../components/layout/ModernDashboardLayout";
@@ -640,12 +641,12 @@ const RecruiterDashboardContent = () => {
                     console.log('🔗 Testing backend connectivity...');
                     try {
                       // Test health endpoint
-                      const healthResponse = await fetch('http://localhost:5000/api/health');
+                      const healthResponse = await fetch(`${API_BASE_URL}/health`);
                       console.log('✅ Health check:', healthResponse.status);
                       
                       // Test analytics endpoint
                       const token = localStorage.getItem('token');
-                      const analyticsResponse = await fetch('http://localhost:5000/api/analytics/realtime/recruiter', {
+                      const analyticsResponse = await fetch(`${API_BASE_URL}/analytics/realtime/recruiter`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                       });
                       console.log('✅ Analytics check:', analyticsResponse.status);

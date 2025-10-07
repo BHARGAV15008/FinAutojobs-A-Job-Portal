@@ -1,8 +1,9 @@
 import axios from 'axios';
+import API_BASE_URL from '../services/apiConfig';
 
 // Create axios instance with base configuration
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: API_BASE_URL,
   timeout: 10000,
   // Don't set default Content-Type - let browser set it based on data type
 });

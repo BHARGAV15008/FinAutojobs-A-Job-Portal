@@ -1,4 +1,5 @@
 import { io } from 'socket.io-client';
+import { SOCKET_URL } from './apiConfig';
 
 class WebSocketService {
   constructor() {
@@ -16,9 +17,7 @@ class WebSocketService {
       this.disconnect();
     }
 
-    const wsUrl = import.meta.env.PROD
-      ? window.location.origin 
-      : 'http://localhost:5000';
+    const wsUrl = SOCKET_URL;
       
     this.socket = io(wsUrl, {
       auth: {

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import API_BASE_URL from '../services/apiConfig';
 import { useAuth } from './AuthContext.jsx';
 import { applicationsAPI, authAPI } from '../services/api.js';
 import * as jobsAPI from "../api/jobs";
@@ -435,7 +436,7 @@ export const DashboardProvider = ({ children }) => {
       
       // Test network connectivity first
       try {
-        await fetch('http://localhost:5000/api/health', { method: 'HEAD' });
+        await fetch(`${API_BASE_URL}/health`, { method: 'HEAD' });
         console.log('✅ Backend connectivity confirmed');
       } catch (connectError) {
         console.warn('⚠️ Backend connectivity issue:', connectError.message);

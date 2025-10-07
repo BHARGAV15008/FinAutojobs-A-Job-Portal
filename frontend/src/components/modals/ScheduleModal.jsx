@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import API_BASE_URL from '../../services/apiConfig';
 import { useTheme } from '../../contexts/IntegratedThemeContext';
 import { 
   XMarkIcon, 
@@ -51,7 +52,7 @@ const ScheduleModal = ({
   const fetchExistingInterviews = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/interviews', {
+      const response = await fetch(`${API_BASE_URL}/interviews`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
@@ -193,7 +194,7 @@ const ScheduleModal = ({
     setLoading(true);
     try {
       // Call API to delete from database using proper delete endpoint
-      const response = await fetch(`http://localhost:5000/api/interviews/${interviewId}`, {
+      const response = await fetch(`${API_BASE_URL}/interviews/${interviewId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
