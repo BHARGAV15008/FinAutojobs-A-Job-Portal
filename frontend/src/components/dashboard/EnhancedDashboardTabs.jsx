@@ -394,6 +394,7 @@ export const EnhancedProfileTab = ({
               const resumeUrl = user?.resume_url || user?.documents?.resumeUrl || '';
               console.log('🔍 Resume debug - user.resume_url:', user?.resume_url);
               console.log('🔍 Resume debug - user.documents?.resumeUrl:', user?.documents?.resumeUrl);
+              return resumeUrl ? (
                 <a 
                   href={resumeUrl.startsWith('http') ? resumeUrl : `${API_BASE_URL}${resumeUrl}`} 
                   target="_blank" 

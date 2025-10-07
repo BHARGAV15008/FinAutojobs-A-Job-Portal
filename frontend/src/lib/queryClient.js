@@ -7,9 +7,6 @@ async function throwIfResNotOk(res) {
     throw new Error(`${res.status}: ${text}`);
   }
 }
-
-import API_BASE_URL from '../services/apiConfig';
-
 export async function apiRequest(
   method,
   url,

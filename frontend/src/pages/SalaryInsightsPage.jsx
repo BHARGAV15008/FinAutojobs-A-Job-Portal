@@ -62,8 +62,6 @@ const SalaryInsightsPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-import API_BASE_URL from '../services/apiConfig';
-
     // Fetch dashboard data
     const fetchDashboardData = async () => {
         try {
