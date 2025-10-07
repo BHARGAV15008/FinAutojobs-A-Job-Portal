@@ -1,13 +1,13 @@
 services:
-  - type: web
-    name: finautojobs-backend
+  - name: finautojobs-backend
+    type: web
     env: node
     rootDir: backend
-    buildCommand: "npm install"
-    startCommand: "npm start"
-  - type: static_site
-    name: finautojobs-frontend
+    buildCommand: npm install
+    startCommand: npm start
+  - name: finautojobs-frontend
+    type: static_site
     env: node
     rootDir: frontend
-    buildCommand: "npm install && npm run build"
+    buildCommand: npm install && npm run build
     staticPublishPath: dist
