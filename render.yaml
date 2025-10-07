@@ -45,7 +45,7 @@ services:
         value: "6"
       - key: OTP_ENABLED
         value: "true"
-      - key: GOOGLE_CALLBACK_URL
+      - key. GOOGLE_CALLBACK_URL
         fromService:
           type: web
           name: finautojobs-backend
