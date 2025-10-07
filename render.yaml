@@ -2,6 +2,7 @@ services:
   - name: finautojobs-backend
     type: web
     env: node
+    plan: free
     rootDir: backend
     buildCommand: "npm install"
     startCommand: "npm start"
@@ -46,7 +47,8 @@ services:
         fromService:
           type: web
           name: finautojobs-backend
-          property: host
+          property: url
+          path: /api/auth/google/callback
       - key: FIREBASE_PROJECT_ID
         sync: false
       - key: FIREBASE_PRIVATE_KEY_ID
@@ -65,16 +67,16 @@ services:
         sync: false
       - key: FRONTEND_URL
         fromService:
-          type: static_site
+          type: web
           name: finautojobs-frontend
-          property: host
+          property: url
   - name: finautojobs-frontend
-    type: static_site
+    type: web
     env: node
     plan: free
     rootDir: frontend
-    buildCommand: "npm install && npm run build"
-    staticPublishPath: dist
+    buildCommand: "npm install --production=false && npm run build"
+    startCommand: "npx serve -s dist"
     envVars:
       - key: NODE_VERSION
         value: 20
@@ -82,6 +84,6 @@ services:
         fromService:
           type: web
           name: finautojobs-backend
-          property: host
+          property: url
       - key: VITE_GOOGLE_CLIENT_ID
         value: "694673409935-td8q4m1qlvnf6ddfbnn3o9sljpirhpeh.apps.googleusercontent.com"
