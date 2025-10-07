@@ -1,11 +1,5 @@
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-
-// Environment variables should already be loaded by server.js
-// This is just a fallback in case database.js is called directly
-if (!process.env.MONGODB_URI && !process.env.DATABASE_URL) {
-  dotenv.config({ path: './.env' });
-}
+import '../loadEnv.js';
 
 // MongoDB connection string with cloud-first fallback
 const MONGODB_URI = process.env.MONGODB_URI || 
