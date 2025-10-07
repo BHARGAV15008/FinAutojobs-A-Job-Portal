@@ -9,9 +9,15 @@
     "build:backend": "cd backend && npm install",
     "start": "cd backend && npm start",
     "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
-    "vercel-build": "npm run build:frontend",
+    "vercel-build": "npm run install:all && npm run build:frontend",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
     "backend": "cd backend && node start-server.js",
-    "frontend": "cd frontend && npm start"
+    "frontend": "cd frontend && npm start",
+    "deploy:vercel": "vercel --prod",
+    "deploy:preview": "vercel",
+    "test:build": "npm run build && npm run start",
+    "clean": "rm -rf frontend/dist backend/node_modules frontend/node_modules node_modules",
+    "postinstall": "npm run install:all"
   },
   "engines": {
     "node": ">=20.0.0",
