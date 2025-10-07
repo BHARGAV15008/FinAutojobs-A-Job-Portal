@@ -1,88 +1,13 @@
 services:
-  # Backend Service
   - type: web
     name: finautojobs-backend
     env: node
     rootDir: backend
     buildCommand: "npm install"
     startCommand: "npm start"
-    envVars:
-      - key: NODE_VERSION
-        value: 20
-      - key: NODE_ENV
-        value: production
-      - key: MONGODB_URI
-        value: "mongodb+srv://hiddenshadow032025_db_user:nJNHickmLkFtwcIY@cluster0.nvq1gwn.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-      - key: DATABASE_URL
-        value: "mongodb+srv://hiddenshadow032025_db_user:nJNHickmLkFtwcIY@cluster0.nvq1gwn.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-      - key: GOOGLE_CLIENT_ID
-        value: "694673409935-td8q4m1qlvnf6ddfbnn3o9sljpirhpeh.apps.googleusercontent.com"
-      - key: GOOGLE_CLIENT_SECRET
-        sync: false
-      - key: SESSION_SECRET
-        value: "session_ee82eabfa45c6e84a7244465b0baa0c43db0f3a479079d96e04ea459f8965b78c6ceb8ad9a2675885ee0bba87831ea19738ffe891d5358b9ea5ed7bcde242e58"
-      - key: JWT_SECRET
-        value: "31bf748d8d2c77a9fa390d0f1da642e3ba8d60fcf18245fef848828d4c24dff22681a2c6e0cd80a260722056a0dec1bd1c4da462d59f46f916029688cd568a62"
-      - key: JWT_EXPIRES_IN
-        value: "24h"
-      - key: EMAIL_HOST
-        value: "smtp.gmail.com"
-      - key: EMAIL_PORT
-        value: 587
-      - key: EMAIL_USER
-        value: "hiddenshadow032025@gmail.com"
-      - key: EMAIL_PASS
-        value: "rxdn afad anzi obxx"
-      - key: EMAIL_FROM_NAME
-        value: "FinAutoJobs"
-      - key: EMAIL_FROM_ADDRESS
-        value: "hiddenshadow032025@gmail.com"
-      - key: OTP_EXPIRY_MINUTES
-        value: 10
-      - key: OTP_LENGTH
-        value: 6
-      - key: OTP_ENABLED
-        value: true
-      - key: GOOGLE_CALLBACK_URL
-        fromService:
-          type: web
-          name: finautojobs-backend
-          property: host
-      - key: FIREBASE_PROJECT_ID
-        sync: false
-      - key: FIREBASE_PRIVATE_KEY_ID
-        sync: false
-      - key: FIREBASE_PRIVATE_KEY
-        sync: false
-      - key: FIREBASE_CLIENT_EMAIL
-        sync: false
-      - key: FIREBASE_CLIENT_ID
-        sync: false
-      - key: FIREBASE_AUTH_URI
-        value: "https://accounts.google.com/o/oauth2/auth"
-      - key: FIREBASE_TOKEN_URI
-        value: "https://oauth2.googleapis.com/token"
-      - key: FIREBASE_CLIENT_X509_CERT_URL
-        sync: false
-      - key: FRONTEND_URL
-        fromService:
-          type: static_site
-          name: finautojobs-frontend
-          property: host
   - type: static_site
     name: finautojobs-frontend
     env: node
-    plan: free
     rootDir: frontend
     buildCommand: "npm install && npm run build"
     staticPublishPath: dist
-    envVars:
-      - key: NODE_VERSION
-        value: 20
-      - key: VITE_API_URL
-        fromService:
-          type: web
-          name: finautojobs-backend
-          property: host
-      - key: VITE_GOOGLE_CLIENT_ID
-        value: "694673409935-td8q4m1qlvnf6ddfbnn3o9sljpirhpeh.apps.googleusercontent.com"
