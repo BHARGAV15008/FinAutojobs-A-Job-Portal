@@ -47,7 +47,7 @@ services:
         fromService:
           type: web
           name: finautojobs-backend
-          property: url
+          property: host
           path: /api/auth/google/callback
       - key: FIREBASE_PROJECT_ID
         sync: false
@@ -69,7 +69,7 @@ services:
         fromService:
           type: web
           name: finautojobs-frontend
-          property: url
+          property: host
   - name: finautojobs-frontend
     type: web
     env: node
@@ -84,6 +84,6 @@ services:
         fromService:
           type: web
           name: finautojobs-backend
-          property: url
+          property: host
       - key: VITE_GOOGLE_CLIENT_ID
         value: "694673409935-td8q4m1qlvnf6ddfbnn3o9sljpirhpeh.apps.googleusercontent.com"
