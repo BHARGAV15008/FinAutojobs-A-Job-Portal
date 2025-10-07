@@ -1,13 +1,14 @@
 services:
+  # Backend Service
   - type: web
-    name: finautojobs-fullstack
+    name: finautojobs-backend
     env: node
-    plan: free
-    buildCommand: "npm run build"
+    rootDir: backend
+    buildCommand: "npm install"
     startCommand: "npm start"
     envVars:
       - key: NODE_VERSION
-        value: "20"
+        value: 20
       - key: NODE_ENV
         value: production
       - key: MONGODB_URI
@@ -43,7 +44,10 @@ services:
       - key: OTP_ENABLED
         value: true
       - key: GOOGLE_CALLBACK_URL
-        value: "https://finautojobs-fullstack.onrender.com/api/auth/google/callback"
+        fromService:
+          type: web
+          name: finautojobs-backend
+          property: host
       - key: FIREBASE_PROJECT_ID
         sync: false
       - key: FIREBASE_PRIVATE_KEY_ID
@@ -60,7 +64,25 @@ services:
         value: "https://oauth2.googleapis.com/token"
       - key: FIREBASE_CLIENT_X509_CERT_URL
         sync: false
+      - key: FRONTEND_URL
+        fromService:
+          type: static_site
+          name: finautojobs-frontend
+          property: host
+  - type: static_site
+    name: finautojobs-frontend
+    env: node
+    plan: free
+    rootDir: frontend
+    buildCommand: "npm install && npm run build"
+    staticPublishPath: dist
+    envVars:
+      - key: NODE_VERSION
+        value: 20
       - key: VITE_API_URL
-        value: "https://finautojobs-fullstack.onrender.com"
+        fromService:
+          type: web
+          name: finautojobs-backend
+          property: host
       - key: VITE_GOOGLE_CLIENT_ID
         value: "694673409935-td8q4m1qlvnf6ddfbnn3o9sljpirhpeh.apps.googleusercontent.com"
