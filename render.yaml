@@ -1,14 +1,13 @@
 services:
   - type: web
-    name: finautojobs-backend
+    name: finautojobs-fullstack
     env: node
     plan: free
-    rootDir: backend
-    buildCommand: "npm install"
+    buildCommand: "npm run build"
     startCommand: "npm start"
     envVars:
       - key: NODE_VERSION
-        value: 20
+        value: "20"
       - key: NODE_ENV
         value: production
       - key: MONGODB_URI
@@ -46,7 +45,7 @@ services:
       - key: GOOGLE_CALLBACK_URL
         fromService:
           type: web
-          name: finautojobs-backend
+          name: finautojobs-fullstack
           property: url
           path: /api/auth/google/callback
       - key: FIREBASE_PROJECT_ID
@@ -65,24 +64,10 @@ services:
         value: "https://oauth2.googleapis.com/token"
       - key: FIREBASE_CLIENT_X509_CERT_URL
         sync: false
-      - key: FRONTEND_URL
-        fromService:
-          type: web
-          name: finautojobs-frontend
-          property: url
-  - type: web
-    name: finautojobs-frontend
-    plan: free
-    rootDir: frontend
-    buildCommand: "npm install --production=false && npm run build"
-    startCommand: "npx serve -s dist -l 3000"
-    envVars:
-      - key: NODE_VERSION
-        value: "20"
       - key: VITE_API_URL
         fromService:
           type: web
-          name: finautojobs-backend
+          name: finautojobs-fullstack
           property: url
       - key: VITE_GOOGLE_CLIENT_ID
         value: "694673409935-td8q4m1qlvnf6ddfbnn3o9sljpirhpeh.apps.googleusercontent.com"
