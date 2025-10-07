@@ -49,7 +49,17 @@ export default defineConfig({
   build: {
     target: 'es2020',
     outDir: 'dist',
-    sourcemap: true,
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          ui: ['@mui/material', '@mui/icons-material'],
+          router: ['react-router-dom'],
+          utils: ['axios', 'moment', 'lodash']
+        }
+      }
+    }
   },
   esbuild: {
     loader: 'jsx',

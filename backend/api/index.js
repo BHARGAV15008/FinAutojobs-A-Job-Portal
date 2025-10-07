@@ -5,12 +5,13 @@ import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import session from 'express-session';
 import passport from 'passport';
-import '../loadEnv.js';
+import dotenv from 'dotenv';
 import MongoStore from 'connect-mongo';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// Centralized env loading is handled by loadEnv.js
+// Configure environment variables for Vercel
+dotenv.config();
 
 // Get directory paths
 const __filename = fileURLToPath(import.meta.url);

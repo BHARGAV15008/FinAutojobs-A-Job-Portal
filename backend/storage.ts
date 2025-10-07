@@ -19,7 +19,9 @@ import {
   type InsertApplication,
 } from "./shared/schema";
 import { eq, like, and, or, gte, lte } from "drizzle-orm";
-import "./loadEnv.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL environment variable is required");
@@ -35,14 +37,14 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, user: Partial<InsertUser>): Promise<User | undefined>;
-
+  
   // Company operations
   getCompany(id: string): Promise<Company | undefined>;
   getCompanies(): Promise<Company[]>;
   createCompany(company: InsertCompany): Promise<Company>;
   updateCompany(id: string, company: Partial<InsertCompany>): Promise<Company | undefined>;
   deleteCompany(id: string): Promise<boolean>;
-
+  
   // Job operations
   getJob(id: string): Promise<Job | undefined>;
   getJobs(filters?: JobFilters): Promise<Job[]>;
@@ -50,7 +52,7 @@ export interface IStorage {
   createJob(job: InsertJob): Promise<Job>;
   updateJob(id: string, job: Partial<InsertJob>): Promise<Job | undefined>;
   deleteJob(id: string): Promise<boolean>;
-
+  
   // Application operations
   getApplication(id: string): Promise<Application | undefined>;
   getApplications(filters?: ApplicationFilters): Promise<Application[]>;
@@ -144,42 +146,42 @@ export class PostgresStorage implements IStorage {
 
   async getJobs(filters: JobFilters = {}): Promise<Job[]> {
     let query = db.select().from(jobs);
-
+    
     // Apply filters
     const conditions = [];
-
+    
     if (filters.location) {
       conditions.push(like(jobs.location, `%${filters.location}%`));
     }
-
+    
     if (filters.job_type) {
       conditions.push(eq(jobs.job_type, filters.job_type as string));
     }
-
+    
     if (filters.work_mode) {
       conditions.push(eq(jobs.work_mode, filters.work_mode));
     }
-
+    
     if (filters.experience_min !== undefined) {
       conditions.push(gte(jobs.experience_min, filters.experience_min));
     }
-
+    
     if (filters.experience_max !== undefined) {
       conditions.push(lte(jobs.experience_max, filters.experience_max));
     }
-
+    
     if (filters.salary_min !== undefined) {
       conditions.push(gte(jobs.salary_min, filters.salary_min));
     }
-
+    
     if (filters.salary_max !== undefined) {
       conditions.push(lte(jobs.salary_max, filters.salary_max));
     }
-
+    
     if (filters.company_id) {
       conditions.push(eq(jobs.company_id, filters.company_id));
     }
-
+    
     if (filters.search) {
       conditions.push(
         or(
@@ -188,11 +190,11 @@ export class PostgresStorage implements IStorage {
         )
       );
     }
-
+    
     if (conditions.length > 0) {
       query = query.where(and(...conditions));
     }
-
+    
     // Apply sorting
     if (filters.sort === 'salary_desc') {
       query = query.orderBy(jobs.salary_max, 'desc');
@@ -202,14 +204,14 @@ export class PostgresStorage implements IStorage {
       // Default to recent
       query = query.orderBy(jobs.created_at, 'desc');
     }
-
+    
     // Apply pagination
     const page = filters.page || 1;
     const limit = filters.limit || 10;
     const offset = (page - 1) * limit;
-
+    
     query = query.limit(limit).offset(offset);
-
+    
     return await query;
   }
 
@@ -240,19 +242,19 @@ export class PostgresStorage implements IStorage {
 
   async getApplications(filters: ApplicationFilters = {}): Promise<Application[]> {
     let query = db.select().from(applications);
-
+    
     // Apply filters
     if (filters.status) {
       query = query.where(eq(applications.status, filters.status));
     }
-
+    
     // Apply pagination
     const page = filters.page || 1;
     const limit = filters.limit || 10;
     const offset = (page - 1) * limit;
-
+    
     query = query.limit(limit).offset(offset);
-
+    
     return await query;
   }
 

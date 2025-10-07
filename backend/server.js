@@ -5,10 +5,27 @@ import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import session from 'express-session';
 import passport from 'passport';
-import './loadEnv.js';
+import dotenv from 'dotenv';
 import MongoStore from 'connect-mongo';
 
-// Centralized env loading is handled by loadEnv.js
+// Load environment variables based on NODE_ENV
+let envFile;
+if (process.env.NODE_ENV === 'production') {
+  envFile = './.env.production';
+} else if (process.env.NODE_ENV === 'development') {
+  envFile = './.env.development';
+} else {
+  envFile = './.env';
+}
+
+console.log('🔧 Loading environment from:', envFile);
+dotenv.config({ path: envFile });
+
+// Fallback to .env if specific environment file doesn't exist
+if (!process.env.MONGODB_URI) {
+  console.log('🔄 Fallback to .env file...');
+  dotenv.config({ path: './.env' });
+}
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import path from 'path';
@@ -30,7 +47,8 @@ import { xssMiddleware, sqlInjectionMiddleware, payloadSizeMiddleware } from './
 import { apiLimiter } from './middlewares/Others/rateLimiter.js';
 import { sanitizeRequest, sqlInjectionPrevention, preventNoSqlInjection } from './middlewares/Others/sanitization.js';
 
-// Env already loaded by centralized loader
+// Configure dotenv with proper file path
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 5000;

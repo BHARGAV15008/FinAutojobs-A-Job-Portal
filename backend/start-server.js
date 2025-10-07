@@ -4,10 +4,11 @@ import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import session from 'express-session';
-import './loadEnv.js';
+import dotenv from 'dotenv';
 import { createServer } from 'http';
 
-// Env loaded centrally by loadEnv.js
+// Load environment variables from config.env
+dotenv.config({ path: './config.env' });
 
 const app = express();
 const PORT = process.env.PORT || 5000;

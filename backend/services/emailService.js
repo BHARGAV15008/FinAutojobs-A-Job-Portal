@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import '../loadEnv.js';
+import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -7,7 +7,8 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Env loaded centrally by loadEnv.js
+// Load environment variables from config.env
+dotenv.config({ path: './config.env' });
 
 class EmailService {
   constructor() {
