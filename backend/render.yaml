@@ -31,7 +31,7 @@ services:
       - key: GOOGLE_CLIENT_SECRET
         value: ${GOOGLE_CLIENT_SECRET}
       - key: FRONTEND_URL
-        value: https://finautojobs-frontend.onrender.com
+        value: https://finautojobs-a-job-portal-1-bctj.onrender.com
     healthCheckPath: /api/health
     repo: https://github.com/BHARGAV15008/FinAutojobs-A-Job-Portal.git
     branch: beta
