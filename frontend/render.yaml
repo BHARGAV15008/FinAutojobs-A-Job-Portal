@@ -20,6 +20,15 @@ services:
         value: "false"
       - key: VITE_ENABLE_PREMIUM_FEATURES
         value: "false"
+      # TODO: Update these values in your Render dashboard
+      - key: VITE_SMTP_HOST
+        value: smtp.gmail.com
+      - key: VITE_SMTP_PORT
+        value: 587
+      - key: VITE_SMTP_USER
+        value: hiddenshadow032025@gmail.com
+      - key: VITE_SMTP_PASS
+        value: rxdn afad anzi obxx
     repo: https://github.com/BHARGAV15008/FinAutojobs-A-Job-Portal.git
     branch: beta
     rootDir: frontend

@@ -80,10 +80,10 @@ const AdminSettingsTab = ({ data, onDataUpdate, user }) => {
       ipWhitelisting: false
     },
     email: {
-      smtpHost: 'smtp.gmail.com',
-      smtpPort: 587,
-      smtpUsername: 'noreply@finautojobs.com',
-      smtpPassword: '••••••••',
+      smtpHost: import.meta.env.VITE_SMTP_HOST,
+      smtpPort: import.meta.env.VITE_SMTP_PORT,
+      smtpUsername: import.meta.env.VITE_SMTP_USER,
+      smtpPassword: import.meta.env.VITE_SMTP_PASS,
       fromName: 'FinAutoJobs',
       fromEmail: 'noreply@finautojobs.com',
       enableSsl: true
