@@ -31,7 +31,7 @@ backend/.env.production
 *env*
 
 # Deployment configurations (keep only Vercel)
-netlify.toml
+# netlify.toml
 # render.yaml
 docker-compose.yml
 Dockerfile
