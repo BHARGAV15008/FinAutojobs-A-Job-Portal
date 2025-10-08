@@ -219,7 +219,7 @@ const PhoneVerification = ({
       // const idToken = await credential.user.getIdToken();
 
       // Send to backend for verification
-      const response = await fetch('/api/phone-auth/verify-phone', {
+      const response = await fetch('/phone-auth/verify-phone', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

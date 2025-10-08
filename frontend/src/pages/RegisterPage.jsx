@@ -591,7 +591,7 @@ const RegisterPage = () => {
 
     try {
       const role = activeTab === 0 ? 'applicant' : 'recruiter'
-      const response = await fetch('/api/auth/generate-username', {
+      const response = await fetch('/auth/generate-username', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -15,7 +15,7 @@ const InterviewsTab = () => {
     const fetchInterviews = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('/api/interviews', {
+        const response = await fetch('/interviews', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {

@@ -246,7 +246,7 @@ const DynamicApplicationForm = ({
         formData.append('type', fileType);
 
         // Upload file (implement your file upload API)
-        const response = await fetch('/api/upload/application-document', {
+        const response = await fetch('/upload/application-document', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`

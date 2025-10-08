@@ -54,7 +54,7 @@ const OAuthCallback = () => {
         localStorage.setItem('token', token);
         
         // Verify token with backend and get user data
-        const response = await fetch('/api/auth/profile', {
+        const response = await fetch('/auth/profile', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
