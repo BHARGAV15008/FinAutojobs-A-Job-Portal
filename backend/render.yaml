@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: finautojobs-backend
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        value: mongodb+srv://hiddenshadow032025_db_user:nJNHickmLkFtwcIY@cluster0.nvq1gwn.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+      - key: JWT_SECRET
+        value: your-jwt-secret-key-change-this-in-production
+      - key: SESSION_SECRET
+        value: your-session-secret-key-change-this-in-production
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: 587
+      - key: EMAIL_USER
+        value: hiddenshadow032025@gmail.com
+      - key: EMAIL_PASS
+        value: rxdn afad anzi obxx
+      - key: EMAIL_FROM_NAME
+        value: FinAutoJobs
+      - key: EMAIL_FROM_ADDRESS
+        value: hiddenshadow032025@gmail.com
+      - key: GOOGLE_CLIENT_ID
+        value: 694673409935-td8q4m1qlvnf6ddfbnn3o9sljpirhpeh.apps.googleusercontent.com
+      - key: GOOGLE_CLIENT_SECRET
+        value: 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
+    healthCheckPath: /api/health
+    repo: https://github.com/yourusername/your-repo-name.git
+    branch: main
+    rootDir: backend

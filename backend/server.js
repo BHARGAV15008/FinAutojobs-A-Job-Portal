@@ -293,7 +293,7 @@ app.get('/', (req, res) => {
     });
 });
 
-// Serve static files from React build (for Railway deployment)
+// Serve static files from React build
 if (process.env.NODE_ENV === 'production') {
   const frontendBuildPath = path.join(__dirname, '../frontend/dist');
   app.use(express.static(frontendBuildPath));

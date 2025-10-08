@@ -8,6 +8,7 @@ const corsOptions = {
         }
 
         const allowedOrigins = [
+            process.env.FRONTEND_URL, // Add this line
             'http://localhost:3000',
             'http://localhost:3000',
             'http://localhost:3000',

@@ -155,7 +155,7 @@ NODE_ENV=development npm run dev
 
 ### **MongoDB Atlas:**
 - ✅ Same database cluster for all environments
-- ✅ Connection string optimized for cloud deployment
+- ✅ Connection string configured for development
 - ✅ Network access configured for 0.0.0.0/0
 
 ### **Email Configuration:**
@@ -170,11 +170,10 @@ NODE_ENV=development npm run dev
 2. ✅ **Atlas connected** - Database working
 3. ✅ **Environment configured** - All settings ready
 
-### **For Production Deployment:**
-1. **Create production config**: `cp .env.production.template .env.production`
-2. **Update URLs**: Replace placeholder URLs with actual domains
-3. **Deploy to Vercel**: Use production environment variables
-4. **Test deployment**: Verify all services working
+### **For Local Development:**
+1. **Start backend**: `npm run backend`
+2. **Start frontend**: `npm run frontend`
+3. **Test locally**: Verify all services working at localhost
 
 ## 📞 **Troubleshooting**
 

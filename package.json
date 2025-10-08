@@ -4,20 +4,9 @@
   "description": "FinAutoJobs - Job Portal Application",
   "type": "module",
   "scripts": {
-    "build": "npm run build:frontend",
-    "build:frontend": "cd frontend && npm install && npm run build",
-    "build:backend": "cd backend && npm install",
-    "start": "cd backend && npm start",
     "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
-    "vercel-build": "npm run install:all && npm run build:frontend",
-    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
     "backend": "cd backend && node start-server.js",
-    "frontend": "cd frontend && npm start",
-    "deploy:vercel": "vercel --prod",
-    "deploy:preview": "vercel",
-    "test:build": "npm run build && npm run start",
-    "clean": "rm -rf frontend/dist backend/node_modules frontend/node_modules node_modules",
-    "postinstall": "npm run install:all"
+    "frontend": "cd frontend && npm start"
   },
   "engines": {
     "node": ">=20.0.0",
@@ -49,7 +38,6 @@
     "socket.io": "^4.8.1"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2",
-    "vercel": "^37.6.1"
+    "concurrently": "^8.2.2"
   }
 }

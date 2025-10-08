@@ -8,7 +8,6 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "build": "cd ../frontend && npm run build",
-    "railway-build": "cd ../frontend && npm install && npm run build",
     "test": "mkdir -p ./data && cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "lint": "eslint . --ext .js",
     "lint:fix": "eslint . --ext .js --fix",

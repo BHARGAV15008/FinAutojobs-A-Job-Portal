@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: finautojobs-frontend
+    env: static
+    plan: free
+    buildCommand: npm install && npm run build
+    publishPath: build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://finautojobs-backend.onrender.com/api
+    repo: https://github.com/yourusername/your-repo-name.git
+    branch: main
+    rootDir: frontend

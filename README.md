@@ -19,8 +19,6 @@ A comprehensive, production-ready job portal application with modern React.js da
 - **Advanced Error Handling**: Comprehensive error boundaries and retry logic
 
 ### 🎯 **Production-Grade Features**
-- **CI/CD Pipeline**: GitHub Actions with automated testing and deployment
-- **Docker Support**: Complete containerization with multi-stage builds
 - **Security**: HTTPS, CSP headers, input validation, and rate limiting
 - **Performance**: Code splitting, lazy loading, and optimization
 - **Monitoring**: Error tracking, analytics, and health checks
@@ -74,7 +72,7 @@ The application will be available at `http://localhost:3000`.
 
 ### Backend (`backend/.env`)
 
-Create a `.env` file in the `backend` directory and add the following variables. For production, use a `.env.production` file.
+Create a `.env` file in the `backend` directory and add the following variables.
 
 ```env
 # Database Configuration (MongoDB)
