@@ -17,7 +17,7 @@ console.log('🔍 Hostname:', window.location.hostname);
 
 const api = axios.create({
   baseURL: baseURL,
-  timeout: 10000,
+  timeout: 30000, // Increased to 30 seconds for slow backend startup
   headers: {
     'Content-Type': 'application/json',
   },
