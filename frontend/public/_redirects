@@ -1,12 +1,16 @@
-# Handle SPA routing - redirect all routes to index.html
 /*    /index.html   200
 
-# Handle API calls - don't redirect API calls
-/api/*  https://finautojobs-a-job-portal-w714.onrender.com/api/:splat  200
-
-# Handle static assets
-/static/*  /static/:splat  200
+# Handle static assets with proper MIME types
 /assets/*  /assets/:splat  200
+/static/*  /static/:splat  200
+/*.js      /:splat.js    200
+/*.css     /:splat.css   200
+/*.json    /:splat.json  200
+/*.svg     /:splat.svg   200
+/*.ico     /:splat.ico   200
+
+# Handle API calls - proxy to your backend
+/api/*  https://finautojobs-a-job-portal-w714.onrender.com/api/:splat  200
 
 # Handle favicon
 /favicon.ico  /vite.svg  200
