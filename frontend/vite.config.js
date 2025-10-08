@@ -48,7 +48,7 @@ export default defineConfig({
   },
   build: {
     target: 'es2020',
-    outDir: 'dist',
+    outDir: 'build',
     sourcemap: false,
     rollupOptions: {
       output: {
