@@ -7,9 +7,9 @@ services:
     publishPath: build
     envVars:
       - key: VITE_API_URL
-        value: https://finautojobs-a-job-portal-w714.onrender.com
+        value: https://finautojobs-a-job-portal-w714.onrender.com/api
       - key: REACT_APP_API_URL
-        value: https://finautojobs-a-job-portal-w714.onrender.com
+        value: https://finautojobs-a-job-portal-w714.onrender.com/api
       - key: REACT_APP_FIREBASE_API_KEY
         value: AIzaSyApOgzzeHAyUA50F7wuY9seiZPiDO6gvWg
       - key: REACT_APP_FIREBASE_AUTH_DOMAIN
