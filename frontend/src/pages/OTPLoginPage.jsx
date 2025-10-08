@@ -55,13 +55,19 @@ const OTPLoginPage = () => {
       const endpoint = isEmail ? 'send-otp-email' : 'send-otp-sms';
       const body = isEmail ? { email: identifier } : { phone: identifier };
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      
       const response = await fetch(`${API_BASE_URL}/auth/${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(body),
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeoutId);
 
       const data = await response.json();
 
@@ -77,7 +83,12 @@ const OTPLoginPage = () => {
       }
     } catch (error) {
       console.error('Send OTP error:', error);
-      setError('Network error. Please try again.');
+      
+      if (error.name === 'AbortError') {
+        setError('Request timeout. Please check your connection and try again.');
+      } else {
+        setError('Network error. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

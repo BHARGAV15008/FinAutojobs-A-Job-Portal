@@ -64,8 +64,8 @@ export const authAPI = {
   checkAvailability: (field, value, role) => api.post('/auth/check-availability', { field, value, role }),
   generateUsername: (firstName, lastName, role) => api.post('/auth/generate-username', { firstName, lastName, role }),
   validateUsername: (username) => api.post('/auth/validate-username', { username }),
-  sendOTPEmail: (email) => api.post('/auth/send-otp-email', { email }),
-  sendOTPSMS: (phone) => api.post('/auth/send-otp-sms', { phone }),
+  sendOTPEmail: (email) => api.post('/auth/send-otp-email', { email }, { timeout: 30000 }),
+  sendOTPSMS: (phone) => api.post('/auth/send-otp-sms', { phone }, { timeout: 30000 }),
   verifyOTP: (identifier, otp, type) => api.post('/auth/verify-otp', { identifier, otp, type }),
   refreshToken: () => api.post('/auth/refresh'),
 };
