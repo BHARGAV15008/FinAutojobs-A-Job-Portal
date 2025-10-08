@@ -1,23 +1,9 @@
 import axios from 'axios';
 
 // Create axios instance with base configuration
-const getBaseURL = () => {
-  // For production, use the production backend URL
-  if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    return 'https://finautojobs-a-job-portal-w714.onrender.com';
-  }
-  // For development, use environment variable or localhost
-  return import.meta.env.VITE_API_URL || 'http://localhost:5000';
-};
-
-const baseURL = getBaseURL();
-console.log('🔍 API Base URL:', baseURL);
-console.log('🔍 Environment:', import.meta.env.VITE_API_URL);
-console.log('🔍 Hostname:', window.location.hostname);
-
 const api = axios.create({
-  baseURL: baseURL,
-  timeout: 30000, // Increased to 30 seconds for slow backend startup
+  baseURL: import.meta.env.VITE_API_URL || 'https://finautojobs-a-job-portal-w714.onrender.com',
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
