@@ -246,6 +246,8 @@ apiRouter.use('/dashboard', dashboardRoutes);
 console.log('🔄 Registering /api/applications routes...');
 apiRouter.use('/applications', applicationRoutes);
 console.log('✅ /api/applications routes registered successfully');
+apiRouter.use('/companies', companyRoutes);
+console.log('✅ /api/companies routes registered successfully');
 apiRouter.use('/users', usersRoutes);
 apiRouter.use('/saved-jobs', savedJobsRoutes);
 apiRouter.use('/notifications', notificationsRoutes);
