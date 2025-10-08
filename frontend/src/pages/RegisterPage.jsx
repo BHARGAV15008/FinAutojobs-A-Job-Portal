@@ -434,16 +434,22 @@ const RegisterPage = () => {
     }
 
     try {
+      console.log('🔄 Sending OTP to:', formData.email)
       const result = await sendEmailOTP(formData.email)
+      console.log('📧 OTP Result:', result)
+      
       if (result.success) {
+        console.log('✅ OTP Success - Setting states')
         setEmailOTPSent(true)
         setShowEmailOTP(true)
+        console.log('✅ States set - emailOTPSent: true, showEmailOTP: true')
         toast({
           title: "Success",
           description: "OTP sent to your email address",
           variant: "default"
         })
       } else {
+        console.log('❌ OTP Failed:', result.error)
         toast({
           title: "Error",
           description: result.error || "Failed to send OTP",
@@ -1310,6 +1316,7 @@ const RegisterPage = () => {
       </Box>
 
       {/* Email OTP Verification Dialog */}
+      {console.log('🔍 Rendering Dialog - showEmailOTP:', showEmailOTP)}
       <Dialog open={showEmailOTP} onClose={() => setShowEmailOTP(false)} maxWidth="sm" fullWidth>
         <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
