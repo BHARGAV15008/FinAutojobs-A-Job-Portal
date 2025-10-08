@@ -6,15 +6,15 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 // Load environment variables from config.env
 dotenv.config({ path: './config.env' });
 
 class EmailService {
   constructor() {
     this.transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.EMAIL_PORT) || 587,
+      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 587,
       secure: false, // Use STARTTLS
       auth: {
         user: process.env.EMAIL_USER,
@@ -25,9 +25,6 @@ class EmailService {
       }
     });
 
-    // Test email configuration on startup
-    this.testConnection();
-
     this.fromEmail = process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER || 'noreply@finautojobs.com';
     this.fromName = process.env.EMAIL_FROM_NAME || 'FinAutoJobs Team';
     this.baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -35,6 +32,7 @@ class EmailService {
     // Initialize email templates
     this.templates = this.loadEmailTemplates();
   }
+
 
   // Load email templates
   loadEmailTemplates() {
@@ -707,41 +705,6 @@ class EmailService {
     }
   }
 
-  // Test email configuration
-  async testEmailConfiguration() {
-    try {
-      await this.transporter.verify();
-      console.log('✅ Email configuration is valid');
-      return { success: true, message: 'Email configuration is valid' };
-    } catch (error) {
-      console.error('❌ Email configuration test failed:', error);
-      return { success: false, message: error.message };
-    }
-  }
-
-  // Send test email
-  async sendTestEmail(recipientEmail) {
-    try {
-      await this.transporter.sendMail({
-        from: `"${this.fromName}" <${this.fromEmail}>`,
-        to: recipientEmail,
-        subject: 'Test Email from FinAutoJobs',
-        html: `
-          <h2>Email Configuration Test</h2>
-          <p>This is a test email to verify that the email service is working correctly.</p>
-          <p>Sent at: ${new Date().toLocaleString()}</p>
-          <p>From: FinAutoJobs Email Service</p>
-        `
-      });
-
-      console.log(`✅ Test email sent to ${recipientEmail}`);
-      return { success: true };
-
-    } catch (error) {
-      console.error('❌ Error sending test email:', error);
-      throw error;
-    }
-  }
 
   /**
    * Send welcome email to new user
@@ -793,29 +756,6 @@ class EmailService {
     }
   }
 
-  /**
-   * Send email verification email
-   */
-  async sendEmailVerification(userEmail, userName, verificationToken) {
-    try {
-      const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
-      const subject = 'Verify Your Email Address - FinAutoJobs';
-      const html = this.getEmailVerificationTemplate(userName, verificationLink);
-
-      await this.transporter.sendMail({
-        from: `"${this.fromName}" <${this.fromEmail}>`,
-        to: userEmail,
-        subject: subject,
-        html: html
-      });
-
-      console.log(`✅ Email verification sent to ${userEmail}`);
-      return true;
-    } catch (error) {
-      console.error('❌ Failed to send email verification:', error);
-      return false;
-    }
-  }
 
   /**
    * Send application received notification to recruiter

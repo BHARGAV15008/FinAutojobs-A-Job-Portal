@@ -25,18 +25,27 @@ yarn-error.log*
 # Environment files with secrets
 .env
 .env.local
+.env.development
 .env.production
+.env.test
+backend/.env
 backend/.env.local
+backend/.env.development
 backend/.env.production
-*env*
+frontend/.env
+frontend/.env.local
+frontend/.env.development
+frontend/.env.production
 
-# Deployment configurations (keep only Vercel)
-# netlify.toml
-# render.yaml
+# Deployment configurations
+netlify.toml
+render.yaml
 docker-compose.yml
 Dockerfile
 .netlify/
 .render/
+_redirects
+_headers
 
 # Vercel deployment
 .vercel
