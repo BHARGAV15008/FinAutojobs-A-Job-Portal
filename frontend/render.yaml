@@ -4,10 +4,22 @@ services:
     env: static
     plan: free
     buildCommand: npm install && npm run build
-    publishPath: build
+    publishPath: dist
     envVars:
       - key: REACT_APP_API_URL
-        value: https://finautojobs-backend.on.render.com/api
+        value: https://finautojobs-a-job-portal-w714.onrender.com/api
+      - key: REACT_APP_FIREBASE_API_KEY
+        value: AIzaSyApOgzzeHAyUA50F7wuY9seiZPiDO6gvWg
+      - key: REACT_APP_FIREBASE_AUTH_DOMAIN
+        value: fineautojobs-429be.firebaseapp.com
+      - key: REACT_APP_FIREBASE_PROJECT_ID
+        value: fineautojobs-429be
+      - key: REACT_APP_FIREBASE_STORAGE_BUCKET
+        value: fineautojobs-429be.firebasestorage.app
+      - key: REACT_APP_FIREBASE_MESSAGING_SENDER_ID
+        value: 164530404731
+      - key: REACT_APP_FIREBASE_APP_ID
+        value: 1:164530404731:web:8843805e200b18cee891de
     repo: https://github.com/BHARGAV15008/FinAutojobs-A-Job-Portal.git
-    branch: main
+    branch: beta
     rootDir: frontend
