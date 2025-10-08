@@ -1,6 +1,6 @@
 {
   "name": "finautojobs-frontend",
-  "version": "1.0.0",
+  "version": "0.1.1",
   "description": "Frontend for FinAutoJobs - Job Board Application",
   "private": true,
   "type": "module",
