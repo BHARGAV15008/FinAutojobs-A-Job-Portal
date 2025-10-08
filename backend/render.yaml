@@ -9,28 +9,28 @@ services:
       - key: NODE_ENV
         value: production
       - key: MONGODB_URI
-        value: mongodb+srv://hiddenshadow032025_db_user:nJNHickmLkFtwcIY@cluster0.nvq1gwn.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+        value: ${MONGODB_URI}
       - key: JWT_SECRET
-        value: your-jwt-secret-key-change-this-in-production
+        value: ${JWT_SECRET}
       - key: SESSION_SECRET
-        value: your-session-secret-key-change-this-in-production
+        value: ${SESSION_SECRET}
       - key: EMAIL_HOST
         value: smtp.gmail.com
       - key: EMAIL_PORT
         value: 587
       - key: EMAIL_USER
-        value: hiddenshadow032025@gmail.com
+        value: ${EMAIL_USER}
       - key: EMAIL_PASS
-        value: rxdn afad anzi obxx
+        value: ${EMAIL_PASS}
       - key: EMAIL_FROM_NAME
         value: FinAutoJobs
       - key: EMAIL_FROM_ADDRESS
-        value: hiddenshadow032025@gmail.com
+        value: ${EMAIL_FROM_ADDRESS}
       - key: GOOGLE_CLIENT_ID
-        value: 694673409935-td8q4m1qlvnf6ddfbnn3o9sljpirhpeh.apps.googleusercontent.com
+        value: ${GOOGLE_CLIENT_ID}
       - key: GOOGLE_CLIENT_SECRET
-        value: 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
+        value: ${GOOGLE_CLIENT_SECRET}
     healthCheckPath: /api/health
-    repo: https://github.com/yourusername/your-repo-name.git
+    repo: https://github.com/BHARGAV15008/FinAutojobs-A-Job-Portal.git
     branch: main
     rootDir: backend

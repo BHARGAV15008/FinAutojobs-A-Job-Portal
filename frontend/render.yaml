@@ -7,7 +7,7 @@ services:
     publishPath: build
     envVars:
       - key: REACT_APP_API_URL
-        value: https://finautojobs-backend.onrender.com/api
-    repo: https://github.com/yourusername/your-repo-name.git
+        value: https://finautojobs-backend.on.render.com/api
+    repo: https://github.com/BHARGAV15008/FinAutojobs-A-Job-Portal.git
     branch: main
     rootDir: frontend
