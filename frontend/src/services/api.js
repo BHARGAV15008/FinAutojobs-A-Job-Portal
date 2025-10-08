@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 // Create axios instance with base configuration
+// Cache bust: 2025-01-08-10:58 - Fixed double API prefix issue
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'https://finautojobs-a-job-portal-w714.onrender.com/api',
   timeout: 10000,
