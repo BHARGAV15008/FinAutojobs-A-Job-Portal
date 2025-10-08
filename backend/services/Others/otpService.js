@@ -1,8 +1,26 @@
 import nodemailer from 'nodemailer';
-import mockEmailService from '../mockEmailService.js';
 
 // In-memory OTP storage (in production, use Redis or database)
 const otpStorage = new Map();
+
+// Mock email service for production
+const mockEmailService = {
+  async sendOTP(email, otp, purpose = 'verification') {
+    console.log('📧 Mock Email Service - OTP would be sent:');
+    console.log(`   Email: ${email}`);
+    console.log(`   OTP: ${otp}`);
+    console.log(`   Purpose: ${purpose}`);
+    
+    // Simulate email sending delay
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    return {
+      success: true,
+      messageId: `mock-${Date.now()}`,
+      message: 'OTP sent via mock service (production mode)'
+    };
+  }
+};
 
 // Helper function to generate OTP
 export const generateOTP = () => {
