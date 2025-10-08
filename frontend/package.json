@@ -79,6 +79,8 @@
     "socket.io-client": "^4.8.1",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
+    "@tailwindcss/forms": "^0.5.7",
+    "@tailwindcss/typography": "^0.5.15",
     "web-vitals": "^3.5.0",
     "wouter": "^3.3.5",
     "yup": "^1.7.0",
@@ -91,9 +93,7 @@
     "serve": "^14.2.1"
   },
   "devDependencies": {
-    "@tailwindcss/forms": "^0.5.7",
     "@tailwindcss/postcss7-compat": "^2.2.17",
-    "@tailwindcss/typography": "^0.5.15",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.1",
     "eslint": "^8.57.0",
