@@ -1336,8 +1336,7 @@ class EmailService {
   async testConnection() {
     try {
       // Check if we have proper email configuration
-      const hasEmailConfig = process.env.EMAIL_USER && process.env.EMAIL_PASS && 
-                            process.env.EMAIL_USER !== 'hiddenshadow032025@gmail.com';
+      const hasEmailConfig = process.env.EMAIL_USER && process.env.EMAIL_PASS;
 
       // Skip connection test in production if no proper email config
       if (process.env.NODE_ENV === 'production' && !hasEmailConfig) {
@@ -1345,7 +1344,13 @@ class EmailService {
         return;
       }
 
-      await this.transporter.verify();
+      // Add timeout to connection test
+      await Promise.race([
+        this.transporter.verify(),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Connection timeout')), 5000) // 5 second timeout
+        )
+      ]);
       console.log('✅ Email service connected successfully');
     } catch (error) {
       console.error('❌ Email service connection failed:', error.message);

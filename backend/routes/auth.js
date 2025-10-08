@@ -1416,7 +1416,13 @@ router.post('/send-otp-email', async (req, res) => {
       `
     };
 
-    await transporter.sendMail(mailOptions);
+    // Add timeout to email sending to prevent hanging
+    await Promise.race([
+      transporter.sendMail(mailOptions),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Connection timeout')), 10000) // 10 second timeout
+      )
+    ]);
     
       console.log(`✅ Email OTP sent to ${email}: ${otp}`);
       
