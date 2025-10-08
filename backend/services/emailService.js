@@ -1335,11 +1335,26 @@ class EmailService {
   // Test email connection
   async testConnection() {
     try {
+      // Check if we have proper email configuration
+      const hasEmailConfig = process.env.EMAIL_USER && process.env.EMAIL_PASS && 
+                            process.env.EMAIL_USER !== 'hiddenshadow032025@gmail.com';
+
+      // Skip connection test in production if no proper email config
+      if (process.env.NODE_ENV === 'production' && !hasEmailConfig) {
+        console.log('📧 Skipping email connection test in production (using mock service)');
+        return;
+      }
+
       await this.transporter.verify();
       console.log('✅ Email service connected successfully');
     } catch (error) {
       console.error('❌ Email service connection failed:', error.message);
       console.error('Please check your email configuration in environment variables');
+      
+      // Don't throw error in production, just log it
+      if (process.env.NODE_ENV !== 'production') {
+        throw error;
+      }
     }
   }
 }

@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import mockEmailService from '../mockEmailService.js';
 
 // In-memory OTP storage (in production, use Redis or database)
 const otpStorage = new Map();
