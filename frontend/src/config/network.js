@@ -4,12 +4,12 @@ export const API_CONFIG = {
   development: {
     baseURL: API_BASE_URL,
     socketURL: SOCKET_URL,
-    timeout: 10000
+    timeout: 30000
   },
   production: {
     baseURL: API_BASE_URL,
     socketURL: SOCKET_URL,
-    timeout: 15000
+    timeout: 30000
   }
 };
 

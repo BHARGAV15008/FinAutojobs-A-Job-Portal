@@ -4,7 +4,7 @@ import API_BASE_URL from '../services/apiConfig';
 // Create axios instance with base configuration
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 30000,
   // Don't set default Content-Type - let browser set it based on data type
 });
 

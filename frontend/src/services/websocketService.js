@@ -24,7 +24,7 @@ class WebSocketService {
         token: token
       },
       transports: ['websocket', 'polling'],
-      timeout: 10000,
+      timeout: 30000,
       reconnection: true,
       reconnectionAttempts: this.maxReconnectAttempts,
       reconnectionDelay: this.reconnectDelay,
