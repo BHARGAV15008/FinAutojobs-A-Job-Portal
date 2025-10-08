@@ -18,7 +18,9 @@
     "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,json,css,md}\"",
     "analyze": "npm run build && npx vite-bundle-analyzer dist/stats.html",
     "start": "npm run dev",
-    "clean": "rm -rf dist node_modules/.vite"
+    "clean": "rm -rf dist node_modules/.vite",
+    "build:check": "node build-check.js",
+    "prebuild": "npm run build:check"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
