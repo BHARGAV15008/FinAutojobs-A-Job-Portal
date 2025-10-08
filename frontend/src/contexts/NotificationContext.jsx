@@ -133,7 +133,15 @@ export const NotificationProvider = ({ children }) => {
     if (!isAuthenticated || !user) return;
 
     const connectWebSocket = () => {
-      const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:5000';
+      const getWSUrl = () => {
+        // For production, use the production backend URL
+        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+          return 'wss://finautojobs-a-job-portal-w714.onrender.com';
+        }
+        // For development, use environment variable or localhost
+        return import.meta.env.VITE_WS_URL || 'ws://localhost:5000';
+      };
+      const wsUrl = getWSUrl();
       const ws = new WebSocket(`${wsUrl}/notifications?token=${localStorage.getItem('token')}`);
 
       ws.onopen = () => {

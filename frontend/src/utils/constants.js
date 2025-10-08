@@ -271,8 +271,17 @@ export const FEATURE_FLAGS = {
   DEBUG: import.meta.env.VITE_DEBUG === 'true',
 };
 
+const getProductionAPIURL = () => {
+  // For production, use the production backend URL
+  if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return 'https://finautojobs-a-job-portal-w714.onrender.com/api';
+  }
+  // For development, use environment variable or localhost
+  return import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+};
+
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  BASE_URL: getProductionAPIURL(),
   TIMEOUT: 10000,
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 1000,
