@@ -4,7 +4,7 @@ services:
     env: static
     plan: free
     buildCommand: npm install && npm run build
-    publishPath: dist
+    publishPath: build
     envVars:
       - key: REACT_APP_API_URL
         value: https://finautojobs-a-job-portal-w714.onrender.com/api
