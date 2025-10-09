@@ -26,8 +26,8 @@ The OAuth system is now integrated into both login and register pages. Users can
    - Click "Create Credentials" > "OAuth 2.0 Client ID"
    - Choose "Web application"
    - Add authorized redirect URIs:
-     - `http://localhost:5000/api/oauth/google/callback`
-     - `http://192.168.41.134:5000/api/oauth/google/callback` (for network access)
+     - `https://finautojobs-a-job-portal-hk5c.onrender.com/api/oauth/google/callback`
+     - `https://finautojobs-a-job-portal-hk5c.onrender.com/api/oauth/google/callback` (for network access)
 5. **Copy credentials** and update `.env.local`:
    ```env
    GOOGLE_CLIENT_ID=694673409935-td8q4m1qlvnf6ddfbnn3o9sljpirhpeh.apps.googleusercontent.com-here
@@ -44,7 +44,7 @@ The OAuth system is now integrated into both login and register pages. Users can
    - Supported account types: "Accounts in any organizational directory and personal Microsoft accounts"
 3. **Set redirect URI**:
    - Platform: Web
-   - Redirect URI: `http://localhost:5000/api/oauth/microsoft/callback`
+   - Redirect URI: `https://finautojobs-a-job-portal-hk5c.onrender.com/api/oauth/microsoft/callback`
 4. **Create client secret**:
    - Go to "Certificates & secrets"
    - Click "New client secret"
@@ -65,7 +65,7 @@ The OAuth system is now integrated into both login and register pages. Users can
 3. **Create Service ID**:
    - Create new Services ID
    - Configure "Sign In with Apple"
-   - Add domain and redirect URL: `http://localhost:5000/api/oauth/apple/callback`
+   - Add domain and redirect URL: `https://finautojobs-a-job-portal-hk5c.onrender.com/api/oauth/apple/callback`
 4. **Create Private Key**:
    - Go to "Keys" section
    - Create new key with "Sign In with Apple" capability
@@ -114,10 +114,10 @@ frontend/
 ## 🧪 Testing OAuth
 
 ### Test URLs:
-- **OAuth Status**: `http://localhost:5000/api/oauth/status`
-- **Google OAuth**: `http://localhost:5000/api/oauth/google?role=applicant`
-- **Microsoft OAuth**: `http://localhost:5000/api/oauth/microsoft?role=recruiter`
-- **Apple OAuth**: `http://localhost:5000/api/oauth/apple?role=applicant`
+- **OAuth Status**: `https://finautojobs-a-job-portal-hk5c.onrender.com/api/oauth/status`
+- **Google OAuth**: `https://finautojobs-a-job-portal-hk5c.onrender.com/api/oauth/google?role=applicant`
+- **Microsoft OAuth**: `https://finautojobs-a-job-portal-hk5c.onrender.com/api/oauth/microsoft?role=recruiter`
+- **Apple OAuth**: `https://finautojobs-a-job-portal-hk5c.onrender.com/api/oauth/apple?role=applicant`
 
 ### Test Steps:
 1. **Start backend server**: `npm run dev`
@@ -157,7 +157,7 @@ frontend/
    - Check if provider allows the redirect URI
 
 ### Debug Steps:
-1. **Check OAuth status**: `curl http://localhost:5000/api/oauth/status`
+1. **Check OAuth status**: `curl https://finautojobs-a-job-portal-hk5c.onrender.com/api/oauth/status`
 2. **Check server logs** for detailed error messages
 3. **Verify environment variables** are loaded correctly
 4. **Test with browser developer tools** to see network requests

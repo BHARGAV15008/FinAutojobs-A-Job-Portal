@@ -10,7 +10,7 @@
 import fetch from 'node-fetch';
 import chalk from 'chalk';
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:5000';
+const BASE_URL = process.env.BASE_URL || 'https://finautojobs-a-job-portal-hk5c.onrender.com';
 
 console.log(chalk.blue.bold('\n🔐 OAuth Integration Test Suite\n'));
 
@@ -177,7 +177,7 @@ if (args.includes('--status')) {
   console.log(chalk.yellow('  node test-oauth.js --status # Check OAuth status only'));
   console.log(chalk.yellow('  node test-oauth.js --help   # Show this help'));
   console.log(chalk.gray('\nEnvironment Variables:'));
-  console.log(chalk.gray('  BASE_URL - Backend server URL (default: http://localhost:5000)'));
+  console.log(chalk.gray('  BASE_URL - Backend server URL (default: https://finautojobs-a-job-portal-hk5c.onrender.com)'));
 } else {
   runAllTests().then(success => {
     process.exit(success ? 0 : 1);

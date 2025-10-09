@@ -82,7 +82,7 @@ export const uploadProfileData = upload.fields([
 
 // Helper function to get file URL
 export const getFileUrl = (filename, type = 'profiles') => {
-  const baseUrl = process.env.BASE_URL || 'http://localhost:5000';
+  const baseUrl = process.env.BASE_URL || 'https://finautojobs-a-job-portal-hk5c.onrender.com';
   return `${baseUrl}/uploads/${type}/${filename}`;
 };
 

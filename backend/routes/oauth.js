@@ -24,7 +24,7 @@ const getOAuthConfig = () => {
     microsoft: {
       clientID: process.env.MICROSOFT_CLIENT_ID || 'your-microsoft-client-id',
       clientSecret: process.env.MICROSOFT_CLIENT_SECRET || 'your-microsoft-client-secret',
-      callbackURL: process.env.MICROSOFT_CALLBACK_URL || 'http://localhost:5000/api/oauth/microsoft/callback',
+      callbackURL: process.env.MICROSOFT_CALLBACK_URL || 'https://finautojobs-a-job-portal-hk5c.onrender.com/api/oauth/microsoft/callback',
       scope: ['user.read']
     },
     apple: {
@@ -32,7 +32,7 @@ const getOAuthConfig = () => {
       teamID: process.env.APPLE_TEAM_ID || 'your-apple-team-id',
       keyID: process.env.APPLE_KEY_ID || 'your-apple-key-id',
       privateKeyPath: process.env.APPLE_PRIVATE_KEY_PATH || './apple-private-key.p8',
-      callbackURL: process.env.APPLE_CALLBACK_URL || 'http://localhost:5000/api/oauth/apple/callback'
+      callbackURL: process.env.APPLE_CALLBACK_URL || 'https://finautojobs-a-job-portal-hk5c.onrender.com/api/oauth/apple/callback'
     }
   };
 };

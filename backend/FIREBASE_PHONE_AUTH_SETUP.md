@@ -89,7 +89,7 @@ For testing without using real SMS:
 
 2. **Check phone auth status**:
    ```bash
-   curl http://localhost:5000/api/phone-auth/status
+   curl https://finautojobs-a-job-portal-hk5c.onrender.com/api/phone-auth/status
    ```
 
    Expected response:
@@ -107,7 +107,7 @@ For testing without using real SMS:
 
 3. **Get Firebase config for frontend**:
    ```bash
-   curl http://localhost:5000/api/phone-auth/firebase-config
+   curl https://finautojobs-a-job-portal-hk5c.onrender.com/api/phone-auth/firebase-config
    ```
 
 ## 📱 Step 6: Frontend Integration (React)
@@ -181,7 +181,7 @@ function PhoneVerify() {
       const idToken = await credential.user.getIdToken();
 
       // Send to backend for verification
-      const response = await axios.post('http://localhost:5000/api/phone-auth/verify-phone', {
+      const response = await axios.post('https://finautojobs-a-job-portal-hk5c.onrender.com/api/phone-auth/verify-phone', {
         idToken,
         role: 'applicant' // or get from form
       });

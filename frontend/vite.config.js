@@ -29,12 +29,12 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://finautojobs-a-job-portal-hk5c.onrender.com',
         changeOrigin: true,
         secure: false,
       },
       '/socket.io': {
-        target: 'http://localhost:5000',
+        target: 'https://finautojobs-a-job-portal-hk5c.onrender.com',
         ws: true,
       },
     },

@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = 'https://finautojobs-a-job-portal-hk5c.onrender.com/api';
 
 // Sample data
 const sampleUsers = [
@@ -284,7 +284,7 @@ const populateDatabase = async () => {
 // Check if server is running
 const checkServer = async () => {
   try {
-    const response = await fetch('http://localhost:5000/health');
+    const response = await fetch('https://finautojobs-a-job-portal-hk5c.onrender.com/health');
     if (response.ok) {
       console.log('✅ Server is running, proceeding with population...\n');
       return true;

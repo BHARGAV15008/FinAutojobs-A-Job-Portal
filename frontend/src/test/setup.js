@@ -75,7 +75,7 @@ global.console = {
 
 // Mock environment variables
 vi.mock('import.meta.env', () => ({
-  VITE_API_URL: 'http://localhost:5000/api',
+  VITE_API_URL: 'https://finautojobs-a-job-portal-hk5c.onrender.com/api',
   VITE_APP_NAME: 'FinAutoJobs',
   VITE_NODE_ENV: 'test',
   VITE_DEBUG: 'false',

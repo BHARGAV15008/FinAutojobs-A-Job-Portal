@@ -2,7 +2,7 @@
 
 ## 🚨 Current Issue
 **Error**: `redirect_uri_mismatch`
-**Your App Sends**: `http://localhost:5000/api/oauth/google/callback`
+**Your App Sends**: `https://finautojobs-a-job-portal-hk5c.onrender.com/api/oauth/google/callback`
 **Client ID**: `694673409935-td8q4m1qlvnf6ddfbnn3o9sljpirhpeh.apps.googleusercontent.com`
 
 ## 📋 MERN Stack OAuth Flow
@@ -25,9 +25,9 @@
 In the "Authorized redirect URIs" section, add these **EXACT** URIs:
 
 ```
-http://localhost:5000/api/oauth/google/callback
+https://finautojobs-a-job-portal-hk5c.onrender.com/api/oauth/google/callback
 http://127.0.0.1:5000/api/oauth/google/callback
-http://192.168.41.134:5000/api/oauth/google/callback
+https://finautojobs-a-job-portal-hk5c.onrender.com/api/oauth/google/callback
 ```
 
 ### Step 4: Save and Wait
@@ -38,15 +38,15 @@ http://192.168.41.134:5000/api/oauth/google/callback
 ## 🔍 Common Mistakes to Avoid
 
 ❌ **Wrong**: `https://localhost:5000/api/oauth/google/callback` (https instead of http)
-❌ **Wrong**: `http://localhost:5000/api/oauth/google/callback/` (trailing slash)
-❌ **Wrong**: `http://localhost:5000/oauth/google/callback` (missing /api)
-✅ **Correct**: `http://localhost:5000/api/oauth/google/callback`
+❌ **Wrong**: `https://finautojobs-a-job-portal-hk5c.onrender.com/api/oauth/google/callback/` (trailing slash)
+❌ **Wrong**: `https://finautojobs-a-job-portal-hk5c.onrender.com/oauth/google/callback` (missing /api)
+✅ **Correct**: `https://finautojobs-a-job-portal-hk5c.onrender.com/api/oauth/google/callback`
 
 ## 🧪 Test URLs
 
 After configuration, test these URLs in browser:
-- http://localhost:5000/api/oauth/google?role=applicant
-- http://localhost:5000/api/oauth/status
+- https://finautojobs-a-job-portal-hk5c.onrender.com/api/oauth/google?role=applicant
+- https://finautojobs-a-job-portal-hk5c.onrender.com/api/oauth/status
 
 ## 🔄 Alternative Solutions
 
@@ -69,7 +69,7 @@ Sometimes localhost doesn't work, try:
 
 - [ ] Correct Google Cloud project selected
 - [ ] OAuth client ID matches: `694673409935-td8q4m1qlvnf6ddfbnn3o9sljpirhpeh.apps.googleusercontent.com`
-- [ ] Redirect URI exactly: `http://localhost:5000/api/oauth/google/callback`
+- [ ] Redirect URI exactly: `https://finautojobs-a-job-portal-hk5c.onrender.com/api/oauth/google/callback`
 - [ ] Changes saved in Google Console
 - [ ] Waited 2-3 minutes after saving
 - [ ] Backend server running on port 5000
@@ -86,14 +86,14 @@ Sometimes localhost doesn't work, try:
 ## 📞 Debug Information
 
 **Current Configuration:**
-- Backend URL: http://localhost:5000
+- Backend URL: https://finautojobs-a-job-portal-hk5c.onrender.com
 - OAuth Endpoint: /api/oauth/google
 - Callback URL: /api/oauth/google/callback
 - Client ID: 694673409935-td8q4m1qlvnf6ddfbnn3o9sljpirhpeh.apps.googleusercontent.com
 
 **Test Command:**
 ```bash
-curl -I "http://localhost:5000/api/oauth/google?role=applicant"
+curl -I "https://finautojobs-a-job-portal-hk5c.onrender.com/api/oauth/google?role=applicant"
 ```
 
 This should return a 302 redirect to Google with the correct redirect_uri parameter.
