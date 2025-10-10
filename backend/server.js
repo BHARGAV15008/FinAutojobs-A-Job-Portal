@@ -374,7 +374,7 @@ server.listen(PORT, '0.0.0.0', () => {
         });
     });
     
-    console.log(`🚀 FinAutoJobs API Server - MongoDB Fixed - running on port ${PORT}`);
+    console.log(`🚀 FinAutoJobs API Server - Email Fixed - running on port ${PORT}`);
     console.log(`🌐 Network Access:`);
     console.log(`   📱 Local: http://localhost:${PORT}`);
     console.log(`   🌍 Network: http://${localIP}:${PORT}`);
