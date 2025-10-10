@@ -165,6 +165,17 @@ const RegisterPage = () => {
   const { toast } = useToast()
   const [, setLocation] = useLocation()
 
+  // Debounce email availability check
+  useEffect(() => {
+    if (formData.email && validateEmail(formData.email)) {
+      const timeoutId = setTimeout(() => {
+        checkEmailAvailability(formData.email)
+      }, 1000) // 1 second delay
+
+      return () => clearTimeout(timeoutId)
+    }
+  }, [formData.email, activeTab])
+
   const skillOptions = [
     'JavaScript', 'Python', 'Java', 'React', 'Node.js', 'Angular', 'Vue.js',
     'PHP', 'C#', 'C++', 'SQL', 'MongoDB', 'AWS', 'Docker', 'DevOps',
@@ -196,6 +207,27 @@ const RegisterPage = () => {
     // Indian phone number validation: +91 followed by 10 digits or just 10 digits
     const phoneRegex = /^(\+91[\-\s]?)?[0]?(91)?[6789]\d{9}$/
     return phoneRegex.test(phone.replace(/[\s\-]/g, ''))
+  }
+
+  // Debounced email availability check
+  const checkEmailAvailability = async (email) => {
+    if (!validateEmail(email)) return
+    
+    try {
+      const role = activeTab === 0 ? 'applicant' : 'recruiter'
+      const response = await authAPI.checkAvailability('email', email, role)
+      
+      if (!response.data.available) {
+        setEmailError(true)
+        setEmailErrorMessage('This email is already registered. Try logging in instead.')
+      } else {
+        setEmailError(false)
+        setEmailErrorMessage('')
+      }
+    } catch (error) {
+      console.error('Email availability check failed:', error)
+      // Don't show error for availability check failures
+    }
   }
 
   const handleChange = (e) => {
@@ -362,12 +394,30 @@ const RegisterPage = () => {
           setPhoneError(true)
           setPhoneErrorMessage(result.error)
         } else {
-          // General error
-          toast({
-            title: "Registration Failed",
-            description: result.error || "Failed to create account",
-            variant: "destructive"
-          })
+          // Check if it's a duplicate account error
+          if (result.error && result.error.includes('already exists')) {
+            toast({
+              title: "Account Already Exists",
+              description: `${result.error}. Please try logging in instead.`,
+              variant: "destructive",
+              action: (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLocation('/login')}
+                >
+                  Go to Login
+                </Button>
+              )
+            })
+          } else {
+            // General error
+            toast({
+              title: "Registration Failed",
+              description: result.error || "Failed to create account",
+              variant: "destructive"
+            })
+          }
         }
       } else {
         // Registration successful
@@ -1348,6 +1398,23 @@ const RegisterPage = () => {
                 >
                   {loading ? 'Creating Account...' : 'Create Account'}
                 </Button>
+
+                {/* Already have account message */}
+                <Box sx={{ mt: 2, textAlign: 'center' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Already have an account?{' '}
+                    <Link 
+                      to="/login" 
+                      style={{ 
+                        color: theme.palette.primary.main,
+                        textDecoration: 'none',
+                        fontWeight: 500
+                      }}
+                    >
+                      Sign in here
+                    </Link>
+                  </Typography>
+                </Box>
 
                 <Divider sx={{ my: 3 }}>
                   <Typography variant="body2" color="text.secondary">
