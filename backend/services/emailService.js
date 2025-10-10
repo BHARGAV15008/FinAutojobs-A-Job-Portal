@@ -12,12 +12,12 @@ dotenv.config({ path: './config.env' });
 
 class EmailService {
   constructor() {
-    // Determine email service to use - hardcoded to use Resend
-    this.emailService = 'resend';
+    // Determine email service to use
+    this.emailService = process.env.EMAIL_SERVICE || 'smtp';
     
     if (this.emailService === 'resend') {
-      // Initialize Resend with hardcoded API key
-      this.resend = new Resend('re_2fxYbcm8_GDPHGcTP1cNXQFvJ5DBHx5iC');
+      // Initialize Resend
+      this.resend = new Resend(process.env.RESEND_API_KEY);
       console.log('✅ Resend email service initialized');
     } else {
       // Initialize SMTP (Gmail)
@@ -43,8 +43,8 @@ class EmailService {
       console.log('✅ SMTP email service initialized');
     }
 
-    this.fromEmail = 'noreply@finautojobs.com';
-    this.fromName = 'FinAutoJobs Team';
+    this.fromEmail = process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER || 'noreply@finautojobs.com';
+    this.fromName = process.env.EMAIL_FROM_NAME || 'FinAutoJobs Team';
     this.baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     
     // Initialize email templates
@@ -502,11 +502,12 @@ class EmailService {
 
       const html = this.renderTemplate('applicationConfirmation', templateData);
 
-      await this.sendEmail(
-        applicantEmail,
-        `Application Received - ${jobTitle} at ${companyName}`,
-        html
-      );
+      await this.transporter.sendMail({
+        from: `"${this.fromName}" <${this.fromEmail}>`,
+        to: applicantEmail,
+        subject: `Application Received - ${jobTitle} at ${companyName}`,
+        html: html
+      });
 
       console.log(`✅ Application confirmation email sent to ${applicantEmail}`);
       return { success: true };
@@ -544,11 +545,12 @@ class EmailService {
 
       const html = this.renderTemplate('statusUpdate', templateData);
 
-      await this.sendEmail(
-        applicantEmail,
-        `Application Update - ${jobTitle} at ${companyName}`,
-        html
-      );
+      await this.transporter.sendMail({
+        from: `"${this.fromName}" <${this.fromEmail}>`,
+        to: applicantEmail,
+        subject: `Application Update - ${jobTitle} at ${companyName}`,
+        html: html
+      });
 
       console.log(`✅ Status update email sent to ${applicantEmail}`);
       return { success: true };
@@ -591,12 +593,13 @@ class EmailService {
 
       const html = this.renderTemplate('newApplicationNotification', templateData);
 
-      await this.sendEmail(
-        recruiterEmail,
-        `New Application Received - ${jobTitle}`,
-        html,
-        { priority: 'high' }
-      );
+      await this.transporter.sendMail({
+        from: `"${this.fromName}" <${this.fromEmail}>`,
+        to: recruiterEmail,
+        subject: `New Application Received - ${jobTitle}`,
+        html: html,
+        priority: 'high'
+      });
 
       console.log(`✅ New application notification sent to ${recruiterEmail}`);
       return { success: true };
@@ -644,12 +647,13 @@ class EmailService {
 
       const html = this.renderTemplate('interviewScheduled', templateData);
 
-      await this.sendEmail(
-        applicantEmail,
-        `Interview Scheduled - ${jobTitle} at ${companyName}`,
-        html,
-        { priority: 'high' }
-      );
+      await this.transporter.sendMail({
+        from: `"${this.fromName}" <${this.fromEmail}>`,
+        to: applicantEmail,
+        subject: `Interview Scheduled - ${jobTitle} at ${companyName}`,
+        html: html,
+        priority: 'high'
+      });
 
       console.log(`✅ Interview scheduled email sent to ${applicantEmail}`);
       return { success: true };
@@ -702,12 +706,13 @@ class EmailService {
 
       const html = this.renderTemplate('offerExtended', templateData);
 
-      await this.sendEmail(
-        applicantEmail,
-        `🎉 Job Offer - ${jobTitle} at ${companyName}`,
-        html,
-        { priority: 'high' }
-      );
+      await this.transporter.sendMail({
+        from: `"${this.fromName}" <${this.fromEmail}>`,
+        to: applicantEmail,
+        subject: `🎉 Job Offer - ${jobTitle} at ${companyName}`,
+        html: html,
+        priority: 'high'
+      });
 
       console.log(`✅ Job offer email sent to ${applicantEmail}`);
       return { success: true };
@@ -729,11 +734,12 @@ class EmailService {
 
         const html = this.renderTemplate(templateName, personalizedData);
 
-        return this.sendEmail(
-          recipient.email,
-          subject,
-          html
-        );
+        return this.transporter.sendMail({
+          from: `"${this.fromName}" <${this.fromEmail}>`,
+          to: recipient.email,
+          subject: subject,
+          html: html
+        });
       });
 
       const results = await Promise.allSettled(emailPromises);
@@ -758,11 +764,12 @@ class EmailService {
       const subject = `Welcome to FinAutoJobs - Your ${role} Account is Ready!`;
       const html = this.getWelcomeEmailTemplate(userName, role);
 
-      await this.sendEmail(
-        userEmail,
-        subject,
-        html
-      );
+      await this.transporter.sendMail({
+        from: `"${this.fromName}" <${this.fromEmail}>`,
+        to: userEmail,
+        subject: subject,
+        html: html
+      });
 
       console.log(`✅ Welcome email sent to ${userEmail}`);
       return true;
@@ -783,12 +790,13 @@ class EmailService {
       const subject = `Your FinAutoJobs Account Has Been Created - Login Details Inside`;
       const html = this.getAccountCreatedEmailTemplate(fullName, userEmail, password, role, contactNumber);
 
-      await this.sendEmail(
-        userEmail,
-        subject,
-        html,
-        { priority: 'high' }
-      );
+      await this.transporter.sendMail({
+        from: `"${this.fromName}" <${this.fromEmail}>`,
+        to: userEmail,
+        subject: subject,
+        html: html,
+        priority: 'high'
+      });
 
       console.log(`✅ Account creation email with credentials sent to ${userEmail}`);
       return true;
@@ -807,11 +815,12 @@ class EmailService {
       const subject = `New Application Received for ${jobTitle} at ${companyName}`;
       const html = this.getApplicationReceivedTemplate(recruiterName, applicantName, jobTitle, companyName);
 
-      await this.sendEmail(
-        recruiterEmail,
-        subject,
-        html
-      );
+      await this.transporter.sendMail({
+        from: `"${this.fromName}" <${this.fromEmail}>`,
+        to: recruiterEmail,
+        subject: subject,
+        html: html
+      });
 
       console.log(`✅ Application notification sent to ${recruiterEmail}`);
       return true;
@@ -829,11 +838,12 @@ class EmailService {
       const subject = `Your Application Status Has Been Updated - ${jobTitle}`;
       const html = this.getApplicationStatusTemplate(applicantName, jobTitle, companyName, newStatus);
 
-      await this.sendEmail(
-        applicantEmail,
-        subject,
-        html
-      );
+      await this.transporter.sendMail({
+        from: `"${this.fromName}" <${this.fromEmail}>`,
+        to: applicantEmail,
+        subject: subject,
+        html: html
+      });
 
       console.log(`✅ Application status update sent to ${applicantEmail}`);
       return true;
@@ -851,11 +861,12 @@ class EmailService {
       const subject = `New Company Registration Pending Verification - ${companyName}`;
       const html = this.getCompanyVerificationTemplate(companyName, recruiterName);
 
-      await this.sendEmail(
-        adminEmail,
-        subject,
-        html
-      );
+      await this.transporter.sendMail({
+        from: `"${this.fromName}" <${this.fromEmail}>`,
+        to: adminEmail,
+        subject: subject,
+        html: html
+      });
 
       console.log(`✅ Company verification request sent to ${adminEmail}`);
       return true;
@@ -873,11 +884,12 @@ class EmailService {
       const subject = `Great News! Your Company ${companyName} Has Been Approved`;
       const html = this.getCompanyApprovedTemplate(recruiterName, companyName);
 
-      await this.sendEmail(
-        recruiterEmail,
-        subject,
-        html
-      );
+      await this.transporter.sendMail({
+        from: `"${this.fromName}" <${this.fromEmail}>`,
+        to: recruiterEmail,
+        subject: subject,
+        html: html
+      });
 
       console.log(`✅ Company approval notification sent to ${recruiterEmail}`);
       return true;
@@ -896,11 +908,12 @@ class EmailService {
       const subject = 'Reset Your Password - FinAutoJobs';
       const html = this.getPasswordResetTemplate(userName, resetLink);
 
-      await this.sendEmail(
-        userEmail,
-        subject,
-        html
-      );
+      await this.transporter.sendMail({
+        from: `"${this.fromName}" <${this.fromEmail}>`,
+        to: userEmail,
+        subject: subject,
+        html: html
+      });
 
       console.log(`✅ Password reset email sent to ${userEmail}`);
       return true;

@@ -909,13 +909,13 @@ const RegisterPage = () => {
                       <TextField
                         fullWidth
                         name="email"
-                        label="Email Address"
+                        label="Email Address *"
                         type="email"
                         value={formData.email}
                         onChange={handleChange}
                         required
                         error={emailError}
-                        helperText={emailErrorMessage || (emailError ? "Please enter a valid email address" : "")}
+                        helperText={emailErrorMessage || (emailError ? "Please enter a valid email address" : "Email verification is required for account activation")}
                         InputProps={{
                           startAdornment: (
                             <InputAdornment position="start">
@@ -975,14 +975,14 @@ const RegisterPage = () => {
                     <TextField
                       fullWidth
                       name="phone"
-                      label="Phone Number"
+                      label="Phone Number *"
                       type="tel"
                       value={formData.phone}
                       onChange={handleChange}
                       required
                       placeholder="+91 9876543210"
                       error={phoneError}
-                      helperText={phoneErrorMessage || (phoneError ? "Please enter a valid Indian phone number (e.g., +91 9876543210)" : "Enter Indian mobile number (e.g., +91 9876543210)")}
+                      helperText={phoneErrorMessage || (phoneError ? "Please enter a valid Indian phone number (e.g., +91 9876543210)" : "Phone number is required • Verification is optional")}
                       InputProps={{
                         startAdornment: (
                           <InputAdornment position="start">
@@ -996,20 +996,42 @@ const RegisterPage = () => {
                         ) : null,
                       }}
                     />
-                    <Button
-                      variant="outlined"
-                      size="medium"
-                      onClick={handleSendPhoneOTP}
-                      disabled={!formData.phone || phoneVerified || phoneOTPSent || phoneError}
-                      startIcon={<Phone />}
-                      sx={{ 
-                        minWidth: 140,
-                        height: 56, // Match TextField height
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      {phoneVerified ? 'Verified' : phoneOTPSent ? 'OTP Sent' : 'Verify (Optional)'}
-                    </Button>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                      <Button
+                        variant="outlined"
+                        size="medium"
+                        onClick={handleSendPhoneOTP}
+                        disabled={!formData.phone || phoneVerified || phoneOTPSent || phoneError}
+                        startIcon={<Phone />}
+                        sx={{ 
+                          minWidth: 140,
+                          height: 56, // Match TextField height
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        {phoneVerified ? 'Verified' : phoneOTPSent ? 'OTP Sent' : 'Verify (Optional)'}
+                      </Button>
+                      {!phoneVerified && !phoneOTPSent && (
+                        <Button
+                          variant="text"
+                          size="small"
+                          onClick={() => {
+                            toast({
+                              title: "Phone Verification Skipped",
+                              description: "You can verify your phone number later in your profile settings",
+                              variant: "default"
+                            })
+                          }}
+                          sx={{ 
+                            fontSize: '0.75rem',
+                            minHeight: 'auto',
+                            py: 0.5
+                          }}
+                        >
+                          Skip for now
+                        </Button>
+                      )}
+                    </Box>
                   </Box>
                   {phoneVerified ? (
                     <Box sx={{ mt: 1 }}>
@@ -1022,7 +1044,7 @@ const RegisterPage = () => {
                     </Box>
                   ) : (
                     <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                      Phone verification is optional but recommended for better security
+                      📱 Phone verification is optional but recommended for enhanced security and account recovery
                     </Typography>
                   )}
                 </Box>
