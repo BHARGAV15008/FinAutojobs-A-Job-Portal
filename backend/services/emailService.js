@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
@@ -11,25 +12,36 @@ dotenv.config({ path: './config.env' });
 
 class EmailService {
   constructor() {
-    this.transporter = nodemailer.createTransport({
-      service: 'gmail',
-      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.EMAIL_PORT) || 587,
-      secure: process.env.EMAIL_SECURE === 'true' || false, // Use STARTTLS for port 587
-      requireTLS: process.env.EMAIL_REQUIRE_TLS === 'true' || true,
-      auth: {
-        user: process.env.EMAIL_USER || process.env.EMAIL_FROM_ADDRESS,
-        pass: process.env.EMAIL_PASS
-      },
-      connectionTimeout: parseInt(process.env.EMAIL_CONNECTION_TIMEOUT) || 120000,
-      socketTimeout: parseInt(process.env.EMAIL_SOCKET_TIMEOUT) || 120000,
-      greetingTimeout: parseInt(process.env.EMAIL_GREETINGS_TIMEOUT) || 30000,
-      tls: {
-        rejectUnauthorized: false,
-        ciphers: 'SSLv3'
-      },
-      debug: process.env.NODE_ENV !== 'production'
-    });
+    // Determine email service to use
+    this.emailService = process.env.EMAIL_SERVICE || 'smtp';
+    
+    if (this.emailService === 'resend') {
+      // Initialize Resend
+      this.resend = new Resend(process.env.RESEND_API_KEY);
+      console.log('✅ Resend email service initialized');
+    } else {
+      // Initialize SMTP (Gmail)
+      this.transporter = nodemailer.createTransport({
+        service: 'gmail',
+        host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+        port: parseInt(process.env.EMAIL_PORT) || 587,
+        secure: process.env.EMAIL_SECURE === 'true' || false,
+        requireTLS: process.env.EMAIL_REQUIRE_TLS === 'true' || true,
+        auth: {
+          user: process.env.EMAIL_USER || process.env.EMAIL_FROM_ADDRESS,
+          pass: process.env.EMAIL_PASS
+        },
+        connectionTimeout: parseInt(process.env.EMAIL_CONNECTION_TIMEOUT) || 120000,
+        socketTimeout: parseInt(process.env.EMAIL_SOCKET_TIMEOUT) || 120000,
+        greetingTimeout: parseInt(process.env.EMAIL_GREETINGS_TIMEOUT) || 30000,
+        tls: {
+          rejectUnauthorized: false,
+          ciphers: 'SSLv3'
+        },
+        debug: process.env.NODE_ENV !== 'production'
+      });
+      console.log('✅ SMTP email service initialized');
+    }
 
     this.fromEmail = process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER || 'noreply@finautojobs.com';
     this.fromName = process.env.EMAIL_FROM_NAME || 'FinAutoJobs Team';
@@ -37,6 +49,38 @@ class EmailService {
     
     // Initialize email templates
     this.templates = this.loadEmailTemplates();
+  }
+
+  // Unified send email method
+  async sendEmail(to, subject, html, options = {}) {
+    try {
+      if (this.emailService === 'resend') {
+        // Use Resend API
+        const result = await this.resend.emails.send({
+          from: options.from || `${this.fromName} <${this.fromEmail}>`,
+          to: Array.isArray(to) ? to : [to],
+          subject: subject,
+          html: html,
+          ...options
+        });
+        console.log(`✅ Email sent via Resend to ${to}`);
+        return { success: true, messageId: result.data?.id };
+      } else {
+        // Use SMTP (Gmail)
+        const result = await this.transporter.sendMail({
+          from: options.from || `"${this.fromName}" <${this.fromEmail}>`,
+          to: to,
+          subject: subject,
+          html: html,
+          ...options
+        });
+        console.log(`✅ Email sent via SMTP to ${to}`);
+        return { success: true, messageId: result.messageId };
+      }
+    } catch (error) {
+      console.error(`❌ Failed to send email to ${to}:`, error);
+      throw error;
+    }
   }
 
 

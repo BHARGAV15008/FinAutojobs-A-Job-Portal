@@ -71,7 +71,7 @@ HEALTH_CHECK_PATH=/health
 # *******************************************************************************
 # EMAIL CONFIGURATION (PRODUCTION SMTP)
 # *******************************************************************************
-# Primary: Gmail SMTP (Optimized for Render.com)
+# Option 1: Gmail SMTP (May timeout on Render free tier)
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 EMAIL_SECURE=false
@@ -81,9 +81,12 @@ EMAIL_CONNECTION_TIMEOUT=120000
 EMAIL_SOCKET_TIMEOUT=120000
 EMAIL_GREETINGS_TIMEOUT=30000
 EMAIL_REQUIRE_TLS=true
-EMAIL_FROM=hiddenshadow032025@gmail.com
+
+# Option 2: Resend.com (Recommended for Render) - ACTIVE
+EMAIL_SERVICE=resend
+RESEND_API_KEY=re_XxB7mdQ7_LFqRbZBnKAaL8tdeZH5zdX8h
+EMAIL_FROM_ADDRESS=onboarding@resend.dev
 EMAIL_FROM_NAME=FinAutoJobs - No Reply
-EMAIL_FROM_ADDRESS=hiddenshadow032025@gmail.com
 
 
 

@@ -68,6 +68,7 @@
     "passport-microsoft": "^2.1.0",
     "pg": "^8.16.3",
     "redis": "^5.8.2",
+    "resend": "^6.1.2",
     "socket.io": "^4.8.1",
     "twilio": "^5.10.2",
     "xss": "^1.0.14"

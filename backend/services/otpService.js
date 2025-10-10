@@ -181,14 +181,7 @@ class OTPService {
       const subject = `Your FinAutoJobs Verification Code: ${otp}`;
       const html = this.getOTPEmailTemplate(fullName, otp, purpose, purposeMessages[purpose] || 'verify your account');
 
-      const result = await this.emailService.transporter.sendMail({
-        from: `"${this.emailService.fromName}" <${this.emailService.fromEmail}>`,
-        to: email,
-        subject: subject,
-        html: html,
-        priority: 'high'
-      });
-
+      const result = await this.emailService.sendEmail(email, subject, html, { priority: 'high' });
       console.log(`✅ OTP email sent to ${email} (Message ID: ${result.messageId})`);
       return true;
 
