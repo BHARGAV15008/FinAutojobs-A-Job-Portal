@@ -14,17 +14,21 @@ class EmailService {
     this.transporter = nodemailer.createTransport({
       service: 'gmail',
       host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.EMAIL_PORT) || 465,
-      secure: process.env.EMAIL_SECURE === 'true' || true, // Use SSL for port 465
+      port: parseInt(process.env.EMAIL_PORT) || 587,
+      secure: process.env.EMAIL_SECURE === 'true' || false, // Use STARTTLS for port 587
+      requireTLS: process.env.EMAIL_REQUIRE_TLS === 'true' || true,
       auth: {
         user: process.env.EMAIL_USER || process.env.EMAIL_FROM_ADDRESS,
         pass: process.env.EMAIL_PASS
       },
-      connectionTimeout: parseInt(process.env.EMAIL_CONNECTION_TIMEOUT) || 60000,
-      socketTimeout: parseInt(process.env.EMAIL_SOCKET_TIMEOUT) || 60000,
+      connectionTimeout: parseInt(process.env.EMAIL_CONNECTION_TIMEOUT) || 120000,
+      socketTimeout: parseInt(process.env.EMAIL_SOCKET_TIMEOUT) || 120000,
+      greetingTimeout: parseInt(process.env.EMAIL_GREETINGS_TIMEOUT) || 30000,
       tls: {
-        rejectUnauthorized: false
-      }
+        rejectUnauthorized: false,
+        ciphers: 'SSLv3'
+      },
+      debug: process.env.NODE_ENV !== 'production'
     });
 
     this.fromEmail = process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER || 'noreply@finautojobs.com';

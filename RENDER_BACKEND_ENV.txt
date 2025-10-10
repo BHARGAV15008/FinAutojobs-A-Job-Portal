@@ -71,14 +71,16 @@ HEALTH_CHECK_PATH=/health
 # *******************************************************************************
 # EMAIL CONFIGURATION (PRODUCTION SMTP)
 # *******************************************************************************
-# Primary: Gmail SMTP (Updated for Render.com)
+# Primary: Gmail SMTP (Optimized for Render.com)
 EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=465
-EMAIL_SECURE=true
+EMAIL_PORT=587
+EMAIL_SECURE=false
 EMAIL_USER=hiddenshadow032025@gmail.com
 EMAIL_PASS=rxdn afad anzi obxx
-EMAIL_CONNECTION_TIMEOUT=60000
-EMAIL_SOCKET_TIMEOUT=60000
+EMAIL_CONNECTION_TIMEOUT=120000
+EMAIL_SOCKET_TIMEOUT=120000
+EMAIL_GREETINGS_TIMEOUT=30000
+EMAIL_REQUIRE_TLS=true
 EMAIL_FROM=hiddenshadow032025@gmail.com
 EMAIL_FROM_NAME=FinAutoJobs - No Reply
 EMAIL_FROM_ADDRESS=hiddenshadow032025@gmail.com
