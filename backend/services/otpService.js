@@ -70,32 +70,17 @@ class OTPService {
       this.storeOTP(email, otp, purpose);
 
       // Send OTP email
-      try {
-        const emailResult = await this.sendOTPEmail(email, otp, purpose, userData);
-        
-        if (emailResult && emailResult.success) {
-          console.log(`✅ OTP sent successfully to ${email}`);
-          return {
-            success: true,
-            message: emailResult.mock ? 'OTP generated (email service unavailable)' : 'OTP sent successfully',
-            expiryMinutes: this.otpExpiryMinutes,
-            mock: emailResult.mock || false
-          };
-        } else {
-          throw new Error('Failed to send OTP email');
-        }
-      } catch (emailError) {
-        // If email fails, still allow OTP verification for testing
-        console.log('⚠️ Email delivery failed, but OTP is stored for verification');
-        console.log(`🔑 OTP for ${email}: ${otp} (valid for ${this.otpExpiryMinutes} minutes)`);
-        
+      const emailSent = await this.sendOTPEmail(email, otp, purpose, userData);
+      
+      if (emailSent) {
+        console.log(`✅ OTP sent successfully to ${email}`);
         return {
           success: true,
-          message: 'OTP generated (email delivery failed - check logs)',
-          expiryMinutes: this.otpExpiryMinutes,
-          mock: true,
-          otp: process.env.NODE_ENV !== 'production' ? otp : undefined
+          message: 'OTP sent successfully',
+          expiryMinutes: this.otpExpiryMinutes
         };
+      } else {
+        throw new Error('Failed to send OTP email');
       }
 
     } catch (error) {
