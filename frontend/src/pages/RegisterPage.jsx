@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext.jsx'
 import { useToast } from '../components/ui/use-toast'
 import OTPVerification from '../components/auth/OTPVerification'
 import OAuthButtons from '../components/auth/OAuthButtons'
+import { authAPI } from '../services/api'
 import {
   Container,
   Box,
@@ -607,19 +608,13 @@ const RegisterPage = () => {
 
     try {
       const role = activeTab === 0 ? 'applicant' : 'recruiter'
-      const response = await fetch('/auth/generate-username', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          role: role
-        }),
-      })
+      const response = await authAPI.generateUsername(
+        formData.firstName,
+        formData.lastName,
+        role
+      )
 
-      const result = await response.json()
+      const result = response.data
 
       if (result.success) {
         setFormData({
