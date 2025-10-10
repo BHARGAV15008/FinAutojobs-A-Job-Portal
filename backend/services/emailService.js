@@ -50,7 +50,6 @@ class EmailService {
     this.fromEmail = process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER || 'noreply@finautojobs.com';
     this.fromName = process.env.EMAIL_FROM_NAME || 'FinAutoJobs Team';
     this.baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-{{ ... }}
     
     // Initialize email templates
     this.templates = this.loadEmailTemplates();
