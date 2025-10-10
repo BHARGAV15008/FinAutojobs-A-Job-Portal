@@ -267,43 +267,41 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
       return;
     }
 
-    // Always use direct URL navigation for simplicity
+    // Build the correct path based on dashboard structure
     let fullPath;
     const dashboardPrefix = `/${userRole}-dashboard`;
-    console.log('🔍 SIDEBAR: Dashboard prefix:', dashboardPrefix);
-
-    // Handle different path scenarios
+    
+    // Handle different navigation scenarios
     if (path === `/${userRole}-dashboard`) {
       // Main dashboard path
       fullPath = path;
-      console.log('🔍 SIDEBAR: Using main dashboard path');
+    } else if (tabId === 'dashboard') {
+      // Dashboard tab
+      fullPath = dashboardPrefix;
+    } else if (tabId) {
+      // Tab-based navigation
+      if (tabId === 'jobs' && jobTabId) {
+        // Job management with subtab
+        fullPath = `${dashboardPrefix}/${tabId}/${jobTabId}`;
+      } else {
+        // Regular tab
+        fullPath = `${dashboardPrefix}/${tabId}`;
+      }
     } else if (path.startsWith('/') && !path.includes('dashboard')) {
-      // Tab path like /profile, /users, etc.
+      // Legacy path handling
       fullPath = `${dashboardPrefix}${path}`;
-      console.log('🔍 SIDEBAR: Using tab path:', fullPath);
-      
-      // Add userTab parameter for user management
-      if (userTab && path === '/users') {
-        fullPath += `?tab=${userTab}`;
-        console.log('🔍 SIDEBAR: Added userTab parameter:', fullPath);
-      }
-      
-      // Add jobTab parameter for job management
-      if (jobTabId && path === '/jobs') {
-        fullPath += `?tab=${jobTabId}`;
-        console.log('🔍 SIDEBAR: Added jobTab parameter:', fullPath);
-      }
-    } else if (path.includes(`${userRole}-dashboard`)) {
-      // Path already has dashboard prefix
-      fullPath = path;
-      console.log('🔍 SIDEBAR: Path already has dashboard prefix');
     } else {
-      // Default case
-      fullPath = `${dashboardPrefix}/${path}`;
-      console.log('🔍 SIDEBAR: Using default case:', fullPath);
+      // Fallback
+      fullPath = `${dashboardPrefix}/${path.replace('/', '')}`;
     }
 
     console.log('🔗 SIDEBAR NAVIGATING TO:', fullPath);
+    
+    // Emit custom event for dashboard components to listen to
+    const navigationEvent = new CustomEvent('dashboardTabChange', {
+      detail: { tabId, jobTabId, userTab, path: fullPath }
+    });
+    window.dispatchEvent(navigationEvent);
     
     try {
       setLocation(fullPath);
@@ -312,6 +310,7 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
       console.error('❌ SIDEBAR: Navigation failed:', error);
     }
 
+    // Close sidebar on mobile
     if (window.innerWidth < 1024) {
       setSidebarOpen(false);
     }

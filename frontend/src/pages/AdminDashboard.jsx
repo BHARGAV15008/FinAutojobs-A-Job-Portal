@@ -43,23 +43,51 @@ const AdminDashboardContent = () => {
   console.log('🔍 AdminDashboard - Using user data:', user);
   console.log('🔍 AdminDashboard - currentUser from context:', currentUser);
 
-  // Extract tab from URL params
+  // Extract tab from URL params with improved parsing
   useEffect(() => {
-    console.log('🔍 AdminDashboard - Current location:', location);
-    console.log('🔍 AdminDashboard - URL params:', params);
+    const pathParts = location.split("/");
+    const validTabs = ['dashboard', 'profile', 'users', 'jobs', 'analytics', 'moderation', 'settings', 'system-settings', 'logs', 'database', 'companies', 'reports', 'security'];
+    
+    console.log('🔍 AdminDashboard URL parsing:', { location, pathParts, params });
 
-    // Get tab from URL params or default to dashboard
-    const tab = params.tab || 'dashboard';
-    console.log('🔍 AdminDashboard - Tab from params:', tab);
-
-    if (['profile', 'users', 'jobs', 'analytics', 'moderation', 'settings', 'system-settings', 'logs', 'database', 'companies', 'reports', 'security'].includes(tab)) {
-      setActiveTab(tab);
-      console.log('✅ AdminDashboard - Set active tab to:', tab);
-    } else {
+    if (location === "/admin-dashboard" || location === "/dashboard") {
       setActiveTab('dashboard');
-      console.log('✅ AdminDashboard - Set active tab to: dashboard (default)');
+      console.log('✅ AdminDashboard: Set to dashboard tab');
+    } else if (pathParts.length >= 3) {
+      const tab = pathParts[2]; // /admin-dashboard/[tab]
+      if (validTabs.includes(tab)) {
+        setActiveTab(tab);
+        console.log('✅ AdminDashboard: Set active tab to:', tab);
+      } else {
+        setActiveTab('dashboard');
+        console.log('✅ AdminDashboard: Invalid tab, defaulting to dashboard');
+      }
+    } else {
+      // Fallback to params if available
+      const tab = params?.tab || 'dashboard';
+      if (validTabs.includes(tab)) {
+        setActiveTab(tab);
+      } else {
+        setActiveTab('dashboard');
+      }
     }
   }, [location, params]);
+  
+  // Listen for navigation events from sidebar
+  useEffect(() => {
+    const handleNavigationEvent = (event) => {
+      const { tabId } = event.detail;
+      const validTabs = ['dashboard', 'profile', 'users', 'jobs', 'analytics', 'moderation', 'settings', 'system-settings', 'logs', 'database', 'companies', 'reports', 'security'];
+      
+      if (tabId && validTabs.includes(tabId)) {
+        setActiveTab(tabId);
+        console.log('✅ AdminDashboard: Tab changed via event to:', tabId);
+      }
+    };
+    
+    window.addEventListener('dashboardTabChange', handleNavigationEvent);
+    return () => window.removeEventListener('dashboardTabChange', handleNavigationEvent);
+  }, []);
 
   // Re-render when currentUser changes (for profile updates)
   useEffect(() => {

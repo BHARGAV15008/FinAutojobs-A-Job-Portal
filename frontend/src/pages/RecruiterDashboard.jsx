@@ -255,30 +255,55 @@ const RecruiterDashboardContent = () => {
     const pathParts = location.split("/");
     const validTabs = dashboardTabs.map((t) => t.id);
     
-    if (location === "/recruiter-dashboard") {
+    console.log('🔍 RecruiterDashboard URL parsing:', { location, pathParts });
+    
+    if (location === "/recruiter-dashboard" || location === "/dashboard") {
       setActiveTab("dashboard");
-    } else if (pathParts.length >= 3) {
-      const mainTab = pathParts[2]; // recruiter-dashboard/[mainTab]/[subTab]
+      console.log('✅ RecruiterDashboard: Set to dashboard tab');
+    } else if (pathParts.length >= 4) {
+      // Handle nested paths: /recruiter-dashboard/jobs/active
+      const mainTab = pathParts[2];
       const subTab = pathParts[3];
       
-      // Handle nested job tabs (e.g., /recruiter-dashboard/jobs/active)
       if (mainTab === "jobs" && subTab) {
         const validJobTabs = ["post", "active", "draft", "closed"];
         if (validJobTabs.includes(subTab)) {
           setActiveTab("jobs");
           setActiveJobTab(subTab);
+          console.log('✅ RecruiterDashboard: Set job tab:', mainTab, subTab);
         }
       } else if (validTabs.includes(mainTab)) {
         setActiveTab(mainTab);
+        console.log('✅ RecruiterDashboard: Set main tab:', mainTab);
       }
-    } else {
-      // Handle single-level tabs (e.g., /recruiter-dashboard/profile)
-      const tab = pathParts[pathParts.length - 1];
+    } else if (pathParts.length >= 3) {
+      // Handle single-level tabs: /recruiter-dashboard/profile
+      const tab = pathParts[2];
       if (validTabs.includes(tab)) {
         setActiveTab(tab);
+        console.log('✅ RecruiterDashboard: Set single tab:', tab);
       }
     }
   }, [location, dashboardTabs]);
+  
+  // Enhanced navigation event listener
+  useEffect(() => {
+    const handleNavigationEvent = (event) => {
+      const { tabId, jobTabId } = event.detail;
+      console.log('🔍 RecruiterDashboard: Navigation event received:', { tabId, jobTabId });
+      
+      if (tabId && dashboardTabs.some(t => t.id === tabId)) {
+        setActiveTab(tabId);
+        if (jobTabId) {
+          setActiveJobTab(jobTabId);
+        }
+        console.log('✅ RecruiterDashboard: Tab changed via event:', { tabId, jobTabId });
+      }
+    };
+    
+    window.addEventListener('dashboardTabChange', handleNavigationEvent);
+    return () => window.removeEventListener('dashboardTabChange', handleNavigationEvent);
+  }, [dashboardTabs]);
 
   // Listen for sidebar tab change events
   useEffect(() => {

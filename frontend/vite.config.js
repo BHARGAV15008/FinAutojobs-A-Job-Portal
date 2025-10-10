@@ -26,16 +26,24 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    host: true,
+    host: '0.0.0.0', // Allow external connections
+    strictPort: false, // Allow port fallback if 3000 is busy
     proxy: {
       '/api': {
-        target: 'https://finautojobs-a-job-portal-hk5c.onrender.com',
+        target: process.env.VITE_API_URL || 'http://localhost:5000',
         changeOrigin: true,
         secure: false,
+        configure: (proxy, options) => {
+          // Log proxy requests for debugging
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            console.log('🔄 Proxying request:', req.method, req.url, '→', options.target + req.url);
+          });
+        }
       },
       '/socket.io': {
-        target: 'https://finautojobs-a-job-portal-hk5c.onrender.com',
+        target: process.env.VITE_API_URL || 'http://localhost:5000',
         ws: true,
+        changeOrigin: true,
       },
     },
   },

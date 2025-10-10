@@ -99,17 +99,43 @@ const ApplicantDashboardContent = () => {
     { id: "settings", label: "Settings", icon: "⚙️" },
   ];
 
-  // Extract tab from URL
+  // Extract tab from URL with improved parsing
   useEffect(() => {
     const pathParts = location.split("/");
-    const tab = pathParts[pathParts.length - 1];
     const validTabs = dashboardTabs.map((t) => t.id);
-    if (validTabs.includes(tab)) {
-      setActiveTab(tab);
-    } else if (location === "/applicant-dashboard") {
+    
+    console.log('🔍 ApplicantDashboard URL parsing:', { location, pathParts });
+    
+    if (location === "/applicant-dashboard" || location === "/dashboard") {
       setActiveTab("dashboard");
+    } else if (pathParts.length >= 3) {
+      const tab = pathParts[2]; // /applicant-dashboard/[tab]
+      if (validTabs.includes(tab)) {
+        setActiveTab(tab);
+        console.log('✅ ApplicantDashboard: Set active tab to:', tab);
+      }
+    } else {
+      // Fallback: check last part of URL
+      const tab = pathParts[pathParts.length - 1];
+      if (validTabs.includes(tab)) {
+        setActiveTab(tab);
+      }
     }
   }, [location, dashboardTabs]);
+  
+  // Listen for navigation events from sidebar
+  useEffect(() => {
+    const handleNavigationEvent = (event) => {
+      const { tabId } = event.detail;
+      if (tabId && dashboardTabs.some(t => t.id === tabId)) {
+        setActiveTab(tabId);
+        console.log('✅ ApplicantDashboard: Tab changed via event to:', tabId);
+      }
+    };
+    
+    window.addEventListener('dashboardTabChange', handleNavigationEvent);
+    return () => window.removeEventListener('dashboardTabChange', handleNavigationEvent);
+  }, [dashboardTabs]);
 
   // Fetch recommended jobs for applicants
   useEffect(() => {
