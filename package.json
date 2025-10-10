@@ -15,11 +15,7 @@
     "start:production": "cd backend && NODE_ENV=production npm start",
     "test-network": "./test-network-access.sh",
     "network-info": "echo \"🌐 Network Access URLs:\" && LOCAL_IP=$(ip route get 8.8.8.8 2>/dev/null | awk '{print $7; exit}' || ifconfig 2>/dev/null | grep -Eo 'inet (addr:)?([0-9]*\\.){3}[0-9]*' | grep -Eo '([0-9]*\\.){3}[0-9]*' | grep -v '127.0.0.1' | head -1 || echo 'localhost') && echo \"Frontend: http://$LOCAL_IP:3000\" && echo \"Backend: http://$LOCAL_IP:5000\"",
-    "deploy-setup": "./deploy-setup.sh",
-    "deploy-render": "./quick-deploy-render.sh",
-    "generate-secrets": "node generate-secrets.js",
-    "check-deployment": "echo \"🔍 Checking deployment readiness...\" && node -e \"console.log('Node version:', process.version); console.log('Environment:', process.env.NODE_ENV || 'development');\"",
-    "render-info": "echo \"🚀 Render.com Deployment Info:\" && echo \"Backend: https://finautojobs-backend.onrender.com\" && echo \"Frontend: https://finautojobs-frontend.onrender.com\" && echo \"Health: https://finautojobs-backend.onrender.com/api/health\""
+    "generate-secrets": "node generate-secrets.js"
   },
   "engines": {
     "node": ">=20.0.0",

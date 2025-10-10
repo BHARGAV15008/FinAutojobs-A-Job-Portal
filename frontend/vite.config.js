@@ -62,7 +62,6 @@ export default defineConfig({
       '127.0.0.1',
       '.onrender.com',
       'finautojobs-frontend.onrender.com',
-      '.netlify.app',
       '.vercel.app',
       '.herokuapp.com'
     ]

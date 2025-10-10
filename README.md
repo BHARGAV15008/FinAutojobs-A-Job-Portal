@@ -167,7 +167,7 @@ The frontend and backend are properly integrated with:
 ### Frontend Deployment
 1. Update `VITE_API_URL` to production backend URL
 2. Run `npm run build`
-3. Deploy `dist` folder to static hosting (Netlify, Vercel, etc.)
+3. Deploy `dist` folder to static hosting (Vercel, etc.)
 
 ## 🔍 Troubleshooting
 

@@ -16,7 +16,6 @@ const getEnvironment = () => {
         
         // Production domains
         if (hostname.includes('.onrender.com') || 
-            hostname.includes('.netlify.app') || 
             hostname.includes('.vercel.app') || 
             hostname.includes('.herokuapp.com') ||
             hostname.includes('finautojobs.com')) {
@@ -78,13 +77,6 @@ const buildApiUrl = () => {
         return import.meta.env.VITE_API_URL;
     }
     
-    // 3. Netlify Functions detection
-    if (hostInfo.hostname.includes('.netlify.app')) {
-        const netlifyUrl = `https://${hostInfo.hostname}/.netlify/functions/api`;
-        console.log('✅ Using Netlify Functions API:', netlifyUrl);
-        return netlifyUrl;
-    }
-    
     // 3. Production deployment URLs
     if (environment === 'production') {
         // Common production patterns
@@ -92,9 +84,6 @@ const buildApiUrl = () => {
             // Render.com
             'finautojobs-frontend.onrender.com': 'https://finautojobs-backend.onrender.com/api',
             'finautojobs.onrender.com': 'https://finautojobs-api.onrender.com/api',
-            
-            // Netlify + Render
-            'finautojobs.netlify.app': 'https://finautojobs-api.onrender.com/api',
             
             // Vercel + Railway
             'finautojobs.vercel.app': 'https://finautojobs-api.railway.app/api',

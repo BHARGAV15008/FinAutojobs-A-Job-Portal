@@ -15,7 +15,6 @@ const getAllowedOrigins = () => {
         // Production domains
         'https://finautojobs.com',
         'https://www.finautojobs.com',
-        'https://finautojobs.netlify.app',
         'https://finautojobs.vercel.app',
         
         // Render.com deployments
@@ -25,7 +24,6 @@ const getAllowedOrigins = () => {
         'https://finautojobs-a-job-portal-hk5c.onrender.com',
         
         // Staging environments
-        'https://staging-finautojobs.netlify.app',
         'https://dev-finautojobs.vercel.app',
         
         // Development origins
@@ -55,7 +53,6 @@ const isDeploymentOrigin = (origin) => {
     // Production deployment patterns
     const productionPatterns = [
         /^https:\/\/.*\.onrender\.com$/,
-        /^https:\/\/.*\.netlify\.app$/,
         /^https:\/\/.*\.vercel\.app$/,
         /^https:\/\/.*\.herokuapp\.com$/,
         /^https:\/\/.*\.railway\.app$/,
