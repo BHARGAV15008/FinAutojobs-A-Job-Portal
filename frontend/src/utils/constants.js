@@ -272,8 +272,8 @@ export const FEATURE_FLAGS = {
 };
 
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_URL || 'https://finautojobs-a-job-portal-w714.onrender.com/api',
-  TIMEOUT: 30000, // Increased timeout for Render cold starts
+  BASE_URL: import.meta.env.VITE_API_URL || 'https://finautojobs-backend.onrender.com/api',
+  TIMEOUT: 60000, // Increased timeout for slow backend responses
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 1000,
 };

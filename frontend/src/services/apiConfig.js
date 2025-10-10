@@ -145,7 +145,7 @@ export const apiConfig = {
     socketURL: SOCKET_URL_INTERNAL,
     environment: getEnvironment(),
     hostInfo: getHostInfo(),
-    timeout: 30000,
+    timeout: 60000,
     retries: 3
 };
 

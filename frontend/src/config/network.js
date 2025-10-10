@@ -1,21 +1,21 @@
 import API_BASE_URL, { SOCKET_URL } from '../services/apiConfig';
 
-export const API_CONFIG = {
+export const networkConfig = {
   development: {
     baseURL: API_BASE_URL,
     socketURL: SOCKET_URL,
-    timeout: 30000
+    timeout: 60000
   },
   production: {
     baseURL: API_BASE_URL,
     socketURL: SOCKET_URL,
-    timeout: 30000
+    timeout: 60000
   }
 };
 
 export const getCurrentConfig = () => {
   const env = import.meta.env.MODE || 'development';
-  return API_CONFIG[env];
+  return networkConfig[env];
 };
 
 export const buildAPIEndpoint = (path) => {
