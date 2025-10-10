@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:production": "node build-production.js",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint . --ext js,jsx --fix",
     "preview": "vite preview --host 0.0.0.0 --port ${PORT:-4173}",
@@ -17,7 +18,7 @@
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css,md}\"",
     "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,json,css,md}\"",
     "analyze": "npm run build && npx vite-bundle-analyzer dist/stats.html",
-    "start": "npm run dev",
+    "start": "npx serve dist -s -l ${PORT:-3000}",
     "clean": "rm -rf dist node_modules/.vite",
     "build:check": "node build-check.js",
     "prebuild": "npm run build:check"
