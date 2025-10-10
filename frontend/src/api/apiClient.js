@@ -4,7 +4,7 @@ import API_BASE_URL from '../services/apiConfig';
 // Create axios instance with base configuration
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 30000,
+  timeout: 60000, // Increased to 60 seconds for slow backend responses
   // Don't set default Content-Type - let browser set it based on data type
 });
 
@@ -34,6 +34,17 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error) => {
+    // Handle rate limiting (429 Too Many Requests)
+    if (error.response?.status === 429) {
+      const retryAfter = error.response?.headers['retry-after'];
+      const message = error.response?.data?.message || 'Too many requests';
+      console.log('⚠️ Rate limited:', message);
+      if (retryAfter) {
+        console.log(`💡 Retry after ${retryAfter} seconds`);
+      }
+      return Promise.reject(error);
+    }
+    
     // Handle common errors
     if (error.response?.status === 401) {
       const errorCode = error.response?.data?.code;
@@ -85,9 +96,14 @@ apiClient.interceptors.response.use(
       }
     }
     
-    // Handle network errors
+    // Handle network errors and timeouts
     if (!error.response) {
-      console.error('Network error:', error.message);
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        console.log('⚠️ Request timeout - backend may be slow or unavailable');
+        console.log('💡 Consider using mock mode for testing');
+      } else {
+        console.error('Network error:', error.message);
+      }
     }
     
     return Promise.reject(error);

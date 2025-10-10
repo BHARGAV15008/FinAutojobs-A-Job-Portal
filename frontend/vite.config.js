@@ -6,7 +6,7 @@ import path from 'path'
 export default defineConfig(({ mode }) => {
   // Set default environment variables for production builds
   const defaultEnvVars = {
-    VITE_API_URL: 'https://finautojobs-a-job-portal-hk5c.onrender.com/api',
+    VITE_API_URL: 'https://finautojobs-backend.onrender.com/api',
     VITE_APP_NAME: 'FinAutoJobs',
     VITE_APP_VERSION: '1.0.0',
     VITE_NODE_ENV: mode || 'production'
