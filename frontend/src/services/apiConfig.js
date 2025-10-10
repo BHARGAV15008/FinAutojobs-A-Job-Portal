@@ -65,13 +65,20 @@ const buildApiUrl = () => {
     console.log('🌐 Environment detected:', environment);
     console.log('🔍 Host info:', hostInfo);
     
-    // 1. Explicit environment variable (highest priority)
+    // 1. Force local development when running on localhost
+    if (hostInfo.hostname === 'localhost' || hostInfo.hostname === '127.0.0.1') {
+        const localUrl = 'http://localhost:5001/api';
+        console.log('🔧 Forcing local backend for development:', localUrl);
+        return localUrl;
+    }
+    
+    // 2. Explicit environment variable (highest priority)
     if (import.meta.env.VITE_API_URL) {
         console.log('✅ Using explicit VITE_API_URL:', import.meta.env.VITE_API_URL);
         return import.meta.env.VITE_API_URL;
     }
     
-    // 2. Production deployment URLs
+    // 3. Production deployment URLs
     if (environment === 'production') {
         // Common production patterns
         const productionUrls = {
@@ -102,14 +109,14 @@ const buildApiUrl = () => {
         return fallbackUrl;
     }
     
-    // 3. Staging environment
+    // 4. Staging environment
     if (environment === 'staging') {
         const stagingUrl = `${hostInfo.protocol}//${hostInfo.hostname.replace('staging-', 'staging-api-')}/api`;
         console.log('✅ Using staging API URL:', stagingUrl);
         return stagingUrl;
     }
     
-    // 4. Network development (same IP, different port)
+    // 5. Network development (same IP, different port)
     if (environment === 'network') {
         const backendPort = import.meta.env.VITE_BACKEND_PORT || '5000';
         const networkUrl = `http://${hostInfo.hostname}:${backendPort}/api`;
@@ -117,8 +124,8 @@ const buildApiUrl = () => {
         return networkUrl;
     }
     
-    // 5. Local development
-    const backendPort = import.meta.env.VITE_BACKEND_PORT || '5000';
+    // 6. Local development
+    const backendPort = import.meta.env.VITE_BACKEND_PORT || '5001';
     const localUrl = `http://localhost:${backendPort}/api`;
     console.log('✅ Using local API URL:', localUrl);
     return localUrl;

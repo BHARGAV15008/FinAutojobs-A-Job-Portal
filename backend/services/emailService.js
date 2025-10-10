@@ -17,7 +17,7 @@ class EmailService {
       port: 587,
       secure: false, // Use STARTTLS
       auth: {
-        user: process.env.EMAIL_USER,
+        user: process.env.EMAIL_USER || process.env.EMAIL_FROM_ADDRESS,
         pass: process.env.EMAIL_PASS
       },
       tls: {
@@ -1304,4 +1304,6 @@ class EmailService {
   }
 }
 
+// Export both the class and an instance
+export { EmailService };
 export default new EmailService();

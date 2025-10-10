@@ -52,13 +52,13 @@ const OTPLoginPage = () => {
 
     try {
       const isEmail = activeTab === 0;
-      const endpoint = isEmail ? 'send-otp-email' : 'send-otp-sms';
-      const body = isEmail ? { email: identifier } : { phone: identifier };
+      const endpoint = isEmail ? 'otp/send' : 'send-otp-sms';
+      const body = isEmail ? { email: identifier, purpose: 'login', userData: { firstName: 'User' } } : { phone: identifier };
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
       
-      const response = await fetch(`${API_BASE_URL}/auth/${endpoint}`, {
+      const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

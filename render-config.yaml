@@ -1,0 +1,42 @@
+# Render.com Configuration for FinAutoJobs MERN Stack
+# This file defines both frontend and backend services
+
+services:
+  # Backend API Service
+  - type: web
+    name: finautojobs-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: HOST
+        value: 0.0.0.0
+      # Add your environment variables here (see .env.render.backend)
+
+  # Frontend Web Service  
+  - type: web
+    name: finautojobs-frontend
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run preview
+    staticPublishPath: ./dist
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Add your environment variables here (see .env.render.frontend)
+
+# Database (use MongoDB Atlas free tier)
+databases: []
+
+# Note: You'll need to:
+# 1. Push this to GitHub
+# 2. Connect your GitHub repo to Render
+# 3. Set environment variables in Render dashboard
+# 4. Deploy both services

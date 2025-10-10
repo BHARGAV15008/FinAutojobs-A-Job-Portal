@@ -235,6 +235,7 @@ import messagesRoutes from './routes/messages.js';
 import jobAlertsRoutes from './routes/jobAlerts.js';
 import smsOtpRoutes from './routes/smsOtp.js';
 import phoneAuthRoutes from './routes/phoneAuth.js';
+import otpRoutes from './routes/otpRoutes.js';
 
 // Mount routes under /api
 const apiRouter = express.Router();
@@ -259,6 +260,7 @@ apiRouter.use('/messages', messagesRoutes);
 apiRouter.use('/job-alerts', jobAlertsRoutes);
 apiRouter.use('/sms-otp', smsOtpRoutes);
 apiRouter.use('/phone-auth', phoneAuthRoutes);
+apiRouter.use('/otp', otpRoutes);
 
 // Initialize OAuth strategies after environment variables are loaded
 console.log('🔧 Initializing OAuth strategies after env load...');
@@ -329,6 +331,8 @@ if (process.env.NODE_ENV === 'production') {
 
 // Add health check endpoint under /api 
 apiRouter.get('/health', (req, res) => {
+    const emailConfigured = !!(process.env.EMAIL_USER && process.env.EMAIL_PASS);
+    
     res.json({
         status: 'OK',
         message: 'FinAutoJobs API is running',
@@ -337,7 +341,15 @@ apiRouter.get('/health', (req, res) => {
         services: {
             database: 'connected',
             cors: 'configured',
-            security: 'enabled'
+            security: 'enabled',
+            email: emailConfigured ? 'configured' : 'not configured',
+            otp: 'enabled'
+        },
+        endpoints: {
+            auth: '/api/auth',
+            otp: '/api/otp',
+            jobs: '/api/jobs',
+            applications: '/api/applications'
         }
     });
 });

@@ -227,7 +227,11 @@ export const AuthProvider = ({ children }) => {
   // OTP Functions
   const sendEmailOTP = async (email) => {
     try {
-      const { data } = await apiClient.post('/auth/send-otp-email', { email });
+      const { data } = await apiClient.post('/otp/send', { 
+        email, 
+        purpose: 'registration',
+        userData: { firstName: 'User', lastName: '' }
+      });
       return { success: data.success || true, message: data.message };
     } catch (error) {
       // Fallback for development/testing when backend OTP endpoint is slow
@@ -250,10 +254,10 @@ export const AuthProvider = ({ children }) => {
 
   const verifyEmailOTP = async (email, otp) => {
     try {
-      const { data } = await apiClient.post('/auth/verify-otp', { 
-        identifier: email, 
+      const { data } = await apiClient.post('/otp/verify', { 
+        email: email, 
         otp, 
-        type: 'email' 
+        purpose: 'registration' 
       });
       return { success: data.success || true, message: data.message };
     } catch (error) {

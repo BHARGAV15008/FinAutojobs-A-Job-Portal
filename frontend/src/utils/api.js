@@ -25,8 +25,8 @@ const api = {
   getProfileActivity: () => handleResponse(apiRequest('GET', '/users/profile/activity')),
   
   // OTP verification endpoints
-  sendEmailOTP: (email) => handleResponse(apiRequest('POST', '/auth/send-email-otp', { email })),
-  verifyEmailOTP: (email, otp) => handleResponse(apiRequest('POST', '/auth/verify-email-otp', { email, otp })),
+  sendEmailOTP: (email) => handleResponse(apiRequest('POST', '/otp/send', { email, purpose: 'registration', userData: { firstName: 'User' } })),
+  verifyEmailOTP: (email, otp) => handleResponse(apiRequest('POST', '/otp/verify', { email, otp, purpose: 'registration' })),
   sendSMSOTP: (phone) => handleResponse(apiRequest('POST', '/auth/send-sms-otp', { phone })),
   verifySMSOTP: (phone, otp) => handleResponse(apiRequest('POST', '/auth/verify-sms-otp', { phone, otp })),
   
