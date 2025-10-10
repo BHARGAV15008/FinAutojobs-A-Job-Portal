@@ -102,10 +102,10 @@ const OTPVerification = ({
     setError('');
 
     try {
-      const response = await apiClient.post('/auth/verify-otp', {
-        identifier,
+      const response = await apiClient.post('/otp/verify', {
+        email: identifier,
         otp: otpCode,
-        type
+        purpose: 'registration'
       });
 
       const data = response.data;
@@ -134,16 +134,15 @@ const OTPVerification = ({
     }
   };
 
-  // Resend OTP
   const handleResendOTP = async () => {
     setResending(true);
     setError('');
 
     try {
-      const endpoint = type === 'sms' ? 'send-otp-sms' : 'send-otp-email';
-      const body = type === 'sms' ? { phone: identifier } : { email: identifier };
+      const endpoint = type === 'sms' ? 'send-otp-sms' : 'otp/send';
+      const body = type === 'sms' ? { phone: identifier } : { email: identifier, purpose: 'registration', userData: { firstName: 'User' } };
 
-      const response = await apiClient.post(`/auth/${endpoint}`, body);
+      const response = await apiClient.post(`/${endpoint}`, body);
 
       const data = response.data;
 
