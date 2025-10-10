@@ -3,22 +3,38 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [
-    react({
-      jsxImportSource: '@emotion/react',
-      babel: {
-        plugins: ['@emotion/babel-plugin'],
+export default defineConfig(({ mode }) => {
+  // Set default environment variables for production builds
+  const defaultEnvVars = {
+    VITE_API_URL: 'https://finautojobs-a-job-portal-hk5c.onrender.com/api',
+    VITE_APP_NAME: 'FinAutoJobs',
+    VITE_APP_VERSION: '1.0.0',
+    VITE_NODE_ENV: mode || 'production'
+  };
+
+  // Use environment variables or defaults
+  Object.keys(defaultEnvVars).forEach(key => {
+    if (!process.env[key]) {
+      process.env[key] = defaultEnvVars[key];
+    }
+  });
+
+  return {
+    plugins: [
+      react({
+        jsxImportSource: '@emotion/react',
+        babel: {
+          plugins: ['@emotion/babel-plugin'],
+        },
+      }),
+    ],
+    define: {
+      'process.env': {},
+      'process': {
+        env: {}
       },
-    }),
-  ],
-  define: {
-    'process.env': {},
-    'process': {
-      env: {}
+      global: 'globalThis',
     },
-    global: 'globalThis',
-  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -96,4 +112,5 @@ export default defineConfig({
     exclude: [],
     target: 'es2020',
   },
+  };
 })

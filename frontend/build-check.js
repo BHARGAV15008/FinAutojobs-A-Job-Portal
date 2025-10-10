@@ -22,10 +22,7 @@ const requiredEnvVars = [
 console.log('\n📋 Environment Variables:');
 requiredEnvVars.forEach(envVar => {
   const value = process.env[envVar];
-  console.log(`${envVar}: ${value ? '✅ Set' : '❌ Missing'}`);
-  if (value) {
-    console.log(`  Value: ${value}`);
-  }
+  console.log(`${envVar}: ${value ? '✅ Set' : '⚠️ Missing (will use defaults)'}`);
 });
 
 // Check if package.json exists and has required scripts
