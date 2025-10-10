@@ -28,6 +28,12 @@ export default defineConfig({
     port: 3000,
     host: '0.0.0.0', // Allow external connections
     strictPort: false, // Allow port fallback if 3000 is busy
+    hmr: {
+      port: 3001
+    },
+    fs: {
+      strict: false
+    },
     proxy: {
       '/api': {
         target: process.env.VITE_API_URL || 'http://localhost:5000',

@@ -1,0 +1,53 @@
+# *******************************************************************************
+# NETLIFY ENVIRONMENT VARIABLES
+# *******************************************************************************
+# Copy these to your Netlify site settings: Site Settings > Environment Variables
+
+# *******************************************************************************
+# SERVER CONFIGURATION
+# *******************************************************************************
+NODE_ENV=production
+FRONTEND_URL=https://your-site-name.netlify.app
+
+# *******************************************************************************
+# DATABASE CONFIGURATION (MongoDB Atlas)
+# *******************************************************************************
+MONGODB_URI=mongodb+srv://hiddenshadow032025_db_user:nJNHickmLkFtwcIY@cluster0.nvq1gwn.mongodb.net/finautojobs
+DATABASE_URL=mongodb+srv://hiddenshadow032025_db_user:nJNHickmLkFtwcIY@cluster0.nvq1gwn.mongodb.net/finautojobs
+
+# *******************************************************************************
+# SECURITY SECRETS
+# *******************************************************************************
+JWT_SECRET=8f69bcf03020571977a802457bd0ff26edce2f7cd0e7519a80c3342f379d2c59
+SESSION_SECRET=d32bb7935507c520472afab198fccdc4e6f9ee12fb25203d9ec953c81d811363
+
+# *******************************************************************************
+# EMAIL CONFIGURATION (Resend.com)
+# *******************************************************************************
+EMAIL_SERVICE=resend
+RESEND_API_KEY=re_XxB7mdQ7_LFqRbZBnKAaL8tdeZH5zdX8h
+EMAIL_FROM_ADDRESS=onboarding@resend.dev
+EMAIL_FROM_NAME=FinAutoJobs - No Reply
+
+# *******************************************************************************
+# OAUTH CONFIGURATION (Google OAuth)
+# *******************************************************************************
+GOOGLE_CLIENT_ID=1091917701977-u8brihbd5v4rtn51b0ihn1k6q39d20d4.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=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
+GOOGLE_REDIRECT_URI=https://your-site-name.netlify.app/.netlify/functions/api/oauth/google/callback
+
+# *******************************************************************************
+# OTP CONFIGURATION
+# *******************************************************************************
+OTP_EXPIRY_MINUTES=10
+OTP_LENGTH=6
+OTP_RESEND_COOLDOWN_MINUTES=2
+ENABLE_EMAIL_VERIFICATION=true
+
+# *******************************************************************************
+# FEATURE FLAGS
+# *******************************************************************************
+ENABLE_REGISTRATION=true
+ENABLE_COMPANY_VERIFICATION=true
+ALLOW_UNVERIFIED_JOB_POSTING=false
+REQUIRE_PROFILE_COMPLETION=true

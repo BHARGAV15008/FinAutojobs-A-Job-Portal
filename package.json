@@ -11,7 +11,7 @@
     "build": "cd frontend && npm run build",
     "build:production": "cd frontend && npm run build -- --mode production",
     "build:staging": "cd frontend && npm run build -- --mode staging",
-    "start": "cd backend && npm start",
+    "start": "npm run dev",
     "start:production": "cd backend && NODE_ENV=production npm start",
     "test-network": "./test-network-access.sh",
     "network-info": "echo \"🌐 Network Access URLs:\" && LOCAL_IP=$(ip route get 8.8.8.8 2>/dev/null | awk '{print $7; exit}' || ifconfig 2>/dev/null | grep -Eo 'inet (addr:)?([0-9]*\\.){3}[0-9]*' | grep -Eo '([0-9]*\\.){3}[0-9]*' | grep -v '127.0.0.1' | head -1 || echo 'localhost') && echo \"Frontend: http://$LOCAL_IP:3000\" && echo \"Backend: http://$LOCAL_IP:5000\"",
@@ -48,7 +48,6 @@
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
-    "resend": "^6.1.2",
     "socket.io": "^4.8.1"
   },
   "devDependencies": {

@@ -38,14 +38,10 @@ frontend/.env.development
 frontend/.env.production
 
 # Deployment configurations
-netlify.toml
 render.yaml
 docker-compose.yml
 Dockerfile
-.netlify/
 .render/
-_redirects
-_headers
 
 # Vercel deployment
 .vercel

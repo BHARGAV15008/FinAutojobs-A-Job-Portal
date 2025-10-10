@@ -78,6 +78,13 @@ const buildApiUrl = () => {
         return import.meta.env.VITE_API_URL;
     }
     
+    // 3. Netlify Functions detection
+    if (hostInfo.hostname.includes('.netlify.app')) {
+        const netlifyUrl = `https://${hostInfo.hostname}/.netlify/functions/api`;
+        console.log('✅ Using Netlify Functions API:', netlifyUrl);
+        return netlifyUrl;
+    }
+    
     // 3. Production deployment URLs
     if (environment === 'production') {
         // Common production patterns
