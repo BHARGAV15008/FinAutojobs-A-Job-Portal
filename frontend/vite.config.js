@@ -47,6 +47,20 @@ export default defineConfig({
       },
     },
   },
+  preview: {
+    port: process.env.PORT || 4173,
+    host: '0.0.0.0',
+    strictPort: false,
+    allowedHosts: [
+      'localhost',
+      '127.0.0.1',
+      '.onrender.com',
+      'finautojobs-frontend.onrender.com',
+      '.netlify.app',
+      '.vercel.app',
+      '.herokuapp.com'
+    ]
+  },
   base: '/',
   optimizeDeps: {
     include: ['react', 'react-dom', 'wouter', '@tanstack/react-query', '@emotion/react', '@emotion/styled', '@mui/material'],
