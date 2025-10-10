@@ -5,21 +5,22 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 // Load environment variables from config.env
 dotenv.config({ path: './config.env' });
 
 class EmailService {
   constructor() {
-    this.transporter = nodemailer.createTransport({
+    this.transporter = nodemailer.createTransporter({
       service: 'gmail',
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false, // Use STARTTLS
+      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.EMAIL_PORT) || 465,
+      secure: process.env.EMAIL_SECURE === 'true' || true, // Use SSL for port 465
       auth: {
         user: process.env.EMAIL_USER || process.env.EMAIL_FROM_ADDRESS,
         pass: process.env.EMAIL_PASS
       },
+      connectionTimeout: parseInt(process.env.EMAIL_CONNECTION_TIMEOUT) || 60000,
+      socketTimeout: parseInt(process.env.EMAIL_SOCKET_TIMEOUT) || 60000,
       tls: {
         rejectUnauthorized: false
       }
