@@ -301,17 +301,8 @@ const RegisterPage = () => {
       return
     }
 
-    // Validate email and phone verification
-    if (!emailVerified) {
-      toast({
-        title: "Error",
-        description: "Please verify your email address",
-        variant: "destructive"
-      })
-      return
-    }
-
-    // Phone verification is optional - removed requirement
+    // Both email and phone verification are now optional
+    // Users can register without verification and verify later
 
     if (formData.password !== formData.confirmPassword) {
       toast({
@@ -915,7 +906,7 @@ const RegisterPage = () => {
                         onChange={handleChange}
                         required
                         error={emailError}
-                        helperText={emailErrorMessage || (emailError ? "Please enter a valid email address" : "Email verification is required for account activation")}
+                        helperText={emailErrorMessage || (emailError ? "Please enter a valid email address" : "Email is required • Verification is optional")}
                         InputProps={{
                           startAdornment: (
                             <InputAdornment position="start">
@@ -941,23 +932,31 @@ const RegisterPage = () => {
                           whiteSpace: 'nowrap'
                         }}
                       >
-                        {emailVerified ? 'Verified' : emailOTPSent ? 'OTP Sent' : 'Verify Email'}
+                        {emailVerified ? 'Verified' : emailOTPSent ? 'OTP Sent' : 'Verify (Optional)'}
                       </Button>
-                      {/* Debug button for testing */}
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={() => {
-                          console.log('🧪 Debug: Manually opening OTP panel')
-                          setEmailOTPSent(true)
-                          setShowEmailOTP(true)
-                        }}
-                        sx={{ ml: 1, fontSize: '0.7rem' }}
-                      >
-                        Test OTP
-                      </Button>
+                      {!emailVerified && !emailOTPSent && (
+                        <Button
+                          variant="text"
+                          size="small"
+                          onClick={() => {
+                            toast({
+                              title: "Email Verification Skipped",
+                              description: "You can verify your email later in your profile settings",
+                              variant: "default"
+                            })
+                          }}
+                          sx={{ 
+                            fontSize: '0.75rem',
+                            minHeight: 'auto',
+                            py: 0.5,
+                            ml: 1
+                          }}
+                        >
+                          Skip for now
+                        </Button>
+                      )}
                     </Box>
-                    {emailVerified && (
+                    {emailVerified ? (
                       <Box sx={{ mt: 1 }}>
                         <Chip
                           label="Email Verified"
@@ -966,6 +965,10 @@ const RegisterPage = () => {
                           icon={<CheckCircle />}
                         />
                       </Box>
+                    ) : (
+                      <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                        📧 Email verification is optional but recommended for account recovery and notifications
+                      </Typography>
                     )}
                   </Box>
 
