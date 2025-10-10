@@ -67,7 +67,7 @@ const buildApiUrl = () => {
     
     // 1. Force local development when running on localhost
     if (hostInfo.hostname === 'localhost' || hostInfo.hostname === '127.0.0.1') {
-        const localUrl = 'http://localhost:5001/api';
+        const localUrl = 'http://localhost:5002/api';
         console.log('🔧 Forcing local backend for development:', localUrl);
         return localUrl;
     }
@@ -125,7 +125,7 @@ const buildApiUrl = () => {
     }
     
     // 6. Local development
-    const backendPort = import.meta.env.VITE_BACKEND_PORT || '5001';
+    const backendPort = import.meta.env.VITE_BACKEND_PORT || '5002';
     const localUrl = `http://localhost:${backendPort}/api`;
     console.log('✅ Using local API URL:', localUrl);
     return localUrl;
