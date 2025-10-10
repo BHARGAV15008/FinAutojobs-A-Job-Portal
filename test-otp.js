@@ -7,8 +7,8 @@
 
 import fetch from 'node-fetch';
 
-const API_BASE = 'http://localhost:5000/api';
-const TEST_EMAIL = 'hiddenshadow032025@gmail.com';
+const API_BASE = 'https://finautojobs-backend.onrender.com/api';
+const TEST_EMAIL = 'technogenius1500@gmail.com';
 
 console.log('🧪 Testing FinAutoJobs OTP System...\n');
 
