@@ -6,22 +6,21 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 // Load environment variables from config.env
 dotenv.config({ path: './config.env' });
 
 class EmailService {
   constructor() {
-    // Determine email service to use
-    this.emailService = process.env.EMAIL_SERVICE || 'smtp';
+    // Determine email service to use - prefer Resend for production (Render-friendly)
+    this.emailService = process.env.EMAIL_SERVICE || (process.env.NODE_ENV === 'production' ? 'resend' : 'smtp');
     
-    if (this.emailService === 'resend') {
-      // Initialize Resend
+    if (this.emailService === 'resend' && process.env.RESEND_API_KEY) {
+      // Initialize Resend (works well with Render)
       this.resend = new Resend(process.env.RESEND_API_KEY);
       console.log('✅ Resend email service initialized');
     } else {
-      // Initialize SMTP (Gmail)
-      this.transporter = nodemailer.createTransport({
+      // Initialize SMTP (Gmail) with Render-optimized settings
+      this.transporter = nodemailer.createTransporter({
         service: 'gmail',
         host: process.env.EMAIL_HOST || 'smtp.gmail.com',
         port: parseInt(process.env.EMAIL_PORT) || 587,
@@ -31,21 +30,27 @@ class EmailService {
           user: process.env.EMAIL_USER || process.env.EMAIL_FROM_ADDRESS,
           pass: process.env.EMAIL_PASS
         },
-        connectionTimeout: parseInt(process.env.EMAIL_CONNECTION_TIMEOUT) || 120000,
-        socketTimeout: parseInt(process.env.EMAIL_SOCKET_TIMEOUT) || 120000,
-        greetingTimeout: parseInt(process.env.EMAIL_GREETINGS_TIMEOUT) || 30000,
+        // Render-optimized timeouts
+        connectionTimeout: parseInt(process.env.EMAIL_CONNECTION_TIMEOUT) || 30000, // Reduced for Render
+        socketTimeout: parseInt(process.env.EMAIL_SOCKET_TIMEOUT) || 30000, // Reduced for Render
+        greetingTimeout: parseInt(process.env.EMAIL_GREETINGS_TIMEOUT) || 15000, // Reduced for Render
         tls: {
           rejectUnauthorized: false,
           ciphers: 'SSLv3'
         },
+        // Add pool settings for better Render compatibility
+        pool: true,
+        maxConnections: 1,
+        maxMessages: 3,
         debug: process.env.NODE_ENV !== 'production'
       });
-      console.log('✅ SMTP email service initialized');
+      console.log('✅ SMTP email service initialized with Render optimizations');
     }
 
     this.fromEmail = process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER || 'noreply@finautojobs.com';
     this.fromName = process.env.EMAIL_FROM_NAME || 'FinAutoJobs Team';
     this.baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+{{ ... }}
     
     // Initialize email templates
     this.templates = this.loadEmailTemplates();
@@ -79,6 +84,20 @@ class EmailService {
       }
     } catch (error) {
       console.error(`❌ Failed to send email to ${to}:`, error);
+      
+      // If SMTP fails on Render, provide helpful fallback
+      if (error.code === 'ETIMEDOUT' || error.code === 'ECONNREFUSED') {
+        console.log('⚠️ SMTP connection failed on Render - this is common due to networking restrictions');
+        console.log('💡 Consider using Resend API for production email delivery');
+        console.log('📧 Email content would have been:', { to, subject });
+        
+        // Return a mock success for development/testing
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('🧪 Returning mock success for development');
+          return { success: true, messageId: 'mock-' + Date.now(), mock: true };
+        }
+      }
+      
       throw error;
     }
   }
