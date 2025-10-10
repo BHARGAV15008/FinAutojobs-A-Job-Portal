@@ -71,19 +71,25 @@ HEALTH_CHECK_PATH=/health
 # *******************************************************************************
 # EMAIL CONFIGURATION (PRODUCTION SMTP)
 # *******************************************************************************
-# Primary: Gmail SMTP (Optimized for Render.com)
-EMAIL_HOST=smtp.gmail.com
+# Primary: Resend SMTP (Recommended for Production)
+EMAIL_HOST=smtp.resend.com
 EMAIL_PORT=587
 EMAIL_SECURE=false
-EMAIL_USER=hiddenshadow032025@gmail.com
-EMAIL_PASS=rxdn afad anzi obxx
-EMAIL_CONNECTION_TIMEOUT=120000
-EMAIL_SOCKET_TIMEOUT=120000
+EMAIL_USER=resend
+EMAIL_PASS=re_YourResendAPIKey_Here
+EMAIL_CONNECTION_TIMEOUT=60000
+EMAIL_SOCKET_TIMEOUT=60000
 EMAIL_GREETINGS_TIMEOUT=30000
 EMAIL_REQUIRE_TLS=true
-EMAIL_FROM=hiddenshadow032025@gmail.com
+
+# Alternative: Brevo (Sendinblue) - 300 emails/day free
+# EMAIL_HOST=smtp-relay.brevo.com
+# EMAIL_PORT=587
+# EMAIL_USER=your-brevo-email@gmail.com
+# EMAIL_PASS=your-brevo-smtp-key
+EMAIL_FROM=noreply@finautojobs.com
 EMAIL_FROM_NAME=FinAutoJobs - No Reply
-EMAIL_FROM_ADDRESS=hiddenshadow032025@gmail.com
+EMAIL_FROM_ADDRESS=noreply@finautojobs.com
 
 
 
