@@ -3,23 +3,25 @@
 ## 📋 **REQUIREMENTS IMPLEMENTED**
 
 ### **✅ Field Requirements:**
-- **Email Address**: ✅ Required field + ✅ Verification mandatory
+- **Email Address**: ✅ Required field + ⚠️ Verification optional
 - **Phone Number**: ✅ Required field + ⚠️ Verification optional
 
 ### **✅ User Experience:**
 - Both email and phone number must be provided during registration
-- Email verification is mandatory for account activation
-- Phone verification is optional but recommended for security
+- Both email and phone verification are optional but recommended
+- Users can register immediately without any verification
+- Verification can be completed later in profile settings
 
 ## 🎯 **CURRENT IMPLEMENTATION**
 
-### **Email Verification (Mandatory)**
+### **Email Verification (Optional)**
 ```
 📧 Email Address * [Required Field]
    ├── Validation: Email format required
-   ├── Verification: OTP sent to email (mandatory)
-   ├── Status: Must be verified before registration
-   └── Helper: "Email verification is required for account activation"
+   ├── Verification: OTP sent to email (optional)
+   ├── Status: Can skip verification and register
+   ├── Helper: "Email is required • Verification is optional"
+   └── Skip Option: "Skip for now" button available
 ```
 
 ### **Phone Verification (Optional)**
@@ -46,9 +48,10 @@
 - **Guidance message**: "You can verify your phone number later in your profile settings"
 
 ### **Enhanced Messaging:**
-- **Email**: "Email verification is required for account activation"
+- **Email**: "Email is required • Verification is optional"
 - **Phone**: "Phone number is required • Verification is optional"
-- **Skip**: "📱 Phone verification is optional but recommended for enhanced security and account recovery"
+- **Email Skip**: "📧 Email verification is optional but recommended for account recovery and notifications"
+- **Phone Skip**: "📱 Phone verification is optional but recommended for enhanced security and account recovery"
 
 ## 📱 **Registration Flow**
 
@@ -64,13 +67,18 @@ User fills out registration form:
 ✅ Terms & Conditions (required)
 ```
 
-### **Step 2: Email Verification (Mandatory)**
+### **Step 2: Email Verification (Optional)**
 ```
-1. User clicks "Verify Email" button
+Option A - Verify Email:
+1. User clicks "Verify (Optional)" button
 2. OTP sent to email address
 3. User enters OTP in dialog
 4. Email marked as verified ✅
-5. Cannot proceed without email verification
+
+Option B - Skip Email:
+1. User clicks "Skip for now" button
+2. Toast shows skip confirmation
+3. Email remains unverified but registration can proceed
 ```
 
 ### **Step 3: Phone Verification (Optional)**
@@ -91,11 +99,11 @@ Option B - Skip Phone:
 ```
 Validation checks:
 ✅ All required fields filled
-✅ Email verified (mandatory)
+⚠️ Email verified (optional)
 ⚠️ Phone verified (optional)
 ✅ Terms accepted
 
-Result: Registration successful regardless of phone verification status
+Result: Registration successful regardless of verification status
 ```
 
 ## 🔒 **Security & Validation**
