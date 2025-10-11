@@ -30,7 +30,10 @@
     "create:simple-admin": "node scripts/create-simple-admin.js",
     "test:user-creds": "node scripts/test-user-credentials.js",
     "create:superadmin-faj": "node scripts/create-superadmin-finautojobs.js",
-    "create:direct-admin": "node scripts/create-direct-admin.js"
+    "create:direct-admin": "node scripts/create-direct-admin.js",
+    "test:exact-request": "node scripts/test-exact-request.js",
+    "check:db-users": "node scripts/check-database-users.js",
+    "create:multiple-admins": "node scripts/create-multiple-admins.js"
   },
   "keywords": [
     "job-portal",
