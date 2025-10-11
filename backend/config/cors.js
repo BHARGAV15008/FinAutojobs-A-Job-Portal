@@ -22,6 +22,7 @@ const getAllowedOrigins = () => {
         'https://finautojobs.onrender.com',
         'https://finautojobs-a-job-portal-1-bctj.onrender.com',
         'https://finautojobs-a-job-portal-hk5c.onrender.com',
+        'https://finautojobs-a-job-portal-pivn.onrender.com',
         
         // Staging environments
         'https://dev-finautojobs.vercel.app',
@@ -56,7 +57,8 @@ const isDeploymentOrigin = (origin) => {
         /^https:\/\/.*\.vercel\.app$/,
         /^https:\/\/.*\.herokuapp\.com$/,
         /^https:\/\/.*\.railway\.app$/,
-        /^https:\/\/.*finautojobs.*$/
+        /^https:\/\/.*finautojobs.*$/,
+        /^https:\/\/finautojobs-a-job-portal-.*\.onrender\.com$/
     ];
     
     return productionPatterns.some(pattern => pattern.test(origin));
