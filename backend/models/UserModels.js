@@ -83,7 +83,7 @@ export const authenticateUser = async (identifier, password, role) => {
             { phone: identifier }
           ]
         },
-        { role: role }
+        { role: { $regex: new RegExp(`^${role}$`, 'i') } }
       ]
     });
     
