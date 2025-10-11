@@ -40,7 +40,8 @@
     "create:simple-working-admin": "node scripts/create-simple-working-admin.js",
     "analyze:database": "node scripts/analyze-database-structure.js",
     "create:admin-baseusers": "node scripts/create-admin-in-baseusers.js",
-    "debug:auth": "node scripts/debug-authentication-issue.js"
+    "debug:auth": "node scripts/debug-authentication-issue.js",
+    "fix:admin-login": "node scripts/fix-admin-login-completely.js"
   },
   "keywords": [
     "job-portal",
