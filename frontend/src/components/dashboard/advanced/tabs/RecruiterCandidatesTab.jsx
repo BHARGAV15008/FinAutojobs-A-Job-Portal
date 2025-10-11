@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { candidatesAPI } from '../../../../services/api';
+import { useResponsive } from '../../../../utils/responsive';
 import {
   Box,
   Grid,
@@ -60,7 +62,7 @@ import { motion } from 'framer-motion';
 
 const RecruiterCandidatesTab = ({ data, onDataUpdate, user }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { isMobile, isTablet, isDesktop } = useResponsive();
   
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -208,6 +210,21 @@ const RecruiterCandidatesTab = ({ data, onDataUpdate, user }) => {
     currentPage * candidatesPerPage
   );
 
+  const handleDownloadResume = async (candidate) => {
+    try {
+      setSnackbar({ open: true, message: 'Downloading resume...', severity: 'info' });
+      await candidatesAPI.downloadResume(candidate.id);
+      setSnackbar({ open: true, message: 'Resume downloaded successfully!', severity: 'success' });
+    } catch (error) {
+      console.error('Resume download error:', error);
+      setSnackbar({ 
+        open: true, 
+        message: error.response?.data?.message || 'Failed to download resume', 
+        severity: 'error' 
+      });
+    }
+  };
+
   const handleCandidateAction = (action, candidate) => {
     switch (action) {
       case 'review':
@@ -227,8 +244,7 @@ const RecruiterCandidatesTab = ({ data, onDataUpdate, user }) => {
         setSnackbar({ open: true, message: 'Candidate rejected', severity: 'info' });
         break;
       case 'download-resume':
-        // Simulate resume download
-        setSnackbar({ open: true, message: 'Resume downloaded!', severity: 'success' });
+        handleDownloadResume(candidate);
         break;
       case 'send-message':
         setSnackbar({ open: true, message: 'Message sent to candidate!', severity: 'success' });
@@ -397,17 +413,19 @@ const RecruiterCandidatesTab = ({ data, onDataUpdate, user }) => {
   }
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 } }}>
-      {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box>
-          <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
-            Candidate Management
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Review and manage job applications from candidates
-          </Typography>
-        </Box>
+    <Box className="responsive-container responsive-padding">
+      <Box className="flex-responsive" sx={{ mb: 3 }}>
+        <Typography variant="h4" className="responsive-text-xl" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+          Candidates Management
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={() => setShowBulkActions(!showBulkActions)}
+          className="full-width-mobile"
+        >
+          Bulk Actions
+        </Button>
       </Box>
 
       {/* Stats Cards */}
@@ -477,7 +495,13 @@ const RecruiterCandidatesTab = ({ data, onDataUpdate, user }) => {
       </Box>
 
       {/* Search and Filters */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+      <Box sx={{ 
+        display: 'flex', 
+        gap: 2, 
+        mb: 3, 
+        flexDirection: isMobile ? 'column' : 'row',
+        flexWrap: 'wrap' 
+      }}>
         <TextField
           placeholder="Search candidates..."
           value={searchQuery}
@@ -486,7 +510,10 @@ const RecruiterCandidatesTab = ({ data, onDataUpdate, user }) => {
           InputProps={{
             startAdornment: <Search sx={{ mr: 1, color: 'text.secondary' }} />
           }}
-          sx={{ minWidth: 250 }}
+          sx={{ 
+            minWidth: isMobile ? '100%' : 250,
+            flex: isMobile ? 1 : 'none'
+          }}
         />
         
         <FormControl size="small" sx={{ minWidth: 120 }}>

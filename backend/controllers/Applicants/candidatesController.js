@@ -1,5 +1,5 @@
-import { db } from '../config/database.js';
-import { users, applications, jobs, companies } from '../schema.js';
+import { db } from '../../config/database.js';
+import { users, applications, jobs, companies } from '../../schema.js';
 import { eq, and, desc, asc, sql, or, like, inArray } from 'drizzle-orm';
 import nodemailer from 'nodemailer';
 import path from 'path';
@@ -365,19 +365,60 @@ export const downloadCandidateResume = async (req, res) => {
       });
     }
 
-    // In a real implementation, you'd handle file download from cloud storage
-    // For now, we'll simulate the download
-    const resumePath = path.join(process.cwd(), 'uploads', 'resumes', candidate.resume_url);
-    
-    if (fs.existsSync(resumePath)) {
-      res.download(resumePath, `${candidate.name}_Resume.pdf`);
+    // Handle different resume URL formats
+    let resumePath;
+    if (candidate.resume_url.startsWith('http')) {
+      // External URL - redirect to the URL
+      return res.redirect(candidate.resume_url);
+    } else if (candidate.resume_url.startsWith('/uploads/')) {
+      // Relative path from uploads
+      resumePath = path.join(process.cwd(), candidate.resume_url.substring(1));
+    } else if (candidate.resume_url.includes('uploads/')) {
+      // Path includes uploads
+      resumePath = path.join(process.cwd(), candidate.resume_url);
     } else {
-      // Simulate resume download with a placeholder response
-      res.json({
-        message: 'Resume download initiated',
-        download_url: candidate.resume_url,
-        candidate_name: candidate.name
+      // Assume it's just a filename in resumes folder
+      resumePath = path.join(process.cwd(), 'uploads', 'resumes', candidate.resume_url);
+    }
+    
+    // Check if file exists and serve it
+    if (fs.existsSync(resumePath)) {
+      const fileExtension = path.extname(resumePath).toLowerCase();
+      const fileName = `${candidate.name.replace(/[^a-zA-Z0-9]/g, '_')}_Resume${fileExtension}`;
+      
+      // Set appropriate headers
+      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+      res.setHeader('Content-Type', fileExtension === '.pdf' ? 'application/pdf' : 'application/octet-stream');
+      
+      // Stream the file
+      const fileStream = fs.createReadStream(resumePath);
+      fileStream.pipe(res);
+      
+      fileStream.on('error', (error) => {
+        console.error('File stream error:', error);
+        res.status(500).json({ 
+          message: 'Error reading resume file' 
+        });
       });
+    } else {
+      // Check in applications folder as backup
+      const backupPath = path.join(process.cwd(), 'uploads', 'applications', candidate.resume_url);
+      if (fs.existsSync(backupPath)) {
+        const fileExtension = path.extname(backupPath).toLowerCase();
+        const fileName = `${candidate.name.replace(/[^a-zA-Z0-9]/g, '_')}_Resume${fileExtension}`;
+        
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+        res.setHeader('Content-Type', fileExtension === '.pdf' ? 'application/pdf' : 'application/octet-stream');
+        
+        const fileStream = fs.createReadStream(backupPath);
+        fileStream.pipe(res);
+      } else {
+        return res.status(404).json({
+          message: 'Resume file not found on server',
+          resume_url: candidate.resume_url,
+          candidate_name: candidate.name
+        });
+      }
     }
 
   } catch (error) {

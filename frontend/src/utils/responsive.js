@@ -10,7 +10,25 @@ export const useResponsive = () => {
     isDesktop: useMediaQuery(theme.breakpoints.up('md')),
     isLargeDesktop: useMediaQuery(theme.breakpoints.up('lg')),
     isExtraLarge: useMediaQuery(theme.breakpoints.up('xl')),
+    // Additional responsive utilities
+    isMobileOrTablet: useMediaQuery(theme.breakpoints.down('md')),
+    isDesktopOrLarger: useMediaQuery(theme.breakpoints.up('md')),
+    isSmallScreen: useMediaQuery(theme.breakpoints.down('sm')),
+    isMediumScreen: useMediaQuery(theme.breakpoints.between('sm', 'lg')),
+    isLargeScreen: useMediaQuery(theme.breakpoints.up('lg')),
   };
+};
+
+// Hook for responsive values
+export const useResponsiveValue = (values) => {
+  const { isMobile, isTablet, isDesktop, isLargeDesktop } = useResponsive();
+  
+  if (isMobile && values.mobile !== undefined) return values.mobile;
+  if (isTablet && values.tablet !== undefined) return values.tablet;
+  if (isDesktop && values.desktop !== undefined) return values.desktop;
+  if (isLargeDesktop && values.large !== undefined) return values.large;
+  
+  return values.default || values.desktop || values.tablet || values.mobile;
 };
 
 // Responsive grid configurations

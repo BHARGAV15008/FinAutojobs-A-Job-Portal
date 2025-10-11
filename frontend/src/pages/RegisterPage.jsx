@@ -800,11 +800,11 @@ const RegisterPage = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          p: 4,
+          p: { xs: 2, sm: 4 },
           background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
         }}
       >
-        <Container maxWidth="md">
+        <Container maxWidth="md" sx={{ width: '100%' }}>
           {/* Mobile Logo */}
           {isMobile && (
             <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
@@ -821,14 +821,36 @@ const RegisterPage = () => {
           )}
 
           {/* Header */}
-          <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <Typography variant="h3" fontWeight="bold" gutterBottom>
+          <Box sx={{ textAlign: 'center', mb: { xs: 3, sm: 4 } }}>
+            <Typography 
+              variant="h3" 
+              fontWeight="bold" 
+              gutterBottom
+              sx={{ 
+                fontSize: { xs: '1.75rem', sm: '2.5rem', md: '3rem' }
+              }}
+            >
               🎉 Join Us!
             </Typography>
-            <Typography variant="h6" color="text.secondary" paragraph>
+            <Typography 
+              variant="h6" 
+              color="text.secondary" 
+              paragraph
+              sx={{ 
+                fontSize: { xs: '1rem', sm: '1.125rem', md: '1.25rem' },
+                px: { xs: 1, sm: 0 }
+              }}
+            >
               Create your account and start your career journey
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography 
+              variant="body2" 
+              color="text.secondary"
+              sx={{ 
+                fontSize: { xs: '0.875rem', sm: '1rem' },
+                px: { xs: 1, sm: 0 }
+              }}
+            >
               Already have an account?{' '}
               <Link to="/login" style={{ color: theme.palette.primary.main, textDecoration: 'none', fontWeight: 600 }}>
                 Sign in here
@@ -837,23 +859,30 @@ const RegisterPage = () => {
           </Box>
 
           <StyledCard>
-            <CardContent sx={{ p: 4 }}>
+            <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
               {/* Role Tabs */}
               <Tabs
                 value={activeTab}
                 onChange={handleTabChange}
                 variant="fullWidth"
-                sx={{ mb: 4 }}
+                sx={{ 
+                  mb: 4,
+                  '& .MuiTab-root': {
+                    fontSize: { xs: '0.875rem', sm: '1rem' },
+                    minHeight: { xs: 48, sm: 56 },
+                    padding: { xs: '8px 12px', sm: '12px 16px' }
+                  }
+                }}
               >
                 <Tab
-                  icon={<Person />}
-                  label="Applicant"
+                  icon={<Person sx={{ fontSize: { xs: 20, sm: 24 } }} />}
+                  label={isMobile ? "Applicant" : "Applicant"}
                   iconPosition="start"
                   sx={{ textTransform: 'none', fontWeight: 600 }}
                 />
                 <Tab
-                  icon={<Work />}
-                  label="Recruiter / HR"
+                  icon={<Work sx={{ fontSize: { xs: 20, sm: 24 } }} />}
+                  label={isMobile ? "Recruiter" : "Recruiter / HR"}
                   iconPosition="start"
                   sx={{ textTransform: 'none', fontWeight: 600 }}
                 />
@@ -941,7 +970,12 @@ const RegisterPage = () => {
 
                   {/* Email Field with Verification */}
                   <Box sx={{ mb: 3 }}>
-                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      flexDirection: { xs: 'column', sm: 'row' },
+                      gap: 2, 
+                      alignItems: { xs: 'stretch', sm: 'flex-start' }
+                    }}>
                       <TextField
                         fullWidth
                         name="email"
@@ -965,41 +999,50 @@ const RegisterPage = () => {
                           ) : null,
                         }}
                       />
-                      <Button
-                        variant="outlined"
-                        size="medium"
-                        onClick={handleSendEmailOTP}
-                        disabled={!formData.email || emailVerified || emailOTPSent || emailError}
-                        startIcon={<Email />}
-                        sx={{ 
-                          minWidth: 140,
-                          height: 56, // Match TextField height
-                          whiteSpace: 'nowrap'
-                        }}
-                      >
-                        {emailVerified ? 'Verified' : emailOTPSent ? 'OTP Sent' : 'Verify (Optional)'}
-                      </Button>
-                      {!emailVerified && !emailOTPSent && (
+                      <Box sx={{ 
+                        display: 'flex', 
+                        flexDirection: { xs: 'row', sm: 'column' },
+                        gap: 1,
+                        minWidth: { xs: 'auto', sm: 140 }
+                      }}>
                         <Button
-                          variant="text"
-                          size="small"
-                          onClick={() => {
-                            toast({
-                              title: "Email Verification Skipped",
-                              description: "You can verify your email later in your profile settings",
-                              variant: "default"
-                            })
-                          }}
+                          variant="outlined"
+                          size="medium"
+                          onClick={handleSendEmailOTP}
+                          disabled={!formData.email || emailVerified || emailOTPSent || emailError}
+                          startIcon={<Email sx={{ display: { xs: 'none', sm: 'block' } }} />}
                           sx={{ 
-                            fontSize: '0.75rem',
-                            minHeight: 'auto',
-                            py: 0.5,
-                            ml: 1
+                            minWidth: { xs: 'auto', sm: 140 },
+                            height: { xs: 'auto', sm: 56 },
+                            whiteSpace: 'nowrap',
+                            flex: { xs: 1, sm: 'none' },
+                            fontSize: { xs: '0.875rem', sm: '1rem' }
                           }}
                         >
-                          Skip for now
+                          {emailVerified ? 'Verified' : emailOTPSent ? 'OTP Sent' : isMobile ? 'Verify' : 'Verify (Optional)'}
                         </Button>
-                      )}
+                        {!emailVerified && !emailOTPSent && (
+                          <Button
+                            variant="text"
+                            size="small"
+                            onClick={() => {
+                              toast({
+                                title: "Email Verification Skipped",
+                                description: "You can verify your email later in your profile settings",
+                                variant: "default"
+                              })
+                            }}
+                            sx={{ 
+                              fontSize: '0.75rem',
+                              minHeight: 'auto',
+                              py: 0.5,
+                              flex: { xs: 1, sm: 'none' }
+                            }}
+                          >
+                            Skip
+                          </Button>
+                        )}
+                      </Box>
                     </Box>
                     {emailVerified ? (
                       <Box sx={{ mt: 1 }}>
@@ -1019,7 +1062,12 @@ const RegisterPage = () => {
 
                 {/* Phone Number Field with Verification */}
                 <Box sx={{ mb: 3 }}>
-                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    gap: 2, 
+                    alignItems: { xs: 'stretch', sm: 'flex-start' }
+                  }}>
                     <TextField
                       fullWidth
                       name="phone"
@@ -1044,20 +1092,27 @@ const RegisterPage = () => {
                         ) : null,
                       }}
                     />
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      flexDirection: { xs: 'row', sm: 'column' },
+                      gap: 1,
+                      minWidth: { xs: 'auto', sm: 140 }
+                    }}>
                       <Button
                         variant="outlined"
                         size="medium"
                         onClick={handleSendPhoneOTP}
                         disabled={!formData.phone || phoneVerified || phoneOTPSent || phoneError}
-                        startIcon={<Phone />}
+                        startIcon={<Phone sx={{ display: { xs: 'none', sm: 'block' } }} />}
                         sx={{ 
-                          minWidth: 140,
-                          height: 56, // Match TextField height
-                          whiteSpace: 'nowrap'
+                          minWidth: { xs: 'auto', sm: 140 },
+                          height: { xs: 'auto', sm: 56 },
+                          whiteSpace: 'nowrap',
+                          flex: { xs: 1, sm: 'none' },
+                          fontSize: { xs: '0.875rem', sm: '1rem' }
                         }}
                       >
-                        {phoneVerified ? 'Verified' : phoneOTPSent ? 'OTP Sent' : 'Verify (Optional)'}
+                        {phoneVerified ? 'Verified' : phoneOTPSent ? 'OTP Sent' : isMobile ? 'Verify' : 'Verify (Optional)'}
                       </Button>
                       {!phoneVerified && !phoneOTPSent && (
                         <Button
@@ -1073,10 +1128,11 @@ const RegisterPage = () => {
                           sx={{ 
                             fontSize: '0.75rem',
                             minHeight: 'auto',
-                            py: 0.5
+                            py: 0.5,
+                            flex: { xs: 1, sm: 'none' }
                           }}
                         >
-                          Skip for now
+                          Skip
                         </Button>
                       )}
                     </Box>
@@ -1436,7 +1492,18 @@ const RegisterPage = () => {
 
       {/* Email OTP Verification Dialog */}
       {console.log('🔍 Rendering Dialog - showEmailOTP:', showEmailOTP)}
-      <Dialog open={showEmailOTP} onClose={() => setShowEmailOTP(false)} maxWidth="sm" fullWidth>
+      <Dialog 
+        open={showEmailOTP} 
+        onClose={() => setShowEmailOTP(false)} 
+        maxWidth="sm" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            m: { xs: 2, sm: 3 },
+            width: { xs: 'calc(100% - 32px)', sm: 'auto' }
+          }
+        }}
+      >
         <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Email color="primary" />
@@ -1460,7 +1527,18 @@ const RegisterPage = () => {
       </Dialog>
 
       {/* Phone OTP Verification Dialog */}
-      <Dialog open={showPhoneOTP} onClose={() => setShowPhoneOTP(false)} maxWidth="sm" fullWidth>
+      <Dialog 
+        open={showPhoneOTP} 
+        onClose={() => setShowPhoneOTP(false)} 
+        maxWidth="sm" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            m: { xs: 2, sm: 3 },
+            width: { xs: 'calc(100% - 32px)', sm: 'auto' }
+          }
+        }}
+      >
         <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Phone color="primary" />

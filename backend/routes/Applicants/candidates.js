@@ -1,5 +1,5 @@
 import express from 'express';
-import { authenticateToken } from './auth.js';
+import { authenticateToken } from '../../middleware/auth.js';
 import { 
   getCandidates,
   getCandidateById,
@@ -8,7 +8,7 @@ import {
   downloadCandidateResume,
   getCandidateStats,
   bulkUpdateCandidates
-} from '../controllers/candidatesController.js';
+} from '../../controllers/Applicants/candidatesController.js';
 
 const router = express.Router();
 

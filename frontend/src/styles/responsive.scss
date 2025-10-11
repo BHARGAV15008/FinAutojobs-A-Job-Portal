@@ -1,0 +1,588 @@
+// Comprehensive Responsive Design System for FinAutoJobs
+// Mobile-first approach with progressive enhancement
+
+// ===== RESPONSIVE BREAKPOINTS =====
+$breakpoints: (
+  xs: 0px,
+  sm: 600px,
+  md: 900px,
+  lg: 1200px,
+  xl: 1536px
+);
+
+// Mixin for media queries
+@mixin respond-to($breakpoint) {
+  @if map-has-key($breakpoints, $breakpoint) {
+    @media (min-width: map-get($breakpoints, $breakpoint)) {
+      @content;
+    }
+  }
+}
+
+@mixin respond-below($breakpoint) {
+  @if map-has-key($breakpoints, $breakpoint) {
+    @media (max-width: map-get($breakpoints, $breakpoint) - 1px) {
+      @content;
+    }
+  }
+}
+
+// ===== GLOBAL RESPONSIVE STYLES =====
+
+// Base responsive container
+.responsive-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+  
+  @include respond-to(sm) {
+    padding: 0 var(--space-6);
+  }
+  
+  @include respond-to(lg) {
+    padding: 0 var(--space-8);
+  }
+}
+
+// Responsive grid system
+.responsive-grid {
+  display: grid;
+  gap: var(--space-4);
+  
+  // 1 column on mobile
+  grid-template-columns: 1fr;
+  
+  // 2 columns on tablet
+  @include respond-to(sm) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-6);
+  }
+  
+  // 3 columns on desktop
+  @include respond-to(md) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  // 4 columns on large desktop
+  @include respond-to(lg) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  &.grid-2 {
+    @include respond-to(sm) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  &.grid-3 {
+    @include respond-to(md) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  &.grid-auto {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+
+// ===== DASHBOARD RESPONSIVE STYLES =====
+
+// Dashboard layout
+.dashboard-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  
+  @include respond-to(md) {
+    flex-direction: row;
+  }
+}
+
+// Dashboard sidebar
+.dashboard-sidebar {
+  width: 100%;
+  background: white;
+  border-bottom: 1px solid var(--neutral-200);
+  
+  @include respond-to(md) {
+    width: 280px;
+    min-width: 280px;
+    border-bottom: none;
+    border-right: 1px solid var(--neutral-200);
+  }
+  
+  @include respond-to(lg) {
+    width: 320px;
+    min-width: 320px;
+  }
+}
+
+// Dashboard main content
+.dashboard-main {
+  flex: 1;
+  padding: var(--space-4);
+  overflow-x: auto;
+  
+  @include respond-to(sm) {
+    padding: var(--space-6);
+  }
+  
+  @include respond-to(lg) {
+    padding: var(--space-8);
+  }
+}
+
+// Dashboard tabs
+.dashboard-tabs {
+  .MuiTabs-root {
+    .MuiTabs-scrollButtons {
+      display: flex;
+      
+      @include respond-to(md) {
+        display: none;
+      }
+    }
+    
+    .MuiTabs-flexContainer {
+      @include respond-below(md) {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+      }
+    }
+  }
+  
+  .MuiTab-root {
+    min-width: auto;
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-sm);
+    
+    @include respond-to(sm) {
+      padding: var(--space-3) var(--space-4);
+      font-size: var(--text-base);
+    }
+  }
+}
+
+// ===== CARD RESPONSIVE STYLES =====
+
+.responsive-card {
+  @include card-base;
+  padding: var(--space-4);
+  
+  @include respond-to(sm) {
+    padding: var(--space-6);
+  }
+  
+  .card-header {
+    margin-bottom: var(--space-4);
+    
+    h2, h3 {
+      font-size: var(--text-lg);
+      
+      @include respond-to(sm) {
+        font-size: var(--text-xl);
+      }
+      
+      @include respond-to(md) {
+        font-size: var(--text-2xl);
+      }
+    }
+  }
+  
+  .card-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    
+    @include respond-to(sm) {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+    }
+  }
+}
+
+// ===== TABLE RESPONSIVE STYLES =====
+
+.responsive-table {
+  width: 100%;
+  overflow-x: auto;
+  
+  .MuiTable-root {
+    min-width: 650px;
+    
+    @include respond-to(lg) {
+      min-width: auto;
+    }
+  }
+  
+  .MuiTableCell-root {
+    padding: var(--space-2);
+    font-size: var(--text-sm);
+    
+    @include respond-to(sm) {
+      padding: var(--space-3);
+    }
+    
+    @include respond-to(md) {
+      padding: var(--space-4);
+      font-size: var(--text-base);
+    }
+  }
+  
+  // Hide less important columns on mobile
+  .hide-mobile {
+    @include respond-below(md) {
+      display: none;
+    }
+  }
+  
+  .hide-tablet {
+    @include respond-below(lg) {
+      display: none;
+    }
+  }
+}
+
+// ===== FORM RESPONSIVE STYLES =====
+
+.responsive-form {
+  .form-row {
+    display: grid;
+    gap: var(--space-4);
+    grid-template-columns: 1fr;
+    
+    @include respond-to(sm) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    &.single-column {
+      grid-template-columns: 1fr;
+    }
+    
+    &.three-columns {
+      @include respond-to(md) {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+  }
+  
+  .form-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+    
+    @include respond-to(sm) {
+      flex-direction: row;
+      justify-content: flex-end;
+    }
+    
+    .MuiButton-root {
+      width: 100%;
+      
+      @include respond-to(sm) {
+        width: auto;
+        min-width: 120px;
+      }
+    }
+  }
+}
+
+// ===== NAVIGATION RESPONSIVE STYLES =====
+
+.responsive-nav {
+  .nav-menu {
+    display: none;
+    
+    @include respond-to(md) {
+      display: flex;
+      align-items: center;
+      gap: var(--space-6);
+    }
+  }
+  
+  .mobile-menu-button {
+    display: block;
+    
+    @include respond-to(md) {
+      display: none;
+    }
+  }
+  
+  .mobile-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: white;
+    z-index: var(--z-modal);
+    padding: var(--space-6);
+    
+    @include respond-to(md) {
+      display: none;
+    }
+  }
+}
+
+// ===== DIALOG RESPONSIVE STYLES =====
+
+.responsive-dialog {
+  .MuiDialog-paper {
+    margin: var(--space-4);
+    width: calc(100% - var(--space-8));
+    max-width: 500px;
+    
+    @include respond-to(sm) {
+      margin: var(--space-8);
+      width: auto;
+    }
+  }
+  
+  .MuiDialogContent-root {
+    padding: var(--space-4);
+    
+    @include respond-to(sm) {
+      padding: var(--space-6);
+    }
+  }
+  
+  .MuiDialogActions-root {
+    padding: var(--space-4);
+    flex-direction: column;
+    gap: var(--space-2);
+    
+    @include respond-to(sm) {
+      flex-direction: row;
+      gap: var(--space-3);
+    }
+    
+    .MuiButton-root {
+      width: 100%;
+      
+      @include respond-to(sm) {
+        width: auto;
+      }
+    }
+  }
+}
+
+// ===== CHART RESPONSIVE STYLES =====
+
+.responsive-chart {
+  width: 100%;
+  height: 300px;
+  
+  @include respond-to(sm) {
+    height: 350px;
+  }
+  
+  @include respond-to(md) {
+    height: 400px;
+  }
+  
+  .recharts-wrapper {
+    width: 100% !important;
+    height: 100% !important;
+  }
+}
+
+// ===== STATS RESPONSIVE STYLES =====
+
+.stats-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: 1fr;
+  
+  @include respond-to(sm) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  @include respond-to(md) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  @include respond-to(lg) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.stat-card {
+  @include card-base;
+  padding: var(--space-4);
+  text-align: center;
+  
+  @include respond-to(sm) {
+    padding: var(--space-6);
+  }
+  
+  .stat-value {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-bold);
+    color: var(--primary-600);
+    
+    @include respond-to(sm) {
+      font-size: var(--text-3xl);
+    }
+  }
+  
+  .stat-label {
+    font-size: var(--text-sm);
+    color: var(--neutral-600);
+    margin-top: var(--space-2);
+  }
+}
+
+// ===== UTILITY CLASSES =====
+
+// Responsive text alignment
+.text-center-mobile {
+  text-align: center;
+  
+  @include respond-to(md) {
+    text-align: left;
+  }
+}
+
+// Responsive spacing
+.spacing-responsive {
+  padding: var(--space-4);
+  
+  @include respond-to(sm) {
+    padding: var(--space-6);
+  }
+  
+  @include respond-to(lg) {
+    padding: var(--space-8);
+  }
+}
+
+// Responsive flex
+.flex-responsive {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  
+  @include respond-to(md) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+// Hide/show utilities
+.hide-mobile {
+  @include respond-below(md) {
+    display: none !important;
+  }
+}
+
+.show-mobile {
+  @include respond-to(md) {
+    display: none !important;
+  }
+}
+
+.hide-tablet {
+  @include respond-below(lg) {
+    display: none !important;
+  }
+}
+
+.show-tablet {
+  @include respond-to(lg) {
+    display: none !important;
+  }
+}
+
+// ===== COMPONENT SPECIFIC RESPONSIVE STYLES =====
+
+// Job cards
+.job-card-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: 1fr;
+  
+  @include respond-to(sm) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  @include respond-to(lg) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+// Profile sections
+.profile-section {
+  display: grid;
+  gap: var(--space-6);
+  grid-template-columns: 1fr;
+  
+  @include respond-to(md) {
+    grid-template-columns: 1fr 2fr;
+  }
+}
+
+// Application timeline
+.application-timeline {
+  .timeline-item {
+    padding: var(--space-3);
+    
+    @include respond-to(sm) {
+      padding: var(--space-4);
+    }
+  }
+}
+
+// Search filters
+.search-filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  
+  @include respond-to(sm) {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  
+  @include respond-to(md) {
+    flex-wrap: nowrap;
+  }
+}
+
+// Pagination
+.responsive-pagination {
+  .MuiPagination-root {
+    .MuiPaginationItem-root {
+      margin: 0 var(--space-1);
+      
+      @include respond-below(sm) {
+        min-width: 32px;
+        height: 32px;
+        font-size: var(--text-sm);
+      }
+    }
+  }
+}
+
+// ===== PRINT STYLES =====
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .dashboard-sidebar {
+    display: none !important;
+  }
+  
+  .dashboard-main {
+    padding: 0 !important;
+  }
+  
+  .responsive-card {
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+  }
+}

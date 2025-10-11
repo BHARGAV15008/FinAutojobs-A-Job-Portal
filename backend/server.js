@@ -236,6 +236,7 @@ import jobAlertsRoutes from './routes/jobAlerts.js';
 import smsOtpRoutes from './routes/smsOtp.js';
 import phoneAuthRoutes from './routes/phoneAuth.js';
 import otpRoutes from './routes/otpRoutes.js';
+import candidatesRoutes from './routes/Applicants/candidates.js';
 
 // Mount routes under /api
 const apiRouter = express.Router();
@@ -261,6 +262,8 @@ apiRouter.use('/job-alerts', jobAlertsRoutes);
 apiRouter.use('/sms-otp', smsOtpRoutes);
 apiRouter.use('/phone-auth', phoneAuthRoutes);
 apiRouter.use('/otp', otpRoutes);
+apiRouter.use('/candidates', candidatesRoutes);
+console.log('✅ /api/candidates routes registered successfully');
 
 // Initialize OAuth strategies after environment variables are loaded
 console.log('🔧 Initializing OAuth strategies after env load...');

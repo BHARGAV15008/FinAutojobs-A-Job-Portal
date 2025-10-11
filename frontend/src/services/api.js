@@ -110,7 +110,41 @@ export const candidatesAPI = {
   getCandidate: (id) => api.get(`/applications/${id}`),
   updateCandidateStatus: (id, status, notes = '') => api.put(`/applications/${id}/status`, { status, notes }),
   sendEmail: (id, emailData) => api.post(`/candidates/${id}/send-email`, emailData),
-  downloadResume: (id) => api.get(`/candidates/${id}/resume/download`, { responseType: 'blob' }),
+  downloadResume: async (id) => {
+    try {
+      const response = await api.get(`/candidates/${id}/resume/download`, { 
+        responseType: 'blob',
+        timeout: 30000 // 30 second timeout for file downloads
+      });
+      
+      // Create blob URL and trigger download
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Try to get filename from response headers
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = 'resume.pdf';
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+      
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      return { success: true, message: 'Resume downloaded successfully' };
+    } catch (error) {
+      console.error('Resume download error:', error);
+      throw error;
+    }
+  },
   getStats: () => api.get('/candidates/stats'),
   bulkUpdate: (candidateIds, updateData) => api.put('/candidates/bulk-update', { candidateIds, ...updateData }),
   searchCandidates: (query, filters) => api.post('/candidates/search', { query, filters }),

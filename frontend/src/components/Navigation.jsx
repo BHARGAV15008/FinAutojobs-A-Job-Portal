@@ -397,14 +397,16 @@ const Navigation = () => {
                     href="/recruiter-dashboard/jobs"
                     variant="contained"
                     color="primary"
-                    startIcon={<PostAdd />}
+                    startIcon={<PostAdd sx={{ display: { xs: 'none', sm: 'block' } }} />}
                     sx={{ 
-                      mr: 2,
+                      mr: { xs: 1, sm: 2 },
                       textTransform: 'none',
                       fontWeight: 600,
-                      px: 3,
+                      px: { xs: 2, sm: 3 },
                       py: 1,
                       borderRadius: 2,
+                      fontSize: { xs: '0.875rem', sm: '1rem' },
+                      minWidth: { xs: 'auto', sm: 'auto' },
                       transition: 'all 0.3s ease-in-out',
                       boxShadow: '0 2px 8px rgba(25, 118, 210, 0.3)',
                       '&:hover': {
@@ -414,7 +416,8 @@ const Navigation = () => {
                       },
                     }}
                   >
-                    Post Job
+                    <Box sx={{ display: { xs: 'none', sm: 'block' } }}>Post Job</Box>
+                    <Box sx={{ display: { xs: 'block', sm: 'none' } }}>Post</Box>
                   </Button>
                 )}
                 <Tooltip title="Open settings">
@@ -495,21 +498,22 @@ const Navigation = () => {
                 </Menu>
               </>
             ) : (
-              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+              <Box sx={{ display: 'flex', gap: { xs: 1, sm: 2 }, alignItems: 'center' }}>
                 <Button
                   component={Link}
                   href="/admin-login"
                   variant="text"
                   size="small"
-                  startIcon={<Shield />}
+                  startIcon={<Shield sx={{ display: { xs: 'none', sm: 'block' } }} />}
                   sx={{
                     textTransform: 'none',
                     fontWeight: 500,
-                    px: 2,
+                    px: { xs: 1.5, sm: 2 },
                     py: 0.5,
                     borderRadius: 1,
                     color: 'text.secondary',
-                    fontSize: '0.875rem',
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                    minWidth: { xs: 'auto', sm: 'auto' },
                     '&:hover': {
                       bgcolor: 'rgba(0, 0, 0, 0.04)',
                       color: 'primary.main',
@@ -523,13 +527,15 @@ const Navigation = () => {
                   href="/login"
                   variant="outlined"
                   color="primary"
-                  startIcon={<Login />}
+                  startIcon={<Login sx={{ display: { xs: 'none', sm: 'block' } }} />}
                   sx={{
                     textTransform: 'none',
                     fontWeight: 500,
-                    px: 3,
+                    px: { xs: 2, sm: 3 },
                     py: 1,
                     borderRadius: 2,
+                    fontSize: { xs: '0.875rem', sm: '1rem' },
+                    minWidth: { xs: 'auto', sm: 'auto' },
                     transition: 'all 0.3s ease-in-out',
                     '&:hover': {
                       transform: 'translateY(-1px)',
@@ -549,9 +555,11 @@ const Navigation = () => {
                   sx={{
                     textTransform: 'none',
                     fontWeight: 600,
-                    px: 3,
+                    px: { xs: 2, sm: 3 },
                     py: 1,
                     borderRadius: 2,
+                    fontSize: { xs: '0.875rem', sm: '1rem' },
+                    minWidth: { xs: 'auto', sm: 'auto' },
                     transition: 'all 0.3s ease-in-out',
                     boxShadow: '0 2px 8px rgba(25, 118, 210, 0.3)',
                     '&:hover': {
