@@ -21,7 +21,11 @@
     "create:admin:simple": "node scripts/create-admin-simple.js",
     "test:cors": "node scripts/test-cors.js",
     "test:admin": "node scripts/test-admin-login.js",
-    "fix:admin": "node scripts/fix-admin-user.js"
+    "fix:admin": "node scripts/fix-admin-user.js",
+    "test:backend": "node scripts/test-backend-login.js",
+    "debug:admin": "node scripts/debug-admin-search.js",
+    "fix:role": "node scripts/fix-admin-role.js",
+    "cleanup:admin": "node scripts/cleanup-admin-users.js"
   },
   "keywords": [
     "job-portal",
