@@ -66,7 +66,13 @@ const AdminLoginPage = () => {
 
     try {
       console.log('Admin login attempt:', { ...formData, password: '***' });
-      const result = await login(formData);
+      // Add admin role to login credentials
+      const adminCredentials = {
+        ...formData,
+        role: 'admin',
+        identifier: formData.email // Backend expects 'identifier' field
+      };
+      const result = await login(adminCredentials);
       
       console.log('Admin login result:', result);
       
