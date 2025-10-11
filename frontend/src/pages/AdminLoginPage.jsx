@@ -69,7 +69,7 @@ const AdminLoginPage = () => {
       // Add admin role to login credentials
       const adminCredentials = {
         ...formData,
-        role: 'admin'
+        role: 'Admin' // Capital A to match database role
         // identifier is already in formData, no need to override
       };
       const result = await login(adminCredentials);
