@@ -19,7 +19,9 @@
     "oauth:config": "node scripts/check-oauth-config.js --deps",
     "create:admin": "node scripts/create-super-admin.js",
     "create:admin:simple": "node scripts/create-admin-simple.js",
-    "test:cors": "node scripts/test-cors.js"
+    "test:cors": "node scripts/test-cors.js",
+    "test:admin": "node scripts/test-admin-login.js",
+    "fix:admin": "node scripts/fix-admin-user.js"
   },
   "keywords": [
     "job-portal",
