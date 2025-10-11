@@ -36,7 +36,8 @@
     "create:multiple-admins": "node scripts/create-multiple-admins.js",
     "create:all-admin-types": "node scripts/create-all-admin-types.js",
     "test:analytics-admin": "node scripts/test-analytics-admin.js",
-    "test:validation": "node scripts/test-validation-details.js"
+    "test:validation": "node scripts/test-validation-details.js",
+    "create:simple-working-admin": "node scripts/create-simple-working-admin.js"
   },
   "keywords": [
     "job-portal",
