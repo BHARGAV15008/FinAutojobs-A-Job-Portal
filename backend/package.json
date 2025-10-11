@@ -33,7 +33,8 @@
     "create:direct-admin": "node scripts/create-direct-admin.js",
     "test:exact-request": "node scripts/test-exact-request.js",
     "check:db-users": "node scripts/check-database-users.js",
-    "create:multiple-admins": "node scripts/create-multiple-admins.js"
+    "create:multiple-admins": "node scripts/create-multiple-admins.js",
+    "create:all-admin-types": "node scripts/create-all-admin-types.js"
   },
   "keywords": [
     "job-portal",
