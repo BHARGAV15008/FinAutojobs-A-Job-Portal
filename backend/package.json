@@ -27,7 +27,10 @@
     "fix:role": "node scripts/fix-admin-role.js",
     "cleanup:admin": "node scripts/cleanup-admin-users.js",
     "create:prod-admin": "node scripts/create-production-admin.js",
-    "create:simple-admin": "node scripts/create-simple-admin.js"
+    "create:simple-admin": "node scripts/create-simple-admin.js",
+    "test:user-creds": "node scripts/test-user-credentials.js",
+    "create:superadmin-faj": "node scripts/create-superadmin-finautojobs.js",
+    "create:direct-admin": "node scripts/create-direct-admin.js"
   },
   "keywords": [
     "job-portal",
