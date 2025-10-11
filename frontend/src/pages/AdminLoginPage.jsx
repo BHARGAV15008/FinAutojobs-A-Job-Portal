@@ -69,8 +69,8 @@ const AdminLoginPage = () => {
       // Add admin role to login credentials
       const adminCredentials = {
         ...formData,
-        role: 'admin',
-        identifier: formData.email // Backend expects 'identifier' field
+        role: 'admin'
+        // identifier is already in formData, no need to override
       };
       const result = await login(adminCredentials);
       

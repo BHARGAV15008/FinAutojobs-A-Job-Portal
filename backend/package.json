@@ -34,7 +34,9 @@
     "test:exact-request": "node scripts/test-exact-request.js",
     "check:db-users": "node scripts/check-database-users.js",
     "create:multiple-admins": "node scripts/create-multiple-admins.js",
-    "create:all-admin-types": "node scripts/create-all-admin-types.js"
+    "create:all-admin-types": "node scripts/create-all-admin-types.js",
+    "test:analytics-admin": "node scripts/test-analytics-admin.js",
+    "test:validation": "node scripts/test-validation-details.js"
   },
   "keywords": [
     "job-portal",

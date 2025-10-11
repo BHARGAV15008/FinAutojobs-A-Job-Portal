@@ -14,8 +14,8 @@ async function testExactRequest() {
 
   // Test the exact format the frontend should send
   const adminCredentials = {
-    identifier: 'admin2@finautojobs.com',
-    password: 'admin123',
+    identifier: 'analyticsadmin@finautojobs.com',
+    password: 'SuperAdmin@2025!',
     role: 'admin'
   };
 
