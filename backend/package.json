@@ -16,7 +16,9 @@
     "test:oauth": "node scripts/test-oauth.js",
     "check:oauth": "node scripts/check-oauth-config.js",
     "oauth:status": "node scripts/test-oauth.js --status",
-    "oauth:config": "node scripts/check-oauth-config.js --deps"
+    "oauth:config": "node scripts/check-oauth-config.js --deps",
+    "create:admin": "node scripts/create-super-admin.js",
+    "create:admin:simple": "node scripts/create-admin-simple.js"
   },
   "keywords": [
     "job-portal",
