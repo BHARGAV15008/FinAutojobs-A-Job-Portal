@@ -2,6 +2,7 @@ import express from 'express';
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as MicrosoftStrategy } from 'passport-microsoft';
+import { Strategy as LinkedInStrategy } from 'passport-linkedin-oauth2';
 import jwt from 'jsonwebtoken';
 import UserModels, { createUserByRole, BaseUser } from '../models/UserModels.js';
 
@@ -33,6 +34,12 @@ const getOAuthConfig = () => {
       keyID: process.env.APPLE_KEY_ID || 'your-apple-key-id',
       privateKeyPath: process.env.APPLE_PRIVATE_KEY_PATH || './apple-private-key.p8',
       callbackURL: process.env.APPLE_CALLBACK_URL || 'https://finautojobs-a-job-portal-hk5c.onrender.com/api/oauth/apple/callback'
+    },
+    linkedin: {
+      clientID: process.env.LINKEDIN_CLIENT_ID || 'your-linkedin-client-id',
+      clientSecret: process.env.LINKEDIN_CLIENT_SECRET || 'your-linkedin-client-secret',
+      callbackURL: process.env.LINKEDIN_CALLBACK_URL || '/api/oauth/linkedin/callback',
+      scope: ['r_liteprofile', 'r_emailaddress']
     }
   };
 };
@@ -103,11 +110,48 @@ const initializeMicrosoftStrategy = () => {
 }));
 };
 
+// Configure LinkedIn OAuth Strategy - Lazy initialization
+const initializeLinkedInStrategy = () => {
+  const OAUTH_CONFIG = getOAuthConfig();
+  passport.use(new LinkedInStrategy({
+    clientID: OAUTH_CONFIG.linkedin.clientID,
+    clientSecret: OAUTH_CONFIG.linkedin.clientSecret,
+    callbackURL: OAUTH_CONFIG.linkedin.callbackURL,
+    scope: OAUTH_CONFIG.linkedin.scope
+}, async (accessToken, refreshToken, profile, done) => {
+  try {
+    console.log('🔍 LinkedIn OAuth Profile:', JSON.stringify(profile, null, 2));
+    
+    // Extract user information
+    const userInfo = {
+      provider: 'linkedin',
+      providerId: profile.id,
+      email: profile.emails?.[0]?.value,
+      firstName: profile.name?.givenName || profile.displayName?.split(' ')[0] || '',
+      lastName: profile.name?.familyName || profile.displayName?.split(' ').slice(1).join(' ') || '',
+      profileImage: profile.photos?.[0]?.value,
+      verified: true, // LinkedIn accounts are generally verified
+      accessToken,
+      refreshToken,
+      headline: profile._json?.headline,
+      industry: profile._json?.industry,
+      location: profile._json?.location?.name
+    };
+    
+    return done(null, userInfo);
+  } catch (error) {
+    console.error('LinkedIn OAuth Error:', error);
+    return done(error, null);
+  }
+}));
+};
+
 // Initialize OAuth strategies when environment is ready
 const initializeOAuth = () => {
   console.log('🔧 Initializing OAuth strategies...');
   initializeGoogleStrategy();
   initializeMicrosoftStrategy();
+  initializeLinkedInStrategy();
   console.log('✅ OAuth strategies initialized');
 };
 
@@ -178,12 +222,16 @@ const findOrCreateOAuthUser = async (userInfo, role = 'applicant') => {
         companyInfo: {
           companyName: userInfo.organization || 'Not specified',
           department: 'Not specified',
-          jobTitle: 'Not specified'
+          jobTitle: userInfo.headline || 'Not specified'
         }
       }),
       ...(role === 'applicant' && {
         skills: { primary: [], technical: [], soft: [] },
-        careerInfo: {},
+        careerInfo: {
+          headline: userInfo.headline || '',
+          industry: userInfo.industry || '',
+          location: userInfo.location || ''
+        },
         documents: {}
       })
     };
@@ -200,11 +248,12 @@ const findOrCreateOAuthUser = async (userInfo, role = 'applicant') => {
 
 // Google OAuth Routes
 router.get('/google', (req, res, next) => {
-  const { role } = req.query;
+  const { role, action } = req.query;
   
-  // Store role in session for callback
+  // Store role and action in session for callback
   req.session = req.session || {};
   req.session.oauthRole = role || 'applicant';
+  req.session.oauthAction = action || 'login'; // 'login' or 'link'
   
   passport.authenticate('google', {
     scope: ['profile', 'email']
@@ -217,10 +266,33 @@ router.get('/google/callback',
     try {
       const userInfo = req.user;
       const role = req.session?.oauthRole || 'applicant';
+      const action = req.session?.oauthAction || 'login';
       
-      console.log('🔍 Google OAuth Callback - Role:', role);
+      console.log('🔍 Google OAuth Callback - Role:', role, 'Action:', action);
       
-      // Find or create user
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      
+      if (action === 'link') {
+        // Handle account linking
+        const linkingToken = req.query.state; // You might need to pass this differently
+        
+        // Redirect to frontend with OAuth data for linking
+        const linkingData = encodeURIComponent(JSON.stringify({
+          provider: 'google',
+          providerId: userInfo.providerId,
+          email: userInfo.email,
+          firstName: userInfo.firstName,
+          lastName: userInfo.lastName,
+          profileImage: userInfo.profileImage,
+          accessToken: userInfo.accessToken,
+          refreshToken: userInfo.refreshToken
+        }));
+        
+        res.redirect(`${frontendUrl}/oauth/link-callback?data=${linkingData}&provider=google`);
+        return;
+      }
+      
+      // Regular login flow
       const user = await findOrCreateOAuthUser(userInfo, role);
       
       // Generate JWT token
@@ -237,7 +309,6 @@ router.get('/google/callback',
       );
       
       // Redirect to frontend with token
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
       const redirectUrl = `${frontendUrl}/oauth/callback?token=${token}&provider=google&role=${user.role}`;
       
       res.redirect(redirectUrl);
@@ -309,6 +380,57 @@ router.get('/apple', (req, res) => {
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
   res.redirect(`${frontendUrl}/oauth/apple?role=${role || 'applicant'}`);
 });
+
+// LinkedIn OAuth Routes
+router.get('/linkedin', (req, res, next) => {
+  const { role } = req.query;
+  
+  // Store role in session for callback
+  req.session = req.session || {};
+  req.session.oauthRole = role || 'applicant';
+  
+  passport.authenticate('linkedin', {
+    scope: ['r_liteprofile', 'r_emailaddress']
+  })(req, res, next);
+});
+
+router.get('/linkedin/callback',
+  passport.authenticate('linkedin', { session: false }),
+  async (req, res) => {
+    try {
+      const userInfo = req.user;
+      const role = req.session?.oauthRole || 'applicant';
+      
+      console.log('🔍 LinkedIn OAuth Callback - Role:', role);
+      
+      // Find or create user
+      const user = await findOrCreateOAuthUser(userInfo, role);
+      
+      // Generate JWT token
+      const token = jwt.sign(
+        { 
+          id: user._id,
+          userId: user._id,
+          email: user.email,
+          role: user.role,
+          provider: 'linkedin'
+        },
+        JWT_SECRET,
+        { expiresIn: '24h' }
+      );
+      
+      // Redirect to frontend with token
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const redirectUrl = `${frontendUrl}/oauth/callback?token=${token}&provider=linkedin&role=${user.role}`;
+      
+      res.redirect(redirectUrl);
+    } catch (error) {
+      console.error('❌ LinkedIn OAuth Callback Error:', error);
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      res.redirect(`${frontendUrl}/oauth/error?message=${encodeURIComponent(error.message)}`);
+    }
+  }
+);
 
 // Apple OAuth callback (handled via POST from Apple's JS SDK)
 router.post('/apple/callback', async (req, res) => {
@@ -386,6 +508,10 @@ router.get('/status', (req, res) => {
       apple: {
         enabled: !!OAUTH_CONFIG.apple.clientID && OAUTH_CONFIG.apple.clientID !== 'your-apple-client-id',
         authUrl: '/api/oauth/apple'
+      },
+      linkedin: {
+        enabled: !!OAUTH_CONFIG.linkedin.clientID && OAUTH_CONFIG.linkedin.clientID !== 'your-linkedin-client-id',
+        authUrl: '/api/oauth/linkedin'
       }
     }
   });
@@ -407,6 +533,10 @@ router.get('/config', (req, res) => {
     apple: {
       enabled: !!OAUTH_CONFIG.apple.clientID && OAUTH_CONFIG.apple.clientID !== 'your-apple-client-id',
       clientId: OAUTH_CONFIG.apple.clientID !== 'your-apple-client-id' ? OAUTH_CONFIG.apple.clientID : null
+    },
+    linkedin: {
+      enabled: !!OAUTH_CONFIG.linkedin.clientID && OAUTH_CONFIG.linkedin.clientID !== 'your-linkedin-client-id',
+      clientId: OAUTH_CONFIG.linkedin.clientID !== 'your-linkedin-client-id' ? OAUTH_CONFIG.linkedin.clientID : null
     }
   });
 });

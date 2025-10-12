@@ -11,38 +11,38 @@ const getAllowedOrigins = () => {
         // Environment-specific URLs
         process.env.FRONTEND_URL,
         process.env.CORS_ORIGIN,
-        
+
         // Production domains
         'https://finautojobs.com',
         'https://www.finautojobs.com',
         'https://finautojobs.vercel.app',
-        
+
         // Render.com deployments
         'https://finautojobs-frontend.onrender.com',
         'https://finautojobs.onrender.com',
         'https://finautojobs-a-job-portal-1-bctj.onrender.com',
         'https://finautojobs-a-job-portal-hk5c.onrender.com',
         'https://finautojobs-a-job-portal-pivn.onrender.com',
-        
+
         // Staging environments
         'https://dev-finautojobs.vercel.app',
-        
+
         // Development origins
         'http://localhost:3000',
-        'http://localhost:3001',
-        'http://localhost:3003',
+        'http://localhost:3000',
+        'http://localhost:3000',
         'http://localhost:5173',
         'http://localhost:4173',
         'http://localhost:8080',
         'http://127.0.0.1:3000',
-        'http://127.0.0.1:3001',
-        'http://127.0.0.1:3003',
+        'http://127.0.0.1:3000',
+        'http://127.0.0.1:3000',
         'http://127.0.0.1:5173',
         'http://127.0.0.1:4173',
         'http://127.0.0.1:5000',
         'http://127.0.0.1:8080'
     ];
-    
+
     // Filter out null/undefined values
     return baseOrigins.filter(Boolean);
 };
@@ -50,7 +50,7 @@ const getAllowedOrigins = () => {
 // Check if origin matches deployment patterns
 const isDeploymentOrigin = (origin) => {
     if (!origin) return false;
-    
+
     // Production deployment patterns
     const productionPatterns = [
         /^https:\/\/.*\.onrender\.com$/,
@@ -60,14 +60,14 @@ const isDeploymentOrigin = (origin) => {
         /^https:\/\/.*finautojobs.*$/,
         /^https:\/\/finautojobs-a-job-portal-.*\.onrender\.com$/
     ];
-    
+
     return productionPatterns.some(pattern => pattern.test(origin));
 };
 
 // Check if origin is local network
 const isLocalNetworkOrigin = (origin) => {
     if (!origin) return false;
-    
+
     // Local network patterns
     const localPatterns = [
         /^https?:\/\/localhost(:\d+)?$/,
@@ -76,14 +76,14 @@ const isLocalNetworkOrigin = (origin) => {
         /^https?:\/\/10\.\d+\.\d+\.\d+(:\d+)?$/,
         /^https?:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+(:\d+)?$/
     ];
-    
+
     return localPatterns.some(pattern => pattern.test(origin));
 };
 
 const corsOptions = {
     origin: (origin, callback) => {
         const allowedOrigins = getAllowedOrigins();
-        
+
         console.log('🔍 CORS Check:', {
             origin,
             environment: process.env.NODE_ENV,
@@ -109,7 +109,7 @@ const corsOptions = {
                 return callback(null, true);
             }
         }
-        
+
         // Production/Staging - check deployment patterns
         if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
             if (isDeploymentOrigin(origin)) {
@@ -117,7 +117,7 @@ const corsOptions = {
                 return callback(null, true);
             }
         }
-        
+
         // Wildcard patterns for dynamic deployments
         if (process.env.CORS_ALLOW_PATTERNS) {
             const patterns = process.env.CORS_ALLOW_PATTERNS.split(',');
@@ -128,15 +128,15 @@ const corsOptions = {
                 }
             }
         }
-        
+
         console.log(`❌ CORS: Blocked origin: ${origin}`);
-        
+
         // In development, log but still allow for debugging
         if (process.env.NODE_ENV === 'development') {
             console.log(`⚠️ Development mode: allowing for debugging`);
             return callback(null, true);
         }
-        
+
         // Production: strict blocking
         callback(new Error(`CORS policy violation: Origin ${origin} not allowed`));
     },

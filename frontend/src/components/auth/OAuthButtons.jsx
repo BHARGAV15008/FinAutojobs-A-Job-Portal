@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Box, Typography, Alert, CircularProgress } from '@mui/material';
-import { Google, Microsoft, Apple } from '@mui/icons-material';
+import { Google, Microsoft, Apple, LinkedIn } from '@mui/icons-material';
 import API_BASE_URL from '../../services/apiConfig';
 
 const OAuthButtons = ({ role = 'applicant', onSuccess, onError }) => {
@@ -54,6 +54,14 @@ const OAuthButtons = ({ role = 'applicant', onSuccess, onError }) => {
             color: '#000000',
             bgColor: '#000000',
             textColor: '#ffffff'
+        },
+        {
+            name: 'linkedin',
+            label: 'Continue with LinkedIn',
+            icon: <LinkedIn />,
+            color: '#0077b5',
+            bgColor: '#ffffff',
+            textColor: '#0077b5'
         }
     ];
 

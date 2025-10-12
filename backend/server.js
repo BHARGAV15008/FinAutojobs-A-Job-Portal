@@ -46,12 +46,15 @@ import { errorHandler, notFoundHandler, errorMonitor } from './middlewares/Other
 import { xssMiddleware, sqlInjectionMiddleware, payloadSizeMiddleware } from './middlewares/Others/security.js';
 import { apiLimiter } from './middlewares/Others/rateLimiter.js';
 import { sanitizeRequest, sqlInjectionPrevention, preventNoSqlInjection } from './middlewares/Others/sanitization.js';
+import WebSocketService from './services/Others/websocketService.js';
+import { setWebSocketService } from './services/notifications.js';
 
-// Configure dotenv with proper file path
-dotenv.config({ path: path.join(__dirname, '.env') });
+// Configure dotenv to read from root .env file
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+// Use environment variable or default port
+const PORT = process.env.PORT || process.env.BACKEND_PORT || 5000;
 
 // Enable trust proxy if behind a reverse proxy
 app.set('trust proxy', 1);
@@ -59,108 +62,39 @@ app.set('trust proxy', 1);
 // Create HTTP server for Socket.IO
 const server = createServer(app);
 
-// Initialize Socket.IO with CORS configuration
-const io = new Server(server, {
-  cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
-    methods: ["GET", "POST"],
-    credentials: true
-  },
-  transports: ['websocket', 'polling']
-});
+// Initialize WebSocket service
+const websocketService = new WebSocketService(server);
 
-// Make io available to routes
-app.set('io', io);
+// Set WebSocket service for notifications
+setWebSocketService(websocketService);
 
-// Socket.io connection handling
-io.on('connection', (socket) => {
-  console.log(`🔌 User connected: ${socket.id}`);
-
-  // Join user-specific room for targeted notifications
-  socket.on('join-user-room', (userId) => {
-    socket.join(`user-${userId}`);
-    console.log(`👤 User ${userId} joined their room`);
-  });
-
-  // Join role-specific rooms for role-based notifications
-  socket.on('join-role-room', (role) => {
-    socket.join(`role-${role}`);
-    console.log(`🎭 User joined ${role} room`);
-  });
-
-  // Handle job posting notifications
-  socket.on('job-posted', (jobData) => {
-    // Notify all applicants about new job
-    io.to('role-applicant').emit('new-job-posted', {
-      message: 'New job opportunity available!',
-      job: jobData,
-      timestamp: new Date()
-    });
-  });
-
-  // Handle application notifications
-  socket.on('new-application', (applicationData) => {
-    // Notify recruiter about new application
-    io.to(`user-${applicationData.recruiterId}`).emit('new-application-received', {
-      message: 'New application received for your job posting',
-      application: applicationData,
-      timestamp: new Date()
-    });
-  });
-
-  // Handle application status updates
-  socket.on('application-status-update', (updateData) => {
-    // Notify applicant about status change
-    io.to(`user-${updateData.applicantId}`).emit('application-status-changed', {
-      message: `Your application status has been updated to: ${updateData.status}`,
-      application: updateData,
-      timestamp: new Date()
-    });
-  });
-
-  // Handle admin notifications
-  socket.on('admin-notification', (notificationData) => {
-    // Notify all admins
-    io.to('role-admin').emit('admin-alert', {
-      message: notificationData.message,
-      type: notificationData.type || 'info',
-      timestamp: new Date()
-    });
-  });
-
-  // Handle disconnection
-  socket.on('disconnect', () => {
-    console.log(`🔌 User disconnected: ${socket.id}`);
-  });
-});
-
-// Make io instance available to routes
-app.set('io', io);
+// Make WebSocket service available to routes
+app.set('websocketService', websocketService);
 
 // Configure basic middleware
 app.use(compression());
 
 // Enable request parsing before any security middleware
-app.use(express.json({ 
-    limit: '10mb',
-    verify: (req, res, buf) => {
-        if (buf.length) {
-            try {
-                JSON.parse(buf);
-            } catch(e) {
-                res.status(400).json({ 
-                    status: 'error',
-                    message: 'Invalid JSON payload',
-                    error: e.message 
-                });
-                throw e;
-            }
-        }
+app.use(express.json({
+  limit: '10mb',
+  verify: (req, res, buf) => {
+    if (buf.length) {
+      try {
+        JSON.parse(buf);
+      } catch (e) {
+        res.status(400).json({
+          status: 'error',
+          message: 'Invalid JSON payload',
+          error: e.message
+        });
+        throw e;
+      }
     }
+  }
 }));
-app.use(express.urlencoded({ 
-    extended: true,
-    limit: '10mb'
+app.use(express.urlencoded({
+  extended: true,
+  limit: '10mb'
 }));
 
 // Apply CORS
@@ -168,9 +102,9 @@ app.use(cors(corsOptions));
 
 // Apply security headers
 app.use(helmet({
-    ...securityHeaders,
-    crossOriginResourcePolicy: { policy: 'cross-origin' },
-    crossOriginEmbedderPolicy: false
+  ...securityHeaders,
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  crossOriginEmbedderPolicy: false
 }));
 
 // Apply security middleware
@@ -188,17 +122,17 @@ app.use(preventNoSqlInjection);
 
 // Session configuration with MongoDB store
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'your-secret-key-change-this-in-production',
-    resave: false,
-    saveUninitialized: false,
-    store: MongoStore.create({
-        mongoUrl: process.env.MONGODB_URI || 'mongodb://localhost:27017/finauto_jobs',
-        touchAfter: 24 * 3600 // lazy session update
-    }),
-    cookie: {
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    }
+  secret: process.env.SESSION_SECRET || 'your-secret-key-change-this-in-production',
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGODB_URI || 'mongodb://localhost:27017/finauto_jobs',
+    touchAfter: 24 * 3600 // lazy session update
+  }),
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
 }));
 
 // Passport middleware
@@ -265,6 +199,11 @@ apiRouter.use('/otp', otpRoutes);
 apiRouter.use('/candidates', candidatesRoutes);
 console.log('✅ /api/candidates routes registered successfully');
 
+// Social accounts routes
+import socialAccountsRoutes from './routes/socialAccounts.js';
+apiRouter.use('/auth', socialAccountsRoutes);
+console.log('✅ /api/auth social accounts routes registered successfully');
+
 // Initialize OAuth strategies after environment variables are loaded
 console.log('🔧 Initializing OAuth strategies after env load...');
 initializeOAuth();
@@ -293,18 +232,18 @@ app.use('/uploads', express.static('uploads'));
 
 // Root health check
 app.get('/', (req, res) => {
-    res.json({
-        message: 'FinAutoJobs API Service',
-        apiDocs: '/api/docs',
-        timestamp: new Date().toISOString()
-    });
+  res.json({
+    message: 'FinAutoJobs API Service',
+    apiDocs: '/api/docs',
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Serve static files from React build
 if (process.env.NODE_ENV === 'production') {
   const frontendBuildPath = path.join(__dirname, '../frontend/build');
   app.use(express.static(frontendBuildPath));
-  
+
   // Handle React Router - send all non-API requests to index.html
   app.get('*', (req, res) => {
     // Skip API routes
@@ -315,7 +254,7 @@ if (process.env.NODE_ENV === 'production') {
         availableRoutes: ['/api/applications', '/api/jobs', '/api/auth', '/api/health']
       });
     }
-    
+
     // Serve React app for all other routes
     res.sendFile(path.join(frontendBuildPath, 'index.html'));
   });
@@ -334,27 +273,27 @@ if (process.env.NODE_ENV === 'production') {
 
 // Add health check endpoint under /api 
 apiRouter.get('/health', (req, res) => {
-    const emailConfigured = !!(process.env.EMAIL_USER && process.env.EMAIL_PASS);
-    
-    res.json({
-        status: 'OK',
-        message: 'FinAutoJobs API is running',
-        timestamp: new Date().toISOString(),
-        env: process.env.NODE_ENV || 'development',
-        services: {
-            database: 'connected',
-            cors: 'configured',
-            security: 'enabled',
-            email: emailConfigured ? 'configured' : 'not configured',
-            otp: 'enabled'
-        },
-        endpoints: {
-            auth: '/api/auth',
-            otp: '/api/otp',
-            jobs: '/api/jobs',
-            applications: '/api/applications'
-        }
-    });
+  const emailConfigured = !!(process.env.EMAIL_USER && process.env.EMAIL_PASS);
+
+  res.json({
+    status: 'OK',
+    message: 'FinAutoJobs API is running',
+    timestamp: new Date().toISOString(),
+    env: process.env.NODE_ENV || 'development',
+    services: {
+      database: 'connected',
+      cors: 'configured',
+      security: 'enabled',
+      email: emailConfigured ? 'configured' : 'not configured',
+      otp: 'enabled'
+    },
+    endpoints: {
+      auth: '/api/auth',
+      otp: '/api/otp',
+      jobs: '/api/jobs',
+      applications: '/api/applications'
+    }
+  });
 });
 
 // Enhanced error handling middleware
@@ -364,31 +303,31 @@ app.use(errorHandler);
 
 // Start server with proper error handling - bind to 0.0.0.0 for network access
 server.listen(PORT, '0.0.0.0', () => {
-    const networkInterfaces = os.networkInterfaces();
-    let localIP = 'localhost';
-    
-    // Find the local IP address
-    Object.keys(networkInterfaces).forEach(interfaceName => {
-        const interfaces = networkInterfaces[interfaceName];
-        interfaces.forEach(interfaceInfo => {
-            if (interfaceInfo.family === 'IPv4' && !interfaceInfo.internal) {
-                localIP = interfaceInfo.address;
-            }
-        });
+  const networkInterfaces = os.networkInterfaces();
+  let localIP = 'localhost';
+
+  // Find the local IP address
+  Object.keys(networkInterfaces).forEach(interfaceName => {
+    const interfaces = networkInterfaces[interfaceName];
+    interfaces.forEach(interfaceInfo => {
+      if (interfaceInfo.family === 'IPv4' && !interfaceInfo.internal) {
+        localIP = interfaceInfo.address;
+      }
     });
-    
-    console.log(`🚀 FinAutoJobs API Server - Email Fixed - running on port ${PORT}`);
-    console.log(`🌐 Network Access:`);
-    console.log(`   📱 Local: http://localhost:${PORT}`);
-    console.log(`   🌍 Network: http://${localIP}:${PORT}`);
-    console.log(`   📊 Health check: http://${localIP}:${PORT}/api/health`);
-    console.log(`🛡️ Enhanced error handling enabled`);
-    console.log(`📡 Server accessible from any device on the network`);
+  });
+
+  console.log(`🚀 FinAutoJobs API Server - Email Fixed - running on port ${PORT}`);
+  console.log(`🌐 Network Access:`);
+  console.log(`   📱 Local: http://localhost:${PORT}`);
+  console.log(`   🌍 Network: http://${localIP}:${PORT}`);
+  console.log(`   📊 Health check: http://${localIP}:${PORT}/api/health`);
+  console.log(`🛡️ Enhanced error handling enabled`);
+  console.log(`📡 Server accessible from any device on the network`);
 }).on('error', (error) => {
-    if (error.code === 'EADDRINUSE') {
-        console.error(`❌ Port ${PORT} is already in use. Please try a different port.`);
-    } else {
-        console.error('❌ Server error:', error);
-    }
-    process.exit(1);
+  if (error.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${PORT} is already in use. Please try a different port.`);
+  } else {
+    console.error('❌ Server error:', error);
+  }
+  process.exit(1);
 });

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
+import { useAuth } from '../contexts/AuthContext';
 import {
     Container,
     Box,
@@ -57,6 +58,8 @@ const AssessmentCard = styled(Card)(({ theme }) => ({
 }));
 
 const SkillsAssessmentPage = () => {
+    const { user } = useAuth();
+    const [, setLocation] = useLocation();
     const [assessments, setAssessments] = useState([]);
     const [userResults, setUserResults] = useState([]);
     const [selectedAssessment, setSelectedAssessment] = useState(null);
@@ -66,6 +69,7 @@ const SkillsAssessmentPage = () => {
     const [isAssessmentActive, setIsAssessmentActive] = useState(false);
     const [showResults, setShowResults] = useState(false);
     const [assessmentResult, setAssessmentResult] = useState(null);
+    const [dialogOpen, setDialogOpen] = useState(false);
 
     // Mock assessments data
     const mockAssessments = [
@@ -292,11 +296,19 @@ const SkillsAssessmentPage = () => {
     }, [timeLeft, isAssessmentActive]);
 
     const startAssessment = (assessment) => {
+        // Check if user is logged in
+        if (!user) {
+            // Redirect to login page
+            setLocation('/login?redirect=/skills-assessment');
+            return;
+        }
+        
         setSelectedAssessment(assessment);
         setCurrentQuestion(0);
         setAnswers({});
         setTimeLeft(assessment.duration * 60);
         setIsAssessmentActive(true);
+        setDialogOpen(true);
         setShowResults(false);
     };
 
@@ -321,6 +333,7 @@ const SkillsAssessmentPage = () => {
 
     const handleSubmitAssessment = () => {
         setIsAssessmentActive(false);
+        setDialogOpen(false);
         
         // Calculate score
         let correctAnswers = 0;
@@ -351,6 +364,15 @@ const SkillsAssessmentPage = () => {
         setUserResults(prev => [...prev, result]);
     };
 
+    const handleCancelAssessment = () => {
+        setIsAssessmentActive(false);
+        setDialogOpen(false);
+        setSelectedAssessment(null);
+        setCurrentQuestion(0);
+        setAnswers({});
+        setTimeLeft(0);
+    };
+
     const formatTime = (seconds) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
@@ -367,8 +389,9 @@ const SkillsAssessmentPage = () => {
     };
 
     const AssessmentCardComponent = ({ assessment }) => {
-        const hasCompleted = userResults.some(result => result.assessmentId === assessment.id);
-        const userResult = userResults.find(result => result.assessmentId === assessment.id);
+        const hasCompleted = user ? userResults.some(result => result.assessmentId === assessment.id) : false;
+        const userResult = user ? userResults.find(result => result.assessmentId === assessment.id) : null;
+        const completedCount = user ? userResults.filter(result => result.assessmentId === assessment.id).length : 0;
 
         return (
             <AssessmentCard>
@@ -442,10 +465,19 @@ const SkillsAssessmentPage = () => {
                         />
                     </Box>
 
-                    {hasCompleted && (
+                    {hasCompleted && user && (
                         <Alert severity="success" sx={{ mb: 2 }}>
                             <Typography variant="body2">
                                 Completed: {userResult.score}% • {userResult.rank}
+                                {completedCount > 1 && ` • Taken ${completedCount} times`}
+                            </Typography>
+                        </Alert>
+                    )}
+                    
+                    {!user && (
+                        <Alert severity="info" sx={{ mb: 2 }}>
+                            <Typography variant="body2">
+                                Please login to track your assessment progress and save results.
                             </Typography>
                         </Alert>
                     )}
@@ -454,11 +486,11 @@ const SkillsAssessmentPage = () => {
                 <CardActions sx={{ p: 2, pt: 0 }}>
                     <Button
                         fullWidth
-                        variant={hasCompleted ? "outlined" : "contained"}
-                        startIcon={hasCompleted ? <Refresh /> : <PlayArrow />}
+                        variant={hasCompleted && user ? "outlined" : "contained"}
+                        startIcon={hasCompleted && user ? <Refresh /> : <PlayArrow />}
                         onClick={() => startAssessment(assessment)}
                     >
-                        {hasCompleted ? 'Retake Assessment' : 'Start Assessment'}
+                        {hasCompleted && user ? 'Retake Assessment' : 'Start Assessment'}
                     </Button>
                 </CardActions>
             </AssessmentCard>
@@ -473,14 +505,23 @@ const SkillsAssessmentPage = () => {
 
         return (
             <Dialog
-                open={isAssessmentActive}
+                open={dialogOpen && isAssessmentActive}
                 maxWidth="md"
                 fullWidth
                 disableEscapeKeyDown
+                PaperProps={{
+                    sx: {
+                        position: 'fixed',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        m: 0
+                    }
+                }}
             >
                 <DialogTitle>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="h6">
+                        <Typography variant="h6" component="div">
                             {selectedAssessment.title}
                         </Typography>
                         <Chip
@@ -500,7 +541,7 @@ const SkillsAssessmentPage = () => {
                 </DialogTitle>
 
                 <DialogContent>
-                    <Typography variant="h6" gutterBottom>
+                    <Typography variant="h6" component="div" gutterBottom>
                         {question.question}
                     </Typography>
 
@@ -523,6 +564,13 @@ const SkillsAssessmentPage = () => {
                 </DialogContent>
 
                 <DialogActions sx={{ p: 3 }}>
+                    <Button
+                        onClick={handleCancelAssessment}
+                        color="error"
+                        variant="outlined"
+                    >
+                        Cancel
+                    </Button>
                     <Button
                         onClick={previousQuestion}
                         disabled={currentQuestion === 0}
@@ -560,10 +608,19 @@ const SkillsAssessmentPage = () => {
                 maxWidth="sm"
                 fullWidth
                 onClose={() => setShowResults(false)}
+                PaperProps={{
+                    sx: {
+                        position: 'fixed',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        m: 0
+                    }
+                }}
             >
                 <DialogTitle sx={{ textAlign: 'center', pb: 1 }}>
                     <EmojiEvents sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
-                    <Typography variant="h5" fontWeight="bold">
+                    <Typography variant="h5" component="div" fontWeight="bold">
                         Assessment Complete!
                     </Typography>
                 </DialogTitle>
@@ -649,10 +706,19 @@ const SkillsAssessmentPage = () => {
                 <Typography variant="h6" color="text.secondary" paragraph>
                     Test your knowledge and showcase your expertise to employers
                 </Typography>
+                {!user && (
+                    <Alert severity="info" sx={{ mt: 2, maxWidth: 600, mx: 'auto' }}>
+                        <Typography variant="body2">
+                            <Link href="/login" style={{ color: 'inherit', textDecoration: 'underline' }}>
+                                Login
+                            </Link> to save your assessment results and track your progress over time.
+                        </Typography>
+                    </Alert>
+                )}
             </Box>
 
             {/* User Progress Summary */}
-            {userResults.length > 0 && (
+            {user && userResults.length > 0 && (
                 <Paper sx={{ p: 3, mb: 4 }}>
                     <Typography variant="h6" gutterBottom>
                         Your Assessment Progress

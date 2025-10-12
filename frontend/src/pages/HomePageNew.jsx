@@ -253,7 +253,7 @@ const HomePageNew = () => {
                     }}
                 />
 
-                <Container maxWidth="lg">
+                <Box sx={{ width: '100%', px: { xs: 2, sm: 3, lg: 4 } }}>
                     <Grid container spacing={4} alignItems="center">
                         <Grid item xs={12} md={6}>
                             <Typography
@@ -383,7 +383,7 @@ const HomePageNew = () => {
                             />
                         </Grid>
                     </Grid>
-                </Container>
+                </Box>
             </Box>
 
             {/* Quick Stats */}

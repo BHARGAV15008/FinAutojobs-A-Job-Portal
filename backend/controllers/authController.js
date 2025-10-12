@@ -6,6 +6,7 @@ import { sendEmail } from '../services/emailService.js';
 import { generateOTP, verifyOTP } from '../utils/otpUtils.js';
 import { createUserProfile } from '../services/profileService.js';
 import { logActivity } from '../services/activityLogger.js';
+import { NotificationService } from '../services/notifications.js';
 
 // Enhanced error handling utility
 const handleError = (res, error, statusCode = 500) => {
@@ -163,6 +164,14 @@ export const register = async (req, res) => {
       ipAddress: req.ip,
       userAgent: req.get('User-Agent')
     });
+
+    // Send notification to admins about new user registration
+    try {
+      await NotificationService.notifyNewUserRegistration(user._id, role);
+    } catch (notificationError) {
+      console.error('Error sending new user registration notification:', notificationError);
+      // Don't fail registration if notification fails
+    }
 
     // Generate tokens
     const { accessToken, refreshToken } = generateTokens(user._id);

@@ -113,7 +113,7 @@ async function makeRequest(endpoint, options = {}) {
         logInfo(`Making ${requestOptions.method || 'GET'} request to: ${endpoint}`);
         const response = await fetch(url, requestOptions);
         const data = await response.json();
-        
+
         return {
             status: response.status,
             ok: response.ok,
@@ -143,7 +143,7 @@ function recordTest(name, passed, message = '', data = null) {
         testResults.failed++;
         logError(`${name}: ${message}`);
     }
-    
+
     testResults.results.push({
         name,
         passed,
@@ -157,14 +157,14 @@ async function testEndpoint(name, endpoint, options = {}, expectedStatus = 200) 
     try {
         const response = await makeRequest(endpoint, options);
         const passed = response.status === expectedStatus;
-        
+
         recordTest(
             name,
             passed,
             passed ? `Status ${response.status}` : `Expected ${expectedStatus}, got ${response.status}`,
             response.data
         );
-        
+
         return response;
     } catch (error) {
         recordTest(name, false, error.message);
@@ -196,7 +196,7 @@ function waitForInput(question) {
 // 1. Health Check Tests
 async function testHealthChecks() {
     logHeader('HEALTH CHECK TESTS');
-    
+
     await testEndpoint('Root Health Check', '/');
     await testEndpoint('API Health Check', '/health');
 }
@@ -204,7 +204,7 @@ async function testHealthChecks() {
 // 2. OTP Tests
 async function testOTPFunctionality() {
     logHeader('OTP FUNCTIONALITY TESTS');
-    
+
     // Test OTP send
     logInfo('Testing OTP send functionality...');
     const otpSendResponse = await testEndpoint(
@@ -225,10 +225,10 @@ async function testOTPFunctionality() {
 
     if (otpSendResponse && otpSendResponse.ok) {
         logSuccess('OTP sent successfully! Check your email.');
-        
+
         // Wait for user to enter OTP
         const otp = await waitForInput('Please enter the OTP you received: ');
-        
+
         if (otp) {
             // Test OTP verification
             await testEndpoint(
@@ -268,7 +268,7 @@ async function testOTPFunctionality() {
 // 3. Authentication Tests
 async function testAuthentication() {
     logHeader('AUTHENTICATION TESTS');
-    
+
     // Test user registration
     const registerResponse = await testEndpoint(
         'Register User',
@@ -339,19 +339,19 @@ async function testAuthentication() {
 // 4. Jobs API Tests
 async function testJobsAPI() {
     logHeader('JOBS API TESTS');
-    
+
     // Test get all jobs
     await testEndpoint('Get All Jobs', '/jobs');
-    
+
     // Test job search
     await testEndpoint('Search Jobs', '/jobs/search?q=developer&location=mumbai');
-    
+
     // Test job filters
     await testEndpoint('Filter Jobs', '/jobs/filter?experience=2-5&salary=500000-1000000');
-    
+
     // Test job categories
     await testEndpoint('Get Job Categories', '/jobs/categories');
-    
+
     // Test job locations
     await testEndpoint('Get Job Locations', '/jobs/locations');
 }
@@ -359,12 +359,12 @@ async function testJobsAPI() {
 // 5. Applications API Tests
 async function testApplicationsAPI() {
     logHeader('APPLICATIONS API TESTS');
-    
+
     if (!authTokens.applicant) {
         logWarning('No auth token available, skipping applications tests');
         return;
     }
-    
+
     // Test get user applications
     await testEndpoint(
         'Get User Applications',
@@ -375,7 +375,7 @@ async function testApplicationsAPI() {
             }
         }
     );
-    
+
     // Test application statistics
     await testEndpoint(
         'Get Application Stats',
@@ -391,13 +391,13 @@ async function testApplicationsAPI() {
 // 6. Companies API Tests
 async function testCompaniesAPI() {
     logHeader('COMPANIES API TESTS');
-    
+
     // Test get all companies
     await testEndpoint('Get All Companies', '/companies');
-    
+
     // Test company search
     await testEndpoint('Search Companies', '/companies/search?q=tech');
-    
+
     // Test company details
     await testEndpoint('Get Company Details', '/companies/featured');
 }
@@ -405,12 +405,12 @@ async function testCompaniesAPI() {
 // 7. Dashboard API Tests
 async function testDashboardAPI() {
     logHeader('DASHBOARD API TESTS');
-    
+
     if (!authTokens.applicant) {
         logWarning('No auth token available, skipping dashboard tests');
         return;
     }
-    
+
     // Test dashboard data
     await testEndpoint(
         'Get Dashboard Data',
@@ -426,12 +426,12 @@ async function testDashboardAPI() {
 // 8. Notifications API Tests
 async function testNotificationsAPI() {
     logHeader('NOTIFICATIONS API TESTS');
-    
+
     if (!authTokens.applicant) {
         logWarning('No auth token available, skipping notifications tests');
         return;
     }
-    
+
     // Test get notifications
     await testEndpoint(
         'Get Notifications',
@@ -447,12 +447,12 @@ async function testNotificationsAPI() {
 // 9. Messages API Tests
 async function testMessagesAPI() {
     logHeader('MESSAGES API TESTS');
-    
+
     if (!authTokens.applicant) {
         logWarning('No auth token available, skipping messages tests');
         return;
     }
-    
+
     // Test get messages
     await testEndpoint(
         'Get Messages',
@@ -468,7 +468,7 @@ async function testMessagesAPI() {
 // 10. Analytics API Tests
 async function testAnalyticsAPI() {
     logHeader('ANALYTICS API TESTS');
-    
+
     // Test public analytics
     await testEndpoint('Get Public Analytics', '/analytics/public');
 }
@@ -476,12 +476,12 @@ async function testAnalyticsAPI() {
 // 11. Recommendations API Tests
 async function testRecommendationsAPI() {
     logHeader('RECOMMENDATIONS API TESTS');
-    
+
     if (!authTokens.applicant) {
         logWarning('No auth token available, skipping recommendations tests');
         return;
     }
-    
+
     // Test get recommendations
     await testEndpoint(
         'Get Job Recommendations',
@@ -497,7 +497,7 @@ async function testRecommendationsAPI() {
 // 12. SMS OTP Tests
 async function testSMSOTP() {
     logHeader('SMS OTP TESTS');
-    
+
     // Test send SMS OTP
     await testEndpoint(
         'Send SMS OTP',
@@ -514,7 +514,7 @@ async function testSMSOTP() {
 // 13. Phone Auth Tests
 async function testPhoneAuth() {
     logHeader('PHONE AUTHENTICATION TESTS');
-    
+
     // Test phone auth initialization
     await testEndpoint(
         'Initialize Phone Auth',
@@ -531,10 +531,10 @@ async function testPhoneAuth() {
 // 14. Error Handling Tests
 async function testErrorHandling() {
     logHeader('ERROR HANDLING TESTS');
-    
+
     // Test 404 endpoint
     await testEndpoint('Test 404 Error', '/nonexistent-endpoint', {}, 404);
-    
+
     // Test invalid JSON
     await testEndpoint(
         'Test Invalid JSON',
@@ -545,7 +545,7 @@ async function testErrorHandling() {
         },
         400
     );
-    
+
     // Test missing required fields
     await testEndpoint(
         'Test Missing Fields',
@@ -565,9 +565,9 @@ async function runAllTests() {
     logHeader('FINAUTOJOBS API COMPREHENSIVE TESTING');
     logInfo(`Testing against: ${CONFIG.BASE_URL}`);
     logInfo(`Test email: ${CONFIG.TEST_EMAIL}`);
-    
+
     const startTime = Date.now();
-    
+
     try {
         // Run all test suites
         await testHealthChecks();
@@ -584,14 +584,14 @@ async function runAllTests() {
         await testSMSOTP();
         await testPhoneAuth();
         await testErrorHandling();
-        
+
     } catch (error) {
         logError(`Test execution failed: ${error.message}`);
     }
-    
+
     const endTime = Date.now();
     const duration = ((endTime - startTime) / 1000).toFixed(2);
-    
+
     // Print final results
     logHeader('TEST RESULTS SUMMARY');
     log(`Total Tests: ${testResults.total}`, 'bright');
@@ -599,7 +599,7 @@ async function runAllTests() {
     log(`Failed: ${testResults.failed}`, 'red');
     log(`Success Rate: ${((testResults.passed / testResults.total) * 100).toFixed(1)}%`, 'cyan');
     log(`Duration: ${duration}s`, 'yellow');
-    
+
     // Print failed tests
     if (testResults.failed > 0) {
         logHeader('FAILED TESTS');
@@ -609,7 +609,7 @@ async function runAllTests() {
                 logError(`${result.name}: ${result.message}`);
             });
     }
-    
+
     // Save results to file
     const resultsFile = path.join(__dirname, 'test-results.json');
     const fs = await import('fs');
@@ -624,9 +624,9 @@ async function runAllTests() {
         },
         results: testResults.results
     }, null, 2));
-    
+
     logInfo(`Detailed results saved to: ${resultsFile}`);
-    
+
     return testResults.failed === 0;
 }
 
@@ -644,7 +644,7 @@ async function checkServerHealth() {
         }
     } catch (error) {
         logError(`Cannot connect to server: ${error.message}`);
-        logInfo('Please make sure the server is running on http://localhost:5002');
+        logInfo('Please make sure the server is running on http://localhost:5000');
         return false;
     }
 }
@@ -653,16 +653,16 @@ async function checkServerHealth() {
 async function main() {
     console.clear();
     logHeader('FINAUTOJOBS API TESTING SUITE');
-    
+
     // Check server health first
     const serverHealthy = await checkServerHealth();
     if (!serverHealthy) {
         process.exit(1);
     }
-    
+
     // Run all tests
     const success = await runAllTests();
-    
+
     // Exit with appropriate code
     process.exit(success ? 0 : 1);
 }

@@ -10,6 +10,7 @@ import { FavoritesProvider } from './contexts/FavoritesContext.jsx';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import NotificationSystem from './components/notifications/NotificationSystem';
 import AppRoutes from './routes/AppRoutes'
+import './styles/responsive.css'
 
 // Create a client
 const queryClient = new QueryClient({

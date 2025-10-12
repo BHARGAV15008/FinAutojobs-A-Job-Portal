@@ -15,9 +15,23 @@ export const AuthProvider = ({ children }) => {
       
       if (token) {
         try {
-          // First try to validate the token
-          const validateResponse = await apiClient.get('/auth/validate-token');
-          console.log('✅ Token validation successful:', validateResponse.data);
+          // First try to validate the token with retry logic
+          let validateResponse;
+          let retryCount = 0;
+          const maxRetries = 3;
+          
+          while (retryCount < maxRetries) {
+            try {
+              validateResponse = await apiClient.get('/auth/validate-token');
+              console.log('✅ Token validation successful:', validateResponse.data);
+              break;
+            } catch (retryError) {
+              retryCount++;
+              console.log(`🔄 Token validation retry ${retryCount}/${maxRetries}`);
+              if (retryCount >= maxRetries) throw retryError;
+              await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+            }
+          }
           
           // If token is valid, get full profile
           const response = await getProfile();
@@ -96,8 +110,24 @@ export const AuthProvider = ({ children }) => {
         
         return { success: true };
       } else {
-        // Regular email/password login
-        const { data } = await apiClient.post('/auth/login', credentials);
+        // Regular email/password login with retry logic
+        let response;
+        let retryCount = 0;
+        const maxRetries = 2;
+        
+        while (retryCount <= maxRetries) {
+          try {
+            response = await apiClient.post('/auth/login', credentials);
+            break;
+          } catch (retryError) {
+            retryCount++;
+            console.log(`🔄 Login retry ${retryCount}/${maxRetries}`);
+            if (retryCount > maxRetries) throw retryError;
+            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          }
+        }
+        
+        const { data } = response;
         
         if (data.success) {
           const { user, token } = data.data;

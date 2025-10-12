@@ -18,7 +18,23 @@ const notificationSchema = new mongoose.Schema({
       'system_alert',
       'interview_scheduled',
       'job_expired',
-      'new_message'
+      'new_message',
+      // New notification types
+      'application_submitted',
+      'application_withdrawn',
+      'application_status_changed',
+      'interview_cancelled',
+      'job_posted',
+      'job_updated',
+      'job_closed',
+      'account_verified',
+      'account_suspended',
+      'policy_update',
+      'system_maintenance',
+      'new_user_registration',
+      'company_verification_request',
+      'report_submitted',
+      'suspicious_activity'
     ],
     required: true
   },

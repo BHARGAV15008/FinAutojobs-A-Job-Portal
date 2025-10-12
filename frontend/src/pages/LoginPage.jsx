@@ -391,7 +391,7 @@ const LoginPage = () => {
           background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
         }}
       >
-        <Container maxWidth="sm">
+        <Box sx={{ width: '100%', maxWidth: '480px' }}>
           {/* Mobile Logo */}
           {isMobile && (
             <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
@@ -571,7 +571,7 @@ const LoginPage = () => {
               </Box>
             </CardContent>
           </StyledCard>
-        </Container>
+        </Box>
       </Box>
 
     </Box>

@@ -74,7 +74,7 @@ async function makeRequest(endpoint, options = {}) {
         logInfo(`Making ${requestOptions.method || 'GET'} request to: ${endpoint}`);
         const response = await fetch(url, requestOptions);
         const data = await response.json();
-        
+
         return {
             status: response.status,
             ok: response.ok,
@@ -114,7 +114,7 @@ function waitForInput(question) {
  */
 async function testOTPSend() {
     logHeader('TESTING OTP SEND');
-    
+
     const requestData = {
         email: CONFIG.TEST_EMAIL,
         purpose: 'verification',
@@ -123,15 +123,15 @@ async function testOTPSend() {
             lastName: 'User'
         }
     };
-    
+
     logInfo(`Sending OTP to: ${CONFIG.TEST_EMAIL}`);
     console.log('Request data:', JSON.stringify(requestData, null, 2));
-    
+
     const response = await makeRequest('/otp/send', {
         method: 'POST',
         body: JSON.stringify(requestData)
     });
-    
+
     if (response.ok) {
         logSuccess('OTP sent successfully!');
         console.log('Response:', JSON.stringify(response.data, null, 2));
@@ -148,28 +148,28 @@ async function testOTPSend() {
  */
 async function testOTPVerification() {
     logHeader('TESTING OTP VERIFICATION');
-    
+
     const otp = await waitForInput('Please enter the OTP you received via email: ');
-    
+
     if (!otp) {
         logError('No OTP provided');
         return false;
     }
-    
+
     const requestData = {
         email: CONFIG.TEST_EMAIL,
         otp: otp,
         purpose: 'verification'
     };
-    
+
     logInfo(`Verifying OTP: ${otp}`);
     console.log('Request data:', JSON.stringify(requestData, null, 2));
-    
+
     const response = await makeRequest('/otp/verify', {
         method: 'POST',
         body: JSON.stringify(requestData)
     });
-    
+
     if (response.ok) {
         logSuccess('OTP verified successfully!');
         console.log('Response:', JSON.stringify(response.data, null, 2));
@@ -186,9 +186,9 @@ async function testOTPVerification() {
  */
 async function testOTPStats() {
     logHeader('TESTING OTP STATS');
-    
+
     const response = await makeRequest('/otp/stats');
-    
+
     if (response.ok) {
         logSuccess('OTP stats retrieved successfully!');
         console.log('Stats:', JSON.stringify(response.data, null, 2));
@@ -205,7 +205,7 @@ async function testOTPStats() {
  */
 async function testOTPResend() {
     logHeader('TESTING OTP RESEND');
-    
+
     const requestData = {
         email: CONFIG.TEST_EMAIL,
         purpose: 'verification',
@@ -214,14 +214,14 @@ async function testOTPResend() {
             lastName: 'User'
         }
     };
-    
+
     logInfo(`Resending OTP to: ${CONFIG.TEST_EMAIL}`);
-    
+
     const response = await makeRequest('/otp/resend', {
         method: 'POST',
         body: JSON.stringify(requestData)
     });
-    
+
     if (response.ok) {
         logSuccess('OTP resent successfully!');
         console.log('Response:', JSON.stringify(response.data, null, 2));
@@ -250,7 +250,7 @@ async function checkServerHealth() {
         }
     } catch (error) {
         logError(`Cannot connect to server: ${error.message}`);
-        logInfo('Please make sure the server is running on http://localhost:5002');
+        logInfo('Please make sure the server is running on http://localhost:5000');
         return false;
     }
 }
@@ -263,41 +263,41 @@ async function runOTPTests() {
     logHeader('FINAUTOJOBS OTP TESTING');
     logInfo(`Testing against: ${CONFIG.BASE_URL}`);
     logInfo(`Test email: ${CONFIG.TEST_EMAIL}`);
-    
+
     // Check server health first
     const serverHealthy = await checkServerHealth();
     if (!serverHealthy) {
         process.exit(1);
     }
-    
+
     let testsPassed = 0;
     let totalTests = 0;
-    
+
     // Test 1: Send OTP
     totalTests++;
     if (await testOTPSend()) {
         testsPassed++;
-        
+
         // Test 2: Verify OTP (only if send was successful)
         totalTests++;
         if (await testOTPVerification()) {
             testsPassed++;
         }
     }
-    
+
     // Test 3: Get OTP Stats
     totalTests++;
     if (await testOTPStats()) {
         testsPassed++;
     }
-    
+
     // Test 4: Resend OTP
     const shouldTestResend = await waitForInput('\nDo you want to test OTP resend? (y/n): ');
     if (shouldTestResend.toLowerCase() === 'y') {
         totalTests++;
         if (await testOTPResend()) {
             testsPassed++;
-            
+
             // Test verification of resent OTP
             const shouldVerifyResent = await waitForInput('Do you want to verify the resent OTP? (y/n): ');
             if (shouldVerifyResent.toLowerCase() === 'y') {
@@ -308,20 +308,20 @@ async function runOTPTests() {
             }
         }
     }
-    
+
     // Print results
     logHeader('OTP TEST RESULTS');
     log(`Total Tests: ${totalTests}`, 'cyan');
     log(`Passed: ${testsPassed}`, 'green');
     log(`Failed: ${totalTests - testsPassed}`, 'red');
     log(`Success Rate: ${((testsPassed / totalTests) * 100).toFixed(1)}%`, 'cyan');
-    
+
     if (testsPassed === totalTests) {
         logSuccess('All OTP tests passed! 🎉');
     } else {
         logError(`${totalTests - testsPassed} test(s) failed`);
     }
-    
+
     return testsPassed === totalTests;
 }
 

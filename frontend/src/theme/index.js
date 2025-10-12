@@ -2,38 +2,48 @@ import { createTheme } from '@mui/material/styles';
 
 // Base theme configuration
 const baseTheme = {
+  breakpoints: {
+    values: {
+      xs: 0,
+      sm: 600,
+      md: 900,
+      lg: 1200,
+      xl: 1536,
+    },
+  },
   typography: {
     fontFamily: '"Inter", "Helvetica", "Arial", sans-serif',
+    // Responsive typography
     h1: {
       fontWeight: 800,
-      fontSize: '3.5rem',
+      fontSize: 'clamp(2rem, 5vw, 3.5rem)',
       lineHeight: 1.2,
       letterSpacing: '-0.02em',
     },
     h2: {
       fontWeight: 700,
-      fontSize: '2.5rem',
+      fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
       lineHeight: 1.3,
       letterSpacing: '-0.01em',
     },
     h3: {
       fontWeight: 700,
-      fontSize: '2rem',
+      fontSize: 'clamp(1.5rem, 3vw, 2rem)',
       lineHeight: 1.4,
     },
     h4: {
       fontWeight: 600,
-      fontSize: '1.5rem',
+      fontSize: 'clamp(1.25rem, 2.5vw, 1.5rem)',
       lineHeight: 1.4,
     },
     h5: {
       fontWeight: 600,
-      fontSize: '1.25rem',
+      fontSize: 'clamp(1.125rem, 2vw, 1.25rem)',
       lineHeight: 1.5,
     },
     h6: {
       fontWeight: 600,
-      fontSize: '1.125rem',
+      fontSize: 'clamp(1rem, 1.5vw, 1.125rem)',
       lineHeight: 1.5,
     },
     subtitle1: {
@@ -76,17 +86,24 @@ const baseTheme = {
   components: {
     MuiButton: {
       styleOverrides: {
-        root: {
+        root: ({ theme }) => ({
           borderRadius: '12px',
           padding: '10px 24px',
           fontSize: '0.875rem',
           fontWeight: 600,
           textTransform: 'none',
           boxShadow: 'none',
+          minHeight: '44px', // Touch-friendly
           '&:hover': {
             boxShadow: '0px 4px 8px rgba(0,0,0,0.12)',
           },
-        },
+          // Responsive padding
+          [theme.breakpoints.down('sm')]: {
+            padding: '8px 16px',
+            fontSize: '0.8rem',
+            minHeight: '40px',
+          },
+        }),
         contained: {
           '&:hover': {
             boxShadow: '0px 6px 12px rgba(0,0,0,0.15)',
@@ -98,40 +115,59 @@ const baseTheme = {
             borderWidth: '2px',
           },
         },
-        sizeSmall: {
+        sizeSmall: ({ theme }) => ({
           padding: '6px 16px',
           fontSize: '0.75rem',
-        },
-        sizeLarge: {
+          [theme.breakpoints.down('sm')]: {
+            padding: '4px 12px',
+            fontSize: '0.7rem',
+          },
+        }),
+        sizeLarge: ({ theme }) => ({
           padding: '12px 32px',
           fontSize: '1rem',
-        },
+          [theme.breakpoints.down('sm')]: {
+            padding: '10px 24px',
+            fontSize: '0.9rem',
+          },
+        }),
       },
     },
     MuiCard: {
       styleOverrides: {
-        root: {
+        root: ({ theme }) => ({
           borderRadius: '16px',
           boxShadow: '0px 4px 12px rgba(0,0,0,0.05)',
           '&:hover': {
             boxShadow: '0px 8px 24px rgba(0,0,0,0.1)',
           },
-        },
+          // Responsive margins and padding
+          [theme.breakpoints.down('sm')]: {
+            borderRadius: '12px',
+            margin: '8px',
+          },
+        }),
       },
     },
     MuiTextField: {
       styleOverrides: {
-        root: {
+        root: ({ theme }) => ({
           '& .MuiOutlinedInput-root': {
             borderRadius: '12px',
+            minHeight: '48px', // Touch-friendly
             '&:hover .MuiOutlinedInput-notchedOutline': {
               borderColor: '#8B5CF6',
             },
             '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
               borderWidth: '2px',
             },
+            // Responsive sizing
+            [theme.breakpoints.down('sm')]: {
+              minHeight: '44px',
+              fontSize: '16px', // Prevents zoom on iOS
+            },
           },
-        },
+        }),
       },
     },
     MuiChip: {
@@ -168,16 +204,111 @@ const baseTheme = {
     },
     MuiDialog: {
       styleOverrides: {
-        paper: {
+        paper: ({ theme }) => ({
           borderRadius: '20px',
-        },
+          margin: '16px',
+          width: 'calc(100% - 32px)',
+          maxWidth: 'calc(100% - 32px)',
+          [theme.breakpoints.down('sm')]: {
+            borderRadius: '16px',
+            margin: '8px',
+            width: 'calc(100% - 16px)',
+            maxWidth: 'calc(100% - 16px)',
+          },
+        }),
       },
     },
     MuiAvatar: {
       styleOverrides: {
-        root: {
+        root: ({ theme }) => ({
           fontWeight: 600,
+          [theme.breakpoints.down('sm')]: {
+            width: '32px',
+            height: '32px',
+            fontSize: '0.875rem',
+          },
+        }),
+      },
+    },
+    // Add responsive Grid component
+    MuiGrid: {
+      styleOverrides: {
+        container: {
+          width: '100%',
+          margin: 0,
         },
+        item: ({ theme }) => ({
+          [theme.breakpoints.down('sm')]: {
+            paddingLeft: theme.spacing(1),
+            paddingRight: theme.spacing(1),
+          },
+        }),
+      },
+    },
+    // Add responsive Container - Force full width
+    MuiContainer: {
+      styleOverrides: {
+        root: ({ theme }) => ({
+          paddingLeft: theme.spacing(2),
+          paddingRight: theme.spacing(2),
+          width: '100% !important',
+          maxWidth: 'none !important',
+          marginLeft: '0 !important',
+          marginRight: '0 !important',
+          [theme.breakpoints.up('sm')]: {
+            paddingLeft: theme.spacing(3),
+            paddingRight: theme.spacing(3),
+          },
+          [theme.breakpoints.up('lg')]: {
+            paddingLeft: theme.spacing(4),
+            paddingRight: theme.spacing(4),
+          },
+          // Only constrain width on very large screens
+          [theme.breakpoints.up('xl')]: {
+            maxWidth: '1400px !important',
+            marginLeft: 'auto !important',
+            marginRight: 'auto !important',
+          },
+        }),
+        maxWidthXs: {
+          maxWidth: 'none !important',
+        },
+        maxWidthSm: {
+          maxWidth: 'none !important',
+        },
+        maxWidthMd: {
+          maxWidth: 'none !important',
+        },
+        maxWidthLg: {
+          maxWidth: 'none !important',
+        },
+        maxWidthXl: {
+          maxWidth: 'none !important',
+        },
+      },
+    },
+    // Add responsive Toolbar
+    MuiToolbar: {
+      styleOverrides: {
+        root: ({ theme }) => ({
+          minHeight: '64px !important',
+          [theme.breakpoints.down('sm')]: {
+            minHeight: '56px !important',
+            paddingLeft: theme.spacing(1),
+            paddingRight: theme.spacing(1),
+          },
+        }),
+      },
+    },
+  },
+  // Add spacing system
+  spacing: 8,
+  // Add responsive mixins
+  mixins: {
+    toolbar: {
+      minHeight: 64,
+      '@media (max-width:600px)': {
+        minHeight: 56,
       },
     },
   },

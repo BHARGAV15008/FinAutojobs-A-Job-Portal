@@ -1,5 +1,6 @@
 import { Job, User } from '../models/index.js';
 import { jobCreationSchema, jobUpdateSchema } from '../models/Job.js';
+import { NotificationService } from '../../services/notifications.js';
 
 // Get all jobs with filtering and pagination
 export const getJobs = async (req, res) => {
@@ -129,6 +130,14 @@ export const createJob = async (req, res) => {
 
     const newJob = new Job(validationResult.data);
     await newJob.save();
+
+    // Send notifications to matching applicants about new job
+    try {
+      await NotificationService.notifyJobPosted(newJob._id, req.user.userId);
+    } catch (notificationError) {
+      console.error('Error sending job posted notification:', notificationError);
+      // Don't fail the job creation if notification fails
+    }
 
     res.status(201).json({
       message: 'Job created successfully',

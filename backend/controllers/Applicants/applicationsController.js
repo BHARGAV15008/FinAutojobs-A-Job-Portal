@@ -1,5 +1,6 @@
 import { JobApplication, Job } from '../models/Recruiters/jobs/index.js';
 import { User } from '../models/Others/index.js';
+import { NotificationService } from '../../services/notifications.js';
 
 // Apply to a job
 export const applyToJob = async (req, res) => {
@@ -35,6 +36,18 @@ export const applyToJob = async (req, res) => {
     });
 
     await application.save();
+
+    // Send notification to recruiter about new application
+    try {
+      await NotificationService.notifyApplicationSubmitted(
+        application._id,
+        jobId,
+        userId
+      );
+    } catch (notificationError) {
+      console.error('Error sending application notification:', notificationError);
+      // Don't fail the application if notification fails
+    }
 
     res.status(201).json({
       message: 'Application submitted successfully',
@@ -160,10 +173,23 @@ export const updateApplicationStatus = async (req, res) => {
       id,
       { status, notes },
       { new: true, runValidators: true }
-    );
+    ).populate('applicant.applicantId');
 
     if (!application) {
       return res.status(404).json({ message: 'Application not found' });
+    }
+
+    // Send notification to applicant about status change
+    try {
+      await NotificationService.notifyApplicationStatusChanged(
+        application._id,
+        status,
+        application.applicant.applicantId._id,
+        req.user.userId
+      );
+    } catch (notificationError) {
+      console.error('Error sending status change notification:', notificationError);
+      // Don't fail the update if notification fails
     }
 
     res.json({

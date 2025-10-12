@@ -18,134 +18,36 @@ export const useDashboard = () => {
   return context;
 };
 
-// Mock data generators
-const generateMockJobs = () => [
-  {
-    id: 1,
-    title: 'Senior Frontend Developer',
-    company: 'TechCorp India',
-    location: 'Mumbai, India',
-    salary: '₹15-25 LPA',
-    type: 'Full-time',
-    industry: 'Technology',
-    experience: '3-5 years',
-    skills: ['React', 'JavaScript', 'TypeScript', 'Node.js'],
-    description: 'We are looking for a senior frontend developer to join our team...',
-    postedDate: '2025-01-15',
-    deadline: '2025-02-15',
-    status: 'active',
-    recommended: true,
-    saved: true
-  },
-  {
-    id: 2,
-    title: 'Financial Analyst',
-    company: 'FinanceHub',
-    location: 'Delhi, India',
-    salary: '₹8-12 LPA',
-    type: 'Full-time',
-    industry: 'Finance',
-    experience: '2-4 years',
-    skills: ['Excel', 'Financial Modeling', 'SQL', 'Python'],
-    description: 'Join our finance team as a financial analyst...',
-    postedDate: '2025-01-14',
-    deadline: '2025-02-10',
-    status: 'active',
-    recommended: false,
-    saved: false
-  },
-  {
-    id: 3,
-    title: 'Automotive Engineer',
-    company: 'AutoTech Solutions',
-    location: 'Bangalore, India',
-    salary: '₹12-18 LPA',
-    type: 'Full-time',
-    industry: 'Automotive',
-    experience: '4-6 years',
-    skills: ['CAD', 'MATLAB', 'Automotive Systems', 'Testing'],
-    description: 'Exciting opportunity in automotive engineering...',
-    postedDate: '2025-01-13',
-    deadline: '2025-02-05',
-    status: 'active',
-    recommended: false,
-    saved: true
-  },
-  {
-    id: 4,
-    title: 'Full Stack Developer',
-    company: 'StartupTech',
-    location: 'Pune, India',
-    salary: '₹10-18 LPA',
-    type: 'Full-time',
-    industry: 'Technology',
-    experience: '2-4 years',
-    skills: ['React', 'Node.js', 'MongoDB', 'Express'],
-    description: 'Join our dynamic startup as a full stack developer...',
-    postedDate: '2025-01-12',
-    deadline: '2025-02-01',
-    status: 'active',
-    recommended: true,
-    saved: false
-  },
-  {
-    id: 5,
-    title: 'Python Developer',
-    company: 'DataScience Corp',
-    location: 'Hyderabad, India',
-    salary: '₹12-20 LPA',
-    type: 'Full-time',
-    industry: 'Technology',
-    experience: '3-5 years',
-    skills: ['Python', 'Django', 'Machine Learning', 'SQL'],
-    description: 'Work with cutting-edge data science technologies...',
-    postedDate: '2025-01-11',
-    deadline: '2025-01-30',
-    status: 'active',
-    recommended: true,
-    saved: true
+// Real data fetchers - no mock data
+const fetchRealJobs = async () => {
+  try {
+    const response = await jobsAPI.getJobs({ limit: 20 });
+    return response.data || [];
+  } catch (error) {
+    console.error('Error fetching jobs:', error);
+    return [];
   }
-];
+};
 
-const generateMockApplications = () => [
-  {
-    id: 1,
-    jobId: 1,
-    jobTitle: 'Senior Frontend Developer',
-    company: 'TechCorp India',
-    appliedDate: '2025-01-16',
-    status: 'pending',
-    stage: 'Application Review'
-  },
-  {
-    id: 2,
-    jobId: 2,
-    jobTitle: 'Financial Analyst',
-    company: 'FinanceHub',
-    appliedDate: '2025-01-15',
-    status: 'shortlisted',
-    stage: 'Technical Interview'
+const fetchRealApplications = async () => {
+  try {
+    const response = await applicationsAPI.getApplications();
+    return response.data || [];
+  } catch (error) {
+    console.error('Error fetching applications:', error);
+    return [];
   }
-];
+};
 
-const generateMockUsers = () => [
-  {
-    id: 1,
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    role: 'jobseeker',
-    status: 'active',
-    joinDate: '2025-01-01'
-  },
-  {
-    id: 2,
-    name: 'Sarah Johnson',
-    email: 'sarah.johnson@techcorp.com',
-    role: 'recruiter',
-    status: 'active',
-    joinDate: '2024-12-15'
+const fetchRealUsers = async () => {
+  try {
+    const response = await usersAPI.getUsers();
+    return response.data || [];
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    return [];
   }
-];
+};
 
 export const DashboardProvider = ({ children }) => {
   // Use auth context if available, otherwise use mock data for demo
@@ -156,91 +58,154 @@ export const DashboardProvider = ({ children }) => {
   const [error, setError] = useState(null);
   
   // State for jobs, applications, and other data
-  const [jobs, setJobs] = useState(generateMockJobs());
+  const [jobs, setJobs] = useState([]);
   const [applications, setApplications] = useState([]);
   const [notifications, setNotifications] = useState([]);
-  const [users, setUsers] = useState(generateMockUsers());
+  const [users, setUsers] = useState([]);
   const [analytics, setAnalytics] = useState({});
   const [bookmarkedJobs, setBookmarkedJobs] = useState([]);
   
-  // Mock data for fallback
-  const mockJobs = generateMockJobs();
-  const mockApplications = [];
-  const mockUsers = generateMockUsers();
+  // Load real data on mount
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      setLoading(true);
+      try {
+        // Fetch real data from APIs
+        const [jobsData, applicationsData, usersData] = await Promise.all([
+          fetchRealJobs(),
+          fetchRealApplications(),
+          fetchRealUsers()
+        ]);
+        
+        setJobs(jobsData);
+        setApplications(applicationsData);
+        setUsers(usersData);
+        
+        // Fetch dashboard stats if user is authenticated
+        if (isAuthenticated && user) {
+          const statsResponse = await dashboardAPI.getStats(user.role);
+          if (statsResponse.success) {
+            setDashboardStats(prev => ({
+              ...prev,
+              [user.role]: statsResponse.data
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Error loading dashboard data:', error);
+        setError('Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboardData();
+  }, [isAuthenticated, user]);
   
-  // Real dashboard stats from API
+  // Real dashboard stats from API - initialized empty, populated by API calls
   const [dashboardStats, setDashboardStats] = useState({
-    applicant: {
-      profileCompletion: 85,
-      appliedJobs: 12,
-      shortlistedApplications: 3,
-      interviewsScheduled: 2,
-      bookmarkedJobs: 8
-    },
-    recruiter: {
-      activeJobs: 5,
-      totalApplications: 45,
-      shortlistedCandidates: 12,
-      interviewsScheduled: 8,
-      hiredCandidates: 3
-    },
-    admin: {
-      totalUsers: 1250,
-      activeJobs: 89,
-      totalApplications: 567,
-      systemHealth: 98
-    }
+    applicant: {},
+    recruiter: {},
+    admin: {}
   });
 
-  // Job management functions
-  const addJob = (jobData) => {
-    const newJob = {
-      ...jobData,
-      id: Date.now(),
-      postedDate: new Date().toISOString().split('T')[0],
-      status: 'active'
-    };
-    setJobs(prev => [newJob, ...prev]);
-    return newJob;
+  // Job management functions - using real API calls
+  const addJob = async (jobData) => {
+    try {
+      const response = await jobsAPI.createJob(jobData);
+      if (response.success) {
+        setJobs(prev => [response.data, ...prev]);
+        return response.data;
+      }
+      throw new Error(response.message || 'Failed to create job');
+    } catch (error) {
+      console.error('Error creating job:', error);
+      setError('Failed to create job');
+      throw error;
+    }
   };
 
-  const updateJob = (jobId, updates) => {
-    setJobs(prev => prev.map(job => 
-      job.id === jobId ? { ...job, ...updates } : job
-    ));
+  const updateJob = async (jobId, updates) => {
+    try {
+      const response = await jobsAPI.updateJob(jobId, updates);
+      if (response.success) {
+        setJobs(prev => prev.map(job => 
+          job.id === jobId ? { ...job, ...response.data } : job
+        ));
+        return response.data;
+      }
+      throw new Error(response.message || 'Failed to update job');
+    } catch (error) {
+      console.error('Error updating job:', error);
+      setError('Failed to update job');
+      throw error;
+    }
   };
 
-  const deleteJob = (jobId) => {
-    setJobs(prev => prev.filter(job => job.id !== jobId));
+  const deleteJob = async (jobId) => {
+    try {
+      const response = await jobsAPI.deleteJob(jobId);
+      if (response.success) {
+        setJobs(prev => prev.filter(job => job.id !== jobId));
+        return true;
+      }
+      throw new Error(response.message || 'Failed to delete job');
+    } catch (error) {
+      console.error('Error deleting job:', error);
+      setError('Failed to delete job');
+      throw error;
+    }
   };
 
-  // Application management
-  const applyToJob = (jobId) => {
-    const job = jobs.find(j => j.id === jobId);
-    if (!job) return false;
-
-    const newApplication = {
-      id: Date.now(),
-      jobId,
-      jobTitle: job.title,
-      company: job.company,
-      appliedDate: new Date().toISOString().split('T')[0],
-      status: 'pending',
-      stage: 'Application Review'
-    };
-
-    setApplications(prev => [newApplication, ...prev]);
-    return true;
+  // Application management - using real API calls
+  const applyToJob = async (jobId, applicationData = {}) => {
+    try {
+      const response = await applicationsAPI.createApplication({
+        jobId,
+        ...applicationData
+      });
+      if (response.success) {
+        setApplications(prev => [response.data, ...prev]);
+        return response.data;
+      }
+      throw new Error(response.message || 'Failed to apply to job');
+    } catch (error) {
+      console.error('Error applying to job:', error);
+      setError('Failed to apply to job');
+      throw error;
+    }
   };
 
-  const withdrawApplication = (applicationId) => {
-    setApplications(prev => prev.filter(app => app.id !== applicationId));
+  const withdrawApplication = async (applicationId) => {
+    try {
+      const response = await applicationsAPI.withdrawApplication(applicationId);
+      if (response.success) {
+        setApplications(prev => prev.filter(app => app.id !== applicationId));
+        return true;
+      }
+      throw new Error(response.message || 'Failed to withdraw application');
+    } catch (error) {
+      console.error('Error withdrawing application:', error);
+      setError('Failed to withdraw application');
+      throw error;
+    }
   };
 
-  const updateApplicationStatus = (applicationId, status, stage) => {
-    setApplications(prev => prev.map(app =>
-      app.id === applicationId ? { ...app, status, stage } : app
-    ));
+  const updateApplicationStatus = async (applicationId, status, stage) => {
+    try {
+      const response = await applicationsAPI.updateApplicationStatus(applicationId, { status, stage });
+      if (response.success) {
+        setApplications(prev => prev.map(app =>
+          app.id === applicationId ? { ...app, status, stage } : app
+        ));
+        return response.data;
+      }
+      throw new Error(response.message || 'Failed to update application status');
+    } catch (error) {
+      console.error('Error updating application status:', error);
+      setError('Failed to update application status');
+      throw error;
+    }
   };
 
   // Bookmark management
