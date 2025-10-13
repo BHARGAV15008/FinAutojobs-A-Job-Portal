@@ -58,6 +58,40 @@ export const createUserByRole = async (userData) => {
     const userObj = user.toObject();
     delete userObj.password;
     
+    // Fix malformed languages data if it exists
+    if (userObj.languages && typeof userObj.languages === 'string') {
+      try {
+        userObj.languages = JSON.parse(userObj.languages);
+      } catch (e) {
+        if (userObj.languages.includes(',')) {
+          userObj.languages = userObj.languages.split(',').map(lang => lang.trim());
+        } else {
+          userObj.languages = [userObj.languages];
+        }
+      }
+    }
+    
+    if (!Array.isArray(userObj.languages)) {
+      userObj.languages = [];
+    }
+    
+    // Fix malformed skills.languages data if it exists
+    if (userObj.skills && userObj.skills.languages && typeof userObj.skills.languages === 'string') {
+      try {
+        userObj.skills.languages = JSON.parse(userObj.skills.languages);
+      } catch (e) {
+        if (userObj.skills.languages.includes(',')) {
+          userObj.skills.languages = userObj.skills.languages.split(',').map(lang => lang.trim());
+        } else {
+          userObj.skills.languages = [userObj.skills.languages];
+        }
+      }
+    }
+    
+    if (userObj.skills && !Array.isArray(userObj.skills.languages)) {
+      userObj.skills.languages = [];
+    }
+    
     return userObj;
   } catch (error) {
     throw error;
@@ -132,6 +166,44 @@ export const authenticateUser = async (identifier, password, role) => {
     const userObj = user.toObject();
     delete userObj.password;
     
+    // Fix malformed languages data if it exists
+    if (userObj.languages && typeof userObj.languages === 'string') {
+      try {
+        // Try to parse JSON string to array
+        userObj.languages = JSON.parse(userObj.languages);
+      } catch (e) {
+        // If parsing fails, split by comma or set to empty array
+        if (userObj.languages.includes(',')) {
+          userObj.languages = userObj.languages.split(',').map(lang => lang.trim());
+        } else {
+          userObj.languages = [userObj.languages];
+        }
+      }
+    }
+    
+    // Ensure languages is always an array
+    if (!Array.isArray(userObj.languages)) {
+      userObj.languages = [];
+    }
+    
+    // Fix malformed skills.languages data if it exists
+    if (userObj.skills && userObj.skills.languages && typeof userObj.skills.languages === 'string') {
+      try {
+        userObj.skills.languages = JSON.parse(userObj.skills.languages);
+      } catch (e) {
+        if (userObj.skills.languages.includes(',')) {
+          userObj.skills.languages = userObj.skills.languages.split(',').map(lang => lang.trim());
+        } else {
+          userObj.skills.languages = [userObj.skills.languages];
+        }
+      }
+    }
+    
+    // Ensure skills.languages is always an array
+    if (userObj.skills && !Array.isArray(userObj.skills.languages)) {
+      userObj.skills.languages = [];
+    }
+    
     return userObj;
   } catch (error) {
     throw error;
@@ -157,6 +229,40 @@ export const findUserByIdAndRole = async (userId, role) => {
     
     const userObj = user.toObject();
     delete userObj.password;
+    
+    // Fix malformed languages data if it exists
+    if (userObj.languages && typeof userObj.languages === 'string') {
+      try {
+        userObj.languages = JSON.parse(userObj.languages);
+      } catch (e) {
+        if (userObj.languages.includes(',')) {
+          userObj.languages = userObj.languages.split(',').map(lang => lang.trim());
+        } else {
+          userObj.languages = [userObj.languages];
+        }
+      }
+    }
+    
+    if (!Array.isArray(userObj.languages)) {
+      userObj.languages = [];
+    }
+    
+    // Fix malformed skills.languages data if it exists
+    if (userObj.skills && userObj.skills.languages && typeof userObj.skills.languages === 'string') {
+      try {
+        userObj.skills.languages = JSON.parse(userObj.skills.languages);
+      } catch (e) {
+        if (userObj.skills.languages.includes(',')) {
+          userObj.skills.languages = userObj.skills.languages.split(',').map(lang => lang.trim());
+        } else {
+          userObj.skills.languages = [userObj.skills.languages];
+        }
+      }
+    }
+    
+    if (userObj.skills && !Array.isArray(userObj.skills.languages)) {
+      userObj.skills.languages = [];
+    }
     
     return userObj;
   } catch (error) {
@@ -258,6 +364,40 @@ export const updateUserProfile = async (userId, updateData, role) => {
     
     const userObj = user.toObject();
     delete userObj.password;
+    
+    // Fix malformed languages data if it exists
+    if (userObj.languages && typeof userObj.languages === 'string') {
+      try {
+        userObj.languages = JSON.parse(userObj.languages);
+      } catch (e) {
+        if (userObj.languages.includes(',')) {
+          userObj.languages = userObj.languages.split(',').map(lang => lang.trim());
+        } else {
+          userObj.languages = [userObj.languages];
+        }
+      }
+    }
+    
+    if (!Array.isArray(userObj.languages)) {
+      userObj.languages = [];
+    }
+    
+    // Fix malformed skills.languages data if it exists
+    if (userObj.skills && userObj.skills.languages && typeof userObj.skills.languages === 'string') {
+      try {
+        userObj.skills.languages = JSON.parse(userObj.skills.languages);
+      } catch (e) {
+        if (userObj.skills.languages.includes(',')) {
+          userObj.skills.languages = userObj.skills.languages.split(',').map(lang => lang.trim());
+        } else {
+          userObj.skills.languages = [userObj.skills.languages];
+        }
+      }
+    }
+    
+    if (userObj.skills && !Array.isArray(userObj.skills.languages)) {
+      userObj.skills.languages = [];
+    }
     
     return userObj;
   } catch (error) {

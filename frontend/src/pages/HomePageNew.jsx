@@ -50,7 +50,10 @@ import api from '../utils/api';
 
 // Styled components
 const SearchContainer = styled(Paper)(({ theme }) => ({
-    padding: theme.spacing(4),
+    padding: theme.spacing(3),
+    [theme.breakpoints.down('sm')]: {
+        padding: theme.spacing(2),
+    },
     background: 'rgba(255, 255, 255, 0.9)',
     backdropFilter: 'blur(10px)',
     borderRadius: theme.spacing(2),
@@ -102,7 +105,6 @@ const HomePageNew = () => {
     const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // Check if viewport is mobile size
 
     const [searchQuery, setSearchQuery] = useState('');
-
     const [locationQuery, setLocationQuery] = useState('');
     const [selectedTab, setSelectedTab] = useState(0);
 
@@ -255,14 +257,15 @@ const HomePageNew = () => {
 
                 <Box sx={{ width: '100%', px: { xs: 2, sm: 3, lg: 4 } }}>
                     <Grid container spacing={4} alignItems="center">
-                        <Grid item xs={12} md={6}>
+                        <Grid item xs={12} lg={6}>
                             <Typography
                                 variant="h1"
                                 sx={{
-                                    fontSize: { xs: '2.5rem', md: '3.5rem' },
+                                    fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.8rem', lg: '3.5rem' },
                                     fontWeight: 800,
                                     mb: 2,
                                     position: 'relative',
+                                    lineHeight: { xs: 1.2, md: 1.1 },
                                 }}
                             >
                                 Find Your Dream Job
@@ -271,7 +274,7 @@ const HomePageNew = () => {
                                     sx={{
                                         color: theme.palette.secondary.light,
                                         display: 'block',
-                                        fontSize: { xs: '1.5rem', md: '2rem' },
+                                        fontSize: { xs: '1rem', sm: '1.2rem', md: '1.5rem', lg: '2rem' },
                                         mt: 1,
                                     }}
                                 >
@@ -279,7 +282,15 @@ const HomePageNew = () => {
                                 </Box>
                             </Typography>
 
-                            <Typography variant="h6" sx={{ mb: 4, maxWidth: 600 }}>
+                            <Typography 
+                                variant="h6" 
+                                sx={{ 
+                                    mb: 4, 
+                                    maxWidth: 600,
+                                    fontSize: { xs: '1rem', sm: '1.1rem', md: '1.25rem' },
+                                    lineHeight: { xs: 1.4, md: 1.3 }
+                                }}
+                            >
                                 India's #1 job platform connecting millions of job seekers with top employers
                             </Typography>
 
@@ -290,12 +301,19 @@ const HomePageNew = () => {
                                         <Autocomplete
                                             freeSolo
                                             options={[]}
+                                            value={searchQuery}
+                                            onInputChange={(event, newValue) => setSearchQuery(newValue || '')}
                                             renderInput={(params) => (
                                                 <TextField
                                                     {...params}
                                                     fullWidth
                                                     placeholder="Job title, keywords, or company"
                                                     variant="outlined"
+                                                    onKeyPress={(e) => {
+                                                        if (e.key === 'Enter') {
+                                                            handleSearch(e);
+                                                        }
+                                                    }}
                                                     InputProps={{
                                                         ...params.InputProps,
                                                         startAdornment: (
@@ -311,12 +329,19 @@ const HomePageNew = () => {
                                     <Grid item xs={12}>
                                         <Autocomplete
                                             options={popularLocations}
+                                            value={locationQuery}
+                                            onChange={(event, newValue) => setLocationQuery(newValue || '')}
                                             renderInput={(params) => (
                                                 <TextField
                                                     {...params}
                                                     fullWidth
                                                     placeholder="Location"
                                                     variant="outlined"
+                                                    onKeyPress={(e) => {
+                                                        if (e.key === 'Enter') {
+                                                            handleSearch(e);
+                                                        }
+                                                    }}
                                                     InputProps={{
                                                         ...params.InputProps,
                                                         startAdornment: (
@@ -368,7 +393,7 @@ const HomePageNew = () => {
                             </SearchContainer>
                         </Grid>
 
-                        <Grid item xs={12} md={6} sx={{ display: { xs: 'none', md: 'block' } }}>
+                        <Grid item xs={12} lg={6} sx={{ display: { xs: 'none', lg: 'block' } }}>
                             <Box
                                 component="img"
                                 src="https://images.unsplash.com/photo-1509956072962-7ff0f36dd7ba?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTAwNDR8MHwxfHNlYXJjaHwzfHxwZW9wbGUlMjBsYXB0b3BzJTIwb2ZmaWNlJTIwZG9jdW1lbnRzJTIwd29ya3BsYWNlfGVufDB8MHx8Ymx1ZXwxNzU3MDYxODk2fDA&ixlib=rb-4.1.0&q=85"
@@ -387,7 +412,7 @@ const HomePageNew = () => {
             </Box>
 
             {/* Quick Stats */}
-            <Container maxWidth="lg" sx={{ mt: -8, position: 'relative', zIndex: 1 }}>
+            <Container maxWidth={false} sx={{ mt: -8, position: 'relative', zIndex: 1, px: { xs: 2, sm: 3, md: 4 } }}>
                 <Grid container spacing={3}>
                     <Grid item xs={6} md={3}>
                         <StatsCard>
@@ -421,7 +446,7 @@ const HomePageNew = () => {
             </Container>
 
             {/* Job Categories */}
-            <Container maxWidth="lg" sx={{ mt: 8 }}>
+            <Container maxWidth={false} sx={{ mt: 8, px: { xs: 2, sm: 3, md: 4 } }}>
                 <Typography variant="h4" gutterBottom align="center" fontWeight="bold">
                     Popular Job Categories
                 </Typography>
@@ -455,7 +480,7 @@ const HomePageNew = () => {
             </Container>
 
             {/* Featured Jobs */}
-            <Container maxWidth="lg" sx={{ mt: 8 }}>
+            <Container maxWidth={false} sx={{ mt: 8, px: { xs: 2, sm: 3, md: 4 } }}>
                 <Box sx={{ mb: 4 }}>
                     <Typography variant="h4" gutterBottom align="center" fontWeight="bold">
                         Featured Jobs
@@ -570,7 +595,7 @@ const HomePageNew = () => {
                     overflow: 'hidden',
                 }}
             >
-                <Container maxWidth="lg">
+                <Container maxWidth={false} sx={{ px: { xs: 2, sm: 3, md: 4 } }}>
                     <Grid container spacing={4} alignItems="center">
                         <Grid item xs={12} md={6}>
                             <Typography variant="h3" gutterBottom fontWeight="bold">
@@ -617,7 +642,7 @@ const HomePageNew = () => {
             </Box>
 
             {/* New Features Section */}
-            <Container maxWidth="lg" sx={{ mt: 8 }}>
+            <Container maxWidth={false} sx={{ mt: 8, px: { xs: 2, sm: 3, md: 4 } }}>
                 <Typography variant="h4" gutterBottom align="center" fontWeight="bold">
                     Explore More Features
                 </Typography>
@@ -698,7 +723,7 @@ const HomePageNew = () => {
 
             {/* Testimonials Section */}
             <Box sx={{ py: 8, bgcolor: 'grey.50' }}>
-                <Container maxWidth="lg">
+                <Container maxWidth={false} sx={{ px: { xs: 2, sm: 3, md: 4 } }}>
                     <Typography variant="h4" gutterBottom align="center" fontWeight="bold">
                         Success Stories
                     </Typography>
@@ -745,7 +770,7 @@ const HomePageNew = () => {
 
             {/* Call to Action */}
             <Box sx={{ textAlign: 'center', py: 8 }}>
-                <Container maxWidth="md">
+                <Container maxWidth={false} sx={{ px: { xs: 2, sm: 3, md: 4 } }}>
                     <Typography variant="h3" gutterBottom fontWeight="bold">
                         Ready to Start Your Career Journey?
                     </Typography>

@@ -2,7 +2,7 @@ import express from 'express';
 import ApplicationInformation from '../models/ApplicationInformation.js';
 import Application from '../models/unified/Application.js';
 import { Applicant } from '../models/UserModels.js';
-import Job from '../models/unified/Job.js';
+import Job from '../models/Job.js';
 import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();

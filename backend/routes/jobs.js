@@ -1,6 +1,6 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
-import Job from '../models/unified/Job.js';
+import Job from '../models/Job.js';
 import Application from '../models/unified/Application.js';
 import ApplicationInformation from '../models/ApplicationInformation.js';
 import { BaseUser, Recruiter } from '../models/UserModels.js';
@@ -115,7 +115,7 @@ router.get('/', async (req, res) => {
       skills,
       company, 
       status,
-      recruiterId,
+      postedBy,
       companyName,
       recruiterAndCompany,
       page = 1, 
@@ -124,7 +124,7 @@ router.get('/', async (req, res) => {
       order = 'desc'
     } = req.query;
 
-    // Build query - if recruiterId is provided, include all statuses for recruiter's dashboard
+    // Build query - if postedBy is provided, include all statuses for recruiter's dashboard
     const query = {};
     
     // Filter by recruiter ID AND company (for recruiter's own jobs + company jobs)
@@ -133,16 +133,16 @@ router.get('/', async (req, res) => {
       if (currentRecruiterId && currentCompanyName) {
         query.$or = [
           { postedBy: currentRecruiterId }, // Jobs posted by the recruiter themselves
-          { companyName: currentCompanyName } // Jobs posted by anyone from the same company
+          { 'companyInfo.companyName': currentCompanyName } // Jobs posted by anyone from the same company
         ];
         // For recruiter dashboard, include all statuses unless specifically filtered
         if (status) {
           query.status = status;
         }
       }
-    } else if (recruiterId) {
+    } else if (postedBy) {
       // Filter by recruiter ID only (for recruiter's own jobs)
-      query.postedBy = recruiterId;
+      query.postedBy = postedBy;
       // For recruiters viewing their own jobs, include all statuses unless specifically filtered
       if (status) {
         query.status = status;
@@ -233,7 +233,7 @@ router.get('/', async (req, res) => {
     }
 
     // Only show jobs with future deadlines for active jobs (not for draft jobs)
-    if (!recruiterId || (status && status !== 'draft')) {
+    if (!postedBy || (status && status !== 'draft')) {
       query.applicationDeadline = { $gt: new Date() };
     }
 
@@ -249,8 +249,7 @@ router.get('/', async (req, res) => {
     // Execute query with population
     const [jobs, totalCount] = await Promise.all([
       Job.find(query)
-        .populate('postedBy', 'firstName lastName email')
-        .populate('recruiterInfo.recruiterId', 'companyInfo')
+        .populate('postedBy', 'firstName lastName email companyInfo')
         .sort(sortObj)
         .skip(skip)
         .limit(limitNum)
@@ -555,14 +554,12 @@ router.get('/:id', async (req, res) => {
     // Find job by ID or slug
     let job = await Job.findById(jobId)
       .populate('postedBy', 'firstName lastName email')
-      .populate('recruiterInfo.recruiterId', 'companyInfo professionalLinks')
       .lean();
 
     // If not found by ID, try finding by slug
     if (!job) {
       job = await Job.findOne({ slug: jobId })
         .populate('postedBy', 'firstName lastName email')
-        .populate('recruiterInfo.recruiterId', 'companyInfo professionalLinks')
         .lean();
     }
 
@@ -1061,18 +1058,18 @@ router.get('/stats', authenticateToken, async (req, res) => {
       });
     }
 
-    const recruiterId = req.user.userId;
+    const postedBy = req.user.userId;
 
     // Get stats for this recruiter's jobs
     const [totalJobs, activeJobs, draftJobs, closedJobs] = await Promise.all([
-      Job.countDocuments({ postedBy: recruiterId }),
-      Job.countDocuments({ postedBy: recruiterId, status: 'active' }),
-      Job.countDocuments({ postedBy: recruiterId, status: 'draft' }),
-      Job.countDocuments({ postedBy: recruiterId, status: 'closed' })
+      Job.countDocuments({ postedBy: postedBy }),
+      Job.countDocuments({ postedBy: postedBy, status: 'active' }),
+      Job.countDocuments({ postedBy: postedBy, status: 'draft' }),
+      Job.countDocuments({ postedBy: postedBy, status: 'closed' })
     ]);
 
     // Get recent jobs
-    const recentJobs = await Job.find({ postedBy: recruiterId })
+    const recentJobs = await Job.find({ postedBy: postedBy })
       .sort({ postedDate: -1 })
       .limit(5)
       .lean();

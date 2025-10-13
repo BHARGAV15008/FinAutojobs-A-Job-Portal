@@ -104,7 +104,7 @@ const ApplicantDashboardContent = () => {
     const pathParts = location.split("/");
     const validTabs = dashboardTabs.map((t) => t.id);
     
-    console.log('🔍 ApplicantDashboard URL parsing:', { location, pathParts });
+    // URL parsing for tab detection
     
     if (location === "/applicant-dashboard" || location === "/dashboard") {
       setActiveTab("dashboard");

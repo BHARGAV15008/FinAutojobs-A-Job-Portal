@@ -21,7 +21,8 @@ import {
   Email, Phone, LinkedIn, CheckCircle, Cancel, Pending,
   ExpandMore, Close, Menu as MenuIcon, ExitToApp, AccountCircle,
   PostAdd, ManageAccounts, RateReview, BarChart, PieChart,
-  ShowChart, Timeline, CalendarToday, Star, Warning, Info
+  ShowChart, Timeline, CalendarToday, Star, Warning, Info,
+  Save, Refresh
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, parseISO } from 'date-fns';
@@ -43,7 +44,7 @@ const RecruiterDashboardNew = () => {
   const [jobDialogOpen, setJobDialogOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
 
-  // Form states
+  // Form states with persistence
   const [profileForm, setProfileForm] = useState({
     fullName: '',
     email: '',
@@ -53,6 +54,11 @@ const RecruiterDashboardNew = () => {
     position: '',
     linkedinUrl: ''
   });
+  
+  // Track if form has been modified
+  const [profileFormModified, setProfileFormModified] = useState(false);
+  const [originalProfileData, setOriginalProfileData] = useState({});
+  const [autoSaveTimer, setAutoSaveTimer] = useState(null);
 
   const [jobForm, setJobForm] = useState({
     title: '',
@@ -69,7 +75,35 @@ const RecruiterDashboardNew = () => {
   // Load dashboard data
   useEffect(() => {
     loadDashboardData();
+    
+    // Check for saved draft
+    const savedDraft = localStorage.getItem('recruiter_profile_draft');
+    if (savedDraft) {
+      try {
+        const draft = JSON.parse(savedDraft);
+        const draftAge = Date.now() - draft.timestamp;
+        
+        // Only restore if draft is less than 24 hours old
+        if (draftAge < 24 * 60 * 60 * 1000) {
+          console.log('📝 Found profile draft, will restore after data loads');
+        } else {
+          localStorage.removeItem('recruiter_profile_draft');
+        }
+      } catch (error) {
+        console.error('Error parsing profile draft:', error);
+        localStorage.removeItem('recruiter_profile_draft');
+      }
+    }
   }, []);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimer) {
+        clearTimeout(autoSaveTimer);
+      }
+    };
+  }, [autoSaveTimer]);
 
   const loadDashboardData = async () => {
     try {
@@ -78,7 +112,7 @@ const RecruiterDashboardNew = () => {
       setDashboardData(response.data);
       
       const userData = response.data.user;
-      setProfileForm({
+      const profileData = {
         fullName: userData.fullName || '',
         email: userData.email || '',
         phone: userData.phone || '',
@@ -86,7 +120,40 @@ const RecruiterDashboardNew = () => {
         companyName: userData.companyName || '',
         position: userData.position || '',
         linkedinUrl: userData.linkedinUrl || ''
-      });
+      };
+      
+      // Only update form if it hasn't been modified by user
+      if (!profileFormModified) {
+        setProfileForm(profileData);
+      }
+      
+      // Always update original data for comparison
+      setOriginalProfileData(profileData);
+      
+      // Check for and restore draft after loading original data
+      const savedDraft = localStorage.getItem('recruiter_profile_draft');
+      if (savedDraft && !profileFormModified) {
+        try {
+          const draft = JSON.parse(savedDraft);
+          const draftAge = Date.now() - draft.timestamp;
+          
+          // Only restore if draft is less than 24 hours old
+          if (draftAge < 24 * 60 * 60 * 1000) {
+            delete draft.timestamp; // Remove timestamp before setting form
+            setProfileForm(draft);
+            setProfileFormModified(true);
+            console.log('📝 Restored profile draft from localStorage');
+            
+            toast({
+              title: 'Draft Restored',
+              description: 'Your unsaved profile changes have been restored.',
+              variant: 'default'
+            });
+          }
+        } catch (error) {
+          console.error('Error restoring profile draft:', error);
+        }
+      }
     } catch (error) {
       console.error('Error loading dashboard data:', error);
       toast({
@@ -102,6 +169,14 @@ const RecruiterDashboardNew = () => {
   const updateProfile = async () => {
     try {
       await api.put('/auth/profile', profileForm);
+      
+      // Reset modification flag after successful update
+      setProfileFormModified(false);
+      setOriginalProfileData(profileForm);
+      
+      // Clear localStorage draft
+      localStorage.removeItem('recruiter_profile_draft');
+      
       await loadDashboardData();
       setProfileDialogOpen(false);
       toast({
@@ -115,6 +190,53 @@ const RecruiterDashboardNew = () => {
         description: 'Failed to update profile',
         variant: 'destructive'
       });
+    }
+  };
+
+  // Enhanced profile form handler that tracks modifications
+  const handleProfileFormChange = (field, value) => {
+    setProfileForm(prev => ({ ...prev, [field]: value }));
+    setProfileFormModified(true);
+    
+    // Auto-save after 3 seconds of inactivity
+    if (autoSaveTimer) {
+      clearTimeout(autoSaveTimer);
+    }
+    
+    const timer = setTimeout(() => {
+      // Save to localStorage as backup
+      localStorage.setItem('recruiter_profile_draft', JSON.stringify({
+        ...profileForm,
+        [field]: value,
+        timestamp: Date.now()
+      }));
+      
+      console.log('📝 Profile draft auto-saved to localStorage');
+    }, 3000);
+    
+    setAutoSaveTimer(timer);
+  };
+
+  // Reset profile form to original data
+  const resetProfileForm = () => {
+    setProfileForm(originalProfileData);
+    setProfileFormModified(false);
+  };
+
+  // Check if profile form has unsaved changes
+  const hasUnsavedChanges = () => {
+    return JSON.stringify(profileForm) !== JSON.stringify(originalProfileData);
+  };
+
+  // Handle tab change with unsaved changes warning
+  const handleTabChange = (newTab) => {
+    if (hasUnsavedChanges() && activeTab === 1) { // Profile tab
+      if (window.confirm('You have unsaved changes in your profile. Are you sure you want to leave this tab? Your changes will be lost.')) {
+        resetProfileForm();
+        setActiveTab(newTab);
+      }
+    } else {
+      setActiveTab(newTab);
     }
   };
 
@@ -240,7 +362,7 @@ const RecruiterDashboardNew = () => {
               key={item.value}
               button
               selected={activeTab === item.value}
-              onClick={() => setActiveTab(item.value)}
+              onClick={() => handleTabChange(item.value)}
               sx={{
                 mx: 1,
                 mb: 0.5,
@@ -337,7 +459,26 @@ const RecruiterDashboardNew = () => {
               transition={{ duration: 0.3 }}
             >
               {activeTab === 0 && <RecruiterOverviewTab data={dashboardData} />}
-              {activeTab === 1 && <RecruiterProfileTab data={dashboardData} onEdit={() => setProfileDialogOpen(true)} />}
+              {activeTab === 1 && (
+                <Box>
+                  {hasUnsavedChanges() && (
+                    <Alert severity="warning" sx={{ mb: 2 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Typography>You have unsaved changes in your profile.</Typography>
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          <Button size="small" onClick={() => setProfileDialogOpen(true)} variant="outlined">
+                            Continue Editing
+                          </Button>
+                          <Button size="small" onClick={resetProfileForm} color="error">
+                            Discard Changes
+                          </Button>
+                        </Box>
+                      </Box>
+                    </Alert>
+                  )}
+                  <RecruiterProfileTab data={dashboardData} onEdit={() => setProfileDialogOpen(true)} />
+                </Box>
+              )}
               {activeTab === 2 && <PostJobTab onCreateJob={() => setJobDialogOpen(true)} />}
               {activeTab === 3 && <AlertsTab data={dashboardData} />}
               {activeTab === 4 && <EditPostsTab data={dashboardData} />}
@@ -351,7 +492,19 @@ const RecruiterDashboardNew = () => {
 
       {/* Profile Edit Dialog */}
       <Dialog open={profileDialogOpen} onClose={() => setProfileDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Edit Profile</DialogTitle>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Typography variant="h6">Edit Profile</Typography>
+            {hasUnsavedChanges() && (
+              <Chip 
+                label="Unsaved Changes" 
+                color="warning" 
+                size="small"
+                sx={{ ml: 2 }}
+              />
+            )}
+          </Box>
+        </DialogTitle>
         <DialogContent>
           <Grid container spacing={3} sx={{ mt: 1 }}>
             <Grid item xs={12} sm={6}>
@@ -359,7 +512,7 @@ const RecruiterDashboardNew = () => {
                 fullWidth
                 label="Full Name"
                 value={profileForm.fullName}
-                onChange={(e) => setProfileForm({ ...profileForm, fullName: e.target.value })}
+                onChange={(e) => handleProfileFormChange('fullName', e.target.value)}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -367,7 +520,7 @@ const RecruiterDashboardNew = () => {
                 fullWidth
                 label="Email"
                 value={profileForm.email}
-                onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                onChange={(e) => handleProfileFormChange('email', e.target.value)}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -375,7 +528,7 @@ const RecruiterDashboardNew = () => {
                 fullWidth
                 label="Phone"
                 value={profileForm.phone}
-                onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                onChange={(e) => handleProfileFormChange('phone', e.target.value)}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -383,7 +536,7 @@ const RecruiterDashboardNew = () => {
                 fullWidth
                 label="Location"
                 value={profileForm.location}
-                onChange={(e) => setProfileForm({ ...profileForm, location: e.target.value })}
+                onChange={(e) => handleProfileFormChange('location', e.target.value)}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -391,7 +544,7 @@ const RecruiterDashboardNew = () => {
                 fullWidth
                 label="Company Name"
                 value={profileForm.companyName}
-                onChange={(e) => setProfileForm({ ...profileForm, companyName: e.target.value })}
+                onChange={(e) => handleProfileFormChange('companyName', e.target.value)}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -399,7 +552,7 @@ const RecruiterDashboardNew = () => {
                 fullWidth
                 label="Position"
                 value={profileForm.position}
-                onChange={(e) => setProfileForm({ ...profileForm, position: e.target.value })}
+                onChange={(e) => handleProfileFormChange('position', e.target.value)}
               />
             </Grid>
             <Grid item xs={12}>
@@ -407,14 +560,32 @@ const RecruiterDashboardNew = () => {
                 fullWidth
                 label="LinkedIn URL"
                 value={profileForm.linkedinUrl}
-                onChange={(e) => setProfileForm({ ...profileForm, linkedinUrl: e.target.value })}
+                onChange={(e) => handleProfileFormChange('linkedinUrl', e.target.value)}
               />
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setProfileDialogOpen(false)}>Cancel</Button>
-          <Button onClick={updateProfile} variant="contained">Save Changes</Button>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Box sx={{ display: 'flex', gap: 1, width: '100%', justifyContent: 'space-between' }}>
+            <Button 
+              onClick={resetProfileForm} 
+              disabled={!hasUnsavedChanges()}
+              startIcon={<Refresh />}
+            >
+              Reset
+            </Button>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button onClick={() => setProfileDialogOpen(false)}>Cancel</Button>
+              <Button 
+                onClick={updateProfile} 
+                variant="contained"
+                disabled={!hasUnsavedChanges()}
+                startIcon={<Save />}
+              >
+                Save Changes
+              </Button>
+            </Box>
+          </Box>
         </DialogActions>
       </Dialog>
 

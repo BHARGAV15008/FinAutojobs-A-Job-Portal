@@ -1,4 +1,4 @@
-import Job from '../models/unified/Job.js';
+import Job from '../models/Job.js';
 import EnhancedApplication from '../models/EnhancedApplication.js';
 import { BaseUser } from '../models/UserModels.js';
 

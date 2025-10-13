@@ -22,7 +22,7 @@ const DashboardHeader = ({
   const [showSearchResults, setShowSearchResults] = useState(false);
 
   const { darkMode, toggleTheme } = useTheme();
-  const { dashboardData, searchJobs } = useDashboard();
+  const { dashboardData } = useDashboard();
   const { logout } = useAuth();
   const [, setLocation] = useLocation();
 
@@ -57,17 +57,78 @@ const DashboardHeader = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Search function using full jobs API
+  const searchJobs = async (query) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/jobs?search=${encodeURIComponent(query)}&limit=10`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      // Handle different response structures
+      if (data.success) {
+        if (data.data?.jobs) {
+          return data.data.jobs;
+        } else if (data.jobs) {
+          return data.jobs;
+        } else if (Array.isArray(data.data)) {
+          return data.data;
+        }
+      }
+      
+      return [];
+    } catch (error) {
+      console.error('API search error:', error.message || error);
+      // Fallback to dashboard data if API fails
+      if (dashboardData?.recentJobs) {
+        return dashboardData.recentJobs.filter(job => 
+          job.jobTitle?.toLowerCase().includes(query.toLowerCase()) ||
+          job.companyName?.toLowerCase().includes(query.toLowerCase()) ||
+          job.location?.toLowerCase().includes(query.toLowerCase())
+        );
+      }
+      return [];
+    }
+  };
+
   // Handle search
-  useEffect(() => {
-    if (searchQuery.trim()) {
-      const results = searchJobs(searchQuery);
+  const handleSearch = async (query = searchQuery) => {
+    if (!query.trim()) return;
+    
+    try {
+      const results = await searchJobs(query);
       setSearchResults(results.slice(0, 5)); // Show top 5 results
       setShowSearchResults(true);
+    } catch (error) {
+      console.error('Search error:', error);
+      setSearchResults([]);
+      setShowSearchResults(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+      // Navigate to jobs page with search query
+      setLocation(`/jobs?search=${encodeURIComponent(searchQuery)}`);
+    }
+  };
+
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      const timeoutId = setTimeout(() => {
+        handleSearch();
+      }, 300); // Debounce search
+      
+      return () => clearTimeout(timeoutId);
     } else {
       setSearchResults([]);
       setShowSearchResults(false);
     }
-  }, [searchQuery, searchJobs]);
+  }, [searchQuery]);
 
   const unreadNotifications = realTimeUnreadCount + (Array.isArray(notifications) ? notifications.filter((n) => !n.read).length : 0);
 
@@ -90,8 +151,8 @@ const DashboardHeader = ({
 
   return (
     <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+      <div className="max-w-none mx-auto px-2 sm:px-4 lg:px-6">
+        <div className="flex justify-between items-center h-14 sm:h-16">
           {/* Left side */}
           <div className="flex items-center">
             {/* Mobile menu button */}
@@ -115,8 +176,8 @@ const DashboardHeader = ({
             </button>
 
             {/* Title and breadcrumbs */}
-            <div className="ml-4 lg:ml-0">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <div className="ml-2 sm:ml-4 lg:ml-0">
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white truncate max-w-48 sm:max-w-none">
                 {title}
               </h1>
               {showBreadcrumbs && breadcrumbs && breadcrumbs.length > 0 && (
@@ -155,11 +216,11 @@ const DashboardHeader = ({
           </div>
 
           {/* Center - Search */}
-          <div className="hidden md:block flex-1 max-w-lg mx-8" ref={searchRef}>
+          <div className="flex-1 max-w-xs sm:max-w-sm md:max-w-lg mx-2 sm:mx-4 md:mx-8" ref={searchRef}>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
                 <svg
-                  className="h-5 w-5 text-gray-400"
+                  className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -174,10 +235,11 @@ const DashboardHeader = ({
               </div>
               <input
                 type="text"
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Search jobs, companies..."
+                className="block w-full pl-8 sm:pl-10 pr-3 py-1.5 sm:py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={handleKeyPress}
               />
 
               {/* Search Results Dropdown */}
@@ -193,19 +255,20 @@ const DashboardHeader = ({
                     <div className="py-2">
                       {searchResults.map((job) => (
                         <button
-                          key={job.id}
+                          key={job._id || job.id}
                           className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
                           onClick={() => {
                             setShowSearchResults(false);
                             setSearchQuery("");
                             // Navigate to job details
+                            setLocation(`/jobs/${job._id || job.id}`);
                           }}
                         >
                           <div className="text-sm font-medium text-gray-900 dark:text-white">
-                            {job.title}
+                            {job.jobTitle || job.title}
                           </div>
                           <div className="text-xs text-gray-500 dark:text-gray-400">
-                            {job.company} • {job.location}
+                            {job.companyName || job.company} • {job.location || job.jobLocation?.city || 'Location not specified'}
                           </div>
                         </button>
                       ))}
@@ -217,17 +280,17 @@ const DashboardHeader = ({
           </div>
 
           {/* Right side */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-4">
             {/* Theme toggle */}
             <motion.button
-              className="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
+              className="p-1.5 sm:p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
               onClick={toggleTheme}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               {darkMode ? (
                 <svg
-                  className="w-5 h-5"
+                  className="w-4 h-4 sm:w-5 sm:h-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -241,7 +304,7 @@ const DashboardHeader = ({
                 </svg>
               ) : (
                 <svg
-                  className="w-5 h-5"
+                  className="w-4 h-4 sm:w-5 sm:h-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -258,14 +321,13 @@ const DashboardHeader = ({
 
             {/* Notifications - Enhanced with proper sizing and margin */}
             <motion.button
-              className="relative p-3 rounded-full text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 mr-4"
+              className="relative p-1.5 sm:p-2 md:p-3 rounded-full text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 mr-1 sm:mr-2 md:mr-4"
               onClick={() => setNotificationPanelOpen(!notificationPanelOpen)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              style={{ width: "48px", height: "48px" }} // Increased size as requested
             >
               <svg
-                className="w-6 h-6"
+                className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

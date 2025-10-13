@@ -568,10 +568,14 @@ const JobApplicationModal = ({ open, onClose, job, user, onSubmit }) => {
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="md"
+      maxWidth="sm"
       fullWidth
       PaperProps={{
-        sx: { minHeight: '80vh' }
+        sx: { 
+          maxWidth: { xs: '95vw', sm: '500px', md: '600px', lg: '650px' },
+          maxHeight: '85vh',
+          m: 2
+        }
       }}
     >
       <DialogTitle>

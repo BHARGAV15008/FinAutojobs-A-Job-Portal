@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
 import Notification from '../models/Notification.js';
 import BaseUser from '../models/unified/BaseUser.js';
-import Job from '../models/unified/Job.js';
+import Job from '../models/Job.js';
 import Application from '../models/unified/Application.js';
 
 // Email transporter configuration

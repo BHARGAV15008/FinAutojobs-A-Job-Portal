@@ -3,9 +3,9 @@
  */
 
 /**
- * Validates if a URL is a proper external URL (not localhost or internal)
+ * Validates if a URL is a proper external URL (allows localhost in development)
  * @param {string} url - The URL to validate
- * @returns {boolean} - True if valid external URL, false otherwise
+ * @returns {boolean} - True if valid URL, false otherwise
  */
 export function isValidExternalUrl(url) {
   if (!url || typeof url !== 'string') {
@@ -25,21 +25,39 @@ export function isValidExternalUrl(url) {
       return false;
     }
     
-    // Reject localhost and local network URLs
     const hostname = urlObj.hostname.toLowerCase();
-    if (
-      hostname === 'localhost' ||
-      hostname === '127.0.0.1' ||
-      hostname.startsWith('192.168.') ||
-      hostname.startsWith('10.') ||
-      hostname.startsWith('172.') ||
-      hostname.endsWith('.local')
-    ) {
-      return false;
+    
+    // In development mode, allow localhost URLs
+    const isDevelopment = process.env.NODE_ENV === 'development' || process.env.NODE_ENV !== 'production';
+    
+    if (isDevelopment) {
+      // Allow localhost and local network URLs in development
+      if (
+        hostname === 'localhost' ||
+        hostname === '127.0.0.1' ||
+        hostname.startsWith('192.168.') ||
+        hostname.startsWith('10.') ||
+        hostname.startsWith('172.') ||
+        hostname.endsWith('.local')
+      ) {
+        return true; // ✅ Allow localhost in development
+      }
+    } else {
+      // In production, reject localhost and local network URLs
+      if (
+        hostname === 'localhost' ||
+        hostname === '127.0.0.1' ||
+        hostname.startsWith('192.168.') ||
+        hostname.startsWith('10.') ||
+        hostname.startsWith('172.') ||
+        hostname.endsWith('.local')
+      ) {
+        return false;
+      }
     }
     
-    // Must have a proper domain
-    if (!hostname.includes('.') || hostname.length < 4) {
+    // Must have a proper domain (skip this check for localhost in development)
+    if (!isDevelopment && (!hostname.includes('.') || hostname.length < 4)) {
       return false;
     }
     
@@ -59,6 +77,12 @@ export function isValidLinkedInUrl(url) {
   
   if (!isValidExternalUrl(url)) return false;
   
+  // In development mode, allow any valid URL for testing
+  const isDevelopment = process.env.NODE_ENV === 'development' || process.env.NODE_ENV !== 'production';
+  if (isDevelopment) {
+    return true; // Allow any valid URL in development
+  }
+  
   try {
     const urlObj = new URL(url);
     return urlObj.hostname.toLowerCase().includes('linkedin.com');
@@ -76,6 +100,12 @@ export function isValidGitHubUrl(url) {
   if (!url || url.trim() === '') return true; // Allow empty
   
   if (!isValidExternalUrl(url)) return false;
+  
+  // In development mode, allow any valid URL for testing
+  const isDevelopment = process.env.NODE_ENV === 'development' || process.env.NODE_ENV !== 'production';
+  if (isDevelopment) {
+    return true; // Allow any valid URL in development
+  }
   
   try {
     const urlObj = new URL(url);

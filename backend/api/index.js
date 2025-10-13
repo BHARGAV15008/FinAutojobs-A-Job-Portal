@@ -36,6 +36,7 @@ import messagesRoutes from '../routes/messages.js';
 import recommendationsRoutes from '../routes/recommendations.js';
 import contactRoutes from '../routes/contact.js';
 import healthRoutes from '../routes/health.js';
+import devRoutes from '../routes/devRoutes.js';
 
 const app = express();
 
@@ -194,6 +195,11 @@ app.use('/api/contact', async (req, res, next) => {
     res.status(500).json({ error: 'Database connection failed', details: error.message });
   }
 }, contactRoutes);
+
+// Development routes (no DB required)
+console.log('🔧 Registering /api/dev routes...');
+app.use('/api/dev', devRoutes);
+console.log('✅ /api/dev routes registered successfully');
 
 // Serve static files (uploads)
 app.use('/uploads', express.static(path.join(rootDir, 'uploads')));

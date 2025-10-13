@@ -1,6 +1,6 @@
 import Joi from 'joi';
 import ApplicationInformation from '../models/ApplicationInformation.js';
-import Job from '../models/unified/Job.js';
+import Job from '../models/Job.js';
 import { Applicant } from '../models/UserModels.js';
 
 /**

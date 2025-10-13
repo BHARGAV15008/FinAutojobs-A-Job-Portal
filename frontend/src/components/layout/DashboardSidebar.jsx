@@ -9,8 +9,7 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
   const { darkMode } = useTheme();
   const { logout } = useAuth();
 
-  // Debug props
-  console.log('🔍 DashboardSidebar props:', { userRole, user: user?.name, location, activeTab });
+  // Removed debug logging to prevent excessive console output
   const [expandedMenus, setExpandedMenus] = useState({});
 
   // Helper function to check if a path is currently active

@@ -4,15 +4,19 @@ import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  // Set default environment variables for production builds
+  // Set environment-specific defaults
+  const isDevelopment = mode === 'development';
+  
   const defaultEnvVars = {
-    VITE_API_URL: 'https://finautojobs-backend.onrender.com/api',
-    VITE_APP_NAME: 'FinAutoJobs',
+    VITE_API_URL: isDevelopment 
+      ? 'http://localhost:5000/api' 
+      : 'https://finautojobs-backend.onrender.com/api',
+    VITE_APP_NAME: isDevelopment ? 'FinAutoJobs (Dev)' : 'FinAutoJobs',
     VITE_APP_VERSION: '1.0.0',
-    VITE_NODE_ENV: mode || 'production'
+    VITE_NODE_ENV: mode || 'development'
   };
 
-  // Use environment variables or defaults
+  // Use environment variables or defaults (only if not already set)
   Object.keys(defaultEnvVars).forEach(key => {
     if (!process.env[key]) {
       process.env[key] = defaultEnvVars[key];
@@ -45,10 +49,23 @@ export default defineConfig(({ mode }) => {
       host: '0.0.0.0', // Allow external connections
       strictPort: false, // Allow port fallback if 3000 is busy
       hmr: {
-        port: 3000
+        overlay: false, // Disable error overlay that can cause refresh loops
+        // Remove explicit port to let Vite choose automatically
+        // port: 24678, // Use a different port for HMR
       },
       fs: {
         strict: false
+      },
+      watch: {
+        usePolling: false, // Disable polling to reduce CPU usage
+        ignored: [
+          '**/node_modules/**', 
+          '**/.git/**',
+          '**/dist/**',
+          '**/.env*',
+          '**/logs/**',
+          '**/coverage/**'
+        ]
       },
       proxy: {
         '/api': {

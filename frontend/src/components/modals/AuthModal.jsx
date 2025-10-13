@@ -138,10 +138,13 @@ const AuthModal = ({ open, onClose, onSuccess, defaultTab = 0 }) => {
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="sm"
+      maxWidth="xs"
       fullWidth
       PaperProps={{
         sx: {
+          maxWidth: { xs: '95vw', sm: '450px', md: '480px', lg: '500px' },
+          maxHeight: '85vh',
+          m: 2,
           borderRadius: 2,
         },
       }}

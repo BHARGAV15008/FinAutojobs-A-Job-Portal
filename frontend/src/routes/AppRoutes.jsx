@@ -218,45 +218,45 @@ const AppRoutes = () => {
 
       {/* Footer - Hide on dashboard pages */}
       {!isDashboard && (
-        <Box component="footer" sx={{ bgcolor: 'grey.900', color: 'white', py: 6, mt: 'auto' }}>
+        <Box component="footer" sx={{ bgcolor: 'grey.900', color: 'white', py: 1.5, mt: 'auto' }}>
         <Box sx={{ maxWidth: '1200px', mx: 'auto', px: { xs: 2, sm: 3, lg: 4 } }}>
           <Box sx={{ 
             display: 'grid', 
             gridTemplateColumns: { xs: '1fr', md: 'repeat(4, 1fr)' }, 
-            gap: 3 
+            gap: 1.5 
           }}>
             <Box>
-              <Box component="h3" sx={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'primary.main', mb: 2 }}>
+              <Box component="h3" sx={{ fontSize: '0.875rem', fontWeight: 'bold', color: 'primary.main', mb: 0.5 }}>
                 FinAutoJobs
               </Box>
-              <Box component="p" sx={{ color: 'grey.400', mb: 2 }}>
+              <Box component="p" sx={{ color: 'grey.400', mb: 0.5, fontSize: '0.875rem' }}>
                 India's #1 job platform connecting millions of job seekers with top employers.
               </Box>
             </Box>
             <Box>
-              <Box component="h4" sx={{ fontWeight: 600, mb: 2 }}>For Job Seekers</Box>
-              <Box component="ul" sx={{ listStyle: 'none', p: 0, '& li': { mb: 1 } }}>
-                <li><Box component="a" href="/jobs" sx={{ color: 'grey.400', textDecoration: 'none', '&:hover': { color: 'white' } }}>Browse Jobs</Box></li>
-                <li><Box component="a" href="/resume" sx={{ color: 'grey.400', textDecoration: 'none', '&:hover': { color: 'white' } }}>Resume Builder</Box></li>
+              <Box component="h4" sx={{ fontWeight: 600, mb: 0.5, fontSize: '0.875rem' }}>For Job Seekers</Box>
+              <Box component="ul" sx={{ listStyle: 'none', p: 0, '& li': { mb: 0.25 } }}>
+                <li><Box component="a" href="/jobs" sx={{ color: 'grey.400', textDecoration: 'none', fontSize: '0.875rem', '&:hover': { color: 'white' } }}>Browse Jobs</Box></li>
+                <li><Box component="a" href="/resume" sx={{ color: 'grey.400', textDecoration: 'none', fontSize: '0.875rem', '&:hover': { color: 'white' } }}>Resume Builder</Box></li>
               </Box>
             </Box>
             <Box>
-              <Box component="h4" sx={{ fontWeight: 600, mb: 2 }}>For Employers</Box>
-              <Box component="ul" sx={{ listStyle: 'none', p: 0, '& li': { mb: 1 } }}>
-                <li><Box component="a" href="#" sx={{ color: 'grey.400', textDecoration: 'none', '&:hover': { color: 'white' } }}>Post Jobs</Box></li>
-                <li><Box component="a" href="#" sx={{ color: 'grey.400', textDecoration: 'none', '&:hover': { color: 'white' } }}>Search Candidates</Box></li>
+              <Box component="h4" sx={{ fontWeight: 600, mb: 0.5, fontSize: '0.875rem' }}>For Employers</Box>
+              <Box component="ul" sx={{ listStyle: 'none', p: 0, '& li': { mb: 0.25 } }}>
+                <li><Box component="a" href="#" sx={{ color: 'grey.400', textDecoration: 'none', fontSize: '0.875rem', '&:hover': { color: 'white' } }}>Post Jobs</Box></li>
+                <li><Box component="a" href="#" sx={{ color: 'grey.400', textDecoration: 'none', fontSize: '0.875rem', '&:hover': { color: 'white' } }}>Search Candidates</Box></li>
               </Box>
             </Box>
             <Box>
-              <Box component="h4" sx={{ fontWeight: 600, mb: 2 }}>Company</Box>
-              <Box component="ul" sx={{ listStyle: 'none', p: 0, '& li': { mb: 1 } }}>
-                <li><Box component="a" href="#" sx={{ color: 'grey.400', textDecoration: 'none', '&:hover': { color: 'white' } }}>About Us</Box></li>
-                <li><Box component="a" href="#" sx={{ color: 'grey.400', textDecoration: 'none', '&:hover': { color: 'white' } }}>Contact</Box></li>
+              <Box component="h4" sx={{ fontWeight: 600, mb: 0.5, fontSize: '0.875rem' }}>Company</Box>
+              <Box component="ul" sx={{ listStyle: 'none', p: 0, '& li': { mb: 0.25 } }}>
+                <li><Box component="a" href="#" sx={{ color: 'grey.400', textDecoration: 'none', fontSize: '0.875rem', '&:hover': { color: 'white' } }}>About Us</Box></li>
+                <li><Box component="a" href="#" sx={{ color: 'grey.400', textDecoration: 'none', fontSize: '0.875rem', '&:hover': { color: 'white' } }}>Contact</Box></li>
               </Box>
             </Box>
           </Box>
-          <Box sx={{ borderTop: '1px solid', borderColor: 'grey.800', mt: 3, pt: 2, textAlign: 'center', color: 'grey.400' }}>
-            <Box component="p">&copy; 2025 FinAutoJobs. All rights reserved.</Box>
+          <Box sx={{ borderTop: '1px solid', borderColor: 'grey.800', mt: 1.5, pt: 0.75, textAlign: 'center', color: 'grey.400' }}>
+            <Box component="p" sx={{ fontSize: '0.875rem', m: 0 }}>&copy; 2025 FinAutoJobs. All rights reserved.</Box>
           </Box>
         </Box>
         </Box>

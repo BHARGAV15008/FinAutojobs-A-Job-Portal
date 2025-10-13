@@ -123,11 +123,8 @@ export const DashboardProvider = ({ children }) => {
       console.log('📊 Final stats being set:', stats);
       setDashboardData(dashboardDataToSet);
       
-      // Force a state update to ensure components re-render with new stats
-      setTimeout(() => {
-        console.log('🔄 Forcing stats refresh...');
-        setDashboardData(prev => ({ ...prev, lastUpdated: Date.now() }));
-      }, 100);
+      // Removed forced refresh to prevent form resets
+      // Components will re-render automatically when dashboardData changes
     } catch (error) {
       console.warn("Failed to load dashboard data, using fallback:", error);
       setError("Failed to load dashboard data - using offline mode");

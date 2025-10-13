@@ -231,13 +231,13 @@ export const EnhancedProfileTab = ({
   const actualUser = currentUser?.data ? currentUser.data : currentUser;
   const profileCompletion = calculateProfileCompletion(actualUser, userRole);
 
-  // Sync local state with prop changes
+  // Sync local state with prop changes (optimized to prevent form resets)
   useEffect(() => {
-    if (user) {
+    if (user && user._id !== currentUser?._id) {
       console.log('🔍 EnhancedProfileTab user prop changed:', user);
       setCurrentUser(user);
     }
-  }, [user]);
+  }, [user?._id]); // Only update when user ID changes, not on every user object change
 
   // Helper function to safely convert values to strings
   const safeStringValue = (value) => {
@@ -265,6 +265,7 @@ export const EnhancedProfileTab = ({
 
   // Create role-specific profile sections
   const getProfileSections = () => {
+    // Reduced debug logging for better performance
     const personalInfo = {
       title: "Personal Information",
       icon: "👤",
@@ -308,20 +309,24 @@ export const EnhancedProfileTab = ({
       fields: [
         {
           label: "LinkedIn",
-          value: safeStringValue(
-            userRole === 'recruiter' 
+          value: (() => {
+            const linkedinValue = userRole === 'recruiter' 
               ? user?.professionalLinks?.linkedin || user?.linkedin_url
-              : user?.linkedin_url
-          ),
+              : user?.linkedin_url;
+            // LinkedIn URL processing
+            return safeStringValue(linkedinValue);
+          })(),
           icon: "💼",
         },
         {
           label: "GitHub",
-          value: safeStringValue(
-            userRole === 'recruiter' 
+          value: (() => {
+            const githubValue = userRole === 'recruiter' 
               ? user?.professionalLinks?.github || user?.github_url
-              : user?.github_url
-          ),
+              : user?.github_url;
+            // GitHub URL processing
+            return safeStringValue(githubValue);
+          })(),
           icon: "💻",
         },
         {
@@ -353,9 +358,7 @@ export const EnhancedProfileTab = ({
           {
             label: "Skills",
             value: (() => {
-              console.log('🔍 Skills display debug - user.skills:', user?.skills);
-              console.log('🔍 Skills display debug - user.skills_array:', user?.skills_array);
-              console.log('🔍 Skills display debug - user.primary_skills:', user?.primary_skills);
+              // Skills processing
               
               // Try multiple sources for skills display
               if (Array.isArray(user?.skills_array) && user.skills_array.length > 0) {
@@ -392,8 +395,7 @@ export const EnhancedProfileTab = ({
             value: (() => {
               // Check multiple sources for resume URL
               const resumeUrl = user?.resume_url || user?.documents?.resumeUrl || '';
-              console.log('🔍 Resume debug - user.resume_url:', user?.resume_url);
-              console.log('🔍 Resume debug - user.documents?.resumeUrl:', user?.documents?.resumeUrl);
+              // Resume URL processing
               return resumeUrl ? (
                 <a 
                   href={resumeUrl.startsWith('http') ? resumeUrl : `${API_BASE_URL}${resumeUrl}`} 
@@ -411,15 +413,7 @@ export const EnhancedProfileTab = ({
         ],
       };
     } else if (userRole === "recruiter") {
-      console.log('🔍 Recruiter profile debug - user object:', typeof user);
-      console.log('🔍 Recruiter profile debug - companyInfo:', user?.companyInfo);
-      console.log('🔍 Recruiter profile debug - yearsOfExperience:', user?.yearsOfExperience);
-      console.log('🔍 Recruiter profile debug - resume_url:', user?.resume_url);
-      console.log('🔍 Recruiter profile debug - location:', user?.location);
-      console.log('🔍 Recruiter profile debug - officeLocation:', user?.officeLocation);
-      console.log('🔍 Recruiter profile debug - linkedin_url:', user?.linkedin_url);
-      console.log('🔍 Recruiter profile debug - github_url:', user?.github_url);
-      console.log('🔍 Recruiter profile debug - portfolio_url:', user?.portfolio_url);
+      // Recruiter profile processing
       
       professionalDetails = {
         title: "Professional Details",
@@ -439,8 +433,7 @@ export const EnhancedProfileTab = ({
           {
             label: "Department",
             value: (() => {
-              console.log('🔍 Department debug - companyInfo.department:', user?.companyInfo?.department);
-              console.log('🔍 Department debug - flat department:', user?.department);
+              // Department processing
               return safeStringValue(user?.companyInfo?.department || user?.department || "Not provided");
             })(),
             icon: "🏛️",
@@ -460,9 +453,7 @@ export const EnhancedProfileTab = ({
             value: (() => {
               // Check multiple sources for resume URL
               const resumeUrl = user?.resume_url || user?.documents?.resumeUrl || '';
-              console.log('🔍 Resume debug (recruiter) - user.resume_url:', user?.resume_url);
-              console.log('🔍 Resume debug (recruiter) - user.documents?.resumeUrl:', user?.documents?.resumeUrl);
-              console.log('🔍 Resume debug (recruiter) - final resumeUrl:', resumeUrl);
+              // Resume processing for recruiter
               
               return resumeUrl ? (
                 <a 
@@ -519,7 +510,7 @@ export const EnhancedProfileTab = ({
   const handleProfileSave = async (formData, isFileUpload = false) => {
     setLoading(true);
     try {
-      console.log('🔍 EnhancedProfileTab handleProfileSave called with:', formData, 'isFileUpload:', isFileUpload);
+      // Profile save initiated
       
       // Handle file upload differently
       if (isFileUpload) {
@@ -540,8 +531,7 @@ export const EnhancedProfileTab = ({
       // Transform form data to match backend expectations (for regular updates)
       const transformedData = { ...formData };
       
-      console.log('🔍 Original formData keys:', Object.keys(formData));
-      console.log('🔍 Original formData values:', formData);
+      // Processing form data
       
       // Handle name field - split into firstName and lastName
       if (formData.name) {
@@ -553,7 +543,7 @@ export const EnhancedProfileTab = ({
       
       // Handle recruiter-specific fields
       if (userRole === 'recruiter') {
-        console.log('🔍 Processing recruiter fields - company:', formData.company, 'department:', formData.department, 'job_title:', formData.job_title);
+        // Processing recruiter fields
         
         // Map company info to nested structure - ALWAYS create companyInfo if any field exists
         if (formData.company !== undefined || formData.department !== undefined || formData.job_title !== undefined) {
@@ -1051,6 +1041,34 @@ export const EnhancedSettingsTab = () => {
 
   const handleThemeChange = (mode) => {
     setThemeMode(mode);
+    // Show feedback
+    if (window.showToast) {
+      window.showToast(`Theme changed to ${mode}`, 'success');
+    }
+  };
+
+  const handleFontSizeChange = (size) => {
+    setFontSize(size);
+    // Show feedback
+    if (window.showToast) {
+      window.showToast(`Font size changed to ${size}`, 'success');
+    }
+  };
+
+  const handleFontFamilyChange = (family) => {
+    setFontFamily(family);
+    // Show feedback
+    if (window.showToast) {
+      window.showToast(`Font family changed to ${family}`, 'success');
+    }
+  };
+
+  const handleLanguageChange = (lang) => {
+    setLanguage(lang);
+    // Show feedback
+    if (window.showToast) {
+      window.showToast(`Language changed to ${languageOptions[lang]}`, 'success');
+    }
   };
 
   const handleNotificationToggle = (key) => {
@@ -1058,6 +1076,10 @@ export const EnhancedSettingsTab = () => {
       ...prev,
       [key]: !prev[key],
     }));
+    // Show feedback
+    if (window.showToast) {
+      window.showToast(`${key} notifications ${notifications[key] ? 'disabled' : 'enabled'}`, 'success');
+    }
   };
 
   return (
@@ -1139,13 +1161,13 @@ export const EnhancedSettingsTab = () => {
 
                   {setting.type === "fontSize" && (
                     <select
-                      className="px-3 py-2 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg text-gray-900 dark:text-white"
+                      className="px-3 py-2 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg text-gray-900 dark:text-white transition-all duration-200 hover:border-blue-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                       value={fontSize}
-                      onChange={(e) => setFontSize(e.target.value)}
+                      onChange={(e) => handleFontSizeChange(e.target.value)}
                     >
                       {Object.entries(fontSizeOptions).map(([key, value]) => (
                         <option key={key} value={key}>
-                          {key.charAt(0).toUpperCase() + key.slice(1)} ({value})
+                          {key.charAt(0).toUpperCase() + key.slice(1)} ({Math.round(value * 16)}px)
                         </option>
                       ))}
                     </select>
@@ -1153,12 +1175,12 @@ export const EnhancedSettingsTab = () => {
 
                   {setting.type === "fontFamily" && (
                     <select
-                      className="px-3 py-2 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg text-gray-900 dark:text-white"
+                      className="px-3 py-2 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg text-gray-900 dark:text-white transition-all duration-200 hover:border-blue-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                       value={fontFamily}
-                      onChange={(e) => setFontFamily(e.target.value)}
+                      onChange={(e) => handleFontFamilyChange(e.target.value)}
                     >
                       {Object.keys(fontFamilyOptions).map((font) => (
-                        <option key={font} value={font}>
+                        <option key={font} value={font} style={{ fontFamily: fontFamilyOptions[font] }}>
                           {font}
                         </option>
                       ))}
@@ -1167,9 +1189,9 @@ export const EnhancedSettingsTab = () => {
 
                   {setting.type === "language" && (
                     <select
-                      className="px-3 py-2 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg text-gray-900 dark:text-white"
+                      className="px-3 py-2 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg text-gray-900 dark:text-white transition-all duration-200 hover:border-blue-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                       value={language}
-                      onChange={(e) => setLanguage(e.target.value)}
+                      onChange={(e) => handleLanguageChange(e.target.value)}
                     >
                       {Object.entries(languageOptions).map(([key, value]) => (
                         <option key={key} value={key}>

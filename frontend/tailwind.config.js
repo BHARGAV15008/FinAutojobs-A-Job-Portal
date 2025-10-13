@@ -72,6 +72,21 @@ module.exports = {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
+      fontSize: {
+        'xs': ['0.75rem', { lineHeight: '1.4' }],
+        'sm': ['0.875rem', { lineHeight: '1.5' }],
+        'base': ['0.875rem', { lineHeight: '1.5' }],
+        'lg': ['1rem', { lineHeight: '1.5' }],
+        'xl': ['1.125rem', { lineHeight: '1.4' }],
+        '2xl': ['1.25rem', { lineHeight: '1.3' }],
+        '3xl': ['1.5rem', { lineHeight: '1.3' }],
+        '4xl': ['1.875rem', { lineHeight: '1.2' }],
+        '5xl': ['2rem', { lineHeight: '1.2' }],
+        '6xl': ['2.25rem', { lineHeight: '1.1' }],
+        '7xl': ['2.25rem', { lineHeight: '1.1' }],
+        '8xl': ['2.25rem', { lineHeight: '1.1' }],
+        '9xl': ['2.25rem', { lineHeight: '1.1' }],
+      },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',
         'slide-up': 'slideUp 0.3s ease-out',

@@ -52,3 +52,5 @@ Dockerfile
 
 # OAuth credentials
 oauth-config.json
+.env.exampl1
+config.env

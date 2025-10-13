@@ -1,6 +1,6 @@
 import express from 'express';
 import JobAlert from '../models/JobAlert.js';
-import Job from '../models/unified/Job.js';
+import Job from '../models/Job.js';
 import jwt from 'jsonwebtoken';
 import { BaseUser } from '../models/UserModels.js';
 

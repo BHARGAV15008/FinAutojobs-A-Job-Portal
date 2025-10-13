@@ -9,22 +9,24 @@ const JobMetrics = ({ userRole }) => {
   // Get real stats from dashboard context
   const stats = getStats ? getStats(userRole) : {};
   
-  // Force re-render when dashboardData changes
+  // Optimized re-render logic - only update when stats actually change
   useEffect(() => {
-    if (dashboardData) {
+    if (dashboardData?.stats && JSON.stringify(dashboardData.stats) !== JSON.stringify(stats)) {
       console.log('🔄 JobMetrics: Dashboard data changed, forcing update');
       setForceUpdate(prev => prev + 1);
     }
-  }, [dashboardData, dashboardData?.stats, dashboardData?.lastUpdated]);
+  }, [dashboardData?.stats]); // Simplified dependencies
   
-  // Debug logs (enhanced)
-  console.log('🔍 JobMetrics Debug:', {
-    userRole,
-    stats,
-    dashboardData: dashboardData?.stats,
-    loading,
-    forceUpdate
-  });
+  // Reduced debug logs to prevent console spam
+  if (Math.random() < 0.1) { // Only log 10% of the time
+    console.log('🔍 JobMetrics Debug:', {
+      userRole,
+      stats,
+      dashboardData: dashboardData?.stats,
+      loading,
+      forceUpdate
+    });
+  }
 
   const getMetrics = () => {
     if (userRole === 'applicant') {

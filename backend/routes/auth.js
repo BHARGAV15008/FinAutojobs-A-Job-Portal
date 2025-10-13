@@ -3,6 +3,9 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
+import multer from 'multer';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { body, validationResult } from 'express-validator';
 import UserModels, { 
   createUserByRole, 
@@ -23,6 +26,40 @@ import {
 } from '../utils/urlValidator.js';
 
 const router = express.Router();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, '../../uploads/documents'));
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, `${file.fieldname}-${req.user.userId}-${uniqueSuffix}${path.extname(file.originalname)}`);
+  }
+});
+
+const fileFilter = (req, file, cb) => {
+  // Accept documents and images
+  const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx|txt/;
+  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+  const mimetype = allowedTypes.test(file.mimetype);
+
+  if (mimetype && extname) {
+    return cb(null, true);
+  } else {
+    cb(new Error('Only documents and images are allowed'), false);
+  }
+};
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  },
+  fileFilter: fileFilter
+});
 
 // JWT Secret - get it dynamically to ensure env vars are loaded
 const getJWTSecret = () => {
@@ -829,7 +866,12 @@ router.get('/profile', authenticateToken, async (req, res) => {
 });
 
 // Update user profile with role-specific field mapping
-router.put('/profile', authenticateToken, async (req, res) => {
+router.put('/profile', authenticateToken, upload.fields([
+  { name: 'resume', maxCount: 1 },
+  { name: 'coverLetter', maxCount: 1 },
+  { name: 'portfolio', maxCount: 1 },
+  { name: 'profilePicture', maxCount: 1 }
+]), async (req, res) => {
   try {
     const userId = req.user.userId || req.user._id;
     const userRole = req.user.role;
@@ -840,7 +882,41 @@ router.put('/profile', authenticateToken, async (req, res) => {
     console.log('🔍 User Role:', userRole);
     console.log('🔍 Update Data Keys:', Object.keys(updateData));
     console.log('🔍 Full Update Data:', JSON.stringify(updateData, null, 2));
+    console.log('🔍 Files:', req.files);
     console.log('🔍 =====================================');
+    
+    // Handle file uploads
+    if (req.files) {
+      console.log('🔍 Processing uploaded files...');
+      
+      // Process resume file
+      if (req.files.resume && req.files.resume[0]) {
+        const resumeFile = req.files.resume[0];
+        updateData.resume_url = `/uploads/documents/${resumeFile.filename}`;
+        console.log('📄 Resume uploaded:', updateData.resume_url);
+      }
+      
+      // Process cover letter file
+      if (req.files.coverLetter && req.files.coverLetter[0]) {
+        const coverLetterFile = req.files.coverLetter[0];
+        updateData.cover_letter_url = `/uploads/documents/${coverLetterFile.filename}`;
+        console.log('📄 Cover letter uploaded:', updateData.cover_letter_url);
+      }
+      
+      // Process portfolio file
+      if (req.files.portfolio && req.files.portfolio[0]) {
+        const portfolioFile = req.files.portfolio[0];
+        updateData.portfolio_url = `/uploads/documents/${portfolioFile.filename}`;
+        console.log('📄 Portfolio uploaded:', updateData.portfolio_url);
+      }
+      
+      // Process profile picture
+      if (req.files.profilePicture && req.files.profilePicture[0]) {
+        const profilePictureFile = req.files.profilePicture[0];
+        updateData.profileImage = `/uploads/documents/${profilePictureFile.filename}`;
+        console.log('🖼️ Profile picture uploaded:', updateData.profileImage);
+      }
+    }
     
     // Remove sensitive fields that shouldn't be updated via this endpoint
     delete updateData.password;
@@ -877,20 +953,25 @@ router.put('/profile', authenticateToken, async (req, res) => {
       portfolio_url: updateData.portfolio_url
     };
     
+    console.log('🔍 Backend: Social links before sanitization:', socialLinksToValidate);
     const sanitizedSocialLinks = sanitizeSocialLinks(socialLinksToValidate);
+    console.log('🔍 Backend: Social links after sanitization:', sanitizedSocialLinks);
     
     // Apply sanitized social links
     if (updateData.linkedin_url !== undefined) {
       transformedData.linkedin_url = sanitizedSocialLinks.linkedin_url || '';
       transformedData['socialLinks.linkedinUrl'] = sanitizedSocialLinks.linkedin_url || '';
+      console.log('🔍 Backend: Setting linkedin_url to:', transformedData.linkedin_url);
     }
     if (updateData.github_url !== undefined) {
       transformedData.github_url = sanitizedSocialLinks.github_url || '';
       transformedData['socialLinks.githubUrl'] = sanitizedSocialLinks.github_url || '';
+      console.log('🔍 Backend: Setting github_url to:', transformedData.github_url);
     }
     if (updateData.portfolio_url !== undefined) {
       transformedData.portfolio_url = sanitizedSocialLinks.portfolio_url || '';
       transformedData['socialLinks.portfolioUrl'] = sanitizedSocialLinks.portfolio_url || '';
+      console.log('🔍 Backend: Setting portfolio_url to:', transformedData.portfolio_url);
     }
     
     // Years of experience
@@ -976,7 +1057,38 @@ router.put('/profile', authenticateToken, async (req, res) => {
       
       // Skills for applicants
       if (updateData.skills) {
-        transformedData.skills = updateData.skills;
+        console.log('🔍 Raw skills data:', updateData.skills);
+        console.log('🔍 Skills data type:', typeof updateData.skills);
+        
+        // Handle skills that might be sent as JSON string from FormData
+        let skillsData = updateData.skills;
+        if (typeof skillsData === 'string') {
+          console.log('🔍 Skills is string, attempting to parse...');
+          try {
+            skillsData = JSON.parse(skillsData);
+            console.log('🔍 Skills parsed successfully:', skillsData);
+          } catch (e) {
+            console.log('🔍 Skills parsing failed, treating as array:', skillsData);
+            // If it's a comma-separated string, split it
+            if (skillsData.includes(',')) {
+              skillsData = skillsData.split(',').map(s => s.trim());
+            } else {
+              skillsData = [skillsData];
+            }
+          }
+        }
+        
+        // Ensure skillsData is an array
+        if (Array.isArray(skillsData)) {
+          transformedData.skills = {
+            primary: skillsData,
+            technical: [],
+            soft: [],
+            languages: []
+          };
+        } else {
+          transformedData.skills = skillsData;
+        }
       } else if (updateData.primary_skills) {
         transformedData.skills = {
           primary: updateData.primary_skills,
@@ -987,7 +1099,20 @@ router.put('/profile', authenticateToken, async (req, res) => {
       
       // Languages for applicants
       if (updateData.languages) {
-        transformedData.languages = updateData.languages;
+        let languagesData = updateData.languages;
+        if (typeof languagesData === 'string') {
+          try {
+            languagesData = JSON.parse(languagesData);
+          } catch (e) {
+            console.log('🔍 Languages parsing failed, treating as array:', languagesData);
+            if (languagesData.includes(',')) {
+              languagesData = languagesData.split(',').map(s => s.trim());
+            } else {
+              languagesData = [languagesData];
+            }
+          }
+        }
+        transformedData.languages = Array.isArray(languagesData) ? languagesData : [];
       }
       
       // Career info for applicants
@@ -2159,6 +2284,33 @@ router.post('/verify-otp', [
       error: error.message
     });
   }
+});
+
+// Error handling middleware for multer
+router.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        success: false,
+        message: 'File too large. Maximum size is 10MB.'
+      });
+    }
+    if (error.code === 'LIMIT_FILE_COUNT') {
+      return res.status(400).json({
+        success: false,
+        message: 'Too many files uploaded.'
+      });
+    }
+  }
+  
+  if (error.message === 'Only documents and images are allowed') {
+    return res.status(400).json({
+      success: false,
+      message: 'Only documents and images are allowed'
+    });
+  }
+  
+  next(error);
 });
 
 export default router;

@@ -171,6 +171,7 @@ import smsOtpRoutes from './routes/smsOtp.js';
 import phoneAuthRoutes from './routes/phoneAuth.js';
 import otpRoutes from './routes/otpRoutes.js';
 import candidatesRoutes from './routes/Applicants/candidates.js';
+import devRoutes from './routes/devRoutes.js';
 
 // Mount routes under /api
 const apiRouter = express.Router();
@@ -199,6 +200,12 @@ apiRouter.use('/otp', otpRoutes);
 apiRouter.use('/candidates', candidatesRoutes);
 console.log('✅ /api/candidates routes registered successfully');
 
+// Development routes (only in development mode)
+if (process.env.NODE_ENV !== 'production') {
+  apiRouter.use('/dev', devRoutes);
+  console.log('✅ /api/dev routes registered successfully (development mode)');
+}
+
 // Social accounts routes
 import socialAccountsRoutes from './routes/socialAccounts.js';
 apiRouter.use('/auth', socialAccountsRoutes);
@@ -217,7 +224,7 @@ initializeFirebase().catch(error => {
 
 // Debug middleware to log all requests
 app.use((req, res, next) => {
-  console.log(`🌐 ${req.method} ${req.url} - Headers:`, {
+  console.log(` ${req.method} ${req.url} - Headers:`, {
     origin: req.headers.origin,
     authorization: req.headers.authorization ? 'Bearer ***' : 'None',
     contentType: req.headers['content-type']
@@ -225,9 +232,17 @@ app.use((req, res, next) => {
   next();
 });
 
+// Serve uploaded files under /api/uploads for consistency
+apiRouter.use('/uploads', express.static('uploads', {
+  setHeaders: (res, path) => {
+    console.log(`📁 Serving file: ${path}`);
+  }
+}));
+
+// Mount all API routes
 app.use('/api', apiRouter);
 
-// Serve uploaded files
+// Also serve uploaded files at root /uploads for backward compatibility
 app.use('/uploads', express.static('uploads'));
 
 // Root health check
@@ -251,7 +266,7 @@ if (process.env.NODE_ENV === 'production') {
       return res.status(404).json({
         success: false,
         message: `API route not found: ${req.method} ${req.originalUrl}`,
-        availableRoutes: ['/api/applications', '/api/jobs', '/api/auth', '/api/health']
+        availableRoutes: ['/api/applications', '/api/jobs', '/api/auth', '/api/health', '/api/uploads']
       });
     }
 
@@ -265,7 +280,7 @@ if (process.env.NODE_ENV === 'production') {
     res.status(404).json({
       success: false,
       message: `Route not found: ${req.method} ${req.originalUrl}`,
-      availableRoutes: ['/api/applications', '/api/jobs', '/api/auth', '/api/health'],
+      availableRoutes: ['/api/applications', '/api/jobs', '/api/auth', '/api/health', '/api/uploads'],
       note: 'In development mode. Frontend should be served separately on port 5173.'
     });
   });

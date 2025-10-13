@@ -23,15 +23,23 @@ export const useRealTimeNotifications = () => {
       return;
     }
 
-    // Initialize socket connection
+    // Initialize socket connection with better error handling
     if (!socket) {
       socket = io(SOCKET_URL, {
-        transports: ['websocket', 'polling'],
-        withCredentials: true
+        transports: ['polling', 'websocket'], // Try polling first, then websocket
+        withCredentials: true,
+        timeout: 20000,
+        forceNew: true,
+        reconnection: true,
+        reconnectionAttempts: 3,
+        reconnectionDelay: 1000
       });
 
       socket.on('connect', () => {
-        console.log('🔌 Connected to real-time notifications');
+        // Reduced logging frequency
+        if (!isConnected) {
+          console.log('🔌 Connected to real-time notifications');
+        }
         setIsConnected(true);
         
         // Join user-specific room
@@ -42,7 +50,20 @@ export const useRealTimeNotifications = () => {
       });
 
       socket.on('disconnect', () => {
-        console.log('🔌 Disconnected from real-time notifications');
+        // Only log if we were previously connected
+        if (isConnected) {
+          console.log('🔌 Disconnected from real-time notifications');
+        }
+        setIsConnected(false);
+      });
+
+      socket.on('connect_error', (error) => {
+        // Silently handle connection errors to reduce console spam
+        setIsConnected(false);
+      });
+
+      socket.on('reconnect_failed', () => {
+        console.log('🔌 Failed to reconnect to real-time notifications');
         setIsConnected(false);
       });
 

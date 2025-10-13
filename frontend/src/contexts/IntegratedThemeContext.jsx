@@ -36,29 +36,40 @@ export const IntegratedThemeProvider = ({ children }) => {
     return localStorage.getItem('language') || 'en';
   });
 
-  // Font size options
+  // Font size options (using relative scaling instead of absolute px)
   const fontSizeOptions = {
-    small: '14px',
-    medium: '16px',
-    large: '18px',
-    xlarge: '20px'
+    small: 0.875,  // 14px equivalent
+    medium: 1,     // 16px equivalent (default)
+    large: 1.125,  // 18px equivalent
+    xlarge: 1.25   // 20px equivalent
   };
 
-  // Font family options
+  // Font family options with better fallbacks
   const fontFamilyOptions = {
-    'Inter': '"Inter", "Helvetica", "Arial", sans-serif',
-    'Roboto': '"Roboto", "Helvetica", "Arial", sans-serif',
-    'Poppins': '"Poppins", "Helvetica", "Arial", sans-serif',
-    'Open Sans': '"Open Sans", "Helvetica", "Arial", sans-serif'
+    'Inter': '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica", "Arial", sans-serif',
+    'Roboto': '"Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica", "Arial", sans-serif',
+    'Poppins': '"Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica", "Arial", sans-serif',
+    'Open Sans': '"Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica", "Arial", sans-serif',
+    'Lato': '"Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica", "Arial", sans-serif',
+    'Montserrat': '"Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica", "Arial", sans-serif',
+    'Source Sans Pro': '"Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica", "Arial", sans-serif',
+    'Nunito': '"Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica", "Arial", sans-serif'
   };
 
-  // Language options
+  // Enhanced language options with proper locale codes
   const languageOptions = {
     'en': 'English',
     'hi': 'हिन्दी (Hindi)',
     'ta': 'தமிழ் (Tamil)',
     'te': 'తెలుగు (Telugu)',
-    'bn': 'বাংলা (Bengali)'
+    'bn': 'বাংলা (Bengali)',
+    'gu': 'ગુજરાતી (Gujarati)',
+    'mr': 'मराठी (Marathi)',
+    'kn': 'ಕನ್ನಡ (Kannada)',
+    'ml': 'മലയാളം (Malayalam)',
+    'or': 'ଓଡ଼ିଆ (Odia)',
+    'pa': 'ਪੰਜਾਬੀ (Punjabi)',
+    'ur': 'اردو (Urdu)'
   };
 
   // Check system theme preference
@@ -83,14 +94,29 @@ export const IntegratedThemeProvider = ({ children }) => {
       document.documentElement.classList.remove('dark');
     }
 
-    // Apply font size
-    document.documentElement.style.fontSize = fontSizeOptions[fontSize];
+    // Apply font size scaling to root element
+    const fontScale = fontSizeOptions[fontSize];
+    document.documentElement.style.fontSize = `${16 * fontScale}px`; // Base 16px scaled
+    
+    // Apply font size class for CSS targeting
+    document.documentElement.className = document.documentElement.className
+      .replace(/font-size-\w+/g, '') + ` font-size-${fontSize}`;
 
-    // Apply font family
-    document.documentElement.style.fontFamily = fontFamilyOptions[fontFamily];
+    // Apply font family to root and body
+    const selectedFontFamily = fontFamilyOptions[fontFamily];
+    document.documentElement.style.fontFamily = selectedFontFamily;
+    document.body.style.fontFamily = selectedFontFamily;
+    
+    // Apply font family class for CSS targeting
+    document.documentElement.className = document.documentElement.className
+      .replace(/font-family-\w+/g, '') + ` font-family-${fontFamily.toLowerCase().replace(/\s+/g, '-')}`;
 
-    // Apply language (for font rendering)
+    // Apply language (for font rendering and RTL support)
     document.documentElement.lang = language;
+    
+    // Apply language class for CSS targeting
+    document.documentElement.className = document.documentElement.className
+      .replace(/lang-\w+/g, '') + ` lang-${language}`;
 
     // Save to localStorage
     localStorage.setItem('darkMode', JSON.stringify(darkMode));
@@ -98,7 +124,14 @@ export const IntegratedThemeProvider = ({ children }) => {
     localStorage.setItem('fontSize', fontSize);
     localStorage.setItem('fontFamily', fontFamily);
     localStorage.setItem('language', language);
-  }, [darkMode, fontSize, fontFamily, language, systemTheme]);
+    
+    console.log('🎨 Theme settings applied:', {
+      darkMode,
+      fontSize: `${16 * fontScale}px`,
+      fontFamily: selectedFontFamily,
+      language
+    });
+  }, [darkMode, fontSize, fontFamily, language, systemTheme, fontSizeOptions, fontFamilyOptions]);
 
   const toggleTheme = () => {
     setDarkMode(!darkMode);
@@ -153,7 +186,18 @@ export const IntegratedThemeProvider = ({ children }) => {
     typography: {
       ...muiTheme.typography,
       fontFamily: fontFamilyOptions[fontFamily],
-      fontSize: parseInt(fontSizeOptions[fontSize]),
+      fontSize: 14 * fontSizeOptions[fontSize], // Base 14px scaled by selected size
+      // Override all typography variants to use the scaled font size
+      h1: { ...muiTheme.typography.h1, fontSize: `${2.5 * fontSizeOptions[fontSize]}rem` },
+      h2: { ...muiTheme.typography.h2, fontSize: `${2 * fontSizeOptions[fontSize]}rem` },
+      h3: { ...muiTheme.typography.h3, fontSize: `${1.75 * fontSizeOptions[fontSize]}rem` },
+      h4: { ...muiTheme.typography.h4, fontSize: `${1.5 * fontSizeOptions[fontSize]}rem` },
+      h5: { ...muiTheme.typography.h5, fontSize: `${1.25 * fontSizeOptions[fontSize]}rem` },
+      h6: { ...muiTheme.typography.h6, fontSize: `${1.125 * fontSizeOptions[fontSize]}rem` },
+      body1: { ...muiTheme.typography.body1, fontSize: `${1 * fontSizeOptions[fontSize]}rem` },
+      body2: { ...muiTheme.typography.body2, fontSize: `${0.875 * fontSizeOptions[fontSize]}rem` },
+      button: { ...muiTheme.typography.button, fontSize: `${0.875 * fontSizeOptions[fontSize]}rem` },
+      caption: { ...muiTheme.typography.caption, fontSize: `${0.75 * fontSizeOptions[fontSize]}rem` },
     }
   };
 

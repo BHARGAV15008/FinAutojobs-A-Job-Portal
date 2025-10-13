@@ -3,6 +3,9 @@
  * Handles localhost, network, and deployment scenarios automatically
  */
 
+// Note: Cannot import logger here due to circular dependency
+// Using console.log directly for configuration logging
+
 // Environment detection
 const getEnvironment = () => {
     // Check for explicit environment variable
@@ -59,7 +62,7 @@ const getHostInfo = () => {
 // Detect backend port by trying common ports
 const detectBackendPort = () => {
     // Common backend ports to try
-    const commonPorts = ['5000', '5001', '5002', '5003', '3001', '8000', '8080'];
+    const commonPorts = ['5000', '5001', '5002', '5003', '3000', '8000', '8080'];
     
     // Check if we have a stored preference
     const storedPort = localStorage.getItem('backend_port');

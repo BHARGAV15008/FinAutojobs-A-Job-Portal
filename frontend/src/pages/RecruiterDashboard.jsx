@@ -180,9 +180,9 @@ const RecruiterDashboardContent = () => {
     console.log('🔍 RecruiterDashboard constructed user:', user?.id);
   }
 
-  // Watch for currentUser changes and trigger re-render
+  // Watch for currentUser changes (optimized to prevent form resets)
   useEffect(() => {
-    if (currentUser) {
+    if (currentUser?._id) {
       console.log('🔍 currentUser changed, triggering re-render');
       console.log('🔍 Current user profile data:', {
         name: currentUser.firstName + ' ' + currentUser.lastName,
@@ -192,19 +192,12 @@ const RecruiterDashboardContent = () => {
         bio: currentUser.bio,
         linkedin: currentUser.linkedin_url
       });
-      setProfileUpdateTrigger(prev => prev + 1);
+      // Only update trigger when user ID changes (new user login), not on profile updates
+      // This prevents form resets during profile editing
     }
   }, [
-    currentUser?._id, 
-    currentUser?.updatedAt,
-    currentUser?.firstName,
-    currentUser?.lastName,
-    currentUser?.bio,
-    currentUser?.linkedin_url,
-    currentUser?.companyInfo?.companyName,
-    currentUser?.companyInfo?.department,
-    currentUser?.companyInfo?.designation
-  ]); // Watch for profile-related fields
+    currentUser?._id // Only watch for user ID changes, not profile field changes
+  ]); // Reduced dependencies to prevent form resets
 
   // Define comprehensive dashboard tabs for recruiters
   const dashboardTabs = [
@@ -472,7 +465,7 @@ const RecruiterDashboardContent = () => {
       case "profile":
         return (
           <EnhancedProfileTab
-            key={`profile-${currentUser?._id}-${profileUpdateTrigger}-${currentUser?.updatedAt}`}
+            key={`profile-${currentUser?._id}`} // Stable key to prevent form resets
             user={user}
             onEdit={handleEditProfile}
             userRole="recruiter"

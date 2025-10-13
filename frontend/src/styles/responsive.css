@@ -48,8 +48,63 @@ main, .main-content {
   width: 100% !important;
   max-width: none !important;
   margin: 0 !important;
-  padding-left: 16px !important;
-  padding-right: 16px !important;
+}
+
+/* MUI Container overrides for full width */
+.MuiContainer-root {
+  max-width: none !important;
+  width: 100% !important;
+}
+
+/* Responsive breakpoints */
+@media (max-width: 600px) {
+  .MuiContainer-root {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+}
+
+@media (min-width: 600px) and (max-width: 960px) {
+  .MuiContainer-root {
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+  }
+}
+
+@media (min-width: 960px) {
+  .MuiContainer-root {
+    padding-left: 32px !important;
+    padding-right: 32px !important;
+  }
+}
+
+/* Hero section mobile improvements */
+@media (max-width: 1199px) {
+  /* Hide hero image on tablets and mobile */
+  .hero-image {
+    display: none !important;
+  }
+}
+
+/* Typography mobile improvements */
+@media (max-width: 600px) {
+  h1, .MuiTypography-h1 {
+    font-size: 1.8rem !important;
+    line-height: 1.2 !important;
+  }
+  
+  h2, .MuiTypography-h2 {
+    font-size: 1.5rem !important;
+  }
+  
+  h3, .MuiTypography-h3 {
+    font-size: 1.3rem !important;
+  }
+  
+  /* Search form mobile improvements */
+  .MuiPaper-root {
+    padding: 16px !important;
+  }
 }
 
 /* Ensure all sections use full width */
@@ -61,6 +116,49 @@ section, .section {
 /* Override any flex containers that might constrain width */
 .MuiBox-root {
   max-width: none !important;
+}
+
+/* Navigation bar responsive improvements */
+.MuiAppBar-root {
+  width: 100% !important;
+}
+
+.MuiAppBar-root .MuiContainer-root {
+  max-width: none !important;
+  width: 100% !important;
+}
+
+.MuiToolbar-root {
+  width: 100% !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+}
+
+@media (min-width: 600px) {
+  .MuiToolbar-root {
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+  }
+}
+
+@media (min-width: 960px) {
+  .MuiToolbar-root {
+    padding-left: 32px !important;
+    padding-right: 32px !important;
+  }
+}
+
+/* Mobile navigation improvements */
+@media (max-width: 600px) {
+  .MuiAppBar-root .MuiTypography-h6 {
+    font-size: 1.1rem !important;
+  }
+  
+  .MuiButton-root {
+    min-width: auto !important;
+    padding: 6px 12px !important;
+    font-size: 0.875rem !important;
+  }
 }
 
 /* Specific overrides for common layout patterns */

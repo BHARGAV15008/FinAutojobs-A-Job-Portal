@@ -1,4 +1,4 @@
-import Job from '../models/unified/Job.js';
+import Job from '../models/Job.js';
 import { Applicant } from '../models/UserModels.js';
 
 /**

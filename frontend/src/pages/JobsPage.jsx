@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import API_BASE_URL from '../services/apiConfig';
+import { log } from '../utils/logger';
 import JobDetailsModal from '../components/modals/JobDetailsModal';
 import AuthModal from '../components/modals/AuthModal';
 import JobApplicationModal from '../components/modals/JobApplicationModal';
@@ -99,7 +100,8 @@ const FilterDrawer = styled(Drawer)(({ theme }) => ({
 }));
 
 const JobsPage = () => {
-    const { user } = useAuth();
+    const { user, login } = useAuth();
+    const [, setLocation] = useLocation();
     
     // Simple local state for favorites and bookmarks
     const [localFavorites, setLocalFavorites] = useState(new Set());
@@ -109,7 +111,7 @@ const JobsPage = () => {
     useEffect(() => {
         if (user && (user.id || user._id)) {
             const userId = user.id || user._id;
-            console.log('🔍 Loading favorites/bookmarks for user:', userId);
+            log.info('Loading favorites/bookmarks for user', userId);
             
             try {
                 const savedFavorites = localStorage.getItem(`favorites_${userId}`);
@@ -118,24 +120,24 @@ const JobsPage = () => {
                 if (savedFavorites) {
                     const favoritesArray = JSON.parse(savedFavorites);
                     setLocalFavorites(new Set(favoritesArray));
-                    console.log('✅ Loaded favorites from localStorage:', favoritesArray.length);
+                    log.success(`Loaded ${favoritesArray.length} favorites from localStorage`);
                 }
                 if (savedBookmarks) {
                     const bookmarksArray = JSON.parse(savedBookmarks);
                     setLocalBookmarks(new Set(bookmarksArray));
-                    console.log('✅ Loaded bookmarks from localStorage:', bookmarksArray.length);
+                    log.success(`Loaded ${bookmarksArray.length} bookmarks from localStorage`);
                 }
             } catch (error) {
-                console.error('❌ Error loading from localStorage:', error);
+                log.error('Error loading from localStorage', error);
             }
         } else {
-            console.log('🔍 No user found or user ID missing');
+            log.info('No user found or user ID missing');
         }
     }, [user]);
 
     // Debug: Log current state
     useEffect(() => {
-        console.log('🔍 Current state:', {
+        log.data('Current state', {
             user: !!user,
             userId: user?.id || user?._id,
             localFavorites: localFavorites.size,
@@ -144,6 +146,7 @@ const JobsPage = () => {
             bookmarksList: [...localBookmarks]
         });
     }, [user, localFavorites, localBookmarks]);
+
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -154,6 +157,54 @@ const JobsPage = () => {
     const [selectedExperience, setSelectedExperience] = useState('');
     const [selectedJobType, setSelectedJobType] = useState('');
     const [selectedSalaryRange, setSelectedSalaryRange] = useState('');
+    
+    // Modal state (needed early for useEffect)
+    const [applicationModalOpen, setApplicationModalOpen] = useState(false);
+    const [selectedJobForApplication, setSelectedJobForApplication] = useState(null);
+
+    // Check for pending job application after login
+    useEffect(() => {
+        if (user && (user.id || user._id)) {
+            const pendingApplication = localStorage.getItem('pendingJobApplication');
+            if (pendingApplication) {
+                try {
+                    const applicationData = JSON.parse(pendingApplication);
+                    // Check if the application is recent (within 10 minutes)
+                    const isRecent = Date.now() - applicationData.timestamp < 10 * 60 * 1000;
+                    
+                    if (isRecent && applicationData.jobId) {
+                        log.info('Found pending job application, looking for job', applicationData.jobTitle);
+                        // Find the job in current jobs list
+                        const job = jobs.find(j => (j.id || j._id) === applicationData.jobId);
+                        if (job) {
+                            log.success('Found job for pending application, opening application modal');
+                            setSelectedJobForApplication(job);
+                            setApplicationModalOpen(true);
+                        } else {
+                            log.warn('Job not found in current list, user can manually apply');
+                        }
+                        // Clear the pending application
+                        localStorage.removeItem('pendingJobApplication');
+                    }
+                } catch (error) {
+                    log.error('Error parsing pending application', error);
+                    localStorage.removeItem('pendingJobApplication');
+                }
+            }
+        }
+    }, [user, jobs]);
+
+    // Read URL parameters on component mount
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchParam = urlParams.get('search');
+        const locationParam = urlParams.get('location');
+        const jobTypeParam = urlParams.get('jobType');
+        
+        if (searchParam) setSearchQuery(searchParam);
+        if (locationParam) setSelectedLocation(locationParam);
+        if (jobTypeParam) setSelectedJobType(jobTypeParam);
+    }, []);
     const [sortBy, setSortBy] = useState('relevance');
     const [selectedTab, setSelectedTab] = useState(0);
     const [showFilters, setShowFilters] = useState(false);
@@ -166,8 +217,6 @@ const JobsPage = () => {
     const [viewDetailsModal, setViewDetailsModal] = useState({ isOpen: false, job: null });
     const [authModalOpen, setAuthModalOpen] = useState(false);
     const [pendingApplication, setPendingApplication] = useState(null);
-    const [applicationModalOpen, setApplicationModalOpen] = useState(false);
-    const [selectedJobForApplication, setSelectedJobForApplication] = useState(null);
     const [appliedJobs, setAppliedJobs] = useState(new Set());
     const [applicationLoading, setApplicationLoading] = useState(false);
 
@@ -176,11 +225,10 @@ const JobsPage = () => {
         const fetchJobs = async () => {
             try {
                 setLoading(true);
-                console.log('🔍 Fetching jobs from comprehensive API...');
+                log.fetch('Fetching jobs from comprehensive API...');
                 
-                // Use fetch directly to call our comprehensive job API
+                // Use fetch directly to call our comprehensive job API (without search query for initial load)
                 const response = await fetch(`${API_BASE_URL}/jobs?${new URLSearchParams({
-                    search: searchQuery || '',
                     location: selectedLocation || '',
                     jobType: selectedJobType || '',
                     page: page.toString(),
@@ -188,15 +236,15 @@ const JobsPage = () => {
                 })}`);
                 
                 const data = await response.json();
-                console.log('🔍 Comprehensive API Response:', data);
+                log.api('Comprehensive API Response', data);
                 
                 // Handle the new API response format
                 let jobsData = [];
                 if (data.success && Array.isArray(data.data?.jobs)) {
                     jobsData = data.data.jobs;
-                    console.log('✅ Found jobs from comprehensive API:', jobsData.length);
+                    log.success(`Found ${jobsData.length} jobs from comprehensive API`);
                 } else {
-                    console.log('🔍 No jobs found, using empty array');
+                    log.info('No jobs found, using empty array');
                     jobsData = [];
                 }
                 
@@ -294,12 +342,12 @@ const JobsPage = () => {
                     companySize: '1000+'
                 }));
                 
-                console.log('🔍 Transformed jobs sample:', transformedJobs[0]);
-                console.log('🔍 Total transformed jobs:', transformedJobs.length);
-                console.log('🔍 Sample job fields:', Object.keys(transformedJobs[0] || {}));
+                log.data('Transformed jobs sample', transformedJobs[0]);
+                log.data('Total transformed jobs', transformedJobs.length);
+                log.data('Sample job fields', Object.keys(transformedJobs[0] || {}));
                 setJobs(transformedJobs);
             } catch (error) {
-                console.error('Error fetching jobs from comprehensive API:', error);
+                log.error('Error fetching jobs from comprehensive API', error);
                 // Show empty array - no mock data fallback
                 setJobs([]);
             } finally {
@@ -308,7 +356,7 @@ const JobsPage = () => {
         };
 
         fetchJobs();
-    }, [searchQuery, selectedLocation, selectedJobType, page]);
+    }, [selectedLocation, selectedJobType, page]);
 
     // No mock data - using only real API data
 
@@ -320,12 +368,44 @@ const JobsPage = () => {
     ];
 
 
-    const handleSearch = () => {
-        setLoading(true);
-        // Simulate search
-        setTimeout(() => {
+    const handleSearch = async () => {
+        try {
+            setLoading(true);
+            console.log('🔍 Performing search with query:', searchQuery);
+            
+            const searchParams = {
+                search: searchQuery,
+                location: selectedLocation,
+                jobType: selectedJobType,
+                experience: selectedExperience,
+                salaryRange: selectedSalaryRange,
+                page: 1,
+                limit: 12
+            };
+            
+            // Filter out empty parameters
+            const filteredParams = Object.fromEntries(
+                Object.entries(searchParams).filter(([_, value]) => value && value !== '')
+            );
+            
+            const response = await fetch(`${API_BASE_URL}/jobs?${new URLSearchParams(filteredParams)}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                setJobs(data.jobs || []);
+                setTotalJobs(data.total || 0);
+                setPage(1); // Reset to first page
+                console.log('✅ Search completed, found', data.jobs?.length || 0, 'jobs');
+            } else {
+                console.error('❌ Search failed:', data.message);
+                setJobs([]);
+            }
+        } catch (error) {
+            console.error('❌ Search error:', error);
+            setJobs([]);
+        } finally {
             setLoading(false);
-        }, 500);
+        }
     };
 
     const toggleFavorite = (jobId) => {
@@ -333,8 +413,8 @@ const JobsPage = () => {
         
         // Check if user is authenticated
         if (!user || !(user.id || user._id)) {
-            console.log('❌ User not authenticated, showing login modal');
-            setAuthModalOpen(true);
+            console.log('❌ User not authenticated, redirecting to login page');
+            setLocation('/login');
             return;
         }
 
@@ -366,8 +446,8 @@ const JobsPage = () => {
         
         // Check if user is authenticated
         if (!user || !(user.id || user._id)) {
-            console.log('❌ User not authenticated, showing login modal');
-            setAuthModalOpen(true);
+            console.log('❌ User not authenticated, redirecting to login page');
+            setLocation('/login');
             return;
         }
 
@@ -427,7 +507,18 @@ const JobsPage = () => {
                 try {
                     const userId = user.id || user._id;
                     const applications = await applicationService.getUserApplications(userId);
-                    const appliedJobIds = new Set(applications.data?.map(app => app.jobId) || []);
+                    
+                    // Handle different response structures
+                    let applicationsData = [];
+                    if (applications?.data && Array.isArray(applications.data)) {
+                        applicationsData = applications.data;
+                    } else if (Array.isArray(applications)) {
+                        applicationsData = applications;
+                    } else if (applications?.applications && Array.isArray(applications.applications)) {
+                        applicationsData = applications.applications;
+                    }
+                    
+                    const appliedJobIds = new Set(applicationsData.map(app => app.jobId || app.job_id || app.id) || []);
                     setAppliedJobs(appliedJobIds);
                     console.log('✅ Loaded applied jobs:', appliedJobIds.size);
                 } catch (error) {
@@ -449,9 +540,15 @@ const JobsPage = () => {
         
         // Check if user is authenticated
         if (!user || !(user.id || user._id || user.userId)) {
-            console.log('❌ User not authenticated, showing login modal');
-            setPendingApplication(job);
-            setAuthModalOpen(true);
+            console.log('❌ User not authenticated, redirecting to login page');
+            // Store the job ID in localStorage so we can redirect back after login
+            localStorage.setItem('pendingJobApplication', JSON.stringify({
+                jobId: job.id || job._id,
+                jobTitle: job.title || job.jobTitle,
+                timestamp: Date.now()
+            }));
+            // Redirect to login page
+            setLocation('/login');
             return;
         }
 
@@ -509,13 +606,22 @@ const JobsPage = () => {
     const handleAuthSuccess = async (userData) => {
         try {
             // Use AuthContext login function
-            await login(userData.email, userData.password || 'temp');
-            setAuthModalOpen(false);
+            const result = await login({
+                identifier: userData.email,
+                password: userData.password || 'temp',
+                role: 'applicant'
+            });
             
-            // If there was a pending application, submit it now
-            if (pendingApplication) {
-                submitApplication(pendingApplication);
-                setPendingApplication(null);
+            if (result.success) {
+                setAuthModalOpen(false);
+                
+                // If there was a pending application, submit it now
+                if (pendingApplication) {
+                    handleApply(pendingApplication);
+                    setPendingApplication(null);
+                }
+            } else {
+                console.error('Login failed:', result.error);
             }
         } catch (error) {
             console.error('Login failed:', error);
@@ -930,6 +1036,11 @@ const JobsPage = () => {
                             placeholder="Search jobs, companies, or skills..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
+                            onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                    handleSearch();
+                                }
+                            }}
                             InputProps={{
                                 startAdornment: (
                                     <InputAdornment position="start">
@@ -1366,8 +1477,8 @@ const JobsPage = () => {
                 </Paper>
             )}
 
-            {/* Pagination */}
-            {filteredJobs.length > 0 && (
+            {/* Pagination - Only show if more than 1 page */}
+            {filteredJobs.length > 12 && (
                 <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
                     <Pagination
                         count={Math.ceil(filteredJobs.length / 12)}
@@ -1437,8 +1548,15 @@ const JobsPage = () => {
             <Dialog
                 open={viewDetailsModal.isOpen}
                 onClose={() => setViewDetailsModal({ isOpen: false, job: null })}
-                maxWidth="md"
+                maxWidth="sm"
                 fullWidth
+                PaperProps={{
+                    sx: {
+                        maxWidth: { xs: '95vw', sm: '600px', md: '700px', lg: '800px' },
+                        maxHeight: '85vh',
+                        m: 2
+                    }
+                }}
             >
                 <DialogTitle>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

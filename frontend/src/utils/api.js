@@ -39,11 +39,27 @@ const api = {
     const queryString = new URLSearchParams(params).toString();
     return handleResponse(apiRequest('GET', `/jobs?${queryString}`));
   },
+  searchJobs: (query, filters = {}) => {
+    const searchParams = { 
+      search: query,
+      ...filters
+    };
+    const queryString = new URLSearchParams(searchParams).toString();
+    return handleResponse(apiRequest('GET', `/jobs?${queryString}`));
+  },
   getJob: (id) => handleResponse(apiRequest('GET', `/jobs/${id}`)),
   
   // Companies endpoints
   getCompanies: (params) => {
     const queryString = new URLSearchParams(params).toString();
+    return handleResponse(apiRequest('GET', `/companies?${queryString}`));
+  },
+  searchCompanies: (query, filters = {}) => {
+    const searchParams = { 
+      search: query,
+      ...filters
+    };
+    const queryString = new URLSearchParams(searchParams).toString();
     return handleResponse(apiRequest('GET', `/companies?${queryString}`));
   },
   getCompany: (id) => handleResponse(apiRequest('GET', `/companies/${id}`)),

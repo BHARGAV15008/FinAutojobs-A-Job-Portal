@@ -231,7 +231,7 @@ const Navigation = () => {
 
   return (
     <AppBar position="sticky" color="default" elevation={1} sx={{ bgcolor: 'background.paper' }}>
-      <Container maxWidth="xl">
+      <Container maxWidth={false} sx={{ px: { xs: 2, sm: 3, md: 4 } }}>
         <Toolbar disableGutters>
           {/* Logo - Desktop */}
           <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', mr: 2 }}>
@@ -265,7 +265,7 @@ const Navigation = () => {
           </Box>
 
           {/* Mobile menu button */}
-          <Box sx={{ flexGrow: 0, display: { xs: 'flex', md: 'none' } }}>
+          <Box sx={{ flexGrow: 0, display: { xs: 'flex', md: 'none' }, mr: 1 }}>
             <IconButton
               size="large"
               aria-label="menu"
@@ -273,6 +273,7 @@ const Navigation = () => {
               aria-haspopup="true"
               onClick={handleDrawerToggle}
               color="inherit"
+              sx={{ p: 1 }}
             >
               <MenuIcon />
             </IconButton>
@@ -498,7 +499,7 @@ const Navigation = () => {
                 </Menu>
               </>
             ) : (
-              <Box sx={{ display: 'flex', gap: { xs: 1, sm: 2 }, alignItems: 'center' }}>
+              <Box sx={{ display: 'flex', gap: { xs: 0.5, sm: 1 }, alignItems: 'center' }}>
                 <Button
                   component={Link}
                   href="/admin-login"
