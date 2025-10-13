@@ -1,7 +1,7 @@
 import { Server } from 'socket.io';
 import jwt from 'jsonwebtoken';
-import { db } from '../config/database.js';
-import { users, applications, jobs, companies } from '../schema.js';
+import { db } from '../../config/database.js';
+import { users, applications, jobs, companies } from '../../schema.js';
 import { eq, and, or, desc } from 'drizzle-orm';
 
 class WebSocketService {

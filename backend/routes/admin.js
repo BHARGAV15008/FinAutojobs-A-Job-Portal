@@ -1,7 +1,7 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import { BaseUser, findUserByIdAndRole } from '../models/UserModels.js';
-import Job from '../models/Job.js';
+import Job from '../models/unified/Job.js';
 import Application from '../models/unified/Application.js';
 import Moderation from '../models/Moderation.js';
 import emailService from '../services/emailService.js';

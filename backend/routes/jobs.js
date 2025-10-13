@@ -1,6 +1,6 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
-import Job from '../models/Job.js';
+import Job from '../models/unified/Job.js';
 import Application from '../models/unified/Application.js';
 import ApplicationInformation from '../models/ApplicationInformation.js';
 import { BaseUser, Recruiter } from '../models/UserModels.js';

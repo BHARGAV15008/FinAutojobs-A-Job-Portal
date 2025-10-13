@@ -1,11 +1,11 @@
 import nodemailer from 'nodemailer';
 import Notification from '../models/Notification.js';
-import BaseUser from '../models/BaseUser.js';
-import Job from '../models/Job.js';
-import Application from '../models/Application.js';
+import BaseUser from '../models/unified/BaseUser.js';
+import Job from '../models/unified/Job.js';
+import Application from '../models/unified/Application.js';
 
 // Email transporter configuration
-const transporter = nodemailer.createTransporter({
+const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST || 'smtp.gmail.com',
   port: process.env.EMAIL_PORT || 587,
   secure: false,

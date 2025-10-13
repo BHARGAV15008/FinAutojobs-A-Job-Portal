@@ -2,7 +2,7 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import Interview from '../models/Interview.js';
 import { BaseUser } from '../models/UserModels.js';
-import Job from '../models/Job.js';
+import Job from '../models/unified/Job.js';
 import Application from '../models/unified/Application.js';
 import { body, validationResult, param } from 'express-validator';
 

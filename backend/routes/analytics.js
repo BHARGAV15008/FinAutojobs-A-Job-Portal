@@ -1,6 +1,6 @@
 import express from 'express';
 import Application from '../models/unified/Application.js';
-import Job from '../models/Job.js';
+import Job from '../models/unified/Job.js';
 import { BaseUser } from '../models/UserModels.js';
 import mongoose from 'mongoose';
 

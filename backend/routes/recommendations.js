@@ -1,5 +1,5 @@
 import express from 'express';
-import Job from '../models/Job.js';
+import Job from '../models/unified/Job.js';
 import { BaseUser, Applicant } from '../models/UserModels.js';
 
 const router = express.Router();

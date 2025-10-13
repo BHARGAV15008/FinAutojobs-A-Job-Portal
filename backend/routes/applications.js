@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import Application from '../models/unified/Application.js';
 import ApplicationInformation from '../models/ApplicationInformation.js';
-import Job from '../models/Job.js';
+import Job from '../models/unified/Job.js';
 // Import the correct user model that other routes use
 import { BaseUser } from '../models/UserModels.js';
 import CleanUser from '../models/CleanUser.js';
