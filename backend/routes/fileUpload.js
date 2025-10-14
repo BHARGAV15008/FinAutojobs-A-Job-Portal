@@ -53,16 +53,20 @@ const authenticateToken = async (req, res, next) => {
 
 // Create upload directories if they don't exist
 const createUploadDirs = () => {
+  // Get the main project directory (parent of backend)
+  const projectRoot = path.join(__dirname, '..', '..');
+  
   const dirs = [
     'uploads/applications/resumes',
     'uploads/applications/cover-letters',
     'uploads/applications/portfolios',
     'uploads/applications/documents',
+    'uploads/documents', // Direct documents folder
     'uploads/temp'
   ];
 
   dirs.forEach(dir => {
-    const fullPath = path.join(process.cwd(), dir);
+    const fullPath = path.join(projectRoot, dir);
     if (!fs.existsSync(fullPath)) {
       fs.mkdirSync(fullPath, { recursive: true });
       console.log(`✅ Created directory: ${fullPath}`);
@@ -73,6 +77,9 @@ const createUploadDirs = () => {
 // Initialize upload directories
 createUploadDirs();
 
+// Get the main project directory (parent of backend)
+const projectRoot = path.join(__dirname, '..', '..');
+
 // File type configurations
 const fileConfigs = {
   resume: {
@@ -82,7 +89,7 @@ const fileConfigs = {
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     ],
     maxSize: 5 * 1024 * 1024, // 5MB
-    destination: 'uploads/applications/resumes'
+    destination: path.join(projectRoot, 'uploads', 'documents') // Direct to uploads/documents
   },
   coverLetter: {
     allowedTypes: [
@@ -92,7 +99,7 @@ const fileConfigs = {
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     ],
     maxSize: 5 * 1024 * 1024, // 5MB
-    destination: 'uploads/applications/cover-letters'
+    destination: path.join(projectRoot, 'uploads', 'documents')
   },
   portfolio: {
     allowedTypes: [
@@ -103,7 +110,7 @@ const fileConfigs = {
       'image/webp'
     ],
     maxSize: 10 * 1024 * 1024, // 10MB
-    destination: 'uploads/applications/portfolios'
+    destination: path.join(projectRoot, 'uploads', 'documents')
   },
   additional: {
     allowedTypes: [
@@ -115,7 +122,7 @@ const fileConfigs = {
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     ],
     maxSize: 10 * 1024 * 1024, // 10MB
-    destination: 'uploads/applications/documents'
+    destination: path.join(projectRoot, 'uploads', 'documents')
   }
 };
 
@@ -219,9 +226,7 @@ router.post('/application-document', authenticateToken, async (req, res) => {
         const fileData = {
           filename: req.file.filename,
           originalName: req.file.originalname,
-          fileUrl: `/uploads/applications/${type === 'resume' ? 'resumes' : 
-                     type === 'coverLetter' ? 'cover-letters' :
-                     type === 'portfolio' ? 'portfolios' : 'documents'}/${req.file.filename}`,
+          fileUrl: `/uploads/documents/${req.file.filename}`, // Simplified path
           fileSize: req.file.size,
           mimeType: req.file.mimetype,
           uploadedAt: new Date(),
@@ -327,7 +332,7 @@ router.post('/application-documents-multiple', authenticateToken, async (req, re
         const uploadedFiles = req.files.map(file => ({
           filename: file.filename,
           originalName: file.originalname,
-          fileUrl: `/uploads/applications/${fileConfigs[type].destination.split('/').pop()}/${file.filename}`,
+          fileUrl: `/uploads/documents/${file.filename}`, // Simplified path
           fileSize: file.size,
           mimeType: file.mimetype,
           uploadedAt: new Date(),
@@ -397,7 +402,7 @@ router.delete('/application-document/:filename', authenticateToken, async (req, 
       });
     }
 
-    const filePath = path.join(process.cwd(), fileConfigs[type].destination, filename);
+    const filePath = path.join(fileConfigs[type].destination, filename);
 
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({
@@ -428,7 +433,7 @@ router.delete('/application-document/:filename', authenticateToken, async (req, 
   }
 });
 
-// File download/view endpoint
+// File download/view endpoint for documents (with authentication)
 router.get('/application-document/:filename', authenticateToken, async (req, res) => {
   try {
     const { filename } = req.params;
@@ -449,7 +454,7 @@ router.get('/application-document/:filename', authenticateToken, async (req, res
       });
     }
 
-    const filePath = path.join(process.cwd(), fileConfigs[type].destination, filename);
+    const filePath = path.join(fileConfigs[type].destination, filename);
 
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({
@@ -474,6 +479,52 @@ router.get('/application-document/:filename', authenticateToken, async (req, res
 
   } catch (error) {
     console.error('❌ File access error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'File access failed',
+      error: error.message
+    });
+  }
+});
+
+// Public file serving endpoint for documents (no authentication required)
+router.get('/documents/:type/:filename', async (req, res) => {
+  try {
+    const { type, filename } = req.params;
+
+    if (!type || !fileConfigs[type]) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid file type'
+      });
+    }
+
+    const filePath = path.join(fileConfigs[type].destination, filename);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        success: false,
+        message: 'File not found'
+      });
+    }
+
+    // Set appropriate headers
+    const stat = fs.statSync(filePath);
+    const mimeType = getMimeType(path.extname(filename));
+    
+    res.setHeader('Content-Type', mimeType);
+    res.setHeader('Content-Length', stat.size);
+    res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+    res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+
+    // Stream file
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
+
+    console.log(`✅ Public file served: ${filename}`);
+
+  } catch (error) {
+    console.error('❌ Public file access error:', error);
     res.status(500).json({
       success: false,
       message: 'File access failed',

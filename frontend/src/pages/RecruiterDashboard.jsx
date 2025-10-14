@@ -35,6 +35,7 @@ const RecruiterDashboardContent = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [activeJobTab, setActiveJobTab] = useState("post");
   const [editingJob, setEditingJob] = useState(null);
+  const { darkMode } = useTheme();
   
   // Safe dashboard context with comprehensive error handling
   let dashboardContext;
@@ -487,10 +488,10 @@ const RecruiterDashboardContent = () => {
               {jobTabs.map((tab) => (
                 <motion.button
                   key={tab.id}
-                  className={`px-6 py-3 rounded-lg text-sm font-medium transition-colors duration-200 
+                  className={`tab-button px-6 py-3 rounded-lg text-sm font-medium transition-colors duration-200 
                     ${
                       activeJobTab === tab.id
-                        ? "bg-blue-600 text-white"
+                        ? "active bg-blue-600 text-white"
                         : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
                     }`}
                   whileHover={{ scale: 1.05 }}

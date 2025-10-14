@@ -29,6 +29,7 @@ if (!process.env.MONGODB_URI) {
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 // ES module equivalent of __dirname
@@ -173,6 +174,7 @@ import phoneAuthRoutes from './routes/phoneAuth.js';
 import otpRoutes from './routes/otpRoutes.js';
 import candidatesRoutes from './routes/Applicants/candidates.js';
 import interviewRoutes from './routes/interviews.js';
+import fileUploadRoutes from './routes/fileUpload.js';
 
 // Mount routes under /api
 const apiRouter = express.Router();
@@ -204,6 +206,9 @@ console.log('✅ /api/candidates routes registered successfully');
 console.log('🔄 Registering /api/interviews routes...');
 apiRouter.use('/interviews', interviewRoutes);
 console.log('✅ /api/interviews routes registered successfully - Interview management enabled!');
+console.log('🔄 Registering /api/file-upload routes...');
+apiRouter.use('/file-upload', fileUploadRoutes);
+console.log('✅ /api/file-upload routes registered successfully - File upload enabled!');
 
 // Development routes (only in development mode)
 if (process.env.NODE_ENV !== 'production') {
@@ -244,10 +249,54 @@ app.use((req, res, next) => {
   next();
 });
 
+// Handle specific document serving patterns
+apiRouter.get('/uploads/documents/:filename', (req, res) => {
+  const { filename } = req.params;
+  
+  // Get the main project directory (parent of backend)
+  const projectRoot = path.join(__dirname, '..');
+  
+  // Try multiple possible locations for the uploaded file
+  const possiblePaths = [
+    // Main project uploads folder (most likely location)
+    path.join(projectRoot, 'uploads', 'documents', filename),
+    path.join(projectRoot, 'uploads', 'applications', 'documents', filename),
+    path.join(projectRoot, 'uploads', 'applications', 'resumes', filename),
+    path.join(projectRoot, 'uploads', filename),
+    // Backend relative paths (fallback)
+    path.join(process.cwd(), 'uploads', 'documents', filename),
+    path.join(process.cwd(), 'uploads', 'applications', 'documents', filename),
+    path.join(process.cwd(), 'uploads', 'applications', 'resumes', filename),
+    path.join(process.cwd(), 'uploads', filename)
+  ];
+  
+  console.log(`🔍 Looking for document: ${filename}`);
+  console.log(`🔍 Project root: ${projectRoot}`);
+  console.log(`🔍 Process cwd: ${process.cwd()}`);
+  
+  // Try each possible path
+  for (const filePath of possiblePaths) {
+    console.log(`🔍 Checking: ${filePath}`);
+    if (fs.existsSync(filePath)) {
+      console.log(`📁 Found file at: ${filePath}`);
+      return res.sendFile(filePath);
+    }
+  }
+  
+  console.log(`❌ File not found in any location: ${filename}`);
+  return res.status(404).json({
+    success: false,
+    message: 'Document not found',
+    filename,
+    searchedPaths: possiblePaths
+  });
+});
+
 // Serve uploaded files under /api/uploads for consistency
-apiRouter.use('/uploads', express.static('uploads', {
+const uploadsPath = path.join(__dirname, '..', 'uploads');
+apiRouter.use('/uploads', express.static(uploadsPath, {
   setHeaders: (res, path) => {
-    console.log(`📁 Serving file: ${path}`);
+    console.log(`📁 Serving static file: ${path}`);
   }
 }));
 
@@ -255,7 +304,7 @@ apiRouter.use('/uploads', express.static('uploads', {
 app.use('/api', apiRouter);
 
 // Also serve uploaded files at root /uploads for backward compatibility
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(uploadsPath));
 
 // Root health check
 app.get('/', (req, res) => {
@@ -278,7 +327,7 @@ if (process.env.NODE_ENV === 'production') {
       return res.status(404).json({
         success: false,
         message: `API route not found: ${req.method} ${req.originalUrl}`,
-        availableRoutes: ['/api/applications', '/api/jobs', '/api/auth', '/api/health', '/api/uploads']
+        availableRoutes: ['/api/applications', '/api/jobs', '/api/auth', '/api/health', '/api/uploads', '/api/file-upload']
       });
     }
 
@@ -292,7 +341,7 @@ if (process.env.NODE_ENV === 'production') {
     res.status(404).json({
       success: false,
       message: `Route not found: ${req.method} ${req.originalUrl}`,
-      availableRoutes: ['/api/applications', '/api/jobs', '/api/auth', '/api/health', '/api/uploads'],
+      availableRoutes: ['/api/applications', '/api/jobs', '/api/auth', '/api/health', '/api/uploads', '/api/file-upload'],
       note: 'In development mode. Frontend should be served separately on port 5173.'
     });
   });

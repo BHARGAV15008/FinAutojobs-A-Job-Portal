@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, MapPin, Clock, Users, DollarSign, BookOpen, Briefcase, Zap } from 'lucide-react';
 import { useDashboard } from '../../contexts/RealDashboardContext';
+import { useTheme } from '../../contexts/IntegratedThemeContext';
 
 const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
   const { postJob, updateJob, currentUser } = useDashboard();
+  const { darkMode } = useTheme();
   const [formData, setFormData] = useState({
     // Basic Information
     title: '',
@@ -516,7 +518,7 @@ const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
   }
 
   return (
-    <motion.div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+    <motion.div className={`dashboard-card rounded-xl p-6 shadow-sm border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
       <div className="flex items-center gap-3 mb-6">
         <Briefcase className="w-8 h-8 text-blue-600" />
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -531,7 +533,7 @@ const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
       
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Basic Information Section */}
-        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
+        <div className={`form-section rounded-lg p-6 ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <BookOpen className="w-5 h-5" />
             Basic Information

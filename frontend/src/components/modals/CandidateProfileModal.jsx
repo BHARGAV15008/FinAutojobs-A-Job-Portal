@@ -21,6 +21,7 @@ const CandidateProfileModal = ({
   isOpen, 
   onClose, 
   onContact, 
+  onSchedule,
   onShortlist,
   onDownloadResume 
 }) => {

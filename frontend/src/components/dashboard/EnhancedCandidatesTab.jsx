@@ -132,7 +132,22 @@ const EnhancedCandidatesTab = () => {
           alert(`Scheduling interview with ${candidate.name} - This would open calendar`);
           break;
         case 'shortlist':
-          alert(`${candidate.name} has been shortlisted - Database updated`);
+          const handleShortlistCandidate = async (candidate) => {
+            setActionLoading(prev => ({ ...prev, [`${candidate.id}_shortlist`]: true }));
+            
+            try {
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              
+              console.log(`Shortlisting candidate:`, candidate);
+              alert(`${candidate.name} has been ${candidate.isShortlisted ? 'removed from' : 'added to'} shortlist!`);
+            } catch (error) {
+              console.error('Failed to shortlist candidate:', error);
+              alert('Failed to update shortlist. Please try again.');
+            } finally {
+              setActionLoading(prev => ({ ...prev, [`${candidate.id}_shortlist`]: false }));
+            }
+          };
+          handleShortlistCandidate(candidate);
           break;
         case 'reject':
           if (window.confirm(`Are you sure you want to reject ${candidate.name}?`)) {
@@ -228,26 +243,58 @@ const EnhancedCandidatesTab = () => {
     // or open a messaging interface
   };
 
-  const handleDownloadResume = async (candidateId) => {
+  const handleDownloadResume = async (candidate) => {
+    setActionLoading(prev => ({ ...prev, [`${candidate.id}_download`]: true }));
+    
     try {
-      const response = await candidatesAPI.downloadCandidateResume(candidateId);
+      console.log('🔍 Attempting to download resume for:', candidate.name);
       
-      // Handle blob response for file download
-      if (response.data instanceof Blob) {
-        const url = window.URL.createObjectURL(response.data);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `candidate_${candidateId}_resume.pdf`);
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        window.URL.revokeObjectURL(url);
+      // First try to get resume from application
+      let resumeUrl = candidate.resumeUrl || candidate.resume;
+      
+      // If no resume in application, fetch from user profile
+      if (!resumeUrl && candidate.candidateId) {
+        console.log('📄 No resume in application, fetching from user profile...');
+        try {
+          // Fetch user profile data using the correct API base URL
+          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+          const profileResponse = await fetch(`${apiUrl}/users/${candidate.candidateId}/profile`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+          
+          if (profileResponse.ok) {
+            const profileData = await profileResponse.json();
+            resumeUrl = profileData.data?.resume || profileData.data?.resumeUrl;
+            console.log('📄 Found resume in profile:', resumeUrl);
+          }
+        } catch (profileError) {
+          console.error('Failed to fetch profile:', profileError);
+        }
       }
       
-      alert('✅ Resume downloaded successfully!');
+      if (resumeUrl) {
+        // Create download link
+        const link = document.createElement('a');
+        link.href = resumeUrl;
+        link.download = `${candidate.name.replace(/\s+/g, '_')}_Resume.pdf`;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        console.log('✅ Resume download initiated for:', candidate.name);
+        alert(`✅ Resume download started for ${candidate.name}`);
+      } else {
+        console.log('❌ No resume found for:', candidate.name);
+        alert(`❌ No resume found for ${candidate.name}. Please ask the candidate to upload their resume.`);
+      }
     } catch (error) {
-      console.error('Failed to download resume:', error);
-      throw error;
+      console.error('❌ Failed to download resume:', error);
+      alert('Failed to download resume. Please try again.');
+    } finally {
+      setActionLoading(prev => ({ ...prev, [`${candidate.id}_download`]: false }));
     }
   };
 
@@ -534,6 +581,15 @@ const EnhancedCandidatesTab = () => {
                           >
                             📧 Contact
                           </motion.button>
+                          <motion.button
+                            className={`px-2 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors duration-200 text-xs ${actionLoading[`${candidate.id}_download`] ? 'opacity-50' : ''}`}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleDownloadResume(candidate)}
+                            disabled={actionLoading[`${candidate.id}_download`]}
+                          >
+                            {actionLoading[`${candidate.id}_download`] ? '⏳' : '📄'} Resume
+                          </motion.button>
                           {selectedStatus === 'interviewed' && (
                             <motion.button
                               className="px-2 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors duration-200 text-xs"
@@ -558,158 +614,157 @@ const EnhancedCandidatesTab = () => {
                           </motion.button>
                         </div>
                       </td>
-                    </motion.tr>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
+      ) : (
+        <motion.div
+          key="cards"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          {filteredAndSortedCandidates.map((candidate, index) => (
+            <motion.div
+              key={candidate.id}
+              className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-300"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              whileHover={{ y: -2 }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center">
+                  <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-xl mr-3">
+                    {candidate.avatar}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{candidate.name}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{candidate.currentRole}</p>
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-sm text-gray-900 dark:text-white mr-1">{candidate.rating}</span>
+                  <span className="text-yellow-400">⭐</span>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-2">
+                  <span className="mr-4">📍 {candidate.location}</span>
+                  <span>⏱️ {candidate.experience}</span>
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  💰 {candidate.expectedSalary}
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <div className="flex flex-wrap gap-1">
+                  {candidate.skills.map((skill, skillIndex) => (
+                    <span key={skillIndex} className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs rounded">
+                      {skill}
+                    </span>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="cards"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-          >
-            {filteredAndSortedCandidates.map((candidate, index) => (
-              <motion.div
-                key={candidate.id}
-                className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-300"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                whileHover={{ y: -2 }}
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center">
-                    <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-xl mr-3">
-                      {candidate.avatar}
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{candidate.name}</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{candidate.currentRole}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="text-sm text-gray-900 dark:text-white mr-1">{candidate.rating}</span>
-                    <span className="text-yellow-400">⭐</span>
-                  </div>
                 </div>
+              </div>
 
-                <div className="mb-4">
-                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-2">
-                    <span className="mr-4">📍 {candidate.location}</span>
-                    <span>⏱️ {candidate.experience}</span>
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    💰 {candidate.expectedSalary}
-                  </div>
-                </div>
+              <div className="mb-4">
+                <select
+                  value={candidate.status}
+                  onChange={(e) => handleStatusChange(candidate.applicationId, e.target.value)}
+                  className={`w-full px-3 py-2 rounded-lg text-sm font-medium ${statusConfig[candidate.status]?.color || statusConfig.pending?.color}`}
+                >
+                  <option value="pending">Pending</option>
+                  <option value="shortlisted">Shortlisted</option>
+                  <option value="interviewed">Interviewed</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+              </div>
 
-                <div className="mb-4">
-                  <div className="flex flex-wrap gap-1">
-                    {candidate.skills.map((skill, skillIndex) => (
-                      <span key={skillIndex} className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs rounded">
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+              <div className="grid grid-cols-2 gap-2">
+                <motion.button
+                  className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-200 text-sm"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleViewCandidate(candidate)}
+                >
+                  👁️ View
+                </motion.button>
+                <motion.button
+                  className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors duration-200 text-sm"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleContactCandidate(candidate)}
+                >
+                  📧 Contact
+                </motion.button>
+                <motion.button
+                  className={`px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors duration-200 text-sm ${actionLoading[`${candidate.id}_download`] ? 'opacity-50' : ''}`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleDownloadResume(candidate)}
+                  disabled={actionLoading[`${candidate.id}_download`]}
+                >
+                  {actionLoading[`${candidate.id}_download`] ? '⏳' : '📄'} Resume
+                </motion.button>
+                <motion.button
+                  className={`px-3 py-2 rounded hover:bg-orange-700 transition-colors duration-200 text-sm ${
+                    candidate.isShortlisted 
+                      ? 'bg-yellow-600 text-white' 
+                      : 'bg-orange-600 text-white'
+                  }`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleShortlistCandidate(candidate)}
+                >
+                  ⭐ {candidate.isShortlisted ? 'Shortlisted' : 'Shortlist'}
+                </motion.button>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      )}
+    </AnimatePresence>
 
-                <div className="mb-4">
-                  <select
-                    value={candidate.status}
-                    onChange={(e) => handleStatusChange(candidate.applicationId, e.target.value)}
-                    className={`w-full px-3 py-2 rounded-lg text-sm font-medium ${statusConfig[candidate.status]?.color || statusConfig.pending?.color}`}
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="shortlisted">Shortlisted</option>
-                    <option value="interviewed">Interviewed</option>
-                    <option value="rejected">Rejected</option>
-                  </select>
-                </div>
+    <div className="text-center text-gray-600 dark:text-gray-400">
+      Showing {filteredAndSortedCandidates.length} of {candidates.length} candidates
+    </div>
 
-                <div className="grid grid-cols-2 gap-2">
-                  <motion.button
-                    className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-200 text-sm"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handleViewCandidate(candidate)}
-                  >
-                    👁️ View
-                  </motion.button>
-                  <motion.button
-                    className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors duration-200 text-sm"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handleContactCandidate(candidate)}
-                  >
-                    📧 Contact
-                  </motion.button>
-                  {selectedStatus === 'interviewed' && (
-                    <motion.button
-                      className="px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors duration-200 text-sm"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handleScheduleInterview(candidate)}
-                    >
-                      📅 Schedule
-                    </motion.button>
-                  )}
-                  <motion.button
-                    className={`px-3 py-2 rounded hover:bg-orange-700 transition-colors duration-200 text-sm ${
-                      candidate.isShortlisted 
-                        ? 'bg-yellow-600 text-white' 
-                        : 'bg-orange-600 text-white'
-                    }`}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handleShortlistCandidate(candidate)}
-                  >
-                    ⭐ {candidate.isShortlisted ? 'Shortlisted' : 'Shortlist'}
-                  </motion.button>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
+    {/* Modals */}
+    <CandidateProfileModal
+      candidate={profileModal.candidate}
+      isOpen={profileModal.isOpen}
+      onClose={() => setProfileModal({ isOpen: false, candidate: null })}
+      onContact={handleContactCandidate}
+      onSchedule={handleScheduleInterview}
+      onShortlist={handleShortlistCandidate}
+      onDownloadResume={handleDownloadResume}
+    />
 
-      <div className="text-center text-gray-600 dark:text-gray-400">
-        Showing {filteredAndSortedCandidates.length} of {candidates.length} candidates
-      </div>
+    <ContactModal
+      candidate={contactModal.candidate}
+      isOpen={contactModal.isOpen}
+      onClose={() => setContactModal({ isOpen: false, candidate: null })}
+      onSendEmail={handleSendEmail}
+      onOpenMessaging={handleOpenMessaging}
+      currentUser={currentUser}
+    />
 
-      {/* Modals */}
-      <CandidateProfileModal
-        candidate={profileModal.candidate}
-        isOpen={profileModal.isOpen}
-        onClose={() => setProfileModal({ isOpen: false, candidate: null })}
-        onContact={handleContactCandidate}
-        onSchedule={handleScheduleInterview}
-        onShortlist={handleShortlistCandidate}
-        onDownloadResume={handleDownloadResume}
-      />
-
-      <ContactModal
-        candidate={contactModal.candidate}
-        isOpen={contactModal.isOpen}
-        onClose={() => setContactModal({ isOpen: false, candidate: null })}
-        onSendEmail={handleSendEmail}
-        onOpenMessaging={handleOpenMessaging}
-        currentUser={currentUser}
-      />
-
-      <ScheduleModal
-        candidate={scheduleModal.candidate}
-        isOpen={scheduleModal.isOpen}
-        onClose={() => setScheduleModal({ isOpen: false, candidate: null })}
-        onScheduleInterview={handleScheduleNewInterview}
-        onRescheduleInterview={handleRescheduleInterview}
-        onCancelInterview={handleCancelInterview}
-      />
-    </motion.div>
-  );
+    <ScheduleModal
+      candidate={scheduleModal.candidate}
+      isOpen={scheduleModal.isOpen}
+      onClose={() => setScheduleModal({ isOpen: false, candidate: null })}
+      onScheduleInterview={handleScheduleNewInterview}
+      onRescheduleInterview={handleRescheduleInterview}
+      onCancelInterview={handleCancelInterview}
+    />
+  </motion.div>
+);
 };
 
 export default EnhancedCandidatesTab;

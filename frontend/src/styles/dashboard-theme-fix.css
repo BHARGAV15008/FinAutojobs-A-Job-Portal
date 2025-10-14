@@ -1,0 +1,583 @@
+/* Dashboard Theme Fix - Maximum Contrast for All Themes */
+
+/* UNIVERSAL FIXES - Apply regardless of theme class */
+:root:not(.dark) input,
+:root:not(.dark) textarea,
+:root:not(.dark) select,
+html:not(.dark) input,
+html:not(.dark) textarea,
+html:not(.dark) select {
+  color: #000000 !important; /* Pure black text */
+  background-color: #ffffff !important; /* Pure white background */
+  border-color: #d1d5db !important; /* gray-300 */
+}
+
+/* LIGHT THEME - Dark text on light backgrounds for maximum contrast */
+.light input,
+.light textarea,
+.light select {
+  color: #000000 !important; /* Pure black text */
+  background-color: #ffffff !important; /* Pure white background */
+  border-color: #d1d5db !important; /* gray-300 */
+}
+
+.light input::placeholder,
+.light textarea::placeholder,
+.light select::placeholder {
+  color: #4b5563 !important; /* Darker gray for better visibility */
+}
+
+.light label {
+  color: #000000 !important; /* Pure black for maximum contrast */
+}
+
+.light .text-gray-900 {
+  color: #000000 !important; /* Pure black */
+}
+
+.light .text-gray-700 {
+  color: #1f2937 !important; /* Very dark gray */
+}
+
+.light .text-gray-600 {
+  color: #374151 !important; /* Dark gray */
+}
+
+.light .text-gray-500 {
+  color: #4b5563 !important; /* Medium dark gray */
+}
+
+/* DARK THEME - Light text on dark backgrounds for maximum contrast */
+.dark input,
+.dark textarea,
+.dark select {
+  color: #ffffff !important; /* Pure white text */
+  background-color: #1f2937 !important; /* Very dark background */
+  border-color: #4b5563 !important; /* gray-600 */
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder,
+.dark select::placeholder {
+  color: #d1d5db !important; /* Light gray for better visibility */
+}
+
+.dark label {
+  color: #ffffff !important; /* Pure white for maximum contrast */
+}
+
+.dark .text-gray-900 {
+  color: #ffffff !important; /* Pure white */
+}
+
+.dark .text-gray-700 {
+  color: #f3f4f6 !important; /* Very light gray */
+}
+
+.dark .text-gray-600 {
+  color: #e5e7eb !important; /* Light gray */
+}
+
+.dark .text-gray-500 {
+  color: #d1d5db !important; /* Medium light gray */
+}
+
+/* BUTTON THEME FIXES - Maximum Contrast */
+.light button:not(.bg-blue-600):not(.bg-green-600):not(.bg-red-600):not(.bg-purple-600):not(.bg-yellow-600):not(.bg-indigo-600) {
+  color: #000000 !important; /* Pure black text on light buttons */
+  background-color: #496d24 !important; /* Light background */
+  border-color: #d1d5db !important;
+}
+
+.dark button:not(.bg-blue-600):not(.bg-green-600):not(.bg-red-600):not(.bg-purple-600):not(.bg-yellow-600):not(.bg-indigo-600) {
+  color: #ffffff !important; /* Pure white text on dark buttons */
+  background-color: #374151 !important; /* Dark background */
+  border-color: #6b7280 !important;
+}
+
+/* TAB BUTTON FIXES - Maximum Contrast */
+.light .tab-button {
+  color: #000000 !important; /* Pure black text */
+  background-color: #ffffff !important; /* Pure white background */
+  border: 1px solid #d1d5db !important;
+}
+
+.light .tab-button.active {
+  color: #ffffff !important; /* White text on active */
+  background-color: #2563eb !important; /* Blue background */
+}
+
+.dark .tab-button {
+  color: #ffffff !important; /* Pure white text */
+  background-color: #1f2937 !important; /* Very dark background */
+  border: 1px solid #4b5563 !important;
+}
+
+.dark .tab-button.active {
+  color: #ffffff !important; /* White text on active */
+  background-color: #2563eb !important; /* Blue background */
+}
+
+/* CARD AND CONTAINER FIXES - Maximum Contrast */
+.light .dashboard-card {
+  background-color: #ffffff !important; /* Pure white background */
+  color: #000000 !important; /* Pure black text */
+}
+
+.dark .dashboard-card {
+  background-color: #1f2937 !important; /* Very dark background */
+  color: #ffffff !important; /* Pure white text */
+}
+
+/* FORM SECTION FIXES - Maximum Contrast */
+.light .form-section {
+  background-color: #f9fafb !important; /* Very light background */
+  color: #000000 !important; /* Pure black text */
+}
+
+.dark .form-section {
+  background-color: #111827 !important; /* Very dark background */
+  color: #ffffff !important; /* Pure white text */
+}
+
+/* ICON COLOR FIXES - Opposite theme colors */
+.light svg,
+.light .lucide,
+.light .icon {
+  color: #000000 !important; /* Pure black icons in light theme */
+  fill: #000000 !important;
+}
+
+.dark svg,
+.dark .lucide,
+.dark .icon {
+  color: #ffffff !important; /* Pure white icons in dark theme */
+  fill: #ffffff !important;
+}
+
+/* Preserve colored icons (blue, green, red, etc.) */
+.light .text-blue-600,
+.dark .text-blue-600 {
+  color: #2563eb !important; /* Keep blue icons blue */
+}
+
+.light .text-green-600,
+.dark .text-green-600 {
+  color: #16a34a !important; /* Keep green icons green */
+}
+
+.light .text-red-600,
+.dark .text-red-600 {
+  color: #dc2626 !important; /* Keep red icons red */
+}
+
+.light .text-yellow-600,
+.dark .text-yellow-600 {
+  color: #ca8a04 !important; /* Keep yellow icons yellow */
+}
+
+.light .text-purple-600,
+.dark .text-purple-600 {
+  color: #9333ea !important; /* Keep purple icons purple */
+}
+
+/* DROPDOWN AND SELECT FIXES - Maximum Contrast */
+.light select option {
+  color: #000000 !important; /* Pure black text */
+  background-color: #ffffff !important; /* Pure white background */
+}
+
+.dark select option {
+  color: #ffffff !important; /* Pure white text */
+  background-color: #1f2937 !important; /* Very dark background */
+}
+
+/* FOCUS STATES - Enhanced visibility */
+.light input:focus,
+.light textarea:focus,
+.light select:focus {
+  border-color: #2563eb !important; /* Blue border */
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2) !important; /* Blue glow */
+  outline: none !important;
+}
+
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  border-color: #60a5fa !important; /* Light blue border */
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2) !important; /* Light blue glow */
+  outline: none !important;
+}
+
+/* HEADING FIXES - Maximum Contrast */
+.light h1, .light h2, .light h3, .light h4, .light h5, .light h6 {
+  color: #000000 !important; /* Pure black headings */
+}
+
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+  color: #ffffff !important; /* Pure white headings */
+}
+
+/* PARAGRAPH FIXES - Maximum Contrast */
+.light p {
+  color: #000000 !important; /* Pure black paragraphs */
+}
+
+.dark p {
+  color: #ffffff !important; /* Pure white paragraphs */
+}
+
+/* DASHBOARD CONTAINER FIXES - Maximum Contrast */
+.light .dashboard-container {
+  background-color: #ffffff !important; /* Pure white background */
+  color: #000000 !important; /* Pure black text */
+}
+
+.dark .dashboard-container {
+  background-color: #000000 !important; /* Pure black background */
+  color: #ffffff !important; /* Pure white text */
+}
+
+/* HOVER STATES - Enhanced feedback */
+.light button:hover:not(.bg-blue-600):not(.bg-green-600):not(.bg-red-600) {
+  background-color: #e5e7eb !important; /* Light gray hover */
+  color: #000000 !important;
+}
+
+.dark button:hover:not(.bg-blue-600):not(.bg-green-600):not(.bg-red-600) {
+  background-color: #84a4d1 !important; /* Dark gray hover */
+  color: #2640c6 !important;
+}
+
+/* LINK FIXES - Maintain visibility */
+.light a {
+  color: #2563eb !important; /* Blue links in light theme */
+}
+
+.dark a {
+  color: #60a5fa !important; /* Light blue links in dark theme */
+}
+
+/* BORDER FIXES - Enhanced visibility */
+.light .border,
+.light .border-gray-200,
+.light .border-gray-300 {
+  border-color: #d1d5db !important; /* Visible borders in light theme */
+}
+
+.dark .border,
+.dark .border-gray-600,
+.dark .border-gray-700 {
+  border-color: #4b5563 !important; /* Visible borders in dark theme */
+}
+
+/* SPAN AND SMALL TEXT FIXES - Maximum Contrast */
+.light span,
+.light small,
+.light .text-sm {
+  color: #000000 !important; /* Pure black small text */
+}
+
+.dark span,
+.dark small,
+.dark .text-sm {
+  color: #ffffff !important; /* Pure white small text */
+}
+
+/* BADGE AND CHIP FIXES - Enhanced visibility */
+.light .badge,
+.light .chip {
+  background-color: #f3f4f6 !important;
+  color: #000000 !important;
+  border: 1px solid #d1d5db !important;
+}
+
+.dark .badge,
+.dark .chip {
+  background-color: #374151 !important;
+  color: #ffffff !important;
+  border: 1px solid #6b7280 !important;
+}
+
+/* TABLE FIXES - Maximum Contrast */
+.light table,
+.light th,
+.light td {
+  color: #000000 !important;
+  border-color: #d1d5db !important;
+}
+
+.dark table,
+.dark th,
+.dark td {
+  color: #ffffff !important;
+  border-color: #4b5563 !important;
+}
+
+/* MODAL AND DIALOG FIXES - Maximum Contrast */
+.light .modal,
+.light .dialog {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #d1d5db !important;
+}
+
+.dark .modal,
+.dark .dialog {
+  background-color: #1f2937 !important;
+  color: #ffffff !important;
+  border: 1px solid #4b5563 !important;
+}
+
+/* OVERRIDE ANY CONFLICTING TAILWIND CLASSES */
+.light * {
+  --tw-text-opacity: 1 !important;
+}
+
+.dark * {
+  --tw-text-opacity: 1 !important;
+}
+
+/* FORCE MAXIMUM CONTRAST FOR ALL TEXT ELEMENTS */
+.light .text-white {
+  color: #000000 !important; /* Override white text in light theme */
+}
+
+.dark .text-black {
+  color: #ffffff !important; /* Override black text in dark theme */
+}
+
+/* FIX SPECIFIC GRAY TEXT COLORS FOR LIGHT THEME */
+.light .text-gray-400,
+.light .text-gray-500,
+.light .text-gray-600,
+.light .text-gray-700 {
+  color: #000000 !important; /* Pure black for all gray text in light theme */
+}
+
+/* UNIVERSAL GRAY TEXT FIXES - Apply when no dark class */
+:root:not(.dark) .text-gray-400,
+:root:not(.dark) .text-gray-500,
+:root:not(.dark) .text-gray-600,
+:root:not(.dark) .text-gray-700,
+html:not(.dark) .text-gray-400,
+html:not(.dark) .text-gray-500,
+html:not(.dark) .text-gray-600,
+html:not(.dark) .text-gray-700 {
+  color: #000000 !important; /* Pure black for all gray text when not in dark mode */
+}
+
+.dark .text-gray-100,
+.dark .text-gray-200,
+.dark .text-gray-300,
+.dark .text-gray-400 {
+  color: #ffffff !important; /* Pure white for all gray text in dark theme */
+}
+
+/* DASHBOARD HEADER SPECIFIC FIXES */
+.light .dashboard-header button,
+.light [data-component-name="DashboardHeader"] button {
+  color: #000000 !important; /* Pure black for header buttons */
+}
+
+.dark .dashboard-header button,
+.dark [data-component-name="DashboardHeader"] button {
+  color: #ffffff !important; /* Pure white for header buttons */
+}
+
+/* DASHBOARD CONTENT SPECIFIC FIXES */
+.light [data-component-name="RecruiterDashboardContent"] button,
+.light [data-component-name="EnhancedCandidatesTab"] button,
+.light [data-component-name="EnhancedInterviewsTab"] button,
+.light [data-component-name="EnhancedSettingsTab"] button {
+  color: #000000 !important; /* Pure black for dashboard buttons */
+}
+
+.dark [data-component-name="RecruiterDashboardContent"] button,
+.dark [data-component-name="EnhancedCandidatesTab"] button,
+.dark [data-component-name="EnhancedInterviewsTab"] button,
+.dark [data-component-name="EnhancedSettingsTab"] button {
+  color: #ffffff !important; /* Pure white for dashboard buttons */
+}
+
+/* MOTION COMPONENT FIXES */
+.light [data-component-name="MotionDOMComponent"] {
+  color: #000000 !important; /* Pure black for motion components */
+}
+
+.dark [data-component-name="MotionDOMComponent"] {
+  color: #ffffff !important; /* Pure white for motion components */
+}
+
+/* OVERRIDE ALL HOVER STATES FOR VISIBILITY */
+.light button:hover {
+  color: #000000 !important; /* Ensure black text on hover in light theme */
+}
+
+.dark button:hover {
+  color: #ffffff !important; /* Ensure white text on hover in dark theme */
+}
+
+/* SVG ICONS IN BUTTONS - SPECIFIC TARGETING */
+.light button svg,
+.light [data-component-name] svg {
+  color: #000000 !important; /* Pure black icons */
+  stroke: #000000 !important; /* Pure black stroke */
+}
+
+.dark button svg,
+.dark [data-component-name] svg {
+  color: #ffffff !important; /* Pure white icons */
+  stroke: #ffffff !important; /* Pure white stroke */
+}
+
+/* UNIVERSAL SVG FIXES - Apply when no dark class */
+:root:not(.dark) button svg,
+:root:not(.dark) [data-component-name] svg,
+html:not(.dark) button svg,
+html:not(.dark) [data-component-name] svg {
+  color: #000000 !important; /* Pure black icons */
+  stroke: #000000 !important; /* Pure black stroke */
+}
+
+/* SPECIFIC BUTTON PATTERN FIXES */
+:root:not(.dark) button.text-gray-400,
+:root:not(.dark) button.text-gray-500,
+html:not(.dark) button.text-gray-400,
+html:not(.dark) button.text-gray-500 {
+  color: #000000 !important; /* Force black text for gray buttons */
+}
+
+:root:not(.dark) button.text-gray-400 svg,
+:root:not(.dark) button.text-gray-500 svg,
+html:not(.dark) button.text-gray-400 svg,
+html:not(.dark) button.text-gray-500 svg {
+  color: #000000 !important; /* Force black icons for gray buttons */
+  stroke: #000000 !important;
+}
+
+/* ULTRA SPECIFIC TARGETING FOR THEME TOGGLE BUTTON */
+button.text-gray-400:not(.dark),
+button.text-gray-500:not(.dark),
+button[class*="text-gray-400"],
+button[class*="text-gray-500"] {
+  color: #000000 !important; /* Force black text */
+}
+
+button.text-gray-400 svg:not(.dark),
+button.text-gray-500 svg:not(.dark),
+button[class*="text-gray-400"] svg,
+button[class*="text-gray-500"] svg {
+  color: #000000 !important; /* Force black icons */
+  stroke: #000000 !important;
+}
+
+/* BODY LEVEL TARGETING */
+body:not(.dark) button.text-gray-400,
+body:not(.dark) button.text-gray-500,
+body:not(.dark) .text-gray-400,
+body:not(.dark) .text-gray-500 {
+  color: #000000 !important;
+}
+
+body:not(.dark) button.text-gray-400 svg,
+body:not(.dark) button.text-gray-500 svg,
+body:not(.dark) .text-gray-400 svg,
+body:not(.dark) .text-gray-500 svg {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* TABLE CELL TEXT FIXES - Experience field visibility */
+body:not(.dark) td.text-gray-900,
+body:not(.dark) .text-gray-900,
+:root:not(.dark) td.text-gray-900,
+:root:not(.dark) .text-gray-900 {
+  color: #000000 !important; /* Pure black for table text */
+}
+
+body:not(.dark) td,
+body:not(.dark) th,
+:root:not(.dark) td,
+:root:not(.dark) th {
+  color: #000000 !important; /* Force all table content to black */
+}
+
+/* AGGRESSIVE TARGETING FOR SPECIFIC PROBLEM ELEMENTS */
+.light .bg-gray-100,
+.light .bg-gray-200 {
+  background-color: #f9fafb !important; /* Light background */
+  color: #000000 !important; /* Pure black text */
+}
+
+.dark .bg-gray-700,
+.dark .bg-gray-800 {
+  background-color: #1f2937 !important; /* Dark background */
+  color: #ffffff !important; /* Pure white text */
+}
+
+/* SPECIFIC BUTTON BACKGROUND FIXES */
+.light button.bg-gray-100,
+.light button.bg-gray-200 {
+  background-color: #db7979 !important; /* White button background */
+  color: #000000 !important; /* Black text */
+  border: 1px solid #13315f !important; /* Visible border */
+}
+
+.dark button.bg-gray-700,
+.dark button.bg-gray-800 {
+  background-color: #374151 !important; /* Dark button background */
+  color: #ffffff !important; /* White text */
+  border: 1px solid #6b7280 !important; /* Visible border */
+}
+
+/* NOTIFICATION AND STATUS INDICATORS */
+.light .bg-red-500,
+.light .bg-green-500,
+.light .bg-blue-500 {
+  color: #ffffff !important; /* White text on colored backgrounds */
+}
+
+.dark .bg-red-500,
+.dark .bg-green-500,
+.dark .bg-blue-500 {
+  color: #ffffff !important; /* White text on colored backgrounds */
+}
+
+/* ROUNDED ELEMENTS AND BADGES */
+.light .rounded-full,
+.light .rounded-lg {
+  border: 1px solid #d1d5db !important; /* Visible borders */
+}
+
+.dark .rounded-full,
+.dark .rounded-lg {
+  border: 1px solid #4b5563 !important; /* Visible borders */
+}
+
+/* FORCE ALL DASHBOARD ELEMENTS TO MAXIMUM CONTRAST */
+.light .dashboard-container *,
+.light [class*="dashboard"] *,
+.light [data-component-name] * {
+  color: #000000 !important; /* Force all text to black in light theme */
+}
+
+.dark .dashboard-container *,
+.dark [class*="dashboard"] *,
+.dark [data-component-name] * {
+  color: #ffffff !important; /* Force all text to white in dark theme */
+}
+
+/* PRESERVE COLORED ELEMENTS */
+.light .text-blue-600,
+.light .text-green-600,
+.light .text-red-600,
+.light .text-yellow-600,
+.light .text-purple-600,
+.dark .text-blue-600,
+.dark .text-green-600,
+.dark .text-red-600,
+.dark .text-yellow-600,
+.dark .text-purple-600 {
+  opacity: 1 !important; /* Keep original colors - these are already visible */
+}

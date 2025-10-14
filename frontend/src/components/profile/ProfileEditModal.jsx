@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTheme } from '../../contexts/IntegratedThemeContext';
 
 const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
+  const { darkMode } = useTheme();
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -158,10 +160,10 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
         >
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Edit Profile</h2>
+              <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Edit Profile</h2>
               <button
                 onClick={onClose}
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                className={`${darkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'}`}
               >
                 ✕
               </button>
@@ -171,43 +173,43 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
               {/* Basic Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Name *</label>
+                  <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Name *</label>
                   <input
                     type="text"
                     value={formData.name || ''}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}`}
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Phone</label>
+                  <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Phone</label>
                   <input
                     type="tel"
                     value={formData.phone || ''}
                     onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}`}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Location</label>
+                <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Location</label>
                 <input
                   type="text"
                   value={formData.location || ''}
                   onChange={(e) => setFormData({...formData, location: e.target.value})}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}`}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Bio</label>
+                <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Bio</label>
                 <textarea
                   value={formData.bio || ''}
                   onChange={(e) => setFormData({...formData, bio: e.target.value})}
                   rows={3}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}`}
                 />
               </div>
 
@@ -215,7 +217,7 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
               {userRole === 'applicant' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Skills (comma-separated)</label>
+                    <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Skills (comma-separated)</label>
                     <input
                       type="text"
                       value={Array.isArray(formData.skills) ? formData.skills.join(', ') : (formData.skills || '')}
@@ -233,34 +235,34 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
                         const skillsArray = value.split(',').map(s => s.trim()).filter(s => s);
                         setFormData({...formData, skills: skillsArray});
                       }}
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}`}
                       placeholder="e.g. JavaScript, React, Node.js"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Qualification</label>
+                    <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Qualification</label>
                     <input
                       type="text"
                       value={formData.qualification || ''}
                       onChange={(e) => setFormData({...formData, qualification: e.target.value})}
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}`}
                       placeholder="e.g. Bachelor's in Computer Science"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Years of Experience</label>
+                    <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Years of Experience</label>
                     <input
                       type="number"
                       min="0"
                       max="50"
                       value={formData.experience_years || ''}
                       onChange={(e) => setFormData({...formData, experience_years: parseInt(e.target.value) || 0})}
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}`}
                       placeholder="e.g. 3"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Resume</label>
+                    <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Resume</label>
                     <div className="space-y-2">
                       <input
                         type="file"
@@ -286,45 +288,45 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
               {userRole === 'recruiter' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Company *</label>
+                    <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Company *</label>
                     <input
                       type="text"
                       value={formData.company || ''}
                       onChange={(e) => setFormData({...formData, company: e.target.value})}
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}`}
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Department</label>
+                    <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Department</label>
                     <input
                       type="text"
                       value={formData.department || ''}
                       onChange={(e) => setFormData({...formData, department: e.target.value})}
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}`}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Job Title</label>
+                    <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Job Title</label>
                     <input
                       type="text"
                       value={formData.job_title || ''}
                       onChange={(e) => setFormData({...formData, job_title: e.target.value})}
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}`}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Years of Experience</label>
+                    <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Years of Experience</label>
                     <input
                       type="number"
                       min="0"
                       value={formData.experience_years || 0}
                       onChange={(e) => setFormData({...formData, experience_years: parseInt(e.target.value) || 0})}
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}`}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Resume</label>
+                    <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Resume</label>
                     <div className="space-y-2">
                       <input
                         type="file"
@@ -335,10 +337,10 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
                             setFormData({...formData, resumeFile: file});
                           }
                         }}
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
                       />
                       {formData.resume_url && (
-                        <div className="text-sm text-gray-600">
+                        <div className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                           Current: <a href={formData.resume_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">View Resume</a>
                         </div>
                       )}
@@ -349,40 +351,40 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
 
               {/* Social Links */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Social Links</h3>
+                <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Social Links</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">LinkedIn</label>
+                    <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>LinkedIn</label>
                     <input
                       type="url"
                       value={formData.linkedin_url || ''}
                       onChange={(e) => setFormData({...formData, linkedin_url: e.target.value})}
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}`}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">GitHub</label>
+                    <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>GitHub</label>
                     <input
                       type="url"
                       value={formData.github_url || ''}
                       onChange={(e) => setFormData({...formData, github_url: e.target.value})}
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}`}
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Portfolio</label>
+                  <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Portfolio</label>
                   <input
                     type="url"
                     value={formData.portfolio_url || ''}
                     onChange={(e) => setFormData({...formData, portfolio_url: e.target.value})}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}`}
                   />
                 </div>
               </div>
 
               {errors.general && (
-                <div className="text-red-500 text-sm">{errors.general}</div>
+                <div className={`text-sm ${darkMode ? 'text-red-400' : 'text-red-500'}`}>{errors.general}</div>
               )}
 
               {/* Buttons */}
@@ -390,7 +392,7 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className={`px-4 py-2 border rounded-lg ${darkMode ? 'text-gray-300 border-gray-600 hover:bg-gray-700' : 'text-gray-600 border-gray-300 hover:bg-gray-50'}`}
                 >
                   Cancel
                 </button>
