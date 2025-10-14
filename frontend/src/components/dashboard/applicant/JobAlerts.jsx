@@ -1,21 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { getJobAlerts, createJobAlert, updateJobAlert, deleteJobAlert, getJobMatches } from "../../../api/jobAlerts";
+import { getRecommendedJobs } from "../../../api/recommendations";
+import { createNotification } from "../../../api/notifications";
+import { useAuth } from "../../../contexts/AuthContext";
+import jobRecommendationService, { startAutoJobMatching, stopAutoJobMatching } from "../../../services/jobRecommendationService";
 
 const JobAlerts = () => {
-  const [alerts, setAlerts] = useState([
-    {
-      id: 1,
-      name: "Senior Frontend Developer",
-      keywords: ["React", "TypeScript", "Frontend"],
-      locations: ["Remote", "New York"],
-      salary: "$100k+",
-      frequency: "daily",
-      active: true,
-      lastTriggered: "2023-09-20",
-      matches: 12,
-    },
-    // Add more mock alerts...
-  ]);
+  const { user } = useAuth();
+  const [alerts, setAlerts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [recommendedJobs, setRecommendedJobs] = useState([]);
+  const [jobMatches, setJobMatches] = useState([]);
 
   const [showNewAlert, setShowNewAlert] = useState(false);
   const [newAlert, setNewAlert] = useState({
@@ -26,50 +23,256 @@ const JobAlerts = () => {
     frequency: "daily",
   });
 
-  const handleToggleAlert = (id) => {
-    setAlerts((prev) =>
-      prev.map((alert) =>
-        alert.id === id ? { ...alert, active: !alert.active } : alert
-      )
-    );
+  // Fetch job alerts and recommendations on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user) return;
+      
+      setLoading(true);
+      try {
+        console.log('🔍 Fetching job alerts and recommendations for user:', user.id);
+        
+        // Fetch job alerts
+        const alertsResponse = await getJobAlerts();
+        console.log('✅ Job alerts fetched:', alertsResponse);
+        setAlerts(alertsResponse.data || []);
+        
+        // Fetch job matches
+        const matchesResponse = await getJobMatches(20);
+        console.log('✅ Job matches fetched:', matchesResponse);
+        setJobMatches(matchesResponse.data || []);
+        
+        // Fetch recommended jobs
+        const recommendationsResponse = await getRecommendedJobs({ limit: 10, minMatchPercentage: 50 });
+        console.log('✅ Recommended jobs fetched:', recommendationsResponse);
+        setRecommendedJobs(recommendationsResponse.data?.jobs || []);
+        
+        // Send notifications for new job matches
+        await sendJobMatchNotifications(recommendationsResponse.data?.jobs || []);
+        
+        // Start auto job matching service
+        if (user?.id) {
+          startAutoJobMatching(user.id);
+        }
+        
+      } catch (error) {
+        console.error('❌ Error fetching job data:', error);
+        setError('Failed to load job alerts and recommendations');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+    
+    // Cleanup function to stop auto matching when component unmounts
+    return () => {
+      stopAutoJobMatching();
+    };
+  }, [user]);
+
+  // Send notifications for job matches
+  const sendJobMatchNotifications = async (jobs) => {
+    if (!jobs || jobs.length === 0) return;
+    
+    try {
+      console.log('📨 Sending job match notifications for', jobs.length, 'jobs');
+      
+      // Filter high-match jobs (>70% match)
+      const highMatchJobs = jobs.filter(job => job.matchScore?.overall > 70);
+      
+      for (const job of highMatchJobs.slice(0, 3)) { // Limit to 3 notifications
+        await createNotification({
+          recipientId: user.id,
+          recipientType: 'applicant',
+          type: 'job_match',
+          title: 'New Job Match Found!',
+          message: `We found a ${job.matchScore.overall}% match for "${job.title}" at ${job.company}`,
+          data: {
+            jobId: job.id,
+            matchScore: job.matchScore.overall,
+            actionUrl: `/jobs/${job.id}`
+          },
+          priority: 'high',
+          channels: ['in_app', 'email']
+        });
+      }
+      
+      console.log('✅ Job match notifications sent for', highMatchJobs.length, 'high-match jobs');
+    } catch (error) {
+      console.error('❌ Error sending job match notifications:', error);
+    }
   };
 
-  const handleDeleteAlert = (id) => {
-    setAlerts((prev) => prev.filter((alert) => alert.id !== id));
+  const handleToggleAlert = async (id) => {
+    try {
+      const alert = alerts.find(a => a.id === id);
+      const updatedAlert = { ...alert, active: !alert.active };
+      
+      await updateJobAlert(id, updatedAlert);
+      
+      setAlerts((prev) =>
+        prev.map((alert) =>
+          alert.id === id ? updatedAlert : alert
+        )
+      );
+      
+      console.log('✅ Job alert toggled:', updatedAlert);
+    } catch (error) {
+      console.error('❌ Error toggling job alert:', error);
+      alert('Failed to update job alert');
+    }
   };
 
-  const handleAddAlert = () => {
-    setAlerts((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
+  const handleDeleteAlert = async (id) => {
+    try {
+      await deleteJobAlert(id);
+      setAlerts((prev) => prev.filter((alert) => alert.id !== id));
+      console.log('✅ Job alert deleted:', id);
+    } catch (error) {
+      console.error('❌ Error deleting job alert:', error);
+      alert('Failed to delete job alert');
+    }
+  };
+
+  const handleAddAlert = async () => {
+    try {
+      const alertData = {
         ...newAlert,
         active: true,
-        lastTriggered: new Date().toISOString().split("T")[0],
-        matches: 0,
-      },
-    ]);
-    setShowNewAlert(false);
-    setNewAlert({
-      name: "",
-      keywords: [],
-      locations: [],
-      salary: "",
-      frequency: "daily",
-    });
+        userId: user.id
+      };
+      
+      const response = await createJobAlert(alertData);
+      
+      setAlerts((prev) => [
+        ...prev,
+        response.data
+      ]);
+      
+      setShowNewAlert(false);
+      setNewAlert({
+        name: "",
+        keywords: [],
+        locations: [],
+        salary: "",
+        frequency: "daily",
+      });
+      
+      console.log('✅ Job alert created:', response.data);
+    } catch (error) {
+      console.error('❌ Error creating job alert:', error);
+      alert('Failed to create job alert');
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Job Matching Dashboard */}
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            🎯 Smart Job Matching
+          </h2>
+          <button
+            onClick={() => window.testJobMatching?.(user?.id)}
+            className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+          >
+            Test Matching
+          </button>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+            <div className="text-2xl font-bold text-blue-600">{recommendedJobs.length}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Recommended Jobs</div>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+            <div className="text-2xl font-bold text-green-600">{jobMatches.length}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Job Matches</div>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+            <div className="text-2xl font-bold text-purple-600">{alerts.length}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Active Alerts</div>
+          </div>
+        </div>
+
+        {/* Top Recommended Jobs */}
+        {recommendedJobs.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">
+              🌟 Top Recommendations
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {recommendedJobs.slice(0, 4).map((job) => (
+                <div key={job.id} className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-start justify-between mb-2">
+                    <h4 className="font-semibold text-gray-900 dark:text-white">{job.title}</h4>
+                    <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                      {job.matchScore?.overall || 0}% match
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{job.company}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-500">{job.location}</p>
+                  <div className="mt-2 flex items-center space-x-2">
+                    <button 
+                      onClick={() => window.open(`/jobs/${job.id}`, '_blank')}
+                      className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700"
+                    >
+                      View Job
+                    </button>
+                    <span className="text-xs text-gray-500">
+                      Skills: {job.matchScore?.skills?.matchPercentage || 0}%
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Job Alerts Section */}
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Job Alerts</h2>
-        <button
-          onClick={() => setShowNewAlert(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          Create New Alert
-        </button>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => window.clearJobNotifications?.()}
+            className="px-3 py-2 bg-gray-500 text-white text-sm rounded hover:bg-gray-600"
+          >
+            Clear History
+          </button>
+          <button
+            onClick={() => setShowNewAlert(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Create New Alert
+          </button>
+        </div>
       </div>
 
       {/* New Alert Form */}

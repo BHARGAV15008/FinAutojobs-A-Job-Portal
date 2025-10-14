@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../contexts/IntegratedThemeContext';
+import { candidatesAPI } from '../../services/api';
 import { 
   XMarkIcon, 
   DocumentArrowDownIcon,
@@ -28,22 +29,96 @@ const CandidateProfileModal = ({
   const { darkMode } = useTheme();
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(false);
+  const [detailedCandidate, setDetailedCandidate] = useState(null);
+  const [fetchingDetails, setFetchingDetails] = useState(false);
   
+  // Fetch detailed candidate data when modal opens
+  useEffect(() => {
+    const fetchCandidateDetails = async () => {
+      if (!isOpen || !candidate) return;
+      
+      setFetchingDetails(true);
+      try {
+        console.log('🔍 Fetching detailed data for candidate:', candidate.candidateId || candidate.id);
+        
+        // Try to fetch detailed candidate profile
+        const candidateId = candidate.candidateId || candidate.id;
+        if (candidateId) {
+          const response = await candidatesAPI.getCandidateProfile(candidateId);
+          console.log('✅ Detailed candidate data fetched:', response.data);
+          setDetailedCandidate(response.data);
+        }
+      } catch (error) {
+        console.warn('⚠️ Could not fetch detailed candidate data:', error);
+        // Use the basic candidate data as fallback
+        setDetailedCandidate(candidate);
+      } finally {
+        setFetchingDetails(false);
+      }
+    };
+
+    fetchCandidateDetails();
+  }, [isOpen, candidate]);
+
   if (!isOpen || !candidate) return null;
+
+  // Use detailed candidate data if available, otherwise use basic candidate data
+  const displayCandidate = detailedCandidate || candidate;
 
   // Debug logging
   console.log('🔍 CandidateProfileModal received candidate:', candidate);
-  console.log('🔍 Candidate skills:', candidate.skills);
-  console.log('🔍 Candidate portfolioLinks:', candidate.portfolioLinks);
+  console.log('🔍 Detailed candidate data:', detailedCandidate);
+  console.log('🔍 Display candidate:', displayCandidate);
 
   const handleDownloadResume = async () => {
+    console.log('📄 Download Resume clicked for candidate:', candidate.name);
+    console.log('📄 onDownloadResume function:', typeof onDownloadResume);
     setLoading(true);
     try {
-      await onDownloadResume(candidate.id);
+      if (typeof onDownloadResume === 'function') {
+        await onDownloadResume(candidate);
+      } else {
+        console.error('❌ onDownloadResume is not a function');
+        alert('Download function not available');
+      }
     } catch (error) {
       console.error('Failed to download resume:', error);
+      alert('Failed to download resume: ' + error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleContactClick = () => {
+    console.log('📧 Contact clicked for candidate:', candidate.name);
+    console.log('📧 onContact function:', typeof onContact);
+    if (typeof onContact === 'function') {
+      onContact(candidate);
+    } else {
+      console.error('❌ onContact is not a function');
+      alert('Contact function not available');
+    }
+  };
+
+  const handleScheduleClick = () => {
+    console.log('📅 Schedule clicked for candidate:', candidate.name);
+    console.log('📅 onSchedule function:', typeof onSchedule);
+    if (typeof onSchedule === 'function') {
+      onSchedule(candidate);
+    } else {
+      console.error('❌ onSchedule is not a function');
+      alert('Schedule function not available');
+    }
+  };
+
+  const handleShortlistClick = () => {
+    console.log('⭐ Shortlist clicked for candidate:', candidate.name);
+    console.log('⭐ onShortlist function:', typeof onShortlist);
+    if (typeof onShortlist === 'function') {
+      onShortlist(candidate);
+    } else {
+      console.error('❌ onShortlist is not a function');
+      alert('Shortlist function not available');
     }
   };
 
@@ -96,36 +171,36 @@ const CandidateProfileModal = ({
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white text-xl font-bold">
-                    {candidate.name.split(' ').map(n => n[0]).join('')}
+                    {displayCandidate.name.split(' ').map(n => n[0]).join('')}
                   </div>
                   <div>
                     <h2 className={`text-2xl font-bold ${
                       darkMode ? 'text-white' : 'text-gray-900'
                     }`}>
-                      {candidate.name}
+                      {displayCandidate.name}
                     </h2>
                     <p className={`text-lg ${
                       darkMode ? 'text-gray-300' : 'text-gray-600'
                     }`}>
-                      {candidate.currentRole}
+                      {displayCandidate.currentRole || displayCandidate.currentJobTitle || 'Not specified'}
                     </p>
                     <div className="flex items-center mt-2 space-x-4 text-sm">
                       <div className="flex items-center space-x-1">
                         <MapPinIcon className="w-4 h-4 text-gray-400" />
                         <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
-                          {candidate.location}
+                          {displayCandidate.location || displayCandidate.address || 'Not specified'}
                         </span>
                       </div>
                       <div className="flex items-center space-x-1">
                         <PhoneIcon className="w-4 h-4 text-gray-400" />
                         <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
-                          {candidate.phone}
+                          {displayCandidate.phone || 'Not specified'}
                         </span>
                       </div>
                       <div className="flex items-center space-x-1">
                         <EnvelopeIcon className="w-4 h-4 text-gray-400" />
                         <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
-                          {candidate.email}
+                          {displayCandidate.email || 'Not specified'}
                         </span>
                       </div>
                     </div>
@@ -144,7 +219,7 @@ const CandidateProfileModal = ({
                   </button>
 
                   <button
-                    onClick={() => onContact(candidate)}
+                    onClick={handleContactClick}
                     className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                   >
                     <EnvelopeIcon className="w-4 h-4" />
@@ -152,7 +227,7 @@ const CandidateProfileModal = ({
                   </button>
 
                   <button
-                    onClick={() => onSchedule(candidate)}
+                    onClick={handleScheduleClick}
                     className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                   >
                     <CalendarIcon className="w-4 h-4" />
@@ -160,15 +235,15 @@ const CandidateProfileModal = ({
                   </button>
 
                   <button
-                    onClick={() => onShortlist(candidate)}
+                    onClick={handleShortlistClick}
                     className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                      candidate.isShortlisted
+                      displayCandidate.isShortlisted
                         ? 'bg-yellow-600 text-white hover:bg-yellow-700'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                     }`}
                   >
                     <StarIcon className="w-4 h-4" />
-                    <span>{candidate.isShortlisted ? 'Shortlisted' : 'Shortlist'}</span>
+                    <span>{displayCandidate.isShortlisted ? 'Shortlisted' : 'Shortlist'}</span>
                   </button>
 
                   <button
@@ -209,12 +284,19 @@ const CandidateProfileModal = ({
             </div>
 
             {/* Content */}
-            <div className="px-8 py-6 max-h-[70vh] overflow-y-auto">
+            <div className="flex-1 p-8">
+              {fetchingDetails && (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <span className="ml-3 text-gray-600 dark:text-gray-400">Loading detailed information...</span>
+                </div>
+              )}
+              
               {activeTab === 'overview' && (
                 <div className="space-y-6">
                   {/* Professional Summary */}
                   <div>
-                    <h3 className={`text-lg font-semibold mb-3 ${
+                    <h3 className={`text-lg font-semibold mb-4 ${
                       darkMode ? 'text-white' : 'text-gray-900'
                     }`}>
                       Professional Summary
@@ -222,7 +304,7 @@ const CandidateProfileModal = ({
                     <p className={`leading-relaxed ${
                       darkMode ? 'text-gray-300' : 'text-gray-600'
                     }`}>
-                      {candidate.summary || 'Experienced professional with a strong background in software development and team leadership. Passionate about creating innovative solutions and driving business growth through technology.'}
+                      {displayCandidate.summary || displayCandidate.bio || 'Experienced professional with a strong background in software development and team leadership. Passionate about creating innovative solutions and driving business growth through technology.'}
                     </p>
                   </div>
 
@@ -232,7 +314,7 @@ const CandidateProfileModal = ({
                       darkMode ? 'bg-gray-700' : 'bg-gray-50'
                     }`}>
                       <div className="text-2xl font-bold text-blue-600">
-                        {candidate.experience || 'Not specified'}
+                        {displayCandidate.experience || 'Not specified'}
                       </div>
                       <div className={`text-sm ${
                         darkMode ? 'text-gray-300' : 'text-gray-600'
@@ -244,7 +326,7 @@ const CandidateProfileModal = ({
                       darkMode ? 'bg-gray-700' : 'bg-gray-50'
                     }`}>
                       <div className="text-2xl font-bold text-green-600">
-                        {candidate.expectedSalary || 'Not specified'}
+                        {displayCandidate.expectedSalary || 'Not specified'}
                       </div>
                       <div className={`text-sm ${
                         darkMode ? 'text-gray-300' : 'text-gray-600'
@@ -256,9 +338,9 @@ const CandidateProfileModal = ({
                       darkMode ? 'bg-gray-700' : 'bg-gray-50'
                     }`}>
                       <div className="flex items-center space-x-1">
-                        {renderStars(candidate.rating)}
+                        {renderStars(displayCandidate.rating || 0)}
                         <span className="text-2xl font-bold text-yellow-600 ml-2">
-                          {candidate.rating}
+                          {displayCandidate.rating || 'N/A'}
                         </span>
                       </div>
                       <div className={`text-sm ${

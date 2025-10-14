@@ -14,6 +14,7 @@ const EnhancedInterviewsTab = () => {
   const [sortBy, setSortBy] = useState('interviewDate');
   const [sortOrder, setSortOrder] = useState('asc');
   const [actionLoading, setActionLoading] = useState({});
+  const [openDropdown, setOpenDropdown] = useState(null);
   
   // Modal states
   const [profileModal, setProfileModal] = useState({ isOpen: false, candidate: null });
@@ -50,11 +51,30 @@ const EnhancedInterviewsTab = () => {
         setLoading(false);
       }
     };
-
+    
     fetchInterviews();
   }, []);
 
-  // No mock data - using real interviews from API only
+  // Dropdown handlers
+  const toggleDropdown = (interviewId) => {
+    setOpenDropdown(openDropdown === interviewId ? null : interviewId);
+  };
+
+  const closeDropdown = () => {
+    setOpenDropdown(null);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      closeDropdown();
+    };
+
+    if (openDropdown) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [openDropdown]);
 
   const statusConfig = {
     all: { label: 'All Interviews', color: 'bg-gray-100 text-gray-800', count: interviews.length },
@@ -442,7 +462,7 @@ const EnhancedInterviewsTab = () => {
                           {interview.status === 'scheduled' && (
                             <>
                               <motion.button
-                                className={`px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors duration-200 text-xs ${actionLoading[`${interview.id}_join`] ? 'opacity-50' : ''}`}
+                                className={`px-2 py-1 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors duration-200 text-xs ${actionLoading[`${interview.id}_join`] ? 'opacity-50' : ''}`}
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => handleInterviewAction('join', interview)}
@@ -451,7 +471,7 @@ const EnhancedInterviewsTab = () => {
                                 {actionLoading[`${interview.id}_join`] ? '⏳' : '🎥'} Join
                               </motion.button>
                               <motion.button
-                                className={`px-2 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors duration-200 text-xs ${actionLoading[`${interview.id}_reschedule`] ? 'opacity-50' : ''}`}
+                                className={`px-2 py-1 bg-orange-600 text-white rounded hover:bg-orange-700 transition-colors duration-200 text-xs ${actionLoading[`${interview.id}_reschedule`] ? 'opacity-50' : ''}`}
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => handleInterviewAction('reschedule', interview)}
@@ -490,6 +510,17 @@ const EnhancedInterviewsTab = () => {
                           >
                             {actionLoading[`${interview.id}_contact`] ? '⏳' : '📧'} Contact
                           </motion.button>
+                          {interview.status === 'scheduled' && (
+                            <motion.button
+                              className={`px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors duration-200 text-xs ${actionLoading[`${interview.id}_cancel`] ? 'opacity-50' : ''}`}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => handleInterviewAction('cancel', interview)}
+                              disabled={actionLoading[`${interview.id}_cancel`]}
+                            >
+                              {actionLoading[`${interview.id}_cancel`] ? '⏳' : '❌'} Cancel
+                            </motion.button>
+                          )}
                         </div>
                       </td>
                     </motion.tr>

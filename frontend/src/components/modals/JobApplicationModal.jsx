@@ -83,6 +83,10 @@ const JobApplicationModal = ({ open, onClose, job, user, onSubmit }) => {
     referralSource: '',
   });
 
+  // State to track if user has resume in profile
+  const [hasProfileResume, setHasProfileResume] = useState(false);
+  const [profileResumeUrl, setProfileResumeUrl] = useState('');
+
   const steps = ['Profile Review', 'Application Details', 'Submit'];
 
   // Fetch complete profile data when modal opens
@@ -97,6 +101,19 @@ const JobApplicationModal = ({ open, onClose, job, user, onSubmit }) => {
           const profileData = await profileService.getApplicationData();
           
           console.log('✅ Profile data fetched:', profileData);
+          
+          // Check if user has resume in profile
+          const resumeUrl = profileData.resume || profileData.resumeUrl;
+          const hasResume = !!(resumeUrl && resumeUrl.trim());
+          setHasProfileResume(hasResume);
+          setProfileResumeUrl(resumeUrl || '');
+          
+          console.log('🔍 Resume check:', {
+            hasProfileResume: hasResume,
+            resumeUrl: resumeUrl,
+            resumeRequired: !hasResume
+          });
+          
           console.log('🔍 Key fields extracted:', {
             location: profileData.location,
             currentLocation: profileData.currentLocation,
@@ -104,7 +121,8 @@ const JobApplicationModal = ({ open, onClose, job, user, onSubmit }) => {
             yearsOfExperience: profileData.yearsOfExperience,
             linkedinUrl: profileData.linkedinUrl,
             portfolioUrl: profileData.portfolioUrl,
-            primarySkills: profileData.primarySkills
+            primarySkills: profileData.primarySkills,
+            hasResume: hasResume
           });
           
           // Pre-fill application form with database data
@@ -190,7 +208,9 @@ const JobApplicationModal = ({ open, onClose, job, user, onSubmit }) => {
       case 0: // Profile Review
         return applicationData.firstName && applicationData.lastName && applicationData.email && applicationData.phone;
       case 1: // Application Details
-        return applicationData.coverLetter.length > 50;
+        // Resume is required only if user doesn't have resume in profile
+        const resumeValid = hasProfileResume || applicationData.resumeFile;
+        return applicationData.coverLetter.length > 50 && resumeValid;
       case 2: // Submit
         return true;
       default:
@@ -221,6 +241,12 @@ const JobApplicationModal = ({ open, onClose, job, user, onSubmit }) => {
           formData.append(key, applicationData[key]);
         }
       });
+      
+      // If no resume file uploaded but user has profile resume, include profile resume URL
+      if (!applicationData.resumeFile && hasProfileResume && profileResumeUrl) {
+        formData.append('resumeUrl', profileResumeUrl);
+        console.log('📄 Using profile resume:', profileResumeUrl);
+      }
       
       // Add job and user info (handle different field name formats)
       const jobId = job.id || job._id;
@@ -263,12 +289,29 @@ const JobApplicationModal = ({ open, onClose, job, user, onSubmit }) => {
               Please verify and update your information before applying
             </Typography>
             {profileDataFetched && (
-              <Alert severity="success" sx={{ mb: 3 }}>
-                <Typography variant="body2">
-                  ✓ Your profile information has been automatically loaded from your dashboard. 
-                  You can edit any field below if needed.
-                </Typography>
-              </Alert>
+              <>
+                <Alert severity="success" sx={{ mb: 2 }}>
+                  <Typography variant="body2">
+                    ✓ Your profile information has been automatically loaded from your dashboard. 
+                    You can edit any field below if needed.
+                  </Typography>
+                </Alert>
+                
+                {/* Resume Status Alert */}
+                {hasProfileResume ? (
+                  <Alert severity="info" sx={{ mb: 3 }}>
+                    <Typography variant="body2">
+                      📄 Resume found in your profile! You can skip resume upload in the next step.
+                    </Typography>
+                  </Alert>
+                ) : (
+                  <Alert severity="warning" sx={{ mb: 3 }}>
+                    <Typography variant="body2">
+                      ⚠️ No resume found in your profile. You'll need to upload your resume in the next step.
+                    </Typography>
+                  </Alert>
+                )}
+              </>
             )}
             
             <Grid container spacing={2}>
@@ -395,31 +438,72 @@ const JobApplicationModal = ({ open, onClose, job, user, onSubmit }) => {
               
               <Grid item xs={12}>
                 <Box sx={{ border: '1px dashed #ccc', borderRadius: 1, p: 2, textAlign: 'center' }}>
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    onChange={handleFileUpload}
-                    style={{ display: 'none' }}
-                    id="resume-upload"
-                  />
-                  <label htmlFor="resume-upload">
-                    <Button
-                      variant="outlined"
-                      component="span"
-                      startIcon={<CloudUpload />}
-                      sx={{ mb: 1 }}
-                    >
-                      Upload Resume
-                    </Button>
-                  </label>
-                  {applicationData.resumeFile && (
-                    <Typography variant="body2" color="primary">
-                      ✓ {applicationData.resumeFile.name}
-                    </Typography>
+                  {hasProfileResume ? (
+                    // User has resume in profile - upload is optional
+                    <>
+                      <Alert severity="success" sx={{ mb: 2 }}>
+                        ✓ Resume found in your profile! Upload is optional.
+                      </Alert>
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={handleFileUpload}
+                        style={{ display: 'none' }}
+                        id="resume-upload"
+                      />
+                      <label htmlFor="resume-upload">
+                        <Button
+                          variant="outlined"
+                          component="span"
+                          startIcon={<CloudUpload />}
+                          sx={{ mb: 1 }}
+                        >
+                          Upload Different Resume (Optional)
+                        </Button>
+                      </label>
+                      {applicationData.resumeFile && (
+                        <Typography variant="body2" color="primary">
+                          ✓ New resume: {applicationData.resumeFile.name}
+                        </Typography>
+                      )}
+                      <Typography variant="caption" display="block" color="text.secondary">
+                        We'll use your profile resume unless you upload a different one
+                      </Typography>
+                    </>
+                  ) : (
+                    // User has no resume in profile - upload is required
+                    <>
+                      <Alert severity="warning" sx={{ mb: 2 }}>
+                        ⚠️ No resume found in your profile. Please upload your resume.
+                      </Alert>
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={handleFileUpload}
+                        style={{ display: 'none' }}
+                        id="resume-upload"
+                      />
+                      <label htmlFor="resume-upload">
+                        <Button
+                          variant="contained"
+                          component="span"
+                          startIcon={<CloudUpload />}
+                          sx={{ mb: 1 }}
+                          color="primary"
+                        >
+                          Upload Resume (Required)
+                        </Button>
+                      </label>
+                      {applicationData.resumeFile && (
+                        <Typography variant="body2" color="primary">
+                          ✓ {applicationData.resumeFile.name}
+                        </Typography>
+                      )}
+                      <Typography variant="caption" display="block" color="text.secondary">
+                        PDF, DOC, or DOCX (Max 5MB) - Required for application
+                      </Typography>
+                    </>
                   )}
-                  <Typography variant="caption" display="block" color="text.secondary">
-                    PDF, DOC, or DOCX (Max 5MB)
-                  </Typography>
                 </Box>
               </Grid>
 

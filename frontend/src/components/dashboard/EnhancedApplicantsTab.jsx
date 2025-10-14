@@ -15,11 +15,33 @@ const EnhancedApplicantsTab = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('appliedDate');
   const [sortOrder, setSortOrder] = useState('desc');
+  const [openDropdown, setOpenDropdown] = useState(null);
   
   // Modal states
   const [profileModal, setProfileModal] = useState({ isOpen: false, candidate: null });
   const [contactModal, setContactModal] = useState({ isOpen: false, candidate: null });
   const [scheduleModal, setScheduleModal] = useState({ isOpen: false, candidate: null });
+
+  // Dropdown handlers
+  const toggleDropdown = (applicantId) => {
+    setOpenDropdown(openDropdown === applicantId ? null : applicantId);
+  };
+
+  const closeDropdown = () => {
+    setOpenDropdown(null);
+  };
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = () => {
+      closeDropdown();
+    };
+
+    if (openDropdown) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [openDropdown]);
 
   // Mock applicants data with comprehensive information
   const mockApplicants = [
@@ -627,31 +649,96 @@ const EnhancedApplicantsTab = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
+                        <div className="relative">
                           <motion.button
-                            className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-200 text-xs"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleApplicantAction('view', applicant)}
+                            className="flex items-center justify-center w-8 h-8 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors duration-200"
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleDropdown(applicant.id);
+                            }}
                           >
-                            👁️ View
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                            </svg>
                           </motion.button>
-                          <motion.button
-                            className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors duration-200 text-xs"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleApplicantAction('interview', applicant)}
-                          >
-                            🗣️ Interview
-                          </motion.button>
-                          <motion.button
-                            className="px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors duration-200 text-xs"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleApplicantAction('message', applicant)}
-                          >
-                            💬 Message
-                          </motion.button>
+
+                          {/* Dropdown Menu */}
+                          <AnimatePresence>
+                            {openDropdown === applicant.id && (
+                              <motion.div
+                                initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                transition={{ duration: 0.15 }}
+                                className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <div className="py-1">
+                                  <motion.button
+                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                                    whileHover={{ x: 4 }}
+                                    onClick={() => {
+                                      handleApplicantAction('view', applicant);
+                                      closeDropdown();
+                                    }}
+                                  >
+                                    <span className="mr-3">👁️</span>
+                                    View Profile
+                                  </motion.button>
+                                  
+                                  <motion.button
+                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                                    whileHover={{ x: 4 }}
+                                    onClick={() => {
+                                      handleApplicantAction('message', applicant);
+                                      closeDropdown();
+                                    }}
+                                  >
+                                    <span className="mr-3">📧</span>
+                                    Contact
+                                  </motion.button>
+                                  
+                                  <motion.button
+                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                                    whileHover={{ x: 4 }}
+                                    onClick={() => {
+                                      handleApplicantAction('download', applicant);
+                                      closeDropdown();
+                                    }}
+                                  >
+                                    <span className="mr-3">📄</span>
+                                    Download Resume
+                                  </motion.button>
+                                  
+                                  <motion.button
+                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                                    whileHover={{ x: 4 }}
+                                    onClick={() => {
+                                      handleApplicantAction('interview', applicant);
+                                      closeDropdown();
+                                    }}
+                                  >
+                                    <span className="mr-3">📅</span>
+                                    Schedule Interview
+                                  </motion.button>
+                                  
+                                  <motion.button
+                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                                    whileHover={{ x: 4 }}
+                                    onClick={() => {
+                                      handleApplicantAction('shortlist', applicant);
+                                      closeDropdown();
+                                    }}
+                                  >
+                                    <span className="mr-3">⭐</span>
+                                    Add to Shortlist
+                                  </motion.button>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
                       </td>
                     </motion.tr>
@@ -771,6 +858,14 @@ const EnhancedApplicantsTab = () => {
                     onClick={() => handleApplicantAction('message', applicant)}
                   >
                     📧 Contact
+                  </motion.button>
+                  <motion.button
+                    className="px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors duration-200 text-sm"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleApplicantAction('download', applicant)}
+                  >
+                    📄 Resume
                   </motion.button>
                   <motion.button
                     className="px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors duration-200 text-sm"

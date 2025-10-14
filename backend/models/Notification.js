@@ -24,6 +24,7 @@ const notificationSchema = new mongoose.Schema({
       'application_withdrawn',
       'application_status_changed',
       'interview_cancelled',
+      'interview_rescheduled',
       'job_posted',
       'job_updated',
       'job_closed',

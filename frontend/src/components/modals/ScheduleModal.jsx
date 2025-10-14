@@ -23,7 +23,8 @@ const ScheduleModal = ({
   onClose, 
   onScheduleInterview,
   onRescheduleInterview,
-  onCancelInterview 
+  onCancelInterview,
+  onDeleteInterview 
 }) => {
   const { darkMode } = useTheme();
   const [activeTab, setActiveTab] = useState('current'); // 'current', 'new'

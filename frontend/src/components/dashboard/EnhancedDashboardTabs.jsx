@@ -5,6 +5,7 @@ import EditJobModal from '../modals/EditJobModal';
 import JobDetailsModal from '../modals/JobDetailsModal';
 import CandidateProfileModal from '../modals/CandidateProfileModal';
 import ContactModal from '../modals/ContactModal';
+import ScheduleModal from '../modals/ScheduleModal';
 import { communicationsAPI } from '../../api/communications';
 import { toast } from '../ui/use-toast';
 import { 
@@ -1477,6 +1478,7 @@ export const EnhancedJobsTab = ({
   const [candidateModal, setCandidateModal] = useState({ isOpen: false, candidate: null });
   const [contactModal, setContactModal] = useState({ isOpen: false, candidate: null });
   const [scheduleInterviewModal, setScheduleInterviewModal] = useState({ isOpen: false, candidate: null, job: null, application: null });
+  const [openDropdown, setOpenDropdown] = useState(null);
 
   // Filter jobs based on job type and current filters
   const getJobsByType = () => {
@@ -1626,9 +1628,15 @@ export const EnhancedJobsTab = ({
       const response = await jobsAPI.deleteJob(jobId);
       
       if (response.data.success) {
+        console.log('✅ Job deleted successfully:', jobId);
+        
+        // Update local jobs list by removing the deleted job
+        setRecruiterJobs(prevJobs => prevJobs.filter(job => 
+          job.id !== jobId && job._id !== jobId
+        ));
+        
+        // Show success message
         alert(`Job has been deleted successfully!`);
-        // Refresh the jobs list
-        window.location.reload();
       } else {
         throw new Error(response.data.message || 'Failed to delete job');
       }
@@ -1680,10 +1688,12 @@ export const EnhancedJobsTab = ({
     const currentJob = jobs.find(job => job.id === jobId || job._id === jobId);
     console.log('🔍 Found job for editing:', currentJob);
     
-    if (currentJob && onEditJob) {
-      onEditJob(currentJob);
+    if (currentJob) {
+      setEditModal({ isOpen: true, job: currentJob });
+      console.log('✅ Edit modal opened for job:', currentJob.jobTitle || currentJob.title);
     } else {
-      console.log('🔍 No onEditJob callback provided or job not found');
+      console.log('❌ Job not found for editing');
+      alert('Job not found. Please refresh the page and try again.');
     }
   };
 
@@ -2656,6 +2666,7 @@ export const EnhancedJobsTab = ({
         applications={applicationsModal.applications}
         onClose={() => setApplicationsModal({ isOpen: false, job: null, applications: [] })}
         onViewCandidate={handleViewCandidate}
+        onScheduleInterview={handleScheduleInterview}
       />
 
       {/* Job Details Modal */}
@@ -2697,6 +2708,39 @@ export const EnhancedJobsTab = ({
         onClose={() => setContactModal({ isOpen: false, candidate: null })}
         onSendEmail={handleSendEmail}
         onOpenMessaging={handleSendMessage}
+      />
+
+      {/* Schedule Interview Modal */}
+      <ScheduleModal
+        candidate={scheduleInterviewModal.candidate}
+        isOpen={scheduleInterviewModal.isOpen}
+        onClose={() => setScheduleInterviewModal({ isOpen: false, candidate: null, job: null, application: null })}
+        onScheduleInterview={async (interviewData) => {
+          try {
+            console.log('📅 Scheduling interview:', interviewData);
+            
+            // Import interviewsAPI dynamically to avoid circular imports
+            const { interviewsAPI } = await import("../../services/api");
+            
+            // Add job and application data to interview data
+            const completeInterviewData = {
+              ...interviewData,
+              jobId: scheduleInterviewModal.job?.id || scheduleInterviewModal.job?._id,
+              applicationId: scheduleInterviewModal.application?.id || scheduleInterviewModal.application?._id,
+              candidateId: scheduleInterviewModal.candidate?.id || scheduleInterviewModal.candidate?._id,
+              candidateName: scheduleInterviewModal.candidate?.name || scheduleInterviewModal.candidate?.fullName,
+              candidateEmail: scheduleInterviewModal.candidate?.email
+            };
+            
+            const response = await interviewsAPI.scheduleInterview(completeInterviewData);
+            console.log('✅ Interview scheduled successfully:', response);
+            alert('Interview scheduled successfully!');
+            setScheduleInterviewModal({ isOpen: false, candidate: null, job: null, application: null });
+          } catch (error) {
+            console.error('❌ Failed to schedule interview:', error);
+            alert('Failed to schedule interview. Please try again.');
+          }
+        }}
       />
     </motion.div>
   );
@@ -3219,19 +3263,16 @@ const JobEditModal = ({ isOpen, job, onClose, onSave }) => {
 // Enhanced Applications Tab Component
 export const EnhancedApplicationsTab = ({ userRole = "applicant" }) => {
   const { dashboardData, loading, error } = useDashboard();
+  const [filters, setFilters] = useState({
+    status: '',
+    company: '',
+    dateRange: ''
+  });
 
   // Get applications from dashboard data with fallback and ensure it's an array
   const applications = Array.isArray(dashboardData?.applications) 
     ? dashboardData.applications 
     : [];
-  const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState({
-    status: "",
-    dateRange: "",
-    company: "",
-  });
-
-  // Filter applications based on current filters
   const displayedApplications = applications.filter((app) => {
     return (
       (!filters.status || app.status === filters.status) &&
@@ -3274,8 +3315,31 @@ export const EnhancedApplicationsTab = ({ userRole = "applicant" }) => {
     return (
       colors[status] ||
       "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
-    );
+    )
   };
+
+  // Dropdown handlers
+  const toggleDropdown = (jobId) => {
+    setOpenDropdown(openDropdown === jobId ? null : jobId);
+  };
+
+  const closeDropdown = () => {
+    setOpenDropdown(null);
+  };
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!dropdownRef.current.contains(event.target)) {
+        closeDropdown();
+      }
+    };
+
+    if (openDropdown) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [openDropdown, dropdownRef]);
 
   return (
     <motion.div
@@ -4375,12 +4439,16 @@ export const EnhancedActiveJobsTab = () => {
   };
 
   const handleDeleteJob = async (jobId) => {
-    if (window.confirm("Are you sure you want to delete this job posting?")) {
+    if (window.confirm("Are you sure you want to delete this job posting? This action cannot be undone.")) {
       try {
+        console.log('🗑️ Deleting job:', jobId);
         await deleteJob(jobId);
+        console.log('✅ Job deleted successfully:', jobId);
+        alert('Job has been deleted successfully!');
         // Job will be removed from the dashboard data automatically
       } catch (error) {
         console.error("Failed to delete job:", error);
+        alert('Failed to delete job. Please try again.');
       }
     }
   };
@@ -4515,13 +4583,46 @@ export const EnhancedActiveJobsTab = () => {
           </div>
         )}
       </div>
+
+      {/* Edit Job Modal */}
+      <EditJobModal
+        open={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedJob(null);
+        }}
+        job={selectedJob}
+        onUpdate={async (jobId, updateData) => {
+          try {
+            console.log('🔍 Updating job in EnhancedActiveJobsTab:', jobId, updateData);
+            await updateJob(jobId, updateData);
+            console.log('✅ Job updated successfully');
+            setIsEditModalOpen(false);
+            setSelectedJob(null);
+          } catch (error) {
+            console.error('❌ Failed to update job:', error);
+            alert('Failed to update job. Please try again.');
+          }
+        }}
+      />
     </motion.div>
   );
 };
 
 // Applications Modal Component
-const ApplicationsModal = ({ isOpen, job, applications, onClose, onViewCandidate }) => {
+const ApplicationsModal = ({ isOpen, job, applications, onClose, onViewCandidate, onScheduleInterview }) => {
   if (!isOpen) return null;
+
+  // Handle schedule interview
+  const handleScheduleInterview = (app, jobData) => {
+    console.log('📅 Schedule interview clicked for:', app.applicantSnapshot?.fullName || app.name);
+    if (typeof onScheduleInterview === 'function') {
+      onScheduleInterview(app, jobData);
+    } else {
+      console.error('❌ onScheduleInterview function not provided');
+      alert('Schedule interview function not available');
+    }
+  };
   
   // Debug: Log the job object to understand its structure
   console.log('🔍 ApplicationsModal job object:', job);
@@ -4546,9 +4647,9 @@ const ApplicationsModal = ({ isOpen, job, applications, onClose, onViewCandidate
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Job Details */}
             <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
-              <h3 className="text-lg font-semibold mb-4">💼 Job Details</h3>
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">💼 Job Details</h3>
               {job && (
-                <div className="space-y-3 text-sm">
+                <div className="space-y-3 text-sm text-gray-800 dark:text-gray-200">
                   <div><strong>Title:</strong> {job.jobTitle || job.title || 'Not specified'}</div>
                   <div><strong>Company:</strong> {job.companyName || job.company || job.companyInfo?.companyName || 'Not specified'}</div>
                   <div><strong>Location:</strong> {job.location || 'Not specified'}</div>
@@ -4582,7 +4683,7 @@ const ApplicationsModal = ({ isOpen, job, applications, onClose, onViewCandidate
                   )}
                   {(job.jobDescription || job.description) && (
                     <div><strong>Description:</strong> 
-                      <p className="text-sm mt-1 max-h-20 overflow-y-auto bg-white dark:bg-gray-600 p-2 rounded">{job.jobDescription || job.description}</p>
+                      <p className="text-sm mt-1 max-h-20 overflow-y-auto bg-white dark:bg-gray-600 p-2 rounded text-gray-800 dark:text-gray-200">{job.jobDescription || job.description}</p>
                     </div>
                   )}
                   {(job.requiredSkills || job.skills) && (job.requiredSkills || job.skills).length > 0 && (
@@ -4593,7 +4694,7 @@ const ApplicationsModal = ({ isOpen, job, applications, onClose, onViewCandidate
                             {skill}
                           </span>
                         ))}
-                        {(job.requiredSkills || job.skills).length > 5 && <span className="text-xs text-gray-500">+{(job.requiredSkills || job.skills).length - 5} more</span>}
+                        {(job.requiredSkills || job.skills).length > 5 && <span className="text-xs text-gray-600 dark:text-gray-400">+{(job.requiredSkills || job.skills).length - 5} more</span>}
                       </div>
                     </div>
                   )}
@@ -4603,7 +4704,7 @@ const ApplicationsModal = ({ isOpen, job, applications, onClose, onViewCandidate
 
             {/* Applications List */}
             <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
-              <h3 className="text-lg font-semibold mb-4">👥 Applications ({applications?.length || 0})</h3>
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">👥 Applications ({applications?.length || 0})</h3>
               <div className="space-y-3 max-h-80 overflow-y-auto">
                 {applications && applications.length > 0 ? (
                   applications.map((app, index) => (
@@ -4649,7 +4750,15 @@ const ApplicationsModal = ({ isOpen, job, applications, onClose, onViewCandidate
                       {/* Action Buttons */}
                       <div className="mt-3 flex justify-end space-x-2">
                         <button
-                          onClick={() => onViewCandidate(app)}
+                          onClick={() => {
+                            console.log('👤 View Profile clicked for:', app.applicantSnapshot?.fullName || app.name);
+                            if (typeof onViewCandidate === 'function') {
+                              onViewCandidate(app);
+                            } else {
+                              console.error('❌ onViewCandidate function not provided');
+                              alert('View profile function not available');
+                            }
+                          }}
                           className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors duration-200"
                         >
                           👤 View Profile

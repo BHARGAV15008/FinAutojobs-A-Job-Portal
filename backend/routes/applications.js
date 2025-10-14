@@ -9,7 +9,7 @@ import Job from '../models/Job.js';
 import { BaseUser } from '../models/UserModels.js';
 import CleanUser from '../models/CleanUser.js';
 import Notification from '../models/Notification.js';
-import { sendInterviewUpdate } from '../services/notifications.js';
+import { sendInterviewUpdate, NotificationService } from '../services/notifications.js';
 import joi from 'joi';
 
 const router = express.Router();
@@ -722,23 +722,17 @@ router.post('/', (req, res, next) => {
 
     console.log('✅ Application created successfully:', savedApplication._id);
 
-    // Create notification for recruiter
-    console.log('🔍 Creating notification for recruiter...');
+    // Send notification to recruiter
+    console.log('🔍 Sending notification to recruiter...');
     try {
-      await Notification.createApplicationReceived(
-        job.postedBy,
-        {
-          _id: savedApplication._id,
-          applicantName: applicantSnapshot.fullName
-        },
-        {
-          _id: job._id,
-          title: job.jobTitle || job.title
-        }
+      await NotificationService.notifyApplicationSubmitted(
+        savedApplication._id,
+        jobId,
+        req.user.userId
       );
-      console.log('✅ Notification created successfully');
+      console.log('✅ Application notification sent successfully');
     } catch (notificationError) {
-      console.log('⚠️ Notification creation failed:', notificationError.message);
+      console.log('⚠️ Application notification failed:', notificationError.message);
       // Don't fail the application if notification fails
     }
 

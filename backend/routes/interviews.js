@@ -5,6 +5,7 @@ import { BaseUser } from '../models/UserModels.js';
 import Job from '../models/Job.js';
 import Application from '../models/unified/Application.js';
 import { body, validationResult, param } from 'express-validator';
+import { NotificationService } from '../services/notifications.js';
 
 const router = express.Router();
 
@@ -276,6 +277,21 @@ router.post('/', [
       .populate('candidateId', 'firstName lastName email')
       .populate('jobId', 'title company');
 
+    // Send notification to applicant
+    try {
+      await NotificationService.notifyInterviewScheduled(
+        applicationId,
+        candidateId,
+        scheduledDate,
+        scheduledTime,
+        type || 'video'
+      );
+      console.log('✅ Interview scheduled notification sent');
+    } catch (notificationError) {
+      console.error('❌ Failed to send interview notification:', notificationError);
+      // Don't fail the request if notification fails
+    }
+
     res.status(201).json({
       success: true,
       message: 'Interview scheduled successfully',
@@ -337,6 +353,11 @@ router.put('/:id', [
       });
     }
 
+    // Store original values for notification comparison
+    const originalStatus = interview.status;
+    const originalDate = interview.scheduledDate;
+    const originalTime = interview.scheduledTime;
+
     // Update fields
     const updateFields = { ...req.body, updatedBy: userId };
     
@@ -347,6 +368,38 @@ router.put('/:id', [
     ).populate('candidateId', 'firstName lastName email')
      .populate('recruiterId', 'firstName lastName email company')
      .populate('jobId', 'title company location');
+
+    // Send notifications based on changes
+    try {
+      const newStatus = updatedInterview.status;
+      const newDate = updatedInterview.scheduledDate;
+      const newTime = updatedInterview.scheduledTime;
+
+      // Check if interview was cancelled
+      if (originalStatus !== 'cancelled' && newStatus === 'cancelled') {
+        await NotificationService.notifyInterviewCancelled(
+          interview.applicationId,
+          interview.candidateId,
+          req.body.reason || 'No reason provided'
+        );
+        console.log('✅ Interview cancelled notification sent');
+      }
+      // Check if interview was rescheduled (date or time changed)
+      else if ((originalDate?.getTime() !== newDate?.getTime() || originalTime !== newTime) && 
+               originalStatus !== 'cancelled' && newStatus !== 'cancelled') {
+        await NotificationService.notifyInterviewRescheduled(
+          interview.applicationId,
+          interview.candidateId,
+          newDate,
+          newTime,
+          updatedInterview.type
+        );
+        console.log('✅ Interview rescheduled notification sent');
+      }
+    } catch (notificationError) {
+      console.error('❌ Failed to send interview update notification:', notificationError);
+      // Don't fail the request if notification fails
+    }
 
     res.json({
       success: true,
@@ -459,6 +512,19 @@ router.delete('/:id', [
         success: false,
         message: 'Access denied'
       });
+    }
+
+    // Send cancellation notification before deleting
+    try {
+      await NotificationService.notifyInterviewCancelled(
+        interview.applicationId,
+        interview.candidateId,
+        'Interview has been cancelled and removed'
+      );
+      console.log('✅ Interview deletion notification sent');
+    } catch (notificationError) {
+      console.error('❌ Failed to send interview deletion notification:', notificationError);
+      // Don't fail the request if notification fails
     }
 
     await Interview.findByIdAndDelete(interviewId);

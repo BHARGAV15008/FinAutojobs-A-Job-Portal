@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../contexts/IntegratedThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { candidatesAPI, interviewsAPI } from '../../services/api';
+import { createNotification } from '../../api/notifications';
 import { applicationService } from '../../services/applicationService';
 import CandidateProfileModal from '../modals/CandidateProfileModal';
 import ContactModal from '../modals/ContactModal';
@@ -20,6 +21,7 @@ const EnhancedCandidatesTab = () => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [openDropdown, setOpenDropdown] = useState(null);
   
   // Modal states
   const [profileModal, setProfileModal] = useState({ isOpen: false, candidate: null });
@@ -63,7 +65,82 @@ const EnhancedCandidatesTab = () => {
       email: app.applicantSnapshot?.email || '',
       phone: app.applicantSnapshot?.phone || app.applicationData?.phone || '',
       currentRole: app.applicationData?.currentJobTitle || 'Not specified',
-      experience: app.applicationData?.experience || 'Not specified',
+      experience: (() => {
+        // Try to get experience from different sources
+        const appExperience = app.applicationData?.experience;
+        const yearsOfExperience = app.applicationData?.yearsOfExperience;
+        const experienceMin = app.applicationData?.experienceMin;
+        const experienceMax = app.applicationData?.experienceMax;
+        const workExperience = app.applicationData?.workExperience;
+        const totalExperience = app.applicationData?.totalExperience;
+        const experienceLevel = app.applicationData?.experienceLevel;
+        
+        // Check nested professional info structure
+        const professionalTotalExp = app.applicationData?.professionalInfo?.totalExperience;
+        const professionalWorkExp = app.applicationData?.professionalInfo?.workExperience;
+        const professionalExpLevel = app.applicationData?.professionalInfo?.experienceLevel;
+        
+        const profileExperience = app.applicantSnapshot?.experience;
+        const profileYears = app.applicantSnapshot?.yearsOfExperience;
+        
+        // Debug: Log available experience data
+        console.log('🔍 Experience data for', app.applicantSnapshot?.fullName || 'Unknown', {
+          appExperience,
+          yearsOfExperience,
+          experienceMin,
+          experienceMax,
+          workExperience,
+          totalExperience,
+          experienceLevel,
+          professionalTotalExp,
+          professionalWorkExp,
+          professionalExpLevel,
+          profileExperience,
+          profileYears,
+          fullApplicationData: app.applicationData,
+          fullApplicantSnapshot: app.applicantSnapshot
+        });
+        
+        // Priority: nested professional info > flat application data > profile data > default
+        if (professionalTotalExp !== undefined && professionalTotalExp !== null) {
+          // Professional info total experience (from form)
+          return `${professionalTotalExp} years`;
+        } else if (professionalWorkExp && professionalWorkExp.trim()) {
+          // Professional info work experience
+          return professionalWorkExp;
+        } else if (professionalExpLevel && professionalExpLevel.trim()) {
+          // Professional info experience level
+          return professionalExpLevel;
+        } else if (appExperience && appExperience.trim()) {
+          // If it's already a formatted string, return as is
+          return appExperience;
+        } else if (totalExperience && totalExperience.trim()) {
+          // Total experience field
+          return totalExperience;
+        } else if (workExperience && workExperience.trim()) {
+          // Work experience field
+          return workExperience;
+        } else if (experienceLevel && experienceLevel.trim()) {
+          // Experience level (e.g., "Senior", "Mid-level")
+          return experienceLevel;
+        } else if (experienceMin !== undefined && experienceMax !== undefined) {
+          // If we have min/max range from application
+          return experienceMin === experienceMax 
+            ? `${experienceMin} years` 
+            : `${experienceMin}-${experienceMax} years`;
+        } else if (yearsOfExperience !== undefined && yearsOfExperience !== null) {
+          // Single years value from application
+          return `${yearsOfExperience} years`;
+        } else if (profileExperience && profileExperience.trim()) {
+          // Experience text from profile
+          return profileExperience;
+        } else if (profileYears !== undefined && profileYears !== null) {
+          // Years from profile
+          return `${profileYears} years`;
+        } else {
+          return 'Not specified';
+        }
+      })(),
       location: app.applicantSnapshot?.location || app.applicationData?.location || 'Not specified',
       skills: app.applicationData?.skills || [],
       education: [],
@@ -81,6 +158,97 @@ const EnhancedCandidatesTab = () => {
       company: app.jobSnapshot?.company || 'Unknown Company'
     }));
   }, [applications]);
+
+  // Dropdown handlers
+  const toggleDropdown = (candidateId) => {
+    setOpenDropdown(openDropdown === candidateId ? null : candidateId);
+  };
+
+  const closeDropdown = () => {
+    setOpenDropdown(null);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      closeDropdown();
+    };
+
+    if (openDropdown) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [openDropdown]);
+
+  // Test function for debugging notifications (can be called from browser console)
+  window.testNotification = async (candidateId) => {
+    console.log('🧪 Testing notification for candidate ID:', candidateId);
+    try {
+      const result = await sendNotificationToApplicant(candidateId, {
+        type: 'test_notification',
+        title: 'Test Notification',
+        message: 'This is a test notification to verify the system is working.',
+        interviewId: 'test-123',
+        jobId: 'test-job-456',
+        meetingLink: 'https://zoom.us/test',
+        actionUrl: '/applicant-dashboard/interviews'
+      });
+      console.log('🧪 Test notification result:', result);
+      alert('Test notification sent! Check console for details.');
+    } catch (error) {
+      console.error('🧪 Test notification failed:', error);
+      alert('Test notification failed! Check console for details.');
+    }
+  };
+
+  // Notification service function
+  const sendNotificationToApplicant = async (applicantId, notificationData) => {
+    try {
+      if (!applicantId) {
+        console.warn('⚠️ No applicant ID provided for notification');
+        return null;
+      }
+
+      console.log('📨 Sending notification to applicant:', applicantId, notificationData);
+      console.log('🔍 Current user sending notification:', currentUser);
+      
+      const notification = {
+        recipientId: applicantId,
+        recipientType: 'applicant',
+        senderId: currentUser?._id || currentUser?.id,
+        senderType: 'recruiter',
+        type: notificationData.type,
+        title: notificationData.title,
+        message: notificationData.message,
+        data: {
+          interviewId: notificationData.interviewId,
+          applicationId: notificationData.applicationId,
+          jobId: notificationData.jobId,
+          meetingLink: notificationData.meetingLink,
+          status: notificationData.status,
+          actionUrl: notificationData.actionUrl
+        },
+        priority: 'high',
+        channels: ['in_app', 'email'], // Send both in-app and email notifications
+        scheduledFor: new Date().toISOString()
+      };
+      
+      // Create notification using the correct API
+      console.log('📧 Creating notification with data:', notification);
+      const response = await createNotification(notification);
+      console.log('✅ Notification created successfully:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ Failed to send notification:', error);
+      console.error('Error details:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data
+      });
+      // Don't throw error to prevent breaking the main flow
+      return null;
+    }
+  };
 
   const statusConfig = {
     all: { label: 'All Candidates', color: 'bg-gray-100 text-gray-800', count: candidates.length },
@@ -181,7 +349,21 @@ const EnhancedCandidatesTab = () => {
           : app
       ));
       
-      alert(`✅ Candidate status updated to ${newStatus} - Database updated successfully!`);
+      // Send notification to applicant about status change
+      const application = applications.find(app => app._id === applicationId);
+      if (application) {
+        await sendNotificationToApplicant(application.applicantId, {
+          type: 'application_status_updated',
+          title: 'Application Status Updated',
+          message: `Your application status has been updated to: ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}`,
+          applicationId: applicationId,
+          jobId: application.jobId,
+          status: newStatus,
+          actionUrl: `/applicant-dashboard/applications`
+        });
+      }
+      
+      alert(`✅ Candidate status updated to ${newStatus} - Database updated successfully! Notification sent to candidate.`);
     } catch (error) {
       console.error('❌ Failed to update status:', error);
       const errorMessage = error.response?.data?.message || error.message || 'Unknown error occurred';
@@ -191,14 +373,24 @@ const EnhancedCandidatesTab = () => {
 
   // Modal handlers
   const handleViewCandidate = (candidate) => {
+    console.log('👁️ Opening profile modal for candidate:', candidate.name);
     setProfileModal({ isOpen: true, candidate });
   };
 
   const handleContactCandidate = (candidate) => {
+    console.log('📧 Opening contact modal for candidate:', candidate.name);
     setContactModal({ isOpen: true, candidate });
   };
 
   const handleScheduleInterview = (candidate) => {
+    console.log('📅 Opening schedule modal for candidate:', candidate.name);
+    console.log('📋 Candidate data:', {
+      id: candidate.id,
+      candidateId: candidate.candidateId,
+      applicationId: candidate.applicationId,
+      name: candidate.name,
+      email: candidate.email
+    });
     setScheduleModal({ isOpen: true, candidate });
   };
 
@@ -249,24 +441,57 @@ const EnhancedCandidatesTab = () => {
     try {
       console.log('🔍 Attempting to download resume for:', candidate.name);
       
-      // First try to get resume from application
+      // First try to get resume from application (priority: application resume > profile resume)
       let resumeUrl = candidate.resumeUrl || candidate.resume;
+      let resumeSource = resumeUrl ? 'application' : 'profile';
       
       // If no resume in application, fetch from user profile
       if (!resumeUrl && candidate.candidateId) {
         console.log('📄 No resume in application, fetching from user profile...');
         try {
-          // Fetch user profile data using the correct API base URL
+          // Try multiple possible API endpoints for user profile
           const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-          const profileResponse = await fetch(`${apiUrl}/users/${candidate.candidateId}/profile`, {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-          });
+          const possibleEndpoints = [
+            `${apiUrl}/users/${candidate.candidateId}/profile`,
+            `${apiUrl}/users/${candidate.candidateId}`,
+            `${apiUrl}/profile/${candidate.candidateId}`,
+            `${apiUrl}/applicants/${candidate.candidateId}/profile`
+          ];
           
-          if (profileResponse.ok) {
-            const profileData = await profileResponse.json();
-            resumeUrl = profileData.data?.resume || profileData.data?.resumeUrl;
+          let profileData = null;
+          for (const endpoint of possibleEndpoints) {
+            try {
+              console.log('🔍 Trying endpoint:', endpoint);
+              const profileResponse = await fetch(endpoint, {
+                headers: {
+                  'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+              });
+              
+              if (profileResponse.ok) {
+                profileData = await profileResponse.json();
+                console.log('✅ Profile data found:', profileData);
+                break;
+              } else {
+                console.log('❌ Endpoint failed:', endpoint, profileResponse.status);
+              }
+            } catch (endpointError) {
+              console.log('❌ Endpoint error:', endpoint, endpointError.message);
+              continue;
+            }
+          }
+          
+          if (profileData) {
+            // Try different possible resume field names
+            resumeUrl = profileData.data?.resume || 
+                       profileData.data?.resumeUrl || 
+                       profileData.resume || 
+                       profileData.resumeUrl ||
+                       profileData.data?.profile?.resume ||
+                       profileData.data?.profile?.resumeUrl;
+            if (resumeUrl) {
+              resumeSource = 'profile';
+            }
             console.log('📄 Found resume in profile:', resumeUrl);
           }
         } catch (profileError) {
@@ -284,11 +509,12 @@ const EnhancedCandidatesTab = () => {
         link.click();
         document.body.removeChild(link);
         
-        console.log('✅ Resume download initiated for:', candidate.name);
-        alert(`✅ Resume download started for ${candidate.name}`);
+        console.log('✅ Resume download initiated for:', candidate.name, 'from', resumeSource);
+        alert(`✅ Resume download started for ${candidate.name} (from ${resumeSource})`);
       } else {
         console.log('❌ No resume found for:', candidate.name);
-        alert(`❌ No resume found for ${candidate.name}. Please ask the candidate to upload their resume.`);
+        const message = `❌ No resume found for ${candidate.name}.\n\nPossible solutions:\n• Ask the candidate to upload their resume\n• Check if resume was uploaded during application\n• Contact the candidate directly for their resume`;
+        alert(message);
       }
     } catch (error) {
       console.error('❌ Failed to download resume:', error);
@@ -307,7 +533,10 @@ const EnhancedCandidatesTab = () => {
         jobId: interviewData.jobId,
         applicationId: interviewData.applicationId,
         title: interviewData.title || `Interview for ${interviewData.candidateId}`,
-        scheduledDate: new Date(interviewData.date).toISOString(),
+        // Handle both datetime and separate date/time formats
+        scheduledDate: interviewData.datetime ? 
+          new Date(interviewData.datetime).toISOString() : 
+          new Date(interviewData.date).toISOString(),
         scheduledTime: interviewData.time,
         duration: parseInt(interviewData.duration) || 60,
         type: interviewData.type || 'video',
@@ -315,13 +544,46 @@ const EnhancedCandidatesTab = () => {
         location: interviewData.location || '',
         meetingLink: interviewData.meetingLink || '',
         description: interviewData.notes || interviewData.description || '',
-        round: interviewData.round || 1
+        round: interviewData.round || 1,
+        interviewer: interviewData.interviewer || ''
       };
       
       console.log('📅 Creating interview with data:', formattedData);
       const response = await interviewsAPI.scheduleInterview(formattedData);
       console.log('Interview scheduled:', response.data);
-      alert('✅ Interview scheduled successfully!');
+      
+      // Send notification to applicant - use multiple sources for candidate ID
+      const candidateId = interviewData.candidateId || 
+                         interviewData.applicantId || 
+                         formattedData.candidateId ||
+                         response.data?.candidateId;
+      
+      console.log('🔍 Full interview data received:', interviewData);
+      console.log('🔍 Formatted data sent to API:', formattedData);
+      console.log('🔍 API response received:', response.data);
+      console.log('🔍 Interview data for notification:', {
+        interviewDataCandidateId: interviewData.candidateId,
+        interviewDataApplicantId: interviewData.applicantId,
+        formattedDataCandidateId: formattedData.candidateId,
+        responseDataCandidateId: response.data?.candidateId,
+        finalCandidateId: candidateId
+      });
+      
+      if (candidateId) {
+        await sendNotificationToApplicant(candidateId, {
+          type: 'interview_scheduled',
+          title: 'Interview Scheduled',
+          message: `Your interview for ${interviewData.jobTitle || 'the position'} has been scheduled for ${new Date(formattedData.scheduledDate).toLocaleDateString()} at ${formattedData.scheduledTime}`,
+          interviewId: response.data?.id,
+          jobId: interviewData.jobId,
+          meetingLink: formattedData.meetingLink,
+          actionUrl: `/applicant-dashboard/interviews`
+        });
+        alert('✅ Interview scheduled successfully! Notification sent to candidate.');
+      } else {
+        console.warn('⚠️ No candidate ID found for notification');
+        alert('✅ Interview scheduled successfully! (Note: Could not send notification - no candidate ID found)');
+      }
     } catch (error) {
       console.error('Failed to schedule interview:', error);
       throw error;
@@ -332,13 +594,17 @@ const EnhancedCandidatesTab = () => {
     try {
       // Extract the correct fields from newDateTime object
       const updateData = {
-        scheduledDate: new Date(newDateTime.date || newDateTime.scheduledDate).toISOString(),
+        // Handle both datetime and separate date/time formats
+        scheduledDate: newDateTime.datetime ? 
+          new Date(newDateTime.datetime).toISOString() : 
+          new Date(newDateTime.date || newDateTime.scheduledDate).toISOString(),
         scheduledTime: newDateTime.time || newDateTime.scheduledTime,
-        duration: newDateTime.duration,
+        duration: parseInt(newDateTime.duration) || 60,
         type: newDateTime.type,
         location: newDateTime.location || '',
         meetingLink: newDateTime.meetingLink || '',
         description: newDateTime.notes || newDateTime.description || '',
+        interviewer: newDateTime.interviewer || '',
         status: 'rescheduled'
       };
       
@@ -346,7 +612,20 @@ const EnhancedCandidatesTab = () => {
       
       const response = await interviewsAPI.updateInterview(interviewId, updateData);
       console.log('Interview rescheduled:', response.data);
-      alert('✅ Interview rescheduled successfully! Notifications sent to candidate.');
+      
+      // Send notification to applicant about reschedule
+      const candidateId = newDateTime.candidateId || newDateTime.applicantId || response.data?.candidateId;
+      console.log('🔍 Sending reschedule notification to candidate ID:', candidateId);
+      await sendNotificationToApplicant(candidateId, {
+        type: 'interview_rescheduled',
+        title: 'Interview Rescheduled',
+        message: `Your interview has been rescheduled to ${new Date(updateData.scheduledDate).toLocaleDateString()} at ${updateData.scheduledTime}`,
+        interviewId: interviewId,
+        meetingLink: updateData.meetingLink,
+        actionUrl: `/applicant-dashboard/interviews`
+      });
+      
+      alert('✅ Interview rescheduled successfully! Notification sent to candidate.');
     } catch (error) {
       console.error('Failed to reschedule interview:', error);
       throw error;
@@ -357,9 +636,34 @@ const EnhancedCandidatesTab = () => {
     try {
       const response = await interviewsAPI.cancelInterview(interviewId);
       console.log('Interview cancelled:', response.data);
-      alert('✅ Interview cancelled successfully! Notifications sent to candidate.');
+      
+      // Send notification to applicant about cancellation
+      const candidateId = response.data?.candidateId || response.data?.applicantId;
+      console.log('🔍 Sending cancel notification to candidate ID:', candidateId);
+      await sendNotificationToApplicant(candidateId, {
+        type: 'interview_cancelled',
+        title: 'Interview Cancelled',
+        message: `Your scheduled interview has been cancelled. Please check your dashboard for updates.`,
+        interviewId: interviewId,
+        actionUrl: `/applicant-dashboard/interviews`
+      });
+      
+      alert('✅ Interview cancelled successfully! Notification sent to candidate.');
     } catch (error) {
       console.error('Failed to cancel interview:', error);
+      throw error;
+    }
+  };
+
+  const handleDeleteInterview = async (interviewId) => {
+    try {
+      if (window.confirm('Are you sure you want to delete this interview? This action cannot be undone.')) {
+        const response = await interviewsAPI.deleteInterview(interviewId);
+        console.log('Interview deleted:', response.data);
+        alert('✅ Interview deleted successfully!');
+      }
+    } catch (error) {
+      console.error('Failed to delete interview:', error);
       throw error;
     }
   };
@@ -564,54 +868,99 @@ const EnhancedCandidatesTab = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex flex-wrap gap-1">
+                        <div className="relative">
                           <motion.button
-                            className={`px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-200 text-xs ${actionLoading[`${candidate.id}_view`] ? 'opacity-50' : ''}`}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleViewCandidate(candidate)}
+                            className="flex items-center justify-center w-8 h-8 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors duration-200"
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleDropdown(candidate.id);
+                            }}
                           >
-                            👁️ View
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                            </svg>
                           </motion.button>
-                          <motion.button
-                            className="px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors duration-200 text-xs"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleContactCandidate(candidate)}
-                          >
-                            📧 Contact
-                          </motion.button>
-                          <motion.button
-                            className={`px-2 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors duration-200 text-xs ${actionLoading[`${candidate.id}_download`] ? 'opacity-50' : ''}`}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleDownloadResume(candidate)}
-                            disabled={actionLoading[`${candidate.id}_download`]}
-                          >
-                            {actionLoading[`${candidate.id}_download`] ? '⏳' : '📄'} Resume
-                          </motion.button>
-                          {selectedStatus === 'interviewed' && (
-                            <motion.button
-                              className="px-2 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors duration-200 text-xs"
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => handleScheduleInterview(candidate)}
-                            >
-                              📅 Schedule
-                            </motion.button>
-                          )}
-                          <motion.button
-                            className={`px-2 py-1 rounded hover:bg-orange-700 transition-colors duration-200 text-xs ${
-                              candidate.isShortlisted 
-                                ? 'bg-yellow-600 text-white' 
-                                : 'bg-orange-600 text-white'
-                            }`}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleShortlistCandidate(candidate)}
-                          >
-                            {actionLoading[`${candidate.id}_shortlist`] ? '⏳' : '⭐'} Shortlist
-                          </motion.button>
+
+                          {/* Dropdown Menu */}
+                          <AnimatePresence>
+                            {openDropdown === candidate.id && (
+                              <motion.div
+                                initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                transition={{ duration: 0.15 }}
+                                className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <div className="py-1">
+                                  <motion.button
+                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                                    whileHover={{ x: 4 }}
+                                    onClick={() => {
+                                      handleViewCandidate(candidate);
+                                      closeDropdown();
+                                    }}
+                                  >
+                                    <span className="mr-3">👁️</span>
+                                    View Profile
+                                  </motion.button>
+                                  
+                                  <motion.button
+                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                                    whileHover={{ x: 4 }}
+                                    onClick={() => {
+                                      handleContactCandidate(candidate);
+                                      closeDropdown();
+                                    }}
+                                  >
+                                    <span className="mr-3">📧</span>
+                                    Contact
+                                  </motion.button>
+                                  
+                                  <motion.button
+                                    className={`w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center ${actionLoading[`${candidate.id}_download`] ? 'opacity-50' : ''}`}
+                                    whileHover={{ x: 4 }}
+                                    onClick={() => {
+                                      handleDownloadResume(candidate);
+                                      closeDropdown();
+                                    }}
+                                    disabled={actionLoading[`${candidate.id}_download`]}
+                                  >
+                                    <span className="mr-3">{actionLoading[`${candidate.id}_download`] ? '⏳' : '📄'}</span>
+                                    Download Resume
+                                  </motion.button>
+                                  
+                                  {selectedStatus === 'interviewed' && (
+                                    <motion.button
+                                      className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                                      whileHover={{ x: 4 }}
+                                      onClick={() => {
+                                        handleScheduleInterview(candidate);
+                                        closeDropdown();
+                                      }}
+                                    >
+                                      <span className="mr-3">📅</span>
+                                      Schedule Interview
+                                    </motion.button>
+                                  )}
+                                  
+                                  <motion.button
+                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                                    whileHover={{ x: 4 }}
+                                    onClick={() => {
+                                      handleShortlistCandidate(candidate);
+                                      closeDropdown();
+                                    }}
+                                  >
+                                    <span className="mr-3">{actionLoading[`${candidate.id}_shortlist`] ? '⏳' : '⭐'}</span>
+                                    {candidate.isShortlisted ? 'Remove from Shortlist' : 'Add to Shortlist'}
+                                  </motion.button>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
                       </td>
                   </motion.tr>
@@ -762,6 +1111,7 @@ const EnhancedCandidatesTab = () => {
       onScheduleInterview={handleScheduleNewInterview}
       onRescheduleInterview={handleRescheduleInterview}
       onCancelInterview={handleCancelInterview}
+      onDeleteInterview={handleDeleteInterview}
     />
   </motion.div>
 );

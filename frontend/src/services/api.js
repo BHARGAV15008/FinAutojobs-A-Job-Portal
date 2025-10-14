@@ -178,12 +178,37 @@ export const companiesAPI = {
 
 // Interviews API
 export const interviewsAPI = {
+  // Get all interviews for current user
   getInterviews: (params) => api.get('/interviews', { params }),
+  
+  // Get specific interview
   getInterview: (id) => api.get(`/interviews/${id}`),
+  
+  // Schedule new interview (recruiters only)
   scheduleInterview: (interviewData) => api.post('/interviews', interviewData),
-  updateInterview: (id, data) => api.put(`/interviews/${id}`, data),
-  cancelInterview: (id) => api.delete(`/interviews/${id}`),
+  
+  // Update interview (reschedule, cancel, etc.)
+  updateInterview: (id, updateData) => api.put(`/interviews/${id}`, updateData),
+  
+  // Cancel interview
+  cancelInterview: (id) => api.put(`/interviews/${id}`, { status: 'cancelled' }),
+  
+  // Delete interview (recruiters only)
+  deleteInterview: (id) => api.delete(`/interviews/${id}`),
+  
+  // Add interview feedback
+  addFeedback: (id, feedbackData) => api.put(`/interviews/${id}/feedback`, feedbackData),
+  
+  // Get interviews by candidate
+  getInterviewsByCandidate: (candidateId) => api.get(`/interviews?candidateId=${candidateId}`),
+  
+  // Get interviews by job
+  getInterviewsByJob: (jobId) => api.get(`/interviews?jobId=${jobId}`),
+  
+  // Get interview feedback
   getInterviewFeedback: (id) => api.get(`/interviews/${id}/feedback`),
+  
+  // Submit interview feedback
   submitInterviewFeedback: (id, feedback) => api.post(`/interviews/${id}/feedback`, feedback),
 };
 

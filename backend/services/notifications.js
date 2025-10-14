@@ -26,6 +26,7 @@ const NOTIFICATION_TYPES = {
   APPLICATION_STATUS_CHANGED: 'application_status_changed',
   INTERVIEW_SCHEDULED: 'interview_scheduled',
   INTERVIEW_CANCELLED: 'interview_cancelled',
+  INTERVIEW_RESCHEDULED: 'interview_rescheduled',
   JOB_POSTED: 'job_posted',
   JOB_UPDATED: 'job_updated',
   JOB_CLOSED: 'job_closed',
@@ -66,6 +67,7 @@ const getNotificationRecipients = async (actionType, actionData) => {
       case NOTIFICATION_TYPES.APPLICATION_STATUS_CHANGED:
       case NOTIFICATION_TYPES.INTERVIEW_SCHEDULED:
       case NOTIFICATION_TYPES.INTERVIEW_CANCELLED:
+      case NOTIFICATION_TYPES.INTERVIEW_RESCHEDULED:
         // Notify applicant
         if (actionData.applicantId) {
           const applicant = await BaseUser.findById(actionData.applicantId);
@@ -291,6 +293,38 @@ const generateNotificationContent = async (actionType, actionData, recipient) =>
         <p>Your interview has been scheduled:</p>
         <p><strong>Position:</strong> ${application?.job?.title || 'Job Position'}</p>
         <p><strong>Date:</strong> ${new Date(actionData.interviewDate).toLocaleDateString()}</p>
+        <p><strong>Time:</strong> ${actionData.interviewTime || 'Not specified'}</p>
+        <p><strong>Type:</strong> ${actionData.interviewType || 'Not specified'}</p>
+        <p><a href="${process.env.FRONTEND_URL}/dashboard/interviews/${actionData.applicationId}">View Interview Details</a></p>
+      `;
+      priority = 'urgent';
+      break;
+
+    case NOTIFICATION_TYPES.INTERVIEW_CANCELLED:
+      title = 'Interview Cancelled';
+      message = `Your interview for ${application?.job?.title || 'the position'} has been cancelled.`;
+      emailSubject = `Interview Cancelled - ${application?.job?.title || 'Job Position'}`;
+      emailContent = `
+        <h2>Interview Cancelled</h2>
+        <p>We regret to inform you that your interview has been cancelled:</p>
+        <p><strong>Position:</strong> ${application?.job?.title || 'Job Position'}</p>
+        <p><strong>Company:</strong> ${application?.job?.companyName || 'Company'}</p>
+        <p><strong>Reason:</strong> ${actionData.reason || 'Not specified'}</p>
+        <p><a href="${process.env.FRONTEND_URL}/dashboard/applications/${actionData.applicationId}">View Application Details</a></p>
+      `;
+      priority = 'high';
+      break;
+
+    case NOTIFICATION_TYPES.INTERVIEW_RESCHEDULED:
+      title = 'Interview Rescheduled';
+      message = `Your interview has been rescheduled to ${new Date(actionData.newInterviewDate).toLocaleDateString()}.`;
+      emailSubject = `Interview Rescheduled - ${application?.job?.title || 'Job Position'}`;
+      emailContent = `
+        <h2>Interview Rescheduled</h2>
+        <p>Your interview has been rescheduled:</p>
+        <p><strong>Position:</strong> ${application?.job?.title || 'Job Position'}</p>
+        <p><strong>New Date:</strong> ${new Date(actionData.newInterviewDate).toLocaleDateString()}</p>
+        <p><strong>New Time:</strong> ${actionData.newInterviewTime || 'Not specified'}</p>
         <p><strong>Type:</strong> ${actionData.interviewType || 'Not specified'}</p>
         <p><a href="${process.env.FRONTEND_URL}/dashboard/interviews/${actionData.applicationId}">View Interview Details</a></p>
       `;
@@ -406,11 +440,32 @@ export const NotificationService = {
     });
   },
 
-  async notifyInterviewScheduled(applicationId, applicantId, interviewDate, interviewType) {
+  async notifyInterviewScheduled(applicationId, applicantId, interviewDate, interviewTime, interviewType) {
     return this.sendActionNotification(NOTIFICATION_TYPES.INTERVIEW_SCHEDULED, {
       applicationId,
       applicantId,
       interviewDate,
+      interviewTime,
+      interviewType,
+      actionUrl: `/dashboard/interviews/${applicationId}`
+    });
+  },
+
+  async notifyInterviewCancelled(applicationId, applicantId, reason) {
+    return this.sendActionNotification(NOTIFICATION_TYPES.INTERVIEW_CANCELLED, {
+      applicationId,
+      applicantId,
+      reason,
+      actionUrl: `/dashboard/applications/${applicationId}`
+    });
+  },
+
+  async notifyInterviewRescheduled(applicationId, applicantId, newInterviewDate, newInterviewTime, interviewType) {
+    return this.sendActionNotification(NOTIFICATION_TYPES.INTERVIEW_RESCHEDULED, {
+      applicationId,
+      applicantId,
+      newInterviewDate,
+      newInterviewTime,
       interviewType,
       actionUrl: `/dashboard/interviews/${applicationId}`
     });
