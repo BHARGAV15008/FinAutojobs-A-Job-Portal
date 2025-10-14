@@ -10,7 +10,7 @@ import { FavoritesProvider } from './contexts/FavoritesContext.jsx';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import NotificationSystem from './components/notifications/NotificationSystem';
 import AppRoutes from './routes/AppRoutes'
-import './styles/responsive-fixed.css'
+import './styles/modern-theme.css'
 
 function App() {
   // Memoize query client to prevent recreation on re-renders
@@ -34,7 +34,7 @@ function App() {
               <FavoritesProvider>
                 <OAuthProvider>
                   <DashboardProvider>
-                    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 typography-fix">
+                    <div className="page-background typography-fix">
                       <AppRoutes />
                       <NotificationSystem />
                     </div>

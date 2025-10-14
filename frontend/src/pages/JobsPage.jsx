@@ -1015,16 +1015,17 @@ const JobsPage = () => {
     }
 
     return (
-        <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
-            {/* Header */}
-            <Box className="page-section text-center" sx={{ mb: { xs: 3, md: 4 } }}>
-                <Typography variant="h3" component="h1" gutterBottom fontWeight="bold">
-                    Find Your Perfect Job
-                </Typography>
-                <Typography variant="h6" color="text.secondary" paragraph>
-                    Discover opportunities in Finance and Automotive industries
-                </Typography>
-            </Box>
+        <div className="page-background-jobs">
+            <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
+                {/* Header */}
+                <Box className="hero-section animate-fade-in-up" sx={{ mb: { xs: 3, md: 4 } }}>
+                    <Typography variant="h1" component="h1" gutterBottom>
+                        Find Your Perfect Job
+                    </Typography>
+                    <Typography variant="h6" sx={{ color: 'rgba(255, 255, 255, 0.9)' }} paragraph>
+                        Discover opportunities in Finance and Automotive industries
+                    </Typography>
+                </Box>
 
             {/* Search Section */}
             <Paper className="search-section page-section" sx={{ p: { xs: 2, md: 3 }, mb: { xs: 3, md: 4 } }}>
@@ -1761,7 +1762,8 @@ const JobsPage = () => {
                 user={user}
                 onSubmit={handleSubmitApplication}
             />
-        </Container>
+            </Container>
+        </div>
     );
 };
 
