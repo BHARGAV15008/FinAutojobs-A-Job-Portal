@@ -10,7 +10,7 @@ import { FavoritesProvider } from './contexts/FavoritesContext.jsx';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import NotificationSystem from './components/notifications/NotificationSystem';
 import AppRoutes from './routes/AppRoutes'
-import './styles/responsive.css'
+import './styles/responsive-fixed.css'
 
 function App() {
   // Memoize query client to prevent recreation on re-renders
