@@ -34,7 +34,7 @@ function App() {
               <FavoritesProvider>
                 <OAuthProvider>
                   <DashboardProvider>
-                    <div className="page-background typography-fix">
+                    <div className="typography-fix">
                       <AppRoutes />
                       <NotificationSystem />
                     </div>
