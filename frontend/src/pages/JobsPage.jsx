@@ -1015,20 +1015,19 @@ const JobsPage = () => {
     }
 
     return (
-        <div className="page-background-jobs">
-            <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
-                {/* Header */}
-                <Box className="hero-section animate-fade-in-up" sx={{ mb: { xs: 3, md: 4 } }}>
-                    <Typography variant="h1" component="h1" gutterBottom sx={{ color: '#1a202c' }}>
-                        Find Your Perfect Job
-                    </Typography>
-                    <Typography variant="h6" sx={{ color: '#4a5568' }} paragraph>
-                        Discover opportunities in Finance and Automotive industries
-                    </Typography>
-                </Box>
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+            {/* Header */}
+            <Box sx={{ textAlign: 'center', mb: 4 }}>
+                <Typography variant="h3" component="h1" gutterBottom fontWeight="bold">
+                    Find Your Perfect Job
+                </Typography>
+                <Typography variant="h6" color="text.secondary" paragraph>
+                    Discover opportunities in Finance and Automotive industries
+                </Typography>
+            </Box>
 
             {/* Search Section */}
-            <Paper className="search-section page-section" sx={{ p: { xs: 2, md: 3 }, mb: { xs: 3, md: 4 } }}>
+            <Paper sx={{ p: 3, mb: 4 }}>
                 <Grid container spacing={2} alignItems="center">
                     <Grid item xs={12} md={6}>
                         <TextField
@@ -1095,19 +1094,13 @@ const JobsPage = () => {
             </Paper>
 
             {/* Category Tabs */}
-            <Box className="page-section" sx={{ mb: { xs: 3, md: 4 } }}>
+            <Box sx={{ mb: 4 }}>
                 <Tabs
                     value={selectedTab}
                     onChange={(e, newValue) => setSelectedTab(newValue)}
                     variant={isMobile ? "scrollable" : "standard"}
                     scrollButtons="auto"
                     centered={!isMobile}
-                    sx={{ 
-                        '& .MuiTab-root': { 
-                            minHeight: { xs: 40, md: 48 },
-                            fontSize: { xs: '0.875rem', md: '1rem' }
-                        }
-                    }}
                 >
                     <Tab label="All Jobs" />
                     <Tab label="Finance" />
@@ -1310,9 +1303,9 @@ const JobsPage = () => {
             )}
 
             {filteredJobs.length > 0 && viewFormat === 'list' && (
-                <Box className="page-section" sx={{ mb: { xs: 3, md: 4 } }}>
+                <Box sx={{ mb: 4, maxHeight: '70vh', overflowY: 'auto', pr: 1 }}>
                     {filteredJobs.map((job) => (
-                        <Card key={job.id} className="job-card" sx={{ mb: { xs: 2, md: 3 }, p: { xs: 2, md: 3 } }}>
+                        <Card key={job.id} sx={{ mb: 3, p: 3 }}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                                 <Box sx={{ display: 'flex', gap: 3, flex: 1 }}>
                                     <Avatar sx={{ width: 60, height: 60, bgcolor: 'primary.main', fontSize: '1.5rem' }}>
@@ -1394,10 +1387,10 @@ const JobsPage = () => {
             )}
 
             {filteredJobs.length > 0 && viewFormat === 'grid' && (
-                <Grid container spacing={{ xs: 2, md: 3 }} className="page-section" sx={{ mb: { xs: 3, md: 4 } }}>
+                <Grid container spacing={3} sx={{ mb: 4 }}>
                     {filteredJobs.map((job) => (
-                        <Grid item xs={12} sm={6} lg={4} key={job.id}>
-                            <Card className="job-card" sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                        <Grid item xs={12} md={6} lg={4} key={job.id}>
+                            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                                 <CardContent sx={{ flexGrow: 1, p: 3 }}>
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                                         <Avatar sx={{ width: 50, height: 50, bgcolor: 'primary.main' }}>
@@ -1762,8 +1755,7 @@ const JobsPage = () => {
                 user={user}
                 onSubmit={handleSubmitApplication}
             />
-            </Container>
-        </div>
+        </Container>
     );
 };
 

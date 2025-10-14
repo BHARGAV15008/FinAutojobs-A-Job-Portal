@@ -7,7 +7,6 @@ import OTPVerification from '../components/auth/OTPVerification'
 import OAuthButtons from '../components/auth/OAuthButtons'
 import { authAPI } from '../services/api'
 import {
-  Container,
   Box,
   Typography,
   TextField,
@@ -696,7 +695,7 @@ const RegisterPage = () => {
 
   return (
     <>
-      <Box sx={{ minHeight: '100vh', display: 'flex' }}>
+      <Box sx={{ minHeight: { xs: 'auto', sm: '100vh' }, display: 'flex' }}>
       {/* Left Side - Branding */}
       {!isMobile && (
         <BrandingSection sx={{ width: '40%', display: 'flex', alignItems: 'center', p: 6 }}>
@@ -800,11 +799,11 @@ const RegisterPage = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          p: { xs: 2, sm: 4 },
+          p: { xs: 2, sm: 3 },
           background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
         }}
       >
-        <Container maxWidth="md" sx={{ width: '100%' }}>
+        <Box sx={{ maxWidth: '360px', width: '100%', mx: 'auto', px: 2 }}>
           {/* Mobile Logo */}
           {isMobile && (
             <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
@@ -823,21 +822,21 @@ const RegisterPage = () => {
           {/* Header */}
           <Box sx={{ textAlign: 'center', mb: { xs: 3, sm: 4 } }}>
             <Typography 
-              variant="h3" 
+              variant="h4" 
               fontWeight="bold" 
               gutterBottom
               sx={{ 
-                fontSize: { xs: '1.75rem', sm: '2.5rem', md: '3rem' }
+                fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' }
               }}
             >
               🎉 Join Us!
             </Typography>
             <Typography 
-              variant="h6" 
+              variant="body1" 
               color="text.secondary" 
               paragraph
               sx={{ 
-                fontSize: { xs: '1rem', sm: '1.125rem', md: '1.25rem' },
+                fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem' },
                 px: { xs: 1, sm: 0 }
               }}
             >
@@ -891,7 +890,7 @@ const RegisterPage = () => {
               {/* Registration Form */}
               <Box component="form" onSubmit={handleSubmit}>
                 {/* Name Fields */}
-                <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid container spacing={{ xs: 2.75, sm: 3 }} sx={{ mb: 3 }}>
                   <Grid item xs={12} sm={6}>
                     <TextField
                       fullWidth
@@ -929,7 +928,7 @@ const RegisterPage = () => {
                 </Grid>
 
                 {/* Username Field - Optional with Auto-Generation */}
-                <Box sx={{ mb: 3 }}>
+                <Box sx={{ mb: { xs: 3.75, sm: 4 }, mt: { xs: 3.75, sm: 3 } }}>
                   <TextField
                     fullWidth
                     name="username"
@@ -969,7 +968,7 @@ const RegisterPage = () => {
                 </Box>
 
                   {/* Email Field with Verification */}
-                  <Box sx={{ mb: 3 }}>
+                  <Box sx={{ mb: { xs: 4, sm: 4.5 } }}>
                     <Box sx={{ 
                       display: 'flex', 
                       flexDirection: { xs: 'column', sm: 'row' },
@@ -1061,7 +1060,7 @@ const RegisterPage = () => {
                   </Box>
 
                 {/* Phone Number Field with Verification */}
-                <Box sx={{ mb: 3 }}>
+                <Box sx={{ mb: { xs: 4, sm: 4.5 } }}>
                   <Box sx={{ 
                     display: 'flex', 
                     flexDirection: { xs: 'column', sm: 'row' },
@@ -1269,7 +1268,7 @@ const RegisterPage = () => {
                 )}
 
                 {/* Password Fields */}
-                <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid container spacing={{ xs: 2.75, sm: 3 }} sx={{ mb: { xs: 4, sm: 4.5 } }}>
                   <Grid item xs={12} sm={6}>
                     <TextField
                       fullWidth
@@ -1414,6 +1413,7 @@ const RegisterPage = () => {
 
                 {/* Terms and Conditions */}
                 <FormControlLabel
+                  sx={{ mb: { xs: 3, sm: 3.5 } }}
                   control={
                     <Checkbox
                       checked={acceptTerms}
@@ -1433,7 +1433,6 @@ const RegisterPage = () => {
                       </Link>
                     </Typography>
                   }
-                  sx={{ mb: 3 }}
                 />
 
                 {/* Submit Button */}
@@ -1446,6 +1445,7 @@ const RegisterPage = () => {
                   sx={{
                     py: 2,
                     mb: 3,
+                    color: 'white',
                     background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
                     '&:hover': {
                       background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.secondary.dark} 100%)`,
@@ -1486,7 +1486,7 @@ const RegisterPage = () => {
               </Box>
             </CardContent>
           </StyledCard>
-        </Container>
+        </Box>
       </Box>
       </Box>
 

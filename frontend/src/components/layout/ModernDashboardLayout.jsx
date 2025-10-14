@@ -116,7 +116,7 @@ const ModernDashboardLayout = ({
       </AnimatePresence>
 
       {/* Content area */}
-      <div className="dashboard-container dashboard-page relative flex flex-col flex-1 lg:ml-64 overflow-y-auto overflow-x-hidden bg-gray-50 dark:bg-gray-800">
+      <div className="dashboard-container relative flex flex-col flex-1 lg:ml-64 overflow-y-auto overflow-x-hidden bg-gray-50 dark:bg-gray-800">
         {/* Header */}
         <DashboardHeader
           title={title}

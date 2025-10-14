@@ -73,6 +73,7 @@ const AppRoutes = () => {
   const [location] = useLocation();
   const isDashboard = location.includes('-dashboard') || location.includes('/demo');
   const isAdminLogin = location === '/admin-login';
+  const isAuthPage = location === '/login' || location === '/register' || location === '/admin-login';
 
   // Show loading screen while auth is initializing
   if (loading) {
@@ -216,8 +217,8 @@ const AppRoutes = () => {
         </React.Suspense>
       </Box>
 
-      {/* Footer - Hide on dashboard pages */}
-      {!isDashboard && (
+      {/* Footer - Hide on dashboard and auth pages */}
+      {!isDashboard && !isAuthPage && (
         <Box component="footer" sx={{ bgcolor: 'grey.900', color: 'white', py: 1.5, mt: 'auto' }}>
         <Box sx={{ maxWidth: '1200px', mx: 'auto', px: { xs: 2, sm: 3, lg: 4 } }}>
           <Box sx={{ 

@@ -92,87 +92,6 @@ const Navigation = () => {
   const drawer = (
     <Box sx={{ width: 250 }} role="presentation">
       <List>
-        {/* Authentication items for mobile - only show when not logged in */}
-        {!user && (
-          <>
-            <ListItem
-              component={Link}
-              href="/login"
-              onClick={handleDrawerToggle}
-              sx={{ 
-                cursor: 'pointer',
-                transition: 'all 0.3s ease-in-out',
-                '&:hover': {
-                  bgcolor: 'rgba(25, 118, 210, 0.08)',
-                  transform: 'translateX(4px)',
-                  '& .MuiListItemIcon-root': {
-                    color: 'primary.main',
-                  },
-                  '& .MuiListItemText-primary': {
-                    color: 'primary.main',
-                    fontWeight: 600,
-                  },
-                },
-              }}
-            >
-              <ListItemIcon>
-                <Login />
-              </ListItemIcon>
-              <ListItemText primary="Login" />
-            </ListItem>
-            <ListItem
-              component={Link}
-              href="/register"
-              onClick={handleDrawerToggle}
-              sx={{ 
-                cursor: 'pointer',
-                transition: 'all 0.3s ease-in-out',
-                '&:hover': {
-                  bgcolor: 'rgba(25, 118, 210, 0.08)',
-                  transform: 'translateX(4px)',
-                  '& .MuiListItemIcon-root': {
-                    color: 'primary.main',
-                  },
-                  '& .MuiListItemText-primary': {
-                    color: 'primary.main',
-                    fontWeight: 600,
-                  },
-                },
-              }}
-            >
-              <ListItemIcon>
-                <Person />
-              </ListItemIcon>
-              <ListItemText primary="Sign Up" />
-            </ListItem>
-            <ListItem
-              component={Link}
-              href="/admin-login"
-              onClick={handleDrawerToggle}
-              sx={{ 
-                cursor: 'pointer',
-                transition: 'all 0.3s ease-in-out',
-                '&:hover': {
-                  bgcolor: 'rgba(25, 118, 210, 0.08)',
-                  transform: 'translateX(4px)',
-                  '& .MuiListItemIcon-root': {
-                    color: 'primary.main',
-                  },
-                  '& .MuiListItemText-primary': {
-                    color: 'primary.main',
-                    fontWeight: 600,
-                  },
-                },
-              }}
-            >
-              <ListItemIcon>
-                <Shield />
-              </ListItemIcon>
-              <ListItemText primary="Admin" />
-            </ListItem>
-            <Divider sx={{ my: 1 }} />
-          </>
-        )}
         {mainMenuItems.map((item) => (
           <ListItem
             key={item.label}
@@ -239,121 +158,6 @@ const Navigation = () => {
           </ListItem>
         ))}
       </List>
-      
-      {/* User menu items for mobile - only show when logged in */}
-      {user && (
-        <>
-          <Divider />
-          <List>
-            {userMenuItems.map((item) => (
-              <ListItem
-                key={item.label}
-                component={Link}
-                href={item.path}
-                onClick={handleDrawerToggle}
-                selected={location === item.path}
-                sx={{ 
-                  cursor: 'pointer',
-                  position: 'relative',
-                  transition: 'all 0.3s ease-in-out',
-                  '&:hover': {
-                    bgcolor: 'rgba(25, 118, 210, 0.08)',
-                    transform: 'translateX(4px)',
-                    '& .MuiListItemIcon-root': {
-                      color: 'primary.main',
-                    },
-                    '& .MuiListItemText-primary': {
-                      color: 'primary.main',
-                      fontWeight: 600,
-                    },
-                  },
-                  '&.Mui-selected': {
-                    bgcolor: 'rgba(25, 118, 210, 0.12)',
-                    '& .MuiListItemIcon-root': {
-                      color: 'primary.main',
-                    },
-                    '& .MuiListItemText-primary': {
-                      color: 'primary.main',
-                      fontWeight: 600,
-                    },
-                    '&::after': {
-                      content: '""',
-                      position: 'absolute',
-                      right: 0,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      width: 4,
-                      height: '60%',
-                      bgcolor: 'primary.main',
-                      borderRadius: '4px 0 0 4px',
-                    },
-                  },
-                }}
-              >
-                <ListItemIcon 
-                  sx={{ 
-                    transition: 'color 0.3s ease-in-out',
-                    color: location === item.path ? 'primary.main' : 'text.secondary',
-                  }}
-                >
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText 
-                  primary={item.label}
-                  sx={{
-                    '& .MuiListItemText-primary': {
-                      transition: 'all 0.3s ease-in-out',
-                      fontWeight: location === item.path ? 600 : 400,
-                      color: location === item.path ? 'primary.main' : 'text.primary',
-                    },
-                  }}
-                />
-              </ListItem>
-            ))}
-            <ListItem
-              onClick={() => {
-                handleDrawerToggle();
-                logout();
-              }}
-              sx={{ 
-                cursor: 'pointer',
-                transition: 'all 0.3s ease-in-out',
-                '&:hover': {
-                  bgcolor: 'rgba(244, 67, 54, 0.08)',
-                  transform: 'translateX(4px)',
-                  '& .MuiListItemIcon-root': {
-                    color: 'error.main',
-                  },
-                  '& .MuiListItemText-primary': {
-                    color: 'error.main',
-                    fontWeight: 600,
-                  },
-                },
-              }}
-            >
-              <ListItemIcon 
-                sx={{ 
-                  transition: 'color 0.3s ease-in-out',
-                  color: 'text.secondary',
-                }}
-              >
-                <Logout />
-              </ListItemIcon>
-              <ListItemText 
-                primary="Logout"
-                sx={{
-                  '& .MuiListItemText-primary': {
-                    transition: 'all 0.3s ease-in-out',
-                    fontWeight: 400,
-                    color: 'text.primary',
-                  },
-                }}
-              />
-            </ListItem>
-          </List>
-        </>
-      )}
-      
       <Divider />
       <List>
         {companyMenuItems.map((item) => (
@@ -422,19 +226,105 @@ const Navigation = () => {
           </ListItem>
         ))}
       </List>
+      
+      {/* Authentication buttons for mobile when not logged in */}
+      {!user && (
+        <>
+          <Divider />
+          <List>
+            <ListItem
+              component={Link}
+              href="/admin-login"
+              onClick={handleDrawerToggle}
+              sx={{ 
+                cursor: 'pointer',
+                transition: 'all 0.3s ease-in-out',
+                '&:hover': {
+                  bgcolor: 'rgba(25, 118, 210, 0.08)',
+                  transform: 'translateX(4px)',
+                  '& .MuiListItemIcon-root': {
+                    color: 'primary.main',
+                  },
+                  '& .MuiListItemText-primary': {
+                    color: 'primary.main',
+                    fontWeight: 600,
+                  },
+                },
+              }}
+            >
+              <ListItemIcon>
+                <Shield />
+              </ListItemIcon>
+              <ListItemText primary="Admin Login" />
+            </ListItem>
+            
+            <ListItem
+              component={Link}
+              href="/login"
+              onClick={handleDrawerToggle}
+              sx={{ 
+                cursor: 'pointer',
+                transition: 'all 0.3s ease-in-out',
+                '&:hover': {
+                  bgcolor: 'rgba(25, 118, 210, 0.08)',
+                  transform: 'translateX(4px)',
+                  '& .MuiListItemIcon-root': {
+                    color: 'primary.main',
+                  },
+                  '& .MuiListItemText-primary': {
+                    color: 'primary.main',
+                    fontWeight: 600,
+                  },
+                },
+              }}
+            >
+              <ListItemIcon>
+                <Login />
+              </ListItemIcon>
+              <ListItemText primary="Login" />
+            </ListItem>
+            
+            <ListItem
+              component={Link}
+              href="/register"
+              onClick={handleDrawerToggle}
+              sx={{ 
+                cursor: 'pointer',
+                transition: 'all 0.3s ease-in-out',
+                '&:hover': {
+                  bgcolor: 'rgba(25, 118, 210, 0.08)',
+                  transform: 'translateX(4px)',
+                  '& .MuiListItemIcon-root': {
+                    color: 'primary.main',
+                  },
+                  '& .MuiListItemText-primary': {
+                    color: 'primary.main',
+                    fontWeight: 600,
+                  },
+                },
+              }}
+            >
+              <ListItemIcon>
+                <Person />
+              </ListItemIcon>
+              <ListItemText primary="Sign Up" />
+            </ListItem>
+          </List>
+        </>
+      )}
     </Box>
   );
 
   return (
     <AppBar position="sticky" color="default" elevation={1} sx={{ bgcolor: 'background.paper' }}>
       <Container maxWidth={false} sx={{ px: { xs: 2, sm: 3, md: 4 } }}>
-        <Toolbar disableGutters>
+        <Toolbar disableGutters sx={{ py: 1, minHeight: { xs: 56, sm: 60 } }}>
           {/* Logo - Desktop */}
           <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', mr: 2 }}>
             <Link href="/">
               <Box sx={{
-                width: 40,
-                height: 40,
+                width: 36,
+                height: 36,
                 bgcolor: 'primary.main',
                 borderRadius: 1,
                 display: 'flex',
@@ -442,7 +332,7 @@ const Navigation = () => {
                 justifyContent: 'center',
                 mr: 1
               }}>
-                <Work sx={{ color: 'white', fontSize: 24 }} />
+                <Work sx={{ color: 'white', fontSize: 20 }} />
               </Box>
             </Link>
             <Typography
@@ -469,9 +359,16 @@ const Navigation = () => {
               aria-haspopup="true"
               onClick={handleDrawerToggle}
               color="inherit"
-              sx={{ p: 1 }}
+              sx={{ 
+                p: 1,
+                width: 40,
+                height: 40,
+                '&:hover': {
+                  bgcolor: 'rgba(0, 0, 0, 0.04)',
+                },
+              }}
             >
-              <MenuIcon />
+              <MenuIcon sx={{ fontSize: 28 }} />
             </IconButton>
           </Box>
 
@@ -479,8 +376,8 @@ const Navigation = () => {
           <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center', flexGrow: 1 }}>
             <Link href="/">
               <Box sx={{
-                width: 32,
-                height: 32,
+                width: 28,
+                height: 28,
                 bgcolor: 'primary.main',
                 borderRadius: 1,
                 display: 'flex',
@@ -488,7 +385,7 @@ const Navigation = () => {
                 justifyContent: 'center',
                 mr: 1
               }}>
-                <Work sx={{ color: 'white', fontSize: 20 }} />
+                <Work sx={{ color: 'white', fontSize: 18 }} />
               </Box>
             </Link>
             <Typography
@@ -531,7 +428,7 @@ const Navigation = () => {
                     alignItems: 'center',
                     fontWeight: location === item.path ? 600 : 500,
                     textTransform: 'none',
-                    fontSize: '1rem',
+                    fontSize: '0.875rem',
                     px: 2,
                     py: 1,
                     borderRadius: 1,
@@ -695,7 +592,7 @@ const Navigation = () => {
                 </Menu>
               </>
             ) : (
-              <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: { xs: 0.5, sm: 1 }, alignItems: 'center' }}>
+              <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1, alignItems: 'center' }}>
                 <Button
                   component={Link}
                   href="/admin-login"
@@ -705,11 +602,11 @@ const Navigation = () => {
                   sx={{
                     textTransform: 'none',
                     fontWeight: 500,
-                    px: { xs: 1.5, sm: 2 },
-                    py: 0.5,
+                    px: { xs: 1, sm: 1.5 },
+                    py: 0.25,
                     borderRadius: 1,
                     color: 'text.secondary',
-                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                    fontSize: { xs: '0.7rem', sm: '0.8rem' },
                     minWidth: { xs: 'auto', sm: 'auto' },
                     '&:hover': {
                       bgcolor: 'rgba(0, 0, 0, 0.04)',
@@ -728,10 +625,10 @@ const Navigation = () => {
                   sx={{
                     textTransform: 'none',
                     fontWeight: 500,
-                    px: { xs: 2, sm: 3 },
-                    py: 1,
+                    px: { xs: 1.5, sm: 2 },
+                    py: 0.75,
                     borderRadius: 2,
-                    fontSize: { xs: '0.875rem', sm: '1rem' },
+                    fontSize: { xs: '0.8rem', sm: '0.875rem' },
                     minWidth: { xs: 'auto', sm: 'auto' },
                     transition: 'all 0.3s ease-in-out',
                     '&:hover': {
@@ -752,10 +649,10 @@ const Navigation = () => {
                   sx={{
                     textTransform: 'none',
                     fontWeight: 600,
-                    px: { xs: 2, sm: 3 },
-                    py: 1,
+                    px: { xs: 1.5, sm: 2 },
+                    py: 0.75,
                     borderRadius: 2,
-                    fontSize: { xs: '0.875rem', sm: '1rem' },
+                    fontSize: { xs: '0.8rem', sm: '0.875rem' },
                     minWidth: { xs: 'auto', sm: 'auto' },
                     transition: 'all 0.3s ease-in-out',
                     boxShadow: '0 2px 8px rgba(25, 118, 210, 0.3)',

@@ -222,7 +222,7 @@ const LoginPage = () => {
       {/* Left Side - Branding */}
       {!isMobile && (
         <BrandingSection sx={{ width: '50%', display: 'flex', alignItems: 'center', p: 6 }}>
-          <Box sx={{ position: 'relative', zIndex: 1, width: '100%' }}>
+          <Box sx={{ position: 'relative', zIndex: 1, width: 'auto' }}>
             {/* Logo and Title */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 6 }}>
               <Avatar
@@ -391,7 +391,7 @@ const LoginPage = () => {
           background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
         }}
       >
-        <Box sx={{ width: '100%', maxWidth: '480px' }}>
+        <Box sx={{ width: '100%', maxWidth: '320px' }}>
           {/* Mobile Logo */}
           {isMobile && (
             <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
@@ -409,10 +409,10 @@ const LoginPage = () => {
 
           {/* Header */}
           <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <Typography variant="h3" fontWeight="bold" gutterBottom>
+            <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
               Welcome Back! 👋
             </Typography>
-            <Typography variant="h6" color="text.secondary" paragraph>
+            <Typography variant="body1" color="text.secondary" paragraph sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}>
               Sign in to access premium job opportunities
             </Typography>
             <Typography variant="body2" color="text.secondary">
@@ -548,6 +548,7 @@ const LoginPage = () => {
                   sx={{
                     py: 2,
                     mb: 3,
+                    color: 'white',
                     background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
                     '&:hover': {
                       background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.secondary.dark} 100%)`,
@@ -557,11 +558,7 @@ const LoginPage = () => {
                   {loading ? 'Signing in...' : 'Sign In'}
                 </Button>
 
-                <Divider sx={{ my: 3 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Or continue with
-                  </Typography>
-                </Divider>
+                <Divider sx={{ my: 3 }} />
 
                 <OAuthButtons
                   role={activeTab === 0 ? 'applicant' : 'recruiter'}

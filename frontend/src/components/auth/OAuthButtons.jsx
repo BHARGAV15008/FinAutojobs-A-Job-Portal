@@ -67,9 +67,6 @@ const OAuthButtons = ({ role = 'applicant', onSuccess, onError }) => {
 
     return (
         <Box sx={{ width: '100%', mt: 2 }}>
-            <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 2 }}>
-                Or continue with
-            </Typography>
             
             {error && (
                 <Alert severity="error" sx={{ mb: 2 }}>

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useLocation } from 'wouter';
 import { motion } from 'framer-motion';
 import {
-  Container,
   Paper,
   TextField,
   Button,
@@ -100,7 +99,7 @@ const AdminLogin = () => {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ py: 8 }}>
+    <Box sx={{ maxWidth: '320px', width: '100%', mx: 'auto', px: 2, py: 8 }}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -274,7 +273,7 @@ const AdminLogin = () => {
           </Box>
         </Paper>
       </motion.div>
-    </Container>
+    </Box>
   );
 };
 

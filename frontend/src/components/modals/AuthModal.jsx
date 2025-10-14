@@ -323,11 +323,7 @@ const AuthModal = ({ open, onClose, onSuccess, defaultTab = 0 }) => {
           )}
 
           {/* Social Login */}
-          <Divider sx={{ my: 2 }}>
-            <Typography variant="body2" color="text.secondary">
-              Or continue with
-            </Typography>
-          </Divider>
+          <Divider sx={{ my: 2 }} />
 
           <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
             <Button

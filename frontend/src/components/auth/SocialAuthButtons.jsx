@@ -16,13 +16,15 @@ const SocialButton = styled(Button)(({ theme }) => ({
   },
 }))
 
-const SocialAuthButtons = ({ label = "Or continue with" }) => {
+const SocialAuthButtons = ({ label = "" }) => {
   return (
     <>
       <Divider sx={{ my: 3 }}>
-        <Typography variant="body2" color="text.secondary">
-          {label}
-        </Typography>
+        {label && (
+          <Typography variant="body2" color="text.secondary">
+            {label}
+          </Typography>
+        )}
       </Divider>
 
       <Grid container spacing={2}>

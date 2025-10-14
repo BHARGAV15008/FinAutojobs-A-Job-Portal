@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useLocation } from 'wouter';
 import {
-  Container,
   Box,
   Typography,
   TextField,
@@ -91,32 +90,6 @@ const AdminLoginPage = () => {
     setLoading(false);
   };
 
-  // Pre-filled admin credentials for easy testing
-  const fillAdminCredentials = (adminType) => {
-    const credentials = {
-      main: {
-        identifier: 'admin@finautojobs.com',
-        password: 'admin123'
-      },
-      super: {
-        identifier: 'superadmin@finautojobs.com',
-        password: 'superadmin123'
-      },
-      hr: {
-        identifier: 'hr@finautojobs.com',
-        password: 'hradmin123'
-      },
-      analytics: {
-        identifier: 'analytics@finautojobs.com',
-        password: 'analytics123'
-      }
-    };
-
-    setFormData(prev => ({
-      ...prev,
-      ...credentials[adminType]
-    }));
-  };
 
   return (
     <Box
@@ -156,14 +129,14 @@ const AdminLoginPage = () => {
         }}
       />
 
-      <Container maxWidth="sm">
+      <Box sx={{ maxWidth: '320px', width: 'auto', mx: 'auto', px: 2, py: 6 }}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
           {/* Header */}
-          <Box sx={{ textAlign: 'center', mb: 4 }}>
+          <Box sx={{ textAlign: 'center', mb: 6 }}>
             <motion.div
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
@@ -183,10 +156,10 @@ const AdminLoginPage = () => {
               </Avatar>
             </motion.div>
             
-            <Typography variant="h3" fontWeight="bold" gutterBottom sx={{ color: 'white' }}>
+            <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ color: 'white', fontSize: { xs: '1.5rem', sm: '2rem' } }}>
               Admin Portal
             </Typography>
-            <Typography variant="h6" sx={{ color: 'rgba(255, 255, 255, 0.8)', mb: 2 }}>
+            <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.8)', mb: 2, fontSize: { xs: '0.9rem', sm: '1rem' } }}>
               FinAutoJobs Administration
             </Typography>
             <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
@@ -195,7 +168,7 @@ const AdminLoginPage = () => {
           </Box>
 
           <StyledCard>
-            <CardContent sx={{ p: 4 }}>
+            <CardContent sx={{ p: 5 }}>
               {/* Security Notice */}
               <Paper
                 sx={{
@@ -214,46 +187,6 @@ const AdminLoginPage = () => {
                 </Box>
               </Paper>
 
-              {/* Quick Login Buttons */}
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="subtitle2" gutterBottom color="text.secondary">
-                  Quick Login (Development):
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={() => fillAdminCredentials('main')}
-                    sx={{ fontSize: '0.7rem' }}
-                  >
-                    Main Admin
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={() => fillAdminCredentials('super')}
-                    sx={{ fontSize: '0.7rem' }}
-                  >
-                    Super Admin
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={() => fillAdminCredentials('hr')}
-                    sx={{ fontSize: '0.7rem' }}
-                  >
-                    HR Admin
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={() => fillAdminCredentials('analytics')}
-                    sx={{ fontSize: '0.7rem' }}
-                  >
-                    Analytics Admin
-                  </Button>
-                </Box>
-              </Box>
 
               {error && (
                 <motion.div
@@ -276,7 +209,7 @@ const AdminLoginPage = () => {
                   value={formData.identifier}
                   onChange={handleChange}
                   required
-                  sx={{ mb: 3 }}
+                  sx={{ mb: 4 }}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -294,7 +227,7 @@ const AdminLoginPage = () => {
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  sx={{ mb: 4 }}
+                  sx={{ mb: 5 }}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -321,8 +254,9 @@ const AdminLoginPage = () => {
                   size="large"
                   disabled={loading}
                   sx={{
-                    py: 2,
-                    mb: 3,
+                    py: 2.5,
+                    mb: 4,
+                    color: 'white',
                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                     '&:hover': {
                       background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
@@ -335,24 +269,6 @@ const AdminLoginPage = () => {
                   {loading ? 'Authenticating...' : 'Access Admin Panel'}
                 </Button>
 
-                {/* Admin Credentials Info */}
-                <Paper
-                  sx={{
-                    p: 2,
-                    mb: 3,
-                    bgcolor: 'rgba(33, 150, 243, 0.1)',
-                    border: '1px solid rgba(33, 150, 243, 0.3)',
-                    borderRadius: 2,
-                  }}
-                >
-                  <Typography variant="caption" color="info.dark">
-                    <strong>Admin Accounts Available:</strong><br/>
-                    • admin@finautojobs.com (admin123)<br/>
-                    • superadmin@finautojobs.com (superadmin123)<br/>
-                    • hr@finautojobs.com (hradmin123)<br/>
-                    • analytics@finautojobs.com (analytics123)
-                  </Typography>
-                </Paper>
 
                 {/* Back to Main Site */}
                 <Box sx={{ textAlign: 'center' }}>
@@ -369,13 +285,13 @@ const AdminLoginPage = () => {
           </StyledCard>
 
           {/* Footer */}
-          <Box sx={{ textAlign: 'center', mt: 4 }}>
+          <Box sx={{ textAlign: 'center', mt: 6 }}>
             <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
               © 2025 FinAutoJobs. All rights reserved.
             </Typography>
           </Box>
         </motion.div>
-      </Container>
+      </Box>
     </Box>
   );
 };

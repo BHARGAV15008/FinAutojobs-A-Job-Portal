@@ -2,16 +2,18 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import API_BASE_URL from '../services/apiConfig';
 import { 
-  Container, 
   Box, 
   Typography, 
   TextField, 
   Button, 
-  Paper,
-  Tab,
-  Tabs,
+  Paper, 
+  Alert, 
+  Tabs, 
+  Tab, 
+  CircularProgress,
+  Divider,
   InputAdornment,
-  Alert,
+  IconButton,
   Stepper,
   Step,
   StepLabel
@@ -149,7 +151,7 @@ const OTPLoginPage = () => {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ py: 8 }}>
+    <Box sx={{ maxWidth: '320px', width: '100%', mx: 'auto', px: 2, py: 8 }}>
       <Paper elevation={3} sx={{ p: 4 }}>
         {/* Header */}
         <Box sx={{ textAlign: 'center', mb: 4 }}>
@@ -282,7 +284,7 @@ const OTPLoginPage = () => {
           </Box>
         )}
       </Paper>
-    </Container>
+    </Box>
   );
 };
 
