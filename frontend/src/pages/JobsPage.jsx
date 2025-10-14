@@ -1019,10 +1019,10 @@ const JobsPage = () => {
             <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
                 {/* Header */}
                 <Box className="hero-section animate-fade-in-up" sx={{ mb: { xs: 3, md: 4 } }}>
-                    <Typography variant="h1" component="h1" gutterBottom sx={{ color: '#1e293b', fontWeight: 700 }}>
+                    <Typography variant="h1" component="h1" gutterBottom sx={{ color: '#1a202c' }}>
                         Find Your Perfect Job
                     </Typography>
-                    <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 500 }} paragraph>
+                    <Typography variant="h6" sx={{ color: '#4a5568' }} paragraph>
                         Discover opportunities in Finance and Automotive industries
                     </Typography>
                 </Box>
