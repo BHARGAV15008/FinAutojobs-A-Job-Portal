@@ -171,6 +171,7 @@ import smsOtpRoutes from './routes/smsOtp.js';
 import phoneAuthRoutes from './routes/phoneAuth.js';
 import otpRoutes from './routes/otpRoutes.js';
 import candidatesRoutes from './routes/Applicants/candidates.js';
+import interviewRoutes from './routes/interviews.js';
 import devRoutes from './routes/devRoutes.js';
 
 // Mount routes under /api
@@ -199,6 +200,9 @@ apiRouter.use('/phone-auth', phoneAuthRoutes);
 apiRouter.use('/otp', otpRoutes);
 apiRouter.use('/candidates', candidatesRoutes);
 console.log('✅ /api/candidates routes registered successfully');
+console.log('🔄 Registering /api/interviews routes...');
+apiRouter.use('/interviews', interviewRoutes);
+console.log('✅ /api/interviews routes registered successfully - Interview management enabled!');
 
 // Development routes (only in development mode)
 if (process.env.NODE_ENV !== 'production') {
