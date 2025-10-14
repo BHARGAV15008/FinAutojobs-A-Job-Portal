@@ -440,6 +440,59 @@ body {
   }
 }
 
+/* VERY TINY SCREENS - Extra small mobile devices */
+@media (max-width: 480px) {
+  .MuiContainer-root {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  
+  .MuiToolbar-root {
+    min-height: 56px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  
+  /* Hide auth buttons on very small screens - they should be in drawer */
+  .auth-buttons-desktop {
+    display: none !important;
+  }
+  
+  /* Ensure mobile drawer is accessible */
+  .mobile-menu-button {
+    display: flex !important;
+  }
+  
+  /* Compact logo on very small screens */
+  .MuiTypography-h6 {
+    font-size: 1rem !important;
+  }
+}
+
+/* ULTRA TINY SCREENS - Very old or small devices */
+@media (max-width: 360px) {
+  .MuiContainer-root {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  
+  .MuiToolbar-root {
+    min-height: 52px;
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+  
+  .MuiTypography-h6 {
+    font-size: 0.9rem !important;
+  }
+  
+  /* Even more compact on ultra small screens */
+  .MuiCard-root {
+    margin-bottom: 1rem;
+    border-radius: 12px;
+  }
+}
+
 @media (min-width: 600px) and (max-width: 899px) {
   .MuiContainer-root {
     padding-left: 24px;

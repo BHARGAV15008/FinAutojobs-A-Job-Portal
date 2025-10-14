@@ -92,6 +92,87 @@ const Navigation = () => {
   const drawer = (
     <Box sx={{ width: 250 }} role="presentation">
       <List>
+        {/* Authentication items for mobile - only show when not logged in */}
+        {!user && (
+          <>
+            <ListItem
+              component={Link}
+              href="/login"
+              onClick={handleDrawerToggle}
+              sx={{ 
+                cursor: 'pointer',
+                transition: 'all 0.3s ease-in-out',
+                '&:hover': {
+                  bgcolor: 'rgba(25, 118, 210, 0.08)',
+                  transform: 'translateX(4px)',
+                  '& .MuiListItemIcon-root': {
+                    color: 'primary.main',
+                  },
+                  '& .MuiListItemText-primary': {
+                    color: 'primary.main',
+                    fontWeight: 600,
+                  },
+                },
+              }}
+            >
+              <ListItemIcon>
+                <Login />
+              </ListItemIcon>
+              <ListItemText primary="Login" />
+            </ListItem>
+            <ListItem
+              component={Link}
+              href="/register"
+              onClick={handleDrawerToggle}
+              sx={{ 
+                cursor: 'pointer',
+                transition: 'all 0.3s ease-in-out',
+                '&:hover': {
+                  bgcolor: 'rgba(25, 118, 210, 0.08)',
+                  transform: 'translateX(4px)',
+                  '& .MuiListItemIcon-root': {
+                    color: 'primary.main',
+                  },
+                  '& .MuiListItemText-primary': {
+                    color: 'primary.main',
+                    fontWeight: 600,
+                  },
+                },
+              }}
+            >
+              <ListItemIcon>
+                <Person />
+              </ListItemIcon>
+              <ListItemText primary="Sign Up" />
+            </ListItem>
+            <ListItem
+              component={Link}
+              href="/admin-login"
+              onClick={handleDrawerToggle}
+              sx={{ 
+                cursor: 'pointer',
+                transition: 'all 0.3s ease-in-out',
+                '&:hover': {
+                  bgcolor: 'rgba(25, 118, 210, 0.08)',
+                  transform: 'translateX(4px)',
+                  '& .MuiListItemIcon-root': {
+                    color: 'primary.main',
+                  },
+                  '& .MuiListItemText-primary': {
+                    color: 'primary.main',
+                    fontWeight: 600,
+                  },
+                },
+              }}
+            >
+              <ListItemIcon>
+                <Shield />
+              </ListItemIcon>
+              <ListItemText primary="Admin" />
+            </ListItem>
+            <Divider sx={{ my: 1 }} />
+          </>
+        )}
         {mainMenuItems.map((item) => (
           <ListItem
             key={item.label}
@@ -158,6 +239,121 @@ const Navigation = () => {
           </ListItem>
         ))}
       </List>
+      
+      {/* User menu items for mobile - only show when logged in */}
+      {user && (
+        <>
+          <Divider />
+          <List>
+            {userMenuItems.map((item) => (
+              <ListItem
+                key={item.label}
+                component={Link}
+                href={item.path}
+                onClick={handleDrawerToggle}
+                selected={location === item.path}
+                sx={{ 
+                  cursor: 'pointer',
+                  position: 'relative',
+                  transition: 'all 0.3s ease-in-out',
+                  '&:hover': {
+                    bgcolor: 'rgba(25, 118, 210, 0.08)',
+                    transform: 'translateX(4px)',
+                    '& .MuiListItemIcon-root': {
+                      color: 'primary.main',
+                    },
+                    '& .MuiListItemText-primary': {
+                      color: 'primary.main',
+                      fontWeight: 600,
+                    },
+                  },
+                  '&.Mui-selected': {
+                    bgcolor: 'rgba(25, 118, 210, 0.12)',
+                    '& .MuiListItemIcon-root': {
+                      color: 'primary.main',
+                    },
+                    '& .MuiListItemText-primary': {
+                      color: 'primary.main',
+                      fontWeight: 600,
+                    },
+                    '&::after': {
+                      content: '""',
+                      position: 'absolute',
+                      right: 0,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: 4,
+                      height: '60%',
+                      bgcolor: 'primary.main',
+                      borderRadius: '4px 0 0 4px',
+                    },
+                  },
+                }}
+              >
+                <ListItemIcon 
+                  sx={{ 
+                    transition: 'color 0.3s ease-in-out',
+                    color: location === item.path ? 'primary.main' : 'text.secondary',
+                  }}
+                >
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText 
+                  primary={item.label}
+                  sx={{
+                    '& .MuiListItemText-primary': {
+                      transition: 'all 0.3s ease-in-out',
+                      fontWeight: location === item.path ? 600 : 400,
+                      color: location === item.path ? 'primary.main' : 'text.primary',
+                    },
+                  }}
+                />
+              </ListItem>
+            ))}
+            <ListItem
+              onClick={() => {
+                handleDrawerToggle();
+                logout();
+              }}
+              sx={{ 
+                cursor: 'pointer',
+                transition: 'all 0.3s ease-in-out',
+                '&:hover': {
+                  bgcolor: 'rgba(244, 67, 54, 0.08)',
+                  transform: 'translateX(4px)',
+                  '& .MuiListItemIcon-root': {
+                    color: 'error.main',
+                  },
+                  '& .MuiListItemText-primary': {
+                    color: 'error.main',
+                    fontWeight: 600,
+                  },
+                },
+              }}
+            >
+              <ListItemIcon 
+                sx={{ 
+                  transition: 'color 0.3s ease-in-out',
+                  color: 'text.secondary',
+                }}
+              >
+                <Logout />
+              </ListItemIcon>
+              <ListItemText 
+                primary="Logout"
+                sx={{
+                  '& .MuiListItemText-primary': {
+                    transition: 'all 0.3s ease-in-out',
+                    fontWeight: 400,
+                    color: 'text.primary',
+                  },
+                }}
+              />
+            </ListItem>
+          </List>
+        </>
+      )}
+      
       <Divider />
       <List>
         {companyMenuItems.map((item) => (
@@ -499,7 +695,7 @@ const Navigation = () => {
                 </Menu>
               </>
             ) : (
-              <Box sx={{ display: 'flex', gap: { xs: 0.5, sm: 1 }, alignItems: 'center' }}>
+              <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: { xs: 0.5, sm: 1 }, alignItems: 'center' }}>
                 <Button
                   component={Link}
                   href="/admin-login"
