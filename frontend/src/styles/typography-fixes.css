@@ -1,0 +1,622 @@
+/* ===== STYLISH TYPOGRAPHY SYSTEM ===== */
+
+/* Import Google Fonts for better typography */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600&display=swap');
+
+/* Global stylish typography */
+.typography-fix {
+  font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-size: 0.9rem !important;
+  line-height: 1.6 !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.01em !important;
+  text-rendering: optimizeLegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+}
+
+/* Stylish Headings with proper hierarchy */
+.typography-fix h1,
+.typography-fix .h1 {
+  font-family: 'Poppins', sans-serif !important;
+  font-size: 1.75rem !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  margin-bottom: 0.75rem !important;
+  letter-spacing: -0.025em !important;
+  color: #1f2937 !important;
+}
+
+.typography-fix h2,
+.typography-fix .h2 {
+  font-family: 'Poppins', sans-serif !important;
+  font-size: 1.4rem !important;
+  font-weight: 600 !important;
+  line-height: 1.3 !important;
+  margin-bottom: 0.6rem !important;
+  letter-spacing: -0.02em !important;
+  color: #374151 !important;
+}
+
+.typography-fix h3,
+.typography-fix .h3 {
+  font-family: 'Poppins', sans-serif !important;
+  font-size: 1.15rem !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  margin-bottom: 0.5rem !important;
+  letter-spacing: -0.015em !important;
+  color: #374151 !important;
+}
+
+.typography-fix h4,
+.typography-fix .h4 {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 1.05rem !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  margin-bottom: 0.4rem !important;
+  letter-spacing: -0.01em !important;
+  color: #4b5563 !important;
+}
+
+.typography-fix h5,
+.typography-fix .h5 {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  line-height: 1.5 !important;
+  margin-bottom: 0.3rem !important;
+  letter-spacing: -0.005em !important;
+  color: #4b5563 !important;
+}
+
+.typography-fix h6,
+.typography-fix .h6 {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  line-height: 1.5 !important;
+  margin-bottom: 0.25rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: #6b7280 !important;
+}
+
+/* Stylish Paragraph and text elements */
+.typography-fix p {
+  font-size: 0.9rem !important;
+  font-weight: 400 !important;
+  line-height: 1.65 !important;
+  margin-bottom: 0.75rem !important;
+  color: #4b5563 !important;
+}
+
+.typography-fix span {
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  line-height: inherit !important;
+}
+
+.typography-fix small {
+  font-size: 0.8rem !important;
+  font-weight: 400 !important;
+  line-height: 1.5 !important;
+  color: #6b7280 !important;
+}
+
+/* Stylish text decorations */
+.typography-fix .text-underline,
+.typography-fix .underline {
+  text-decoration: underline !important;
+  text-decoration-color: #3b82f6 !important;
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 3px !important;
+  transition: all 0.2s ease !important;
+}
+
+.typography-fix .text-underline:hover,
+.typography-fix .underline:hover {
+  text-decoration-color: #1d4ed8 !important;
+  text-decoration-thickness: 3px !important;
+}
+
+.typography-fix .text-italic,
+.typography-fix .italic {
+  font-style: italic !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+
+.typography-fix .text-bold,
+.typography-fix .bold {
+  font-weight: 600 !important;
+}
+
+.typography-fix .text-semibold {
+  font-weight: 500 !important;
+}
+
+.typography-fix .text-light {
+  font-weight: 300 !important;
+  font-style: italic !important;
+}
+
+/* Stylish Button fixes */
+.typography-fix button,
+.typography-fix .btn {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.85rem !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+  padding: 0.6rem 1.2rem !important;
+  border-radius: 0.5rem !important;
+  letter-spacing: 0.01em !important;
+  transition: all 0.2s ease !important;
+}
+
+.typography-fix .btn-sm {
+  font-size: 0.75rem !important;
+  padding: 0.4rem 0.8rem !important;
+  border-radius: 0.375rem !important;
+}
+
+.typography-fix .btn-lg {
+  font-size: 0.95rem !important;
+  padding: 0.8rem 1.6rem !important;
+  border-radius: 0.625rem !important;
+  font-weight: 600 !important;
+}
+
+/* Stylish Form element fixes */
+.typography-fix label {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  line-height: 1.5 !important;
+  color: #374151 !important;
+  margin-bottom: 0.25rem !important;
+  display: block !important;
+}
+
+.typography-fix input,
+.typography-fix textarea,
+.typography-fix select {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.85rem !important;
+  font-weight: 400 !important;
+  line-height: 1.5 !important;
+  padding: 0.6rem 0.75rem !important;
+  border-radius: 0.5rem !important;
+  border: 1px solid #d1d5db !important;
+  transition: all 0.2s ease !important;
+}
+
+.typography-fix input:focus,
+.typography-fix textarea:focus,
+.typography-fix select:focus {
+  outline: none !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Stylish Navigation fixes */
+.typography-fix nav,
+.typography-fix .nav,
+.typography-fix .navbar {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.85rem !important;
+}
+
+.typography-fix .nav-link {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.85rem !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.005em !important;
+  transition: all 0.2s ease !important;
+  padding: 0.5rem 0.75rem !important;
+  border-radius: 0.375rem !important;
+}
+
+.typography-fix .nav-link:hover {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+  color: #3b82f6 !important;
+}
+
+.typography-fix .nav-link.active {
+  background-color: #3b82f6 !important;
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+/* Table fixes */
+.typography-fix table {
+  font-size: 0.875rem !important;
+}
+
+.typography-fix th {
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+.typography-fix td {
+  font-size: 0.875rem !important;
+  font-weight: 400 !important;
+}
+
+/* Stylish Card fixes */
+.typography-fix .card-title {
+  font-family: 'Poppins', sans-serif !important;
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  color: #1f2937 !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.typography-fix .card-subtitle {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+  color: #6b7280 !important;
+  font-style: italic !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.typography-fix .card-text {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.85rem !important;
+  font-weight: 400 !important;
+  line-height: 1.6 !important;
+  color: #4b5563 !important;
+}
+
+/* Stylish Badge and chip fixes */
+.typography-fix .badge,
+.typography-fix .chip {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.7rem !important;
+  font-weight: 600 !important;
+  padding: 0.25rem 0.6rem !important;
+  border-radius: 0.375rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  background-color: #f3f4f6 !important;
+  color: #374151 !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+.typography-fix .badge-primary,
+.typography-fix .chip-primary {
+  background-color: #dbeafe !important;
+  color: #1d4ed8 !important;
+  border-color: #93c5fd !important;
+}
+
+.typography-fix .badge-success,
+.typography-fix .chip-success {
+  background-color: #dcfce7 !important;
+  color: #166534 !important;
+  border-color: #86efac !important;
+}
+
+.typography-fix .badge-warning,
+.typography-fix .chip-warning {
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
+  border-color: #fcd34d !important;
+}
+
+/* Tab fixes */
+.typography-fix .tab,
+.typography-fix .tab-button {
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+}
+
+/* Modal fixes */
+.typography-fix .modal-title {
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+}
+
+.typography-fix .modal-body {
+  font-size: 0.875rem !important;
+  font-weight: 400 !important;
+}
+
+/* Alert fixes */
+.typography-fix .alert {
+  font-size: 0.875rem !important;
+  font-weight: 400 !important;
+}
+
+.typography-fix .alert-title {
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+}
+
+/* Stylish Dashboard specific fixes */
+.typography-fix .dashboard-title {
+  font-family: 'Poppins', sans-serif !important;
+  font-size: 1.4rem !important;
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+  color: #1f2937 !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.typography-fix .dashboard-subtitle {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.9rem !important;
+  font-weight: 400 !important;
+  color: #6b7280 !important;
+  font-style: italic !important;
+  margin-bottom: 1rem !important;
+}
+
+.typography-fix .metric-value {
+  font-family: 'Poppins', sans-serif !important;
+  font-size: 1.4rem !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  color: #1f2937 !important;
+}
+
+.typography-fix .metric-label {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.7rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+  color: #6b7280 !important;
+}
+
+/* Stylish Job listing fixes */
+.typography-fix .job-title {
+  font-family: 'Poppins', sans-serif !important;
+  font-size: 1.05rem !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  color: #1f2937 !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.typography-fix .job-title:hover {
+  color: #3b82f6 !important;
+  text-decoration: underline !important;
+  text-decoration-color: #3b82f6 !important;
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 2px !important;
+}
+
+.typography-fix .job-company {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+  color: #6b7280 !important;
+  font-style: italic !important;
+}
+
+.typography-fix .job-location {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.75rem !important;
+  font-weight: 400 !important;
+  color: #9ca3af !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+/* Override any Tailwind classes that might be too large */
+.typography-fix .text-xs { font-size: 0.75rem !important; }
+.typography-fix .text-sm { font-size: 0.875rem !important; }
+.typography-fix .text-base { font-size: 0.875rem !important; }
+.typography-fix .text-lg { font-size: 1rem !important; }
+.typography-fix .text-xl { font-size: 1.125rem !important; }
+.typography-fix .text-2xl { font-size: 1.25rem !important; }
+.typography-fix .text-3xl { font-size: 1.5rem !important; }
+.typography-fix .text-4xl { font-size: 1.875rem !important; }
+.typography-fix .text-5xl { font-size: 2rem !important; }
+.typography-fix .text-6xl { font-size: 2.25rem !important; }
+
+/* Prevent any text from being larger than necessary */
+.typography-fix .text-7xl,
+.typography-fix .text-8xl,
+.typography-fix .text-9xl {
+  font-size: 2.25rem !important;
+}
+
+/* Stylish Sidebar fixes */
+.typography-fix .sidebar-title {
+  font-family: 'Poppins', sans-serif !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  color: #1f2937 !important;
+  margin-bottom: 0.5rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+.typography-fix .sidebar-item {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+  color: #4b5563 !important;
+  padding: 0.5rem 0.75rem !important;
+  border-radius: 0.375rem !important;
+  transition: all 0.2s ease !important;
+  margin-bottom: 0.125rem !important;
+}
+
+.typography-fix .sidebar-item:hover {
+  background-color: #f3f4f6 !important;
+  color: #1f2937 !important;
+}
+
+.typography-fix .sidebar-item.active {
+  background-color: #3b82f6 !important;
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+/* Stylish User info fixes */
+.typography-fix .user-name {
+  font-family: 'Poppins', sans-serif !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  color: #1f2937 !important;
+  line-height: 1.4 !important;
+}
+
+.typography-fix .user-role {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.7rem !important;
+  font-weight: 500 !important;
+  color: #6b7280 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  font-style: italic !important;
+}
+
+.typography-fix .user-email {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.8rem !important;
+  font-weight: 400 !important;
+  color: #6b7280 !important;
+  text-decoration: underline !important;
+  text-decoration-color: #d1d5db !important;
+  text-underline-offset: 2px !important;
+}
+
+/* Additional Stylish Elements */
+.typography-fix .text-gradient {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  font-weight: 600 !important;
+}
+
+.typography-fix .text-shadow {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.typography-fix .text-highlight {
+  background-color: #fef3c7 !important;
+  padding: 0.125rem 0.25rem !important;
+  border-radius: 0.25rem !important;
+  font-weight: 500 !important;
+}
+
+/* Link Styles */
+.typography-fix a,
+.typography-fix .link {
+  color: #3b82f6 !important;
+  text-decoration: none !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+  border-bottom: 1px solid transparent !important;
+}
+
+.typography-fix a:hover,
+.typography-fix .link:hover {
+  color: #1d4ed8 !important;
+  border-bottom-color: #1d4ed8 !important;
+}
+
+/* Improved Spacing Classes */
+.typography-fix .spacing-tight {
+  margin-bottom: 0.25rem !important;
+}
+
+.typography-fix .spacing-normal {
+  margin-bottom: 0.5rem !important;
+}
+
+.typography-fix .spacing-relaxed {
+  margin-bottom: 0.75rem !important;
+}
+
+.typography-fix .spacing-loose {
+  margin-bottom: 1rem !important;
+}
+
+/* List Styling */
+.typography-fix ul,
+.typography-fix ol {
+  padding-left: 1.25rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.typography-fix li {
+  font-size: 0.85rem !important;
+  line-height: 1.6 !important;
+  margin-bottom: 0.25rem !important;
+  color: #4b5563 !important;
+}
+
+.typography-fix li::marker {
+  color: #3b82f6 !important;
+}
+
+/* Blockquote Styling */
+.typography-fix blockquote {
+  border-left: 4px solid #3b82f6 !important;
+  padding-left: 1rem !important;
+  margin: 1rem 0 !important;
+  font-style: italic !important;
+  color: #6b7280 !important;
+  background-color: #f8fafc !important;
+  padding: 0.75rem 1rem !important;
+  border-radius: 0 0.5rem 0.5rem 0 !important;
+}
+
+/* Code Styling */
+.typography-fix code {
+  font-family: 'Fira Code', 'Monaco', 'Consolas', monospace !important;
+  font-size: 0.8rem !important;
+  background-color: #f1f5f9 !important;
+  padding: 0.125rem 0.25rem !important;
+  border-radius: 0.25rem !important;
+  color: #e11d48 !important;
+  font-weight: 500 !important;
+}
+
+.typography-fix pre {
+  background-color: #1e293b !important;
+  color: #e2e8f0 !important;
+  padding: 1rem !important;
+  border-radius: 0.5rem !important;
+  overflow-x: auto !important;
+  font-size: 0.8rem !important;
+  line-height: 1.5 !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .typography-fix h1,
+  .typography-fix .h1 {
+    font-size: 1.4rem !important;
+  }
+  
+  .typography-fix h2,
+  .typography-fix .h2 {
+    font-size: 1.15rem !important;
+  }
+  
+  .typography-fix .dashboard-title {
+    font-size: 1.15rem !important;
+  }
+  
+  .typography-fix .metric-value {
+    font-size: 1.15rem !important;
+  }
+  
+  .typography-fix .card-title {
+    font-size: 0.95rem !important;
+  }
+  
+  .typography-fix .job-title {
+    font-size: 0.9rem !important;
+  }
+}
