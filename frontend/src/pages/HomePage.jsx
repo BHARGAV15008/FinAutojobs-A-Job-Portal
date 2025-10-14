@@ -110,19 +110,19 @@ const HomePage = () => {
       {/* Hero Section */}
       <Box
         sx={{
-          background: 'linear-gradient(135deg, #6B46C1 0%, #3182CE 100%)',
-          color: 'white',
+          background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+          color: '#1a202c',
           py: { xs: 12, md: 16 },
           px: { xs: 2, sm: 3, lg: 4 },
           textAlign: 'center',
         }}
       >
         <Container maxWidth="md">
-          <Typography variant="h1" component="h1" sx={{ fontWeight: 800, mb: 3 }}>
-            Find Your <Box component="span" sx={{ color: '#FFD700' }}>Dream Job</Box>
+          <Typography variant="h1" component="h1" sx={{ fontWeight: 800, mb: 3, color: '#1a202c' }}>
+            Find Your <Box component="span" sx={{ color: '#3b82f6' }}>Dream Job</Box>
           </Typography>
-          <Typography variant="h5" sx={{ mb: 6, color: 'rgba(255,255,255,0.8)' }}>
-            India’s #1 job platform connecting millions of job seekers with top employers
+          <Typography variant="h5" sx={{ mb: 6, color: '#4a5568', fontWeight: 500 }}>
+            India's #1 job platform connecting millions of job seekers with top employers
           </Typography>
 
           {/* Search Form */}
@@ -195,10 +195,10 @@ const HomePage = () => {
               size="large"
               sx={{
                 minWidth: { xs: '100%', md: '150px' },
-                background: 'linear-gradient(45deg, #6B46C1 30%, #3182CE 90%)',
+                background: 'linear-gradient(45deg, #3b82f6 30%, #1d4ed8 90%)',
                 '&:hover': {
-                  background: 'linear-gradient(45deg, #553C9A 30%, #2C5282 90%)',
-                  boxShadow: '0px 6px 12px rgba(0,0,0,0.15)',
+                  background: 'linear-gradient(45deg, #2563eb 30%, #1e40af 90%)',
+                  boxShadow: '0px 6px 12px rgba(59, 130, 246, 0.4)',
                 },
                 borderRadius: 2,
               }}
@@ -211,17 +211,18 @@ const HomePage = () => {
             <Chip
               label="🔥 Trending: AI Jobs, Remote Work, Startups"
               sx={{
-                backgroundColor: 'rgba(255,255,255,0.2)',
-                color: 'white',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                color: '#3b82f6',
                 fontSize: '0.9rem',
                 px: 2,
                 py: 1,
                 borderRadius: 4,
+                border: '1px solid rgba(59, 130, 246, 0.2)',
                 animation: 'pulse 2s infinite',
                 '@keyframes pulse': {
-                  '0%': { boxShadow: '0 0 0 0 rgba(255,255,255,0.4)' },
-                  '70%': { boxShadow: '0 0 0 10px rgba(255,255,255,0)' },
-                  '100%': { boxShadow: '0 0 0 0 rgba(255,255,255,0)' },
+                  '0%': { boxShadow: '0 0 0 0 rgba(59, 130, 246, 0.4)' },
+                  '70%': { boxShadow: '0 0 0 10px rgba(59, 130, 246, 0)' },
+                  '100%': { boxShadow: '0 0 0 0 rgba(59, 130, 246, 0)' },
                 },
               }}
             />
