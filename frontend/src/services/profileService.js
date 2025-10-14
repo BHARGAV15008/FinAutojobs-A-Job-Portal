@@ -1,5 +1,4 @@
 import { apiClient } from '../api/apiClient';
-import { log } from '../utils/logger';
 
 // Profile Service initialized
 
@@ -8,14 +7,14 @@ export const profileService = {
   // Get complete user profile data
   getCompleteProfile: async (userId) => {
     try {
-      log.fetch('Fetching complete profile for user', userId);
+      console.log('Fetching complete profile for user', userId);
       
       const response = await apiClient.get('/auth/profile');
       
-      log.success('Complete profile fetched', response.data);
+      console.log('Complete profile fetched', response.data);
       return response.data.data || response.data;
     } catch (error) {
-      log.error('Error fetching complete profile', error);
+      console.error('Error fetching complete profile', error);
       throw error;
     }
   },
@@ -57,14 +56,14 @@ export const profileService = {
   // Update user profile
   updateProfile: async (profileData) => {
     try {
-      log.fetch('Updating profile', profileData);
+      console.log('Updating profile', profileData);
       
       const response = await apiClient.put('/auth/profile', profileData);
       
-      log.success('Profile updated successfully', response.data);
+      console.log('Profile updated successfully', response.data);
       return response.data;
     } catch (error) {
-      log.error('Error updating profile', error);
+      console.error('Error updating profile', error);
       throw error;
     }
   },
@@ -110,7 +109,7 @@ export const profileService = {
   // Get comprehensive application data (combines all above)
   getApplicationData: async () => {
     try {
-      log.fetch('Fetching comprehensive application data...');
+      console.log('Fetching comprehensive application data...');
       
       const response = await apiClient.get('/auth/profile');
       const profileData = response.data.data || response.data;
@@ -190,10 +189,10 @@ export const profileService = {
         resumeUrl: profileData.resume_url || profileData.documents?.resumeUrl || '',
       };
       
-      log.success('Comprehensive application data prepared', applicationData);
+      console.log('Comprehensive application data prepared', applicationData);
       return applicationData;
     } catch (error) {
-      log.error('Error fetching comprehensive application data', error);
+      console.error('Error fetching comprehensive application data', error);
       throw error;
     }
   },

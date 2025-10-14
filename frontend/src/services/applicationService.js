@@ -1,5 +1,4 @@
 import { apiClient } from '../api/apiClient';
-import { log } from '../utils/logger';
 
 // Application Service initialized
 
@@ -8,14 +7,14 @@ export const applicationService = {
   // Submit job application
   submitApplication: async (applicationData) => {
     try {
-      log.fetch('Submitting application', applicationData);
+      console.log('Submitting application', applicationData);
       
       const response = await apiClient.post('/applications', applicationData);
       
-      log.success('Application submitted successfully', response.data);
+      console.log('Application submitted successfully', response.data);
       return response.data;
     } catch (error) {
-      log.error('Error submitting application', error);
+      console.error('Error submitting application', error);
       throw error;
     }
   },

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import API_BASE_URL from '../services/apiConfig';
-import { log } from '../utils/logger';
 import JobDetailsModal from '../components/modals/JobDetailsModal';
 import AuthModal from '../components/modals/AuthModal';
 import JobApplicationModal from '../components/modals/JobApplicationModal';
