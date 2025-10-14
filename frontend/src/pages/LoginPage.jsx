@@ -236,20 +236,20 @@ const LoginPage = () => {
                 <Business sx={{ fontSize: 32 }} />
               </Avatar>
               <Box>
-                <Typography variant="h3" fontWeight="bold">
+                <Typography variant="h3" fontWeight="bold" sx={{ color: 'white' }}>
                   FinAutoJobs
                 </Typography>
-                <Typography variant="h6" sx={{ color: 'primary.100' }}>
+                <Typography variant="h6" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
                   Premium Career Platform
                 </Typography>
               </Box>
             </Box>
 
             {/* Main Heading */}
-            <Typography variant="h2" fontWeight="bold" gutterBottom sx={{ mb: 3 }}>
+            <Typography variant="h2" fontWeight="bold" gutterBottom sx={{ mb: 3, color: 'white' }}>
               Connect with Top Finance & Automotive Companies
             </Typography>
-            <Typography variant="h6" sx={{ color: 'primary.100', mb: 6, lineHeight: 1.6 }}>
+            <Typography variant="h6" sx={{ color: 'rgba(255, 255, 255, 0.9)', mb: 6, lineHeight: 1.6 }}>
               Join thousands of professionals who've found their dream careers in finance and automotive industries.
             </Typography>
 
@@ -261,10 +261,10 @@ const LoginPage = () => {
                     <Calculate />
                   </Avatar>
                   <Box>
-                    <Typography variant="subtitle1" fontWeight="bold">
+                    <Typography variant="subtitle1" fontWeight="bold" sx={{ color: 'white' }}>
                       Finance Roles
                     </Typography>
-                    <Typography variant="body2" sx={{ color: 'primary.100' }}>
+                    <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
                       Investment Banking, Fintech, Trading
                     </Typography>
                   </Box>
@@ -276,10 +276,10 @@ const LoginPage = () => {
                     <DirectionsCar />
                   </Avatar>
                   <Box>
-                    <Typography variant="subtitle1" fontWeight="bold">
+                    <Typography variant="subtitle1" fontWeight="bold" sx={{ color: 'white' }}>
                       Automotive Jobs
                     </Typography>
-                    <Typography variant="body2" sx={{ color: 'primary.100' }}>
+                    <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
                       Engineering, Design, Manufacturing
                     </Typography>
                   </Box>
@@ -291,10 +291,10 @@ const LoginPage = () => {
                     <TrendingUp />
                   </Avatar>
                   <Box>
-                    <Typography variant="subtitle1" fontWeight="bold">
+                    <Typography variant="subtitle1" fontWeight="bold" sx={{ color: 'white' }}>
                       Career Growth
                     </Typography>
-                    <Typography variant="body2" sx={{ color: 'primary.100' }}>
+                    <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
                       Premium opportunities
                     </Typography>
                   </Box>
@@ -306,10 +306,10 @@ const LoginPage = () => {
                     <Security />
                   </Avatar>
                   <Box>
-                    <Typography variant="subtitle1" fontWeight="bold">
+                    <Typography variant="subtitle1" fontWeight="bold" sx={{ color: 'white' }}>
                       Trusted Platform
                     </Typography>
-                    <Typography variant="body2" sx={{ color: 'primary.100' }}>
+                    <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
                       Verified companies only
                     </Typography>
                   </Box>
@@ -321,30 +321,30 @@ const LoginPage = () => {
             <Grid container spacing={4}>
               <Grid item xs={4}>
                 <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="h3" fontWeight="bold">
+                  <Typography variant="h3" fontWeight="bold" sx={{ color: 'white' }}>
                     50K+
                   </Typography>
-                  <Typography variant="body2" sx={{ color: 'primary.100' }}>
+                  <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
                     Active Jobs
                   </Typography>
                 </Box>
               </Grid>
               <Grid item xs={4}>
                 <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="h3" fontWeight="bold">
+                  <Typography variant="h3" fontWeight="bold" sx={{ color: 'white' }}>
                     25K+
                   </Typography>
-                  <Typography variant="body2" sx={{ color: 'primary.100' }}>
+                  <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
                     Companies
                   </Typography>
                 </Box>
               </Grid>
               <Grid item xs={4}>
                 <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="h3" fontWeight="bold">
+                  <Typography variant="h3" fontWeight="bold" sx={{ color: 'white' }}>
                     100K+
                   </Typography>
-                  <Typography variant="body2" sx={{ color: 'primary.100' }}>
+                  <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
                     Professionals
                   </Typography>
                 </Box>

@@ -266,6 +266,7 @@ const HomePageNew = () => {
                                     mb: 2,
                                     position: 'relative',
                                     lineHeight: { xs: 1.2, md: 1.1 },
+                                    color: 'white',
                                 }}
                             >
                                 Find Your Dream Job
@@ -288,7 +289,8 @@ const HomePageNew = () => {
                                     mb: 4, 
                                     maxWidth: 600,
                                     fontSize: { xs: '1rem', sm: '1.1rem', md: '1.25rem' },
-                                    lineHeight: { xs: 1.4, md: 1.3 }
+                                    lineHeight: { xs: 1.4, md: 1.3 },
+                                    color: 'white'
                                 }}
                             >
                                 India's #1 job platform connecting millions of job seekers with top employers
