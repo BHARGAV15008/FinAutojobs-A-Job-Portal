@@ -15,7 +15,7 @@ const __dirname = path.dirname(__filename);
 
 // Configuration
 const CONFIG = {
-    BASE_URL: 'http://localhost:3000',
+    BASE_URL: 'http://localhost:3002',
     TIMEOUT: 30000,
     SCREENSHOT_DIR: path.join(__dirname, 'test-screenshots'),
     RESULTS_FILE: path.join(__dirname, 'frontend-test-results.json')

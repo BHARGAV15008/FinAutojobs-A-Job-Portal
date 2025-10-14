@@ -110,7 +110,7 @@ const JobsPage = () => {
     useEffect(() => {
         if (user && (user.id || user._id)) {
             const userId = user.id || user._id;
-            log.info('Loading favorites/bookmarks for user', userId);
+            console.log('Loading favorites/bookmarks for user', userId);
             
             try {
                 const savedFavorites = localStorage.getItem(`favorites_${userId}`);
@@ -119,24 +119,24 @@ const JobsPage = () => {
                 if (savedFavorites) {
                     const favoritesArray = JSON.parse(savedFavorites);
                     setLocalFavorites(new Set(favoritesArray));
-                    log.success(`Loaded ${favoritesArray.length} favorites from localStorage`);
+                    console.log(`Loaded ${favoritesArray.length} favorites from localStorage`);
                 }
                 if (savedBookmarks) {
                     const bookmarksArray = JSON.parse(savedBookmarks);
                     setLocalBookmarks(new Set(bookmarksArray));
-                    log.success(`Loaded ${bookmarksArray.length} bookmarks from localStorage`);
+                    console.log(`Loaded ${bookmarksArray.length} bookmarks from localStorage`);
                 }
             } catch (error) {
-                log.error('Error loading from localStorage', error);
+                console.error('Error loading from localStorage', error);
             }
         } else {
-            log.info('No user found or user ID missing');
+            console.log('No user found or user ID missing');
         }
     }, [user]);
 
     // Debug: Log current state
     useEffect(() => {
-        log.data('Current state', {
+        console.log('Current state', {
             user: !!user,
             userId: user?.id || user?._id,
             localFavorites: localFavorites.size,
@@ -172,21 +172,21 @@ const JobsPage = () => {
                     const isRecent = Date.now() - applicationData.timestamp < 10 * 60 * 1000;
                     
                     if (isRecent && applicationData.jobId) {
-                        log.info('Found pending job application, looking for job', applicationData.jobTitle);
+                        console.log('Found pending job application, looking for job', applicationData.jobTitle);
                         // Find the job in current jobs list
                         const job = jobs.find(j => (j.id || j._id) === applicationData.jobId);
                         if (job) {
-                            log.success('Found job for pending application, opening application modal');
+                            console.log('Found job for pending application, opening application modal');
                             setSelectedJobForApplication(job);
                             setApplicationModalOpen(true);
                         } else {
-                            log.warn('Job not found in current list, user can manually apply');
+                            console.warn('Job not found in current list, user can manually apply');
                         }
                         // Clear the pending application
                         localStorage.removeItem('pendingJobApplication');
                     }
                 } catch (error) {
-                    log.error('Error parsing pending application', error);
+                    console.error('Error parsing pending application', error);
                     localStorage.removeItem('pendingJobApplication');
                 }
             }
@@ -224,7 +224,7 @@ const JobsPage = () => {
         const fetchJobs = async () => {
             try {
                 setLoading(true);
-                log.fetch('Fetching jobs from comprehensive API...');
+                console.log('Fetching jobs from comprehensive API...');
                 
                 // Use fetch directly to call our comprehensive job API (without search query for initial load)
                 const response = await fetch(`${API_BASE_URL}/jobs?${new URLSearchParams({
@@ -235,15 +235,15 @@ const JobsPage = () => {
                 })}`);
                 
                 const data = await response.json();
-                log.api('Comprehensive API Response', data);
+                console.log('Comprehensive API Response', data);
                 
                 // Handle the new API response format
                 let jobsData = [];
                 if (data.success && Array.isArray(data.data?.jobs)) {
                     jobsData = data.data.jobs;
-                    log.success(`Found ${jobsData.length} jobs from comprehensive API`);
+                    console.log(`Found ${jobsData.length} jobs from comprehensive API`);
                 } else {
-                    log.info('No jobs found, using empty array');
+                    console.log('No jobs found, using empty array');
                     jobsData = [];
                 }
                 
@@ -341,12 +341,12 @@ const JobsPage = () => {
                     companySize: '1000+'
                 }));
                 
-                log.data('Transformed jobs sample', transformedJobs[0]);
-                log.data('Total transformed jobs', transformedJobs.length);
-                log.data('Sample job fields', Object.keys(transformedJobs[0] || {}));
+                console.log('Transformed jobs sample', transformedJobs[0]);
+                console.log('Total transformed jobs', transformedJobs.length);
+                console.log('Sample job fields', Object.keys(transformedJobs[0] || {}));
                 setJobs(transformedJobs);
             } catch (error) {
-                log.error('Error fetching jobs from comprehensive API', error);
+                console.error('Error fetching jobs from comprehensive API', error);
                 // Show empty array - no mock data fallback
                 setJobs([]);
             } finally {

@@ -36,6 +36,7 @@ const OAuthCallback = () => {
         const token = urlParams.get('token');
         const oauthProvider = urlParams.get('provider');
         const userRole = urlParams.get('role');
+        const isNewUser = urlParams.get('isNewUser') === 'true';
         const error = urlParams.get('error');
         const errorMessage = urlParams.get('message');
 
@@ -85,12 +86,16 @@ const OAuthCallback = () => {
         await login(authResult, true); // true indicates OAuth login
 
         setStatus('success');
-        setMessage(`Successfully authenticated with ${getProviderName(oauthProvider)}!`);
+        const welcomeMessage = isNewUser 
+          ? `Welcome! Your account has been created with ${getProviderName(oauthProvider)}.`
+          : `Welcome back! You've been signed in with ${getProviderName(oauthProvider)}.`;
+        
+        setMessage(welcomeMessage);
 
         // Show success toast
         toast({
-          title: "Authentication Successful",
-          description: `Welcome! You've been signed in with ${getProviderName(oauthProvider)}.`,
+          title: isNewUser ? "Account Created Successfully" : "Authentication Successful",
+          description: welcomeMessage,
           variant: "default"
         });
 

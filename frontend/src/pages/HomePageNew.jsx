@@ -53,6 +53,7 @@ const SearchContainer = styled(Paper)(({ theme }) => ({
     padding: theme.spacing(3),
     [theme.breakpoints.down('sm')]: {
         padding: theme.spacing(2),
+        margin: theme.spacing(1),
     },
     background: 'rgba(255, 255, 255, 0.9)',
     backdropFilter: 'blur(10px)',
@@ -90,6 +91,10 @@ const CategoryCard = styled(Card)(({ theme }) => ({
     cursor: 'pointer',
     '&:hover img': {
         transform: 'scale(1.1)',
+    },
+    '& .MuiTypography-root': {
+        color: 'white',
+        textShadow: '0 2px 4px rgba(0,0,0,0.5)', // Enhanced text shadow for better readability
     },
 }));
 

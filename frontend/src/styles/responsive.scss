@@ -21,7 +21,7 @@ $breakpoints: (
 
 @mixin respond-below($breakpoint) {
   @if map-has-key($breakpoints, $breakpoint) {
-    @media (max-width: map-get($breakpoints, $breakpoint) - 1px) {
+    @media (max-width: (map-get($breakpoints, $breakpoint) - 1px)) {
       @content;
     }
   }
@@ -83,6 +83,29 @@ $breakpoints: (
   
   &.grid-auto {
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+
+// Enhanced mobile responsiveness
+@include respond-below(sm) {
+  .MuiContainer-root {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+  
+  .MuiCard-root {
+    padding: var(--space-3) !important;
+  }
+  
+  // Improve text readability on small screens
+  h1, h2, h3 {
+    word-break: break-word;
+  }
+  
+  // Ensure buttons are properly sized on mobile
+  .MuiButton-root {
+    min-height: 44px; // Better touch target
+    width: 100%; // Full width on mobile for better usability
   }
 }
 

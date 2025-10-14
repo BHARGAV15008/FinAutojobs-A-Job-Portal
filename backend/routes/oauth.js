@@ -169,34 +169,44 @@ const findOrCreateOAuthUser = async (userInfo, role = 'applicant') => {
   try {
     console.log('🔍 Finding or creating OAuth user:', { email: userInfo.email, provider: userInfo.provider, role });
     
-    // First, try to find existing user by email and role
-    let existingUser = await BaseUser.findOne({ 
-      email: userInfo.email,
-      role: role 
+    // First, check if email exists with ANY role
+    let existingUserAnyRole = await BaseUser.findOne({ 
+      email: userInfo.email 
     });
     
-    if (existingUser) {
-      console.log('✅ Found existing user:', existingUser._id);
-      
-      // Update OAuth information if not already set
-      if (!existingUser.oauthProviders?.find(p => p.provider === userInfo.provider)) {
-        existingUser.oauthProviders = existingUser.oauthProviders || [];
-        existingUser.oauthProviders.push({
-          provider: userInfo.provider,
-          providerId: userInfo.providerId,
-          accessToken: userInfo.accessToken,
-          refreshToken: userInfo.refreshToken
-        });
+    if (existingUserAnyRole) {
+      // If user exists with same role, update OAuth info and return
+      if (existingUserAnyRole.role === role) {
+        console.log('✅ Found existing user with same role:', existingUserAnyRole._id);
         
-        // Update profile image if not set
-        if (!existingUser.profileImage && userInfo.profileImage) {
-          existingUser.profileImage = userInfo.profileImage;
+        // Update OAuth information if not already set
+        if (!existingUserAnyRole.oauthProviders?.find(p => p.provider === userInfo.provider)) {
+          existingUserAnyRole.oauthProviders = existingUserAnyRole.oauthProviders || [];
+          existingUserAnyRole.oauthProviders.push({
+            provider: userInfo.provider,
+            providerId: userInfo.providerId,
+            accessToken: userInfo.accessToken,
+            refreshToken: userInfo.refreshToken
+          });
+          
+          // Update profile image if not set
+          if (!existingUserAnyRole.profileImage && userInfo.profileImage) {
+            existingUserAnyRole.profileImage = userInfo.profileImage;
+          }
+          
+          await existingUserAnyRole.save();
         }
         
-        await existingUser.save();
+        return { user: existingUserAnyRole, isNewUser: false };
+      } else {
+        // Email exists with different role - throw error
+        console.log('❌ Email exists with different role:', existingUserAnyRole.role, 'vs requested:', role);
+        const error = new Error(`Email ${userInfo.email} is already registered as ${existingUserAnyRole.role}. Please use a different email or login with the correct role.`);
+        error.code = 'EMAIL_ROLE_CONFLICT';
+        error.existingRole = existingUserAnyRole.role;
+        error.requestedRole = role;
+        throw error;
       }
-      
-      return existingUser;
     }
     
     // Create new user with OAuth information
@@ -239,7 +249,7 @@ const findOrCreateOAuthUser = async (userInfo, role = 'applicant') => {
     const newUser = await createUserByRole(userData);
     console.log('✅ Created new OAuth user:', newUser._id);
     
-    return newUser;
+    return { user: newUser, isNewUser: true };
   } catch (error) {
     console.error('❌ Error in findOrCreateOAuthUser:', error);
     throw error;
@@ -293,7 +303,7 @@ router.get('/google/callback',
       }
       
       // Regular login flow
-      const user = await findOrCreateOAuthUser(userInfo, role);
+      const { user, isNewUser } = await findOrCreateOAuthUser(userInfo, role);
       
       // Generate JWT token
       const token = jwt.sign(
@@ -308,14 +318,20 @@ router.get('/google/callback',
         { expiresIn: '24h' }
       );
       
-      // Redirect to frontend with token
-      const redirectUrl = `${frontendUrl}/oauth/callback?token=${token}&provider=google&role=${user.role}`;
+      // Redirect to frontend with token - Fixed URL path
+      const redirectUrl = `${frontendUrl}/auth/oauth-callback?token=${token}&provider=google&role=${user.role}&isNewUser=${isNewUser}`;
       
       res.redirect(redirectUrl);
     } catch (error) {
       console.error('❌ Google OAuth Callback Error:', error);
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-      res.redirect(`${frontendUrl}/oauth/error?message=${encodeURIComponent(error.message)}`);
+      
+      // Handle specific error types
+      if (error.code === 'EMAIL_ROLE_CONFLICT') {
+        res.redirect(`${frontendUrl}/auth/oauth-error?error=email_role_conflict&message=${encodeURIComponent(error.message)}&existingRole=${error.existingRole}&requestedRole=${error.requestedRole}&provider=google`);
+      } else {
+        res.redirect(`${frontendUrl}/auth/oauth-error?error=oauth_failed&message=${encodeURIComponent(error.message)}&provider=google`);
+      }
     }
   }
 );
@@ -343,7 +359,7 @@ router.get('/microsoft/callback',
       console.log('🔍 Microsoft OAuth Callback - Role:', role);
       
       // Find or create user
-      const user = await findOrCreateOAuthUser(userInfo, role);
+      const { user, isNewUser } = await findOrCreateOAuthUser(userInfo, role);
       
       // Generate JWT token
       const token = jwt.sign(
@@ -358,15 +374,21 @@ router.get('/microsoft/callback',
         { expiresIn: '24h' }
       );
       
-      // Redirect to frontend with token
+      // Redirect to frontend with token - Fixed URL path
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-      const redirectUrl = `${frontendUrl}/oauth/callback?token=${token}&provider=microsoft&role=${user.role}`;
+      const redirectUrl = `${frontendUrl}/auth/oauth-callback?token=${token}&provider=microsoft&role=${user.role}&isNewUser=${isNewUser}`;
       
       res.redirect(redirectUrl);
     } catch (error) {
       console.error('❌ Microsoft OAuth Callback Error:', error);
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-      res.redirect(`${frontendUrl}/oauth/error?message=${encodeURIComponent(error.message)}`);
+      
+      // Handle specific error types
+      if (error.code === 'EMAIL_ROLE_CONFLICT') {
+        res.redirect(`${frontendUrl}/auth/oauth-error?error=email_role_conflict&message=${encodeURIComponent(error.message)}&existingRole=${error.existingRole}&requestedRole=${error.requestedRole}&provider=microsoft`);
+      } else {
+        res.redirect(`${frontendUrl}/auth/oauth-error?error=oauth_failed&message=${encodeURIComponent(error.message)}&provider=microsoft`);
+      }
     }
   }
 );
@@ -404,7 +426,7 @@ router.get('/linkedin/callback',
       console.log('🔍 LinkedIn OAuth Callback - Role:', role);
       
       // Find or create user
-      const user = await findOrCreateOAuthUser(userInfo, role);
+      const { user, isNewUser } = await findOrCreateOAuthUser(userInfo, role);
       
       // Generate JWT token
       const token = jwt.sign(
@@ -419,15 +441,21 @@ router.get('/linkedin/callback',
         { expiresIn: '24h' }
       );
       
-      // Redirect to frontend with token
+      // Redirect to frontend with token - Fixed URL path
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-      const redirectUrl = `${frontendUrl}/oauth/callback?token=${token}&provider=linkedin&role=${user.role}`;
+      const redirectUrl = `${frontendUrl}/auth/oauth-callback?token=${token}&provider=linkedin&role=${user.role}&isNewUser=${isNewUser}`;
       
       res.redirect(redirectUrl);
     } catch (error) {
       console.error('❌ LinkedIn OAuth Callback Error:', error);
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-      res.redirect(`${frontendUrl}/oauth/error?message=${encodeURIComponent(error.message)}`);
+      
+      // Handle specific error types
+      if (error.code === 'EMAIL_ROLE_CONFLICT') {
+        res.redirect(`${frontendUrl}/auth/oauth-error?error=email_role_conflict&message=${encodeURIComponent(error.message)}&existingRole=${error.existingRole}&requestedRole=${error.requestedRole}&provider=linkedin`);
+      } else {
+        res.redirect(`${frontendUrl}/auth/oauth-error?error=oauth_failed&message=${encodeURIComponent(error.message)}&provider=linkedin`);
+      }
     }
   }
 );
@@ -450,7 +478,7 @@ router.post('/apple/callback', async (req, res) => {
     };
     
     // Find or create user
-    const dbUser = await findOrCreateOAuthUser(appleUserInfo, role || 'applicant');
+    const { user: dbUser, isNewUser } = await findOrCreateOAuthUser(appleUserInfo, role || 'applicant');
     
     // Generate JWT token
     const token = jwt.sign(
@@ -477,7 +505,9 @@ router.post('/apple/callback', async (req, res) => {
           lastName: dbUser.lastName,
           role: dbUser.role,
           provider: 'apple'
-        }
+        },
+        isNewUser,
+        redirectUrl: dbUser.role === 'recruiter' ? '/recruiter-dashboard' : '/applicant-dashboard'
       }
     });
   } catch (error) {

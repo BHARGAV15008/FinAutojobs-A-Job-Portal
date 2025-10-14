@@ -158,6 +158,7 @@ console.log('🔄 Loading applications routes...');
 import applicationRoutes from './routes/applications.js';
 console.log('✅ Applications routes loaded successfully');
 import oauthRoutes, { initializeOAuth } from './routes/oauth.js';
+import testOAuthRoutes from './routes/testOAuth.js';
 import notificationsRoutes from './routes/notifications.js';
 import usersRoutes from './routes/users.js';
 import savedJobsRoutes from './routes/savedJobs.js';
@@ -177,6 +178,7 @@ import interviewRoutes from './routes/interviews.js';
 const apiRouter = express.Router();
 apiRouter.use('/auth', authRoutes);
 apiRouter.use('/oauth', oauthRoutes);
+apiRouter.use('/test-oauth', testOAuthRoutes);
 apiRouter.use('/jobs', jobRoutes);
 apiRouter.use('/dashboard', dashboardRoutes);
 // Add placeholder routes to prevent 404 errors

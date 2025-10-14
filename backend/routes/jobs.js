@@ -538,6 +538,121 @@ router.get('/stats/overview', async (req, res) => {
   }
 });
 
+// GET /api/jobs/search - Search jobs by query
+router.get('/search', async (req, res) => {
+  try {
+    const { q, location, page = 1, limit = 20 } = req.query;
+    
+    if (!q) {
+      return res.status(400).json({
+        success: false,
+        message: 'Search query is required'
+      });
+    }
+
+    const query = {
+      status: 'active',
+      applicationDeadline: { $gt: new Date() },
+      $or: [
+        { jobTitle: { $regex: q, $options: 'i' } },
+        { jobDescription: { $regex: q, $options: 'i' } },
+        { companyName: { $regex: q, $options: 'i' } },
+        { requiredSkills: { $in: [new RegExp(q, 'i')] } }
+      ]
+    };
+
+    if (location) {
+      query.location = { $regex: location, $options: 'i' };
+    }
+
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
+
+    const [jobs, totalCount] = await Promise.all([
+      Job.find(query)
+        .populate('postedBy', 'firstName lastName')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
+      Job.countDocuments(query)
+    ]);
+
+    const transformedJobs = jobs.map(job => ({
+      id: job._id,
+      jobTitle: job.jobTitle,
+      companyName: job.companyName,
+      location: job.location,
+      industry: job.industry,
+      jobType: job.jobType,
+      workArrangement: job.workArrangement,
+      salary: job.formattedSalary,
+      experience: job.experience,
+      requiredSkills: job.requiredSkills,
+      createdAt: job.createdAt,
+      applicationDeadline: job.applicationDeadline,
+      slug: job.slug
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        jobs: transformedJobs,
+        total: totalCount,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(totalCount / limitNum)
+      }
+    });
+  } catch (error) {
+    console.error('Error searching jobs:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to search jobs',
+      error: error.message
+    });
+  }
+});
+
+// GET /api/jobs/categories - Get job categories
+router.get('/categories', async (req, res) => {
+  try {
+    const categories = await Job.distinct('jobCategory');
+    
+    res.json({
+      success: true,
+      data: categories.filter(Boolean)
+    });
+  } catch (error) {
+    console.error('Error fetching job categories:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch job categories',
+      error: error.message
+    });
+  }
+});
+
+// GET /api/jobs/locations - Get job locations
+router.get('/locations', async (req, res) => {
+  try {
+    const locations = await Job.distinct('location');
+    
+    res.json({
+      success: true,
+      data: locations.filter(Boolean)
+    });
+  } catch (error) {
+    console.error('Error fetching job locations:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch job locations',
+      error: error.message
+    });
+  }
+});
+
 // GET /api/jobs/:id - Get job by ID with full details
 router.get('/:id', async (req, res) => {
   try {

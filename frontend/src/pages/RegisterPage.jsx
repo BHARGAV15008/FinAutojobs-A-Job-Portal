@@ -695,17 +695,33 @@ const RegisterPage = () => {
 
   return (
     <>
-      <Box sx={{ minHeight: { xs: 'auto', sm: '100vh' }, display: 'flex' }}>
+      <Box sx={{ 
+        minHeight: { xs: 'auto', sm: '100vh' }, 
+        display: 'flex',
+        flexDirection: { xs: 'column', md: 'row' }
+      }}>
       {/* Left Side - Branding */}
       {!isMobile && (
-        <BrandingSection sx={{ width: '40%', display: 'flex', alignItems: 'center', p: 6 }}>
+        <BrandingSection sx={{ 
+          width: { xs: '100%', md: '40%' }, 
+          display: 'flex', 
+          alignItems: 'center', 
+          p: { xs: 3, sm: 4, md: 6 }
+        }}>
           <Box sx={{ position: 'relative', zIndex: 1, width: '100%' }}>
             {/* Logo and Title */}
             <Box sx={{ mb: 6 }}>
-              <Typography variant="h2" fontWeight="bold" gutterBottom>
+              <Typography variant="h2" fontWeight="bold" gutterBottom sx={{ 
+                color: 'white',
+                fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' }
+              }}>
                 🚀 FinAutoJobs
               </Typography>
-              <Typography variant="h6" sx={{ color: 'primary.100', lineHeight: 1.6 }}>
+              <Typography variant="h6" sx={{ 
+                color: 'rgba(255, 255, 255, 0.9)', 
+                lineHeight: 1.6,
+                fontSize: { xs: '0.9rem', sm: '1rem', md: '1.25rem' }
+              }}>
                 Join the premier platform connecting talent with opportunities in Finance & Automotive industries
               </Typography>
             </Box>
@@ -717,10 +733,16 @@ const RegisterPage = () => {
                   <Calculate />
                 </Avatar>
                 <Box>
-                  <Typography variant="h6" fontWeight="bold">
+                  <Typography variant="h6" fontWeight="bold" sx={{ 
+                    color: 'white',
+                    fontSize: { xs: '0.9rem', sm: '1rem', md: '1.25rem' }
+                  }}>
                     💼 Finance Roles
                   </Typography>
-                  <Typography variant="body2" sx={{ color: 'primary.100' }}>
+                  <Typography variant="body2" sx={{ 
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                  }}>
                     Investment Banking, Financial Analysis, Risk Management
                   </Typography>
                 </Box>
@@ -731,10 +753,16 @@ const RegisterPage = () => {
                   <DirectionsCar />
                 </Avatar>
                 <Box>
-                  <Typography variant="h6" fontWeight="bold">
+                  <Typography variant="h6" fontWeight="bold" sx={{ 
+                    color: 'white',
+                    fontSize: { xs: '0.9rem', sm: '1rem', md: '1.25rem' }
+                  }}>
                     🚗 Automotive Careers
                   </Typography>
-                  <Typography variant="body2" sx={{ color: 'primary.100' }}>
+                  <Typography variant="body2" sx={{ 
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                  }}>
                     Engineering, Manufacturing, Sales & Marketing
                   </Typography>
                 </Box>
@@ -745,10 +773,16 @@ const RegisterPage = () => {
                   <TrendingUp />
                 </Avatar>
                 <Box>
-                  <Typography variant="h6" fontWeight="bold">
+                  <Typography variant="h6" fontWeight="bold" sx={{ 
+                    color: 'white',
+                    fontSize: { xs: '0.9rem', sm: '1rem', md: '1.25rem' }
+                  }}>
                     📈 Career Growth
                   </Typography>
-                  <Typography variant="body2" sx={{ color: 'primary.100' }}>
+                  <Typography variant="body2" sx={{ 
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                  }}>
                     Premium opportunities with top-tier companies
                   </Typography>
                 </Box>
@@ -759,30 +793,30 @@ const RegisterPage = () => {
             <Grid container spacing={4}>
               <Grid item xs={4}>
                 <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="h3" fontWeight="bold">
+                  <Typography variant="h3" fontWeight="bold" sx={{ color: 'white' }}>
                     50K+
                   </Typography>
-                  <Typography variant="body2" sx={{ color: 'primary.100' }}>
+                  <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
                     Active Jobs
                   </Typography>
                 </Box>
               </Grid>
               <Grid item xs={4}>
                 <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="h3" fontWeight="bold">
+                  <Typography variant="h3" fontWeight="bold" sx={{ color: 'white' }}>
                     25K+
                   </Typography>
-                  <Typography variant="body2" sx={{ color: 'primary.100' }}>
+                  <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
                     Companies
                   </Typography>
                 </Box>
               </Grid>
               <Grid item xs={4}>
                 <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="h3" fontWeight="bold">
+                  <Typography variant="h3" fontWeight="bold" sx={{ color: 'white' }}>
                     100K+
                   </Typography>
-                  <Typography variant="body2" sx={{ color: 'primary.100' }}>
+                  <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
                     Professionals
                   </Typography>
                 </Box>
@@ -801,9 +835,17 @@ const RegisterPage = () => {
           justifyContent: 'center',
           p: { xs: 2, sm: 3 },
           background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+          overflowY: 'auto',
+          maxHeight: { xs: '100vh', md: 'none' }
         }}
       >
-        <Box sx={{ maxWidth: '360px', width: '100%', mx: 'auto', px: 2 }}>
+        <Box sx={{ 
+          maxWidth: { xs: '100%', sm: '450px' }, 
+          width: '100%', 
+          mx: 'auto', 
+          px: { xs: 1, sm: 2 },
+          my: { xs: 2, sm: 0 }
+        }}>
           {/* Mobile Logo */}
           {isMobile && (
             <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>

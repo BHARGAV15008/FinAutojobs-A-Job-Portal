@@ -64,7 +64,7 @@ const BrandingSection = styled(Box)(({ theme }) => ({
     left: 0,
     right: 0,
     bottom: 0,
-    background: 'rgba(0, 0, 0, 0.2)',
+    background: 'rgba(0, 0, 0, 0.4)', // Darker overlay for better text contrast
   },
 }))
 
@@ -73,9 +73,12 @@ const FeatureCard = styled(Box)(({ theme }) => ({
   alignItems: 'center',
   gap: theme.spacing(2),
   padding: theme.spacing(2),
-  background: 'rgba(255, 255, 255, 0.1)',
+  background: 'rgba(255, 255, 255, 0.15)', // Increased opacity for better contrast
   borderRadius: theme.spacing(2),
   backdropFilter: 'blur(10px)',
+  '& .MuiTypography-root': {
+    textShadow: '0 1px 2px rgba(0,0,0,0.3)', // Text shadow for better readability
+  }
 }))
 
 const SocialButton = styled(Button)(({ theme }) => ({
@@ -218,10 +221,14 @@ const LoginPage = () => {
 
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex' }}>
+    <Box sx={{ 
+      minHeight: '100vh', 
+      display: 'flex',
+      flexDirection: { xs: 'column', md: 'row' } 
+    }}>
       {/* Left Side - Branding */}
       {!isMobile && (
-        <BrandingSection sx={{ width: '50%', display: 'flex', alignItems: 'center', p: 6 }}>
+        <BrandingSection sx={{ width: { xs: '100%', md: '50%' }, display: 'flex', alignItems: 'center', p: { xs: 3, sm: 4, md: 6 } }}>
           <Box sx={{ position: 'relative', zIndex: 1, width: 'auto' }}>
             {/* Logo and Title */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 6 }}>
@@ -387,11 +394,17 @@ const LoginPage = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          p: 4,
+          p: { xs: 2, sm: 3, md: 4 },
           background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+          overflowY: 'auto',
+          maxHeight: { xs: '100vh', md: 'none' }
         }}
       >
-        <Box sx={{ width: '100%', maxWidth: '320px' }}>
+        <Box sx={{ 
+          width: '100%', 
+          maxWidth: { xs: '100%', sm: '350px' },
+          my: { xs: 2, sm: 0 }
+        }}>
           {/* Mobile Logo */}
           {isMobile && (
             <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
@@ -408,21 +421,21 @@ const LoginPage = () => {
           )}
 
           {/* Header */}
-          <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
-              Welcome Back! 👋
-            </Typography>
-            <Typography variant="body1" color="text.secondary" paragraph sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}>
-              Sign in to access premium job opportunities
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Don't have an account?{' '}
-              <Link to="/register" style={{ color: theme.palette.primary.main, textDecoration: 'none', fontWeight: 600 }}>
-                Create one here
-              </Link>
-            </Typography>
-            
-          </Box>
+          <Box sx={{ textAlign: 'center', mb: { xs: 2, sm: 3, md: 4 } }}>
+              <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ fontSize: { xs: '1.5rem', sm: '1.8rem', md: '2rem' } }}>
+                Welcome Back! 👋
+              </Typography>
+              <Typography variant="body1" color="text.secondary" paragraph sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+                Sign in to access premium job opportunities
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Don't have an account?{' '}
+                <Link to="/register" style={{ color: theme.palette.primary.main, textDecoration: 'none', fontWeight: 600 }}>
+                  Create one here
+                </Link>
+              </Typography>
+              
+            </Box>
 
           <StyledCard>
             <CardContent sx={{ p: 4 }}>
@@ -431,7 +444,7 @@ const LoginPage = () => {
                 value={activeTab}
                 onChange={handleTabChange}
                 variant="fullWidth"
-                sx={{ mb: 4 }}
+                sx={{ mb: { xs: 2, sm: 3, md: 4 } }}
               >
                 <Tab
                   icon={<Person />}
@@ -546,8 +559,8 @@ const LoginPage = () => {
                   size="large"
                   disabled={loading}
                   sx={{
-                    py: 2,
-                    mb: 3,
+                    py: { xs: 1.5, sm: 2 },
+                    mb: { xs: 2, sm: 3 },
                     color: 'white',
                     background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
                     '&:hover': {

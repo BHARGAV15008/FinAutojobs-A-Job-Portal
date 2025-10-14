@@ -120,8 +120,10 @@ const AppRoutes = () => {
             
             {/* OAuth Routes */}
             <Route path="/oauth/callback">{() => <OAuthCallback />}</Route>
+            <Route path="/auth/oauth-callback">{() => <OAuthCallback />}</Route>
             <Route path="/oauth/link-callback">{() => <OAuthLinkCallback />}</Route>
             <Route path="/oauth/error">{() => <OAuthError />}</Route>
+            <Route path="/auth/oauth-error">{() => <OAuthError />}</Route>
 
             {/* Admin Login Route */}
             <Route path="/admin-login">{() => <AdminLoginPage />}</Route>

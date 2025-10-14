@@ -20,12 +20,22 @@ const OAuthError = () => {
   const [, setLocation] = useLocation();
   const [errorMessage, setErrorMessage] = useState('');
   const [provider, setProvider] = useState('');
+  const [errorType, setErrorType] = useState('');
+  const [existingRole, setExistingRole] = useState('');
+  const [requestedRole, setRequestedRole] = useState('');
 
   useEffect(() => {
     // Get error details from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     const message = urlParams.get('message');
     const oauthProvider = urlParams.get('provider');
+    const error = urlParams.get('error');
+    const existing = urlParams.get('existingRole');
+    const requested = urlParams.get('requestedRole');
+
+    setErrorType(error || 'oauth_failed');
+    setExistingRole(existing || '');
+    setRequestedRole(requested || '');
 
     if (message) {
       setErrorMessage(decodeURIComponent(message));
@@ -51,6 +61,24 @@ const OAuthError = () => {
     localStorage.removeItem('token');
     sessionStorage.clear();
     setLocation('/login');
+  };
+
+  const handleLoginWithCorrectRole = () => {
+    // Redirect to login page with the existing role
+    if (existingRole === 'recruiter') {
+      setLocation('/login?role=recruiter');
+    } else {
+      setLocation('/login?role=applicant');
+    }
+  };
+
+  const handleRegisterWithDifferentEmail = () => {
+    // Redirect to register page with the requested role
+    if (requestedRole === 'recruiter') {
+      setLocation('/register?role=recruiter');
+    } else {
+      setLocation('/register?role=applicant');
+    }
   };
 
   const getProviderName = (provider) => {
@@ -153,33 +181,66 @@ const OAuthError = () => {
 
           {/* Action Buttons */}
           <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', mb: 4, flexWrap: 'wrap' }}>
-            <Button
-              variant="contained"
-              startIcon={<Refresh />}
-              onClick={handleTryAgain}
-              color="primary"
-              size="large"
-            >
-              Try Again
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<Login />}
-              onClick={handleRetryLogin}
-              color="primary"
-              size="large"
-            >
-              Back to Login
-            </Button>
-            <Button
-              variant="text"
-              startIcon={<Home />}
-              onClick={handleGoHome}
-              color="inherit"
-              size="large"
-            >
-              Go Home
-            </Button>
+            {errorType === 'email_role_conflict' ? (
+              <>
+                <Button
+                  variant="contained"
+                  startIcon={<Login />}
+                  onClick={handleLoginWithCorrectRole}
+                  color="primary"
+                  size="large"
+                >
+                  Login as {existingRole}
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={handleRegisterWithDifferentEmail}
+                  color="secondary"
+                  size="large"
+                >
+                  Use Different Email
+                </Button>
+                <Button
+                  variant="text"
+                  startIcon={<Home />}
+                  onClick={handleGoHome}
+                  color="inherit"
+                  size="large"
+                >
+                  Go Home
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="contained"
+                  startIcon={<Refresh />}
+                  onClick={handleTryAgain}
+                  color="primary"
+                  size="large"
+                >
+                  Try Again
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<Login />}
+                  onClick={handleRetryLogin}
+                  color="primary"
+                  size="large"
+                >
+                  Back to Login
+                </Button>
+                <Button
+                  variant="text"
+                  startIcon={<Home />}
+                  onClick={handleGoHome}
+                  color="inherit"
+                  size="large"
+                >
+                  Go Home
+                </Button>
+              </>
+            )}
           </Box>
 
           <Divider sx={{ my: 3 }} />
