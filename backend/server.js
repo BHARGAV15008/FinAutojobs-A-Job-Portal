@@ -172,7 +172,6 @@ import phoneAuthRoutes from './routes/phoneAuth.js';
 import otpRoutes from './routes/otpRoutes.js';
 import candidatesRoutes from './routes/Applicants/candidates.js';
 import interviewRoutes from './routes/interviews.js';
-import devRoutes from './routes/devRoutes.js';
 
 // Mount routes under /api
 const apiRouter = express.Router();
@@ -206,8 +205,15 @@ console.log('✅ /api/interviews routes registered successfully - Interview mana
 
 // Development routes (only in development mode)
 if (process.env.NODE_ENV !== 'production') {
-  apiRouter.use('/dev', devRoutes);
-  console.log('✅ /api/dev routes registered successfully (development mode)');
+  (async () => {
+    try {
+      const { default: devRoutes } = await import('./routes/devRoutes.js');
+      apiRouter.use('/dev', devRoutes);
+      console.log('✅ /api/dev routes registered successfully (development mode)');
+    } catch (error) {
+      console.log('⚠️ Dev routes not available:', error.message);
+    }
+  })();
 }
 
 // Social accounts routes
