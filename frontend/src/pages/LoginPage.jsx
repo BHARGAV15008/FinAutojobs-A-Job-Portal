@@ -201,9 +201,6 @@ const LoginPage = () => {
   }
 
   const handleOAuthSuccess = (authResult) => {
-    // Handle successful OAuth authentication
-    console.log('OAuth success:', authResult)
-    // The OAuthButton component already shows success toast
     // Redirect based on user role
     const role = authResult.user.role || (activeTab === 0 ? 'applicant' : 'recruiter')
     if (role === 'recruiter' || role === 'employer') {
@@ -214,19 +211,17 @@ const LoginPage = () => {
   }
 
   const handleOAuthError = (error) => {
-    // Handle OAuth authentication error
-    console.error('OAuth error:', error)
-    // The OAuthButton component already shows error toast
+    // Intentionally silent: OAuthButtons already handle toasts
   }
 
 
   return (
     <Box sx={{ 
       minHeight: '100vh',
-      height: { xs: 'auto', md: '100vh' },
+      height: 'auto',
       display: 'flex',
       flexDirection: { xs: 'column', md: 'row' },
-      overflow: { xs: 'auto', md: 'hidden' }
+      overflow: 'auto'
     }}>
       {/* Left Side - Branding */}
       {!isMobile && (
@@ -394,14 +389,12 @@ const LoginPage = () => {
         sx={{
           flex: 1,
           display: 'flex',
-          alignItems: { xs: 'flex-start', md: 'center' },
+          alignItems: { xs: 'flex-start', md: 'flex-start' },
           justifyContent: 'center',
-          p: { xs: 1, sm: 2, md: 4 },
-          pt: { xs: 2, sm: 3, md: 4 },
+          p: { xs: 2, sm: 3, md: 6 },
           background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
           overflowY: 'auto',
-          minHeight: { xs: '100vh', md: 'auto' },
-          maxHeight: 'none'
+          minHeight: '100vh'
         }}
       >
         <Box sx={{ 

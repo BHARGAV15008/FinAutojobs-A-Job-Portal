@@ -132,35 +132,7 @@ const OAuthButtons = ({ role = 'applicant', onSuccess, onError }) => {
                 ))}
             </Box>
 
-            {/* Development Test Buttons */}
-            {isDevelopment && (
-                <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 2, border: '1px dashed', borderColor: 'grey.300' }}>
-                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 'bold', mb: 1, display: 'block' }}>
-                        🧪 Development Test Scenarios
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                        <Button
-                            size="small"
-                            variant="text"
-                            onClick={() => handleTestScenario('google', 'existing_user')}
-                            disabled={loading['google_existing_user']}
-                            sx={{ fontSize: '0.75rem', py: 0.5 }}
-                        >
-                            {loading['google_existing_user'] ? 'Testing...' : 'Test: Existing User Login'}
-                        </Button>
-                        <Button
-                            size="small"
-                            variant="text"
-                            color="error"
-                            onClick={() => handleTestScenario('google', 'email_conflict')}
-                            disabled={loading['google_email_conflict']}
-                            sx={{ fontSize: '0.75rem', py: 0.5 }}
-                        >
-                            {loading['google_email_conflict'] ? 'Testing...' : 'Test: Email Role Conflict'}
-                        </Button>
-                    </Box>
-                </Box>
-            )}
+            {/* Development Test Buttons removed for production */}
 
             <Typography variant="caption" color="text.secondary" align="center" sx={{ mt: 2, display: 'block' }}>
                 By continuing, you agree to our Terms of Service and Privacy Policy

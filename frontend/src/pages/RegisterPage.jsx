@@ -375,16 +375,12 @@ const RegisterPage = () => {
       })
     }
 
-    console.log('Starting registration with data:', { ...submitData, password: '[HIDDEN]' })
     setLoading(true)
 
     try {
       const result = await register(submitData)
-      console.log('Registration result:', result)
 
       if (!result.success) {
-        console.error('Registration failed:', result.error)
-        
         // Handle field-specific errors
         if (result.field === 'email') {
           setEmailError(true)
@@ -420,8 +416,6 @@ const RegisterPage = () => {
         }
       } else {
         // Registration successful
-        console.log('Registration successful:', result)
-        
         // Show success message with username if available
         const username = result.data?.user?.username
         const usernameInfo = result.data?.usernameGeneration
@@ -443,7 +437,6 @@ const RegisterPage = () => {
         // The AuthContext will handle redirection based on role
       }
     } catch (error) {
-      console.error('Registration error:', error)
       toast({
         title: "Error",
         description: error.message || "Failed to create account",
@@ -457,72 +450,24 @@ const RegisterPage = () => {
   // OTP verification functions
   const handleSendEmailOTP = async () => {
     if (!formData.email) {
-      toast({
-        title: "Error",
-        description: "Please enter your email address",
-        variant: "destructive"
-      })
+      toast({ title: "Error", description: "Please enter your email address", variant: "destructive" })
       return
     }
-
     if (!validateEmail(formData.email)) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid email address",
-        variant: "destructive"
-      })
+      toast({ title: "Error", description: "Please enter a valid email address", variant: "destructive" })
       return
     }
-
     try {
-      console.log('🔄 Sending OTP to:', formData.email)
-      
-      // Set loading state
       const result = await sendEmailOTP(formData.email)
-      console.log('📧 OTP Result:', result)
-      
-      if (result.success || result.mockOTP) {
-        console.log('✅ OTP Success - Setting states')
+      if (result.success) {
         setEmailOTPSent(true)
         setShowEmailOTP(true)
-        console.log('✅ States set - emailOTPSent: true, showEmailOTP: true')
-        
-        // Force re-render
-        setTimeout(() => {
-          console.log('🔄 Force re-render check - showEmailOTP:', showEmailOTP)
-        }, 100)
-        
-        toast({
-          title: "Success",
-          description: result.mockOTP ? "OTP generated for testing (check console)" : "OTP sent to your email address",
-          variant: "default"
-        })
+        toast({ title: "Success", description: "OTP sent to your email address", variant: "default" })
       } else {
-        console.log('❌ OTP Failed:', result.error)
-        // For testing purposes, let's open the panel anyway with a test OTP
-        console.log('🧪 Opening OTP panel for testing purposes')
-        setEmailOTPSent(true)
-        setShowEmailOTP(true)
-        
-        toast({
-          title: "Testing Mode",
-          description: "OTP panel opened for testing. Use OTP: 512589",
-          variant: "default"
-        })
+        toast({ title: "Error", description: result.error || "Failed to send OTP", variant: "destructive" })
       }
     } catch (error) {
-      console.error('Email OTP error:', error)
-      
-      // For testing, open the panel anyway
-      console.log('🧪 Error fallback - Opening OTP panel for testing')
-      setEmailOTPSent(true)
-      setShowEmailOTP(true)
-      
-      toast({
-        title: "Testing Mode",
-        description: "Failed to send OTP",
-        variant: "destructive"
-      })
+      toast({ title: "Error", description: "Failed to send OTP", variant: "destructive" })
     }
   }
 
@@ -697,10 +642,10 @@ const RegisterPage = () => {
     <>
       <Box sx={{ 
         minHeight: '100vh',
-        height: { xs: 'auto', md: '100vh' },
+        height: 'auto',
         display: 'flex',
         flexDirection: { xs: 'column', md: 'row' },
-        overflow: { xs: 'auto', md: 'hidden' }
+        overflow: 'auto'
       }}>
       {/* Left Side - Branding */}
       {!isMobile && (
@@ -833,14 +778,12 @@ const RegisterPage = () => {
         sx={{
           flex: 1,
           display: 'flex',
-          alignItems: { xs: 'flex-start', md: 'center' },
+          alignItems: { xs: 'flex-start', md: 'flex-start' },
           justifyContent: 'center',
-          p: { xs: 1, sm: 2, md: 3 },
-          pt: { xs: 2, sm: 3, md: 3 },
+          p: { xs: 2, sm: 3, md: 6 },
           background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
           overflowY: 'auto',
-          minHeight: { xs: '100vh', md: 'auto' },
-          maxHeight: 'none'
+          minHeight: '100vh'
         }}
       >
         <Box sx={{ 
