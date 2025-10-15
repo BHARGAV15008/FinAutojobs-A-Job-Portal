@@ -1040,3 +1040,65 @@ h1[class*="bg-"], h1[class*="gradient-"], a[class*="bg-"], a[class*="gradient-"]
     width: auto;
   }
 }
+
+/* ===== MOBILE VIEWPORT FIXES FOR LOGIN/REGISTER PAGES ===== */
+
+/* Prevent iOS Safari from zooming on form inputs */
+input[type="email"],
+input[type="password"],
+input[type="text"],
+input[type="tel"],
+select,
+textarea {
+  font-size: 16px !important;
+}
+
+/* Fix for mobile viewport height issues */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari specific fixes */
+  .mobile-viewport-fix {
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Ensure login/register pages don't get cut off on mobile */
+.auth-page-container {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  position: relative;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile-specific auth form container */
+@media (max-width: 767px) {
+  .auth-form-container {
+    padding-top: env(safe-area-inset-top, 20px) !important;
+    padding-bottom: env(safe-area-inset-bottom, 20px) !important;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+  
+  /* Ensure auth cards are properly sized on mobile */
+  .auth-card {
+    margin: 16px !important;
+    max-width: calc(100vw - 32px) !important;
+  }
+  
+  /* Fix for mobile keyboard pushing content up */
+  .auth-input-container {
+    margin-bottom: 16px;
+  }
+}
+
+/* Prevent horizontal scrolling on mobile */
+.auth-page-wrapper {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+}
+
+/* iOS Safari viewport height fix */
+.ios-vh-fix {
+  height: 100vh;
+  height: -webkit-fill-available;
