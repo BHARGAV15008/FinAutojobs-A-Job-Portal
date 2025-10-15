@@ -320,14 +320,47 @@ const RealApplicationsTab = () => {
                   </TableCell>
                   
                   <TableCell>
-                    <IconButton
-                      onClick={(e) => {
-                        setAnchorEl(e.currentTarget);
-                        setSelectedApplication(application);
-                      }}
-                    >
-                      <MoreVert />
-                    </IconButton>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        color="primary"
+                        startIcon={<Visibility />}
+                        onClick={() => {
+                          setSelectedApplication(application);
+                          setViewDetailsModal(true);
+                        }}
+                        sx={{ fontSize: '0.75rem', py: 0.5 }}
+                      >
+                        View
+                      </Button>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        color="secondary"
+                        startIcon={<CheckCircle />}
+                        onClick={() => {
+                          setSelectedApplication(application);
+                          setStatusUpdateModal(true);
+                        }}
+                        sx={{ fontSize: '0.75rem', py: 0.5 }}
+                      >
+                        Status
+                      </Button>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        color="info"
+                        startIcon={<Download />}
+                        onClick={() => {
+                          // Handle resume download
+                          console.log("Download resume for", application._id);
+                        }}
+                        sx={{ fontSize: '0.75rem', py: 0.5 }}
+                      >
+                        Resume
+                      </Button>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))}

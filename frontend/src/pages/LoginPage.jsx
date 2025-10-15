@@ -222,9 +222,11 @@ const LoginPage = () => {
 
   return (
     <Box sx={{ 
-      minHeight: '100vh', 
+      minHeight: '100vh',
+      height: { xs: 'auto', md: '100vh' },
       display: 'flex',
-      flexDirection: { xs: 'column', md: 'row' } 
+      flexDirection: { xs: 'column', md: 'row' },
+      overflow: { xs: 'auto', md: 'hidden' }
     }}>
       {/* Left Side - Branding */}
       {!isMobile && (
@@ -392,18 +394,21 @@ const LoginPage = () => {
         sx={{
           flex: 1,
           display: 'flex',
-          alignItems: 'center',
+          alignItems: { xs: 'flex-start', md: 'center' },
           justifyContent: 'center',
-          p: { xs: 2, sm: 3, md: 4 },
+          p: { xs: 1, sm: 2, md: 4 },
+          pt: { xs: 2, sm: 3, md: 4 },
           background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
           overflowY: 'auto',
-          maxHeight: { xs: '100vh', md: 'none' }
+          minHeight: { xs: '100vh', md: 'auto' },
+          maxHeight: 'none'
         }}
       >
         <Box sx={{ 
           width: '100%', 
           maxWidth: { xs: '100%', sm: '350px' },
-          my: { xs: 2, sm: 0 }
+          my: { xs: 0, sm: 0 },
+          pb: { xs: 4, sm: 2 }
         }}>
           {/* Mobile Logo */}
           {isMobile && (
