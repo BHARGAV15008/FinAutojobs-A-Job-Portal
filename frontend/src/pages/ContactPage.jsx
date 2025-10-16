@@ -26,8 +26,8 @@ import {
 import { styled } from '@mui/material/styles';
 
 const HeroSection = styled(Box)(({ theme }) => ({
-  background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-  color: 'white',
+  background: `linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%)`,
+  color: '#333333',
   padding: theme.spacing(8, 0),
   textAlign: 'center',
 }));
@@ -145,10 +145,10 @@ const ContactPage = () => {
                 width: { xs: 'calc(100% - 32px)', sm: '800px', md: '1000px', lg: '1200px' }, 
                 px: { xs: 2, sm: 3, md: 4 } 
             }}>
-              <Typography variant="h2" gutterBottom fontWeight="bold" color="white">
+              <Typography variant="h2" gutterBottom fontWeight="bold" color="#333333">
                 Get in Touch
               </Typography>
-              <Typography variant="h5" sx={{ maxWidth: 600, mx: 'auto', color: 'white' }}>
+              <Typography variant="h5" sx={{ maxWidth: 600, mx: 'auto', color: '#555555' }}>
                 Have questions about our specialized finance and automotive job portal? We're here to help you succeed in your career journey.
               </Typography>
             </Box>

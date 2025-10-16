@@ -1191,20 +1191,22 @@ const JobsPage = () => {
                                     setSelectedSalaryRange('');
                                     handleSearch();
                                 }}
-                            <Card 
-                            key={job.id} 
-                            className="job-card-container"
-                            sx={{ 
-                                mb: 2, 
-                                cursor: 'pointer',
-                                '&:hover': { 
-                                    boxShadow: 3,
-                                    transform: 'translateY(-2px)',
-                                    transition: 'all 0.2s ease-in-out'
-                                }
-                            }}
-                            onClick={() => setViewDetailsModal({ isOpen: true, job: { ...job, company: "TechCorp", location: "Mumbai, India", type: "Full-time", salary: "₹15-25 LPA", experience: "3-5 years", description: "We are looking for a skilled software engineer to join our team." } })}
-                        >
+                            >
+                                Clear All Filters
+                            </Button>
+                            <Button 
+                                variant="outlined" 
+                                onClick={async () => {
+                                    try {
+                                        const sampleJobs = [
+                                            {
+                                                title: "Software Engineer",
+                                                company: "TechCorp",
+                                                location: "Mumbai, India",
+                                                type: "Full-time",
+                                                salary: "₹15-25 LPA",
+                                                experience: "3-5 years",
+                                                description: "We are looking for a skilled software engineer to join our team.",
                                                 skills: ["React", "Node.js", "MongoDB"],
                                                 requirements: ["Bachelor's degree in CS", "3+ years experience"],
                                                 responsibilities: ["Develop web applications", "Code review"],

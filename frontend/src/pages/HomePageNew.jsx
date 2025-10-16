@@ -271,14 +271,14 @@ const HomePageNew = () => {
                                     mb: 2,
                                     position: 'relative',
                                     lineHeight: { xs: 1.2, md: 1.1 },
-                                    color: 'white',
+                                    color: '#ffffff !important',
                                 }}
                             >
                                 Find Your Dream Job
                                 <Box
                                     component="span"
                                     sx={{
-                                        color: theme.palette.secondary.light,
+                                        color: '#ffffff !important',
                                         display: 'block',
                                         fontSize: { xs: '1rem', sm: '1.2rem', md: '1.5rem', lg: '2rem' },
                                         mt: 1,
@@ -295,7 +295,7 @@ const HomePageNew = () => {
                                     maxWidth: 600,
                                     fontSize: { xs: '1rem', sm: '1.1rem', md: '1.25rem' },
                                     lineHeight: { xs: 1.4, md: 1.3 },
-                                    color: 'white'
+                                    color: '#ffffff !important'
                                 }}
                             >
                                 India's #1 job platform connecting millions of job seekers with top employers

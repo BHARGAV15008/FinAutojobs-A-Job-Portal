@@ -28,8 +28,8 @@ import {
 import { styled } from '@mui/material/styles';
 
 const HeroSection = styled(Box)(({ theme }) => ({
-  background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-  color: 'white',
+  background: `linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%)`,
+  color: '#333333',
   padding: theme.spacing(12, 0),
   textAlign: 'center',
 }));
@@ -125,10 +125,10 @@ const AboutPage = () => {
                 width: { xs: 'calc(100% - 32px)', sm: '800px', md: '1000px', lg: '1200px' }, 
                 px: { xs: 2, sm: 3, md: 4 } 
             }}>
-              <Typography variant="h2" gutterBottom fontWeight="bold" color="white">
+              <Typography variant="h2" gutterBottom fontWeight="bold" color="#333333">
                 About FinAutoJobs
               </Typography>
-              <Typography variant="h5" sx={{ mb: 4, maxWidth: 800, mx: 'auto', color: 'white' }}>
+              <Typography variant="h5" sx={{ mb: 4, maxWidth: 800, mx: 'auto', color: '#555555' }}>
                 India's leading specialized job portal connecting top talent with premier opportunities in Finance and Automotive sectors
               </Typography>
               <Button variant="contained" color="secondary" size="large">
@@ -276,7 +276,7 @@ const AboutPage = () => {
       </Container>
 
       {/* CTA Section */}
-      <Box sx={{ bgcolor: 'primary.main', color: 'white', py: 8 }}>
+      <Box sx={{ bgcolor: '#e3f2fd', color: '#333333', py: 8 }}>
         <Container maxWidth="md" sx={{ textAlign: 'center' }}>
           <Typography variant="h3" gutterBottom align="center" fontWeight="bold">
             Ready to Accelerate Your Career?

@@ -1,11 +1,13 @@
-import React from 'react';
-import { Route, Switch, useLocation } from 'wouter';
-import { useAuth } from '../contexts/AuthContext.jsx';
-import { CircularProgress, Box } from '@mui/material';
+import React, { Suspense, lazy } from 'react'
+import { Route, Switch, useLocation } from 'wouter'
+import { Box, CircularProgress, Typography } from '@mui/material'
+import { useAuth } from '../contexts/AuthContext'
+import FloatingActions from '../components/ui/FloatingActions'
+import SmoothLoader from '../components/ui/SmoothLoader'
+import ScrollProgress from '../components/ui/ScrollProgress'
 import Navigation from '../components/Navigation';
 import ProtectedRoute from '../components/auth/ProtectedRoute';
 import ResponsiveLayout from '../components/layout/ResponsiveLayout';
-
 // Direct imports for dashboards
 import ApplicantDashboard from '../pages/ApplicantDashboard';
 import RecruiterDashboard from '../pages/RecruiterDashboard';
@@ -79,26 +81,29 @@ const AppRoutes = () => {
   // Show loading screen while auth is initializing
   if (loading) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-      >
-        <CircularProgress size={60} />
-      </Box>
+      <SmoothLoader 
+        loading={true} 
+        message="Initializing FinAutoJobs..." 
+        fullScreen={true}
+        size={60}
+      />
     );
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#fafafa', display: 'flex', flexDirection: 'column', width: '100%' }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#ffffff', display: 'flex', flexDirection: 'column', width: '100%' }}>
+      {/* Scroll Progress Indicator */}
+      {!isDashboard && <ScrollProgress />}
+      
       {!isDashboard && !isAdminLogin && <Navigation />}
       
       <Box component="main" sx={{ flex: 1, width: '100%', overflow: 'visible' }}>
         <React.Suspense fallback={
-          <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
-            <CircularProgress />
-          </Box>
+          <SmoothLoader 
+            loading={true} 
+            message="Loading page..." 
+            size={50}
+          />
         }>
           <Switch>
             {/* Public Routes */}
@@ -277,6 +282,9 @@ const AppRoutes = () => {
           </Box>
         </Box>
       )}
+      
+      {/* Floating Actions - Show on all pages except dashboards */}
+      {!isDashboard && <FloatingActions />}
     </Box>
   );
 };

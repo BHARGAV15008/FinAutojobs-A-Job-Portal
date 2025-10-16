@@ -90,7 +90,12 @@ const Navigation = () => {
   ] : [];
 
   const drawer = (
-    <Box sx={{ width: 250 }} role="presentation">
+    <Box sx={{ 
+      width: 250,
+      bgcolor: '#ffffff',
+      color: '#333333',
+      height: '100%'
+    }} role="presentation">
       <List>
         {mainMenuItems.map((item) => (
           <ListItem
