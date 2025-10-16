@@ -1528,7 +1528,7 @@ router.post('/send-otp-email', async (req, res) => {
           <div style="padding: 20px; background: #f9f9f9;">
             <h2>Your Verification Code</h2>
             <p>Use the following code to verify your email address:</p>
-            <div style="background: white; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px;">
+            <div style="background: white; padding: 20px; text-align: center; margin: 20px 0; border-radius: 6px;">
               <h1 style="color: #2196F3; font-size: 32px; letter-spacing: 8px; margin: 0;">${otp}</h1>
             </div>
             <p><strong>This code will expire in 5 minutes.</strong></p>

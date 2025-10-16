@@ -118,7 +118,7 @@ const RecruiterProfilePage = () => {
     };
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Container maxWidth="md" sx={{ py: 4 }}>
             <Grid container spacing={4}>
                 {/* Profile Header */}
                 <Grid item xs={12}>

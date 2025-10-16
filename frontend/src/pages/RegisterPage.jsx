@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react'
-// PropType fixes applied - all error props are boolean - Updated: 2025-09-23T22:36:26
 import { Link, useLocation } from 'wouter'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { useToast } from '../components/ui/use-toast'
-import OTPVerification from '../components/auth/OTPVerification'
 import OAuthButtons from '../components/auth/OAuthButtons'
-import { authAPI } from '../services/api'
 import {
+  Container,
   Box,
   Typography,
   TextField,
@@ -21,53 +19,50 @@ import {
   Checkbox,
   FormControlLabel,
   Divider,
-  Paper,
-  useTheme,
-  useMediaQuery,
   Alert,
   Avatar,
-  Chip,
-  Autocomplete,
-  MenuItem,
-  Select,
+  styled,
+  useTheme,
+  useMediaQuery,
   FormControl,
   InputLabel,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  Select,
+  MenuItem,
+  Chip,
+  LinearProgress,
+  Autocomplete
 } from '@mui/material'
 import {
-  Visibility,
-  VisibilityOff,
-  Email,
-  Lock,
-  Business,
-  DirectionsCar,
-  Calculate,
-  TrendingUp,
-  Security,
-  Group,
   Person,
   Work,
-  Google,
-  Microsoft,
-  Apple,
+  Email,
   Phone,
-  School,
-  Add,
-  Close,
+  Lock,
+  Visibility,
+  VisibilityOff,
+  AlternateEmail,
+  Business,
+  Calculate,
+  DirectionsCar,
+  TrendingUp,
   CheckCircle,
-  Cancel,
-  Verified,
+  Cancel
 } from '@mui/icons-material'
-import { styled } from '@mui/material/styles'
 
 const StyledCard = styled(Card)(({ theme }) => ({
-  background: 'rgba(255, 255, 255, 0.95)',
-  backdropFilter: 'blur(20px)',
-  borderRadius: theme.spacing(3),
-  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
+  borderRadius: theme.spacing(2),
+  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+  border: '1px solid rgba(255, 255, 255, 0.2)',
+}))
+
+const FeatureCard = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(2),
+  padding: theme.spacing(2),
+  borderRadius: theme.spacing(1.5),
+  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  backdropFilter: 'blur(10px)',
   border: '1px solid rgba(255, 255, 255, 0.2)',
 }))
 
@@ -83,75 +78,50 @@ const BrandingSection = styled(Box)(({ theme }) => ({
     left: 0,
     right: 0,
     bottom: 0,
-    background: 'rgba(0, 0, 0, 0.2)',
-  },
-}))
-
-const FeatureCard = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: theme.spacing(2),
-  padding: theme.spacing(2),
-  background: 'rgba(255, 255, 255, 0.1)',
-  borderRadius: theme.spacing(2),
-  backdropFilter: 'blur(10px)',
-}))
-
-const SocialButton = styled(Button)(({ theme }) => ({
-  borderRadius: theme.spacing(2),
-  padding: theme.spacing(1.5),
-  border: '1px solid',
-  borderColor: theme.palette.divider,
-  backgroundColor: 'white',
-  color: theme.palette.text.primary,
-  '&:hover': {
-    backgroundColor: theme.palette.grey[50],
-    borderColor: theme.palette.primary.main,
+    background: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="4"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
+    opacity: 0.3,
   },
 }))
 
 const RegisterPage = () => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
+  const { register, loading } = useAuth()
+  const [, setLocation] = useLocation()
+  const { toast } = useToast()
+
   const [activeTab, setActiveTab] = useState(0)
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     username: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: '',
-    phone: '',
+    role: 'applicant',
+    company: '',
+    position: '',
     skills: [],
     qualification: '',
-    companyName: '',
-    position: '',
-    role: 'applicant',
-    emailVerified: false,
-    phoneVerified: false
+    experience: ''
   })
 
-  const [selectedSkill, setSelectedSkill] = useState('')
+  const [errors, setErrors] = useState({})
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
+  const [registrationError, setRegistrationError] = useState('')
+
   const [emailVerified, setEmailVerified] = useState(false)
   const [phoneVerified, setPhoneVerified] = useState(false)
-  const [acceptTerms, setAcceptTerms] = useState(false)
-  
-  // OTP verification states
-  const [showEmailOTP, setShowEmailOTP] = useState(false)
-  const [showPhoneOTP, setShowPhoneOTP] = useState(false)
-  const [emailOTPSent, setEmailOTPSent] = useState(false)
-  const [phoneOTPSent, setPhoneOTPSent] = useState(false)
-  
-  // Validation states
-  const [emailError, setEmailError] = useState(false)
-  const [phoneError, setPhoneError] = useState(false)
-  const [emailErrorMessage, setEmailErrorMessage] = useState('')
-  const [phoneErrorMessage, setPhoneErrorMessage] = useState('')
-  
-  // Password strength state
+  const [emailVerificationCode, setEmailVerificationCode] = useState('')
+  const [phoneVerificationCode, setPhoneVerificationCode] = useState('')
+  const [showEmailVerification, setShowEmailVerification] = useState(false)
+  const [showPhoneVerification, setShowPhoneVerification] = useState(false)
+  const [verificationLoading, setVerificationLoading] = useState(false)
+
+  const [newSkill, setNewSkill] = useState('')
   const [passwordStrength, setPasswordStrength] = useState({
     hasMinLength: false,
     hasUppercase: false,
@@ -160,420 +130,193 @@ const RegisterPage = () => {
     hasSpecialChar: false
   })
 
-  const { register, sendEmailOTP, verifyEmailOTP, sendSMSOTP, verifySMSOTP } = useAuth()
-  const { toast } = useToast()
-  const [, setLocation] = useLocation()
-
-  // Debounce email availability check
-  useEffect(() => {
-    if (formData.email && validateEmail(formData.email)) {
-      const timeoutId = setTimeout(() => {
-        checkEmailAvailability(formData.email)
-      }, 1000) // 1 second delay
-
-      return () => clearTimeout(timeoutId)
-    }
-  }, [formData.email, activeTab])
-
   const skillOptions = [
-    'JavaScript', 'Python', 'Java', 'React', 'Node.js', 'Angular', 'Vue.js',
-    'PHP', 'C#', 'C++', 'SQL', 'MongoDB', 'AWS', 'Docker', 'DevOps',
-    'UI/UX Design', 'Data Science', 'Machine Learning', 'Cybersecurity',
-    'Mobile Development', 'Financial Analysis', 'Investment Banking',
-    'Risk Management', 'Automotive Engineering', 'Mechanical Engineering',
-    'Electrical Engineering'
+    'JavaScript', 'Python', 'Java', 'React', 'Node.js', 'SQL', 'MongoDB',
+    'AWS', 'Docker', 'Kubernetes', 'Git', 'HTML/CSS', 'TypeScript',
+    'Angular', 'Vue.js', 'PHP', 'C++', 'C#', '.NET', 'Spring Boot',
+    'Express.js', 'Django', 'Flask', 'Laravel', 'Ruby on Rails',
+    'Machine Learning', 'Data Analysis', 'Project Management', 'Agile',
+    'Scrum', 'DevOps', 'CI/CD', 'Testing', 'UI/UX Design'
   ]
 
   const qualificationOptions = [
     'High School',
-    'Diploma', 
+    'Associate Degree',
     'Bachelor\'s Degree',
     'Master\'s Degree',
-    'Master\'s in Business Administration (MBA)',
     'PhD',
     'Professional Certification',
-    'Trade School Certificate',
+    'Diploma',
     'Other'
   ]
 
-  // Validation functions
-  const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return emailRegex.test(email)
-  }
+  const experienceOptions = [
+    'Entry Level (0-1 years)',
+    'Junior (1-3 years)',
+    'Mid-level (3-5 years)',
+    'Senior (5-8 years)',
+    'Lead (8-12 years)',
+    'Principal/Architect (12+ years)'
+  ]
 
-  const validatePhoneNumber = (phone) => {
-    // Indian phone number validation: +91 followed by 10 digits or just 10 digits
-    const phoneRegex = /^(\+91[\-\s]?)?[0]?(91)?[6789]\d{9}$/
-    return phoneRegex.test(phone.replace(/[\s\-]/g, ''))
-  }
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      role: activeTab === 0 ? 'applicant' : 'recruiter'
+    }))
+  }, [activeTab])
 
-  // Debounced email availability check
-  const checkEmailAvailability = async (email) => {
-    if (!validateEmail(email)) return
-    
-    try {
-      const role = activeTab === 0 ? 'applicant' : 'recruiter'
-      const response = await authAPI.checkAvailability('email', email, role)
-      
-      if (!response.data.available) {
-        setEmailError(true)
-        setEmailErrorMessage('This email is already registered. Try logging in instead.')
-      } else {
-        setEmailError(false)
-        setEmailErrorMessage('')
-      }
-    } catch (error) {
-      console.error('Email availability check failed:', error)
-      // Don't show error for availability check failures
-    }
-  }
+  useEffect(() => {
+    checkPasswordStrength(formData.password)
+  }, [formData.password])
 
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData({
-      ...formData,
-      [name]: value
+  const checkPasswordStrength = (password) => {
+    setPasswordStrength({
+      hasMinLength: password.length >= 8,
+      hasUppercase: /[A-Z]/.test(password),
+      hasLowercase: /[a-z]/.test(password),
+      hasNumber: /\d/.test(password),
+      hasSpecialChar: /[@$!%*?&]/.test(password)
     })
-
-    // Real-time validation
-    if (name === 'email') {
-      if (value && !validateEmail(value)) {
-        setEmailError(true)
-      } else {
-        setEmailError(false)
-        setEmailErrorMessage('') // Clear error message
-        // Reset verification status if email changes
-        if (emailVerified) {
-          setEmailVerified(false)
-          setEmailOTPSent(false)
-        }
-      }
-    }
-
-    if (name === 'phone') {
-      if (value && !validatePhoneNumber(value)) {
-        setPhoneError(true)
-      } else {
-        setPhoneError(false)
-        setPhoneErrorMessage('') // Clear error message
-        // Reset verification status if phone changes
-        if (phoneVerified) {
-          setPhoneVerified(false)
-          setPhoneOTPSent(false)
-        }
-      }
-    }
-
-    // Check password strength when password changes
-    if (name === 'password') {
-      setPasswordStrength({
-        hasMinLength: value.length >= 8,
-        hasNumber: /\d/.test(value),
-        hasSpecialChar: /[@$!%*?&]/.test(value),
-        hasUppercase: /[A-Z]/.test(value),
-        hasLowercase: /[a-z]/.test(value)
-      })
-    }
-  }
-
-  const handleSkillAdd = () => {
-    if (selectedSkill && !formData.skills.includes(selectedSkill)) {
-      setFormData({
-        ...formData,
-        skills: [...formData.skills, selectedSkill]
-      })
-      setSelectedSkill('')
-    }
-  }
-
-  const handleSkillRemove = (skillToRemove) => {
-    setFormData({
-      ...formData,
-      skills: formData.skills.filter(skill => skill !== skillToRemove)
-    })
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-
-    // Prevent multiple submissions
-    if (loading) {
-      console.log('Registration already in progress, ignoring submission')
-      return
-    }
-
-    // Validate all required fields
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.password) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields including phone number",
-        variant: "destructive"
-      })
-      return
-    }
-
-    // Validate email format
-    if (!validateEmail(formData.email)) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid email address",
-        variant: "destructive"
-      })
-      return
-    }
-
-    // Validate phone format
-    if (!validatePhoneNumber(formData.phone)) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid Indian phone number",
-        variant: "destructive"
-      })
-      return
-    }
-
-    // Both email and phone verification are now optional
-    // Users can register without verification and verify later
-
-    if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Passwords do not match",
-        variant: "destructive"
-      })
-      return
-    }
-
-    if (!acceptTerms) {
-      toast({
-        title: "Error",
-        description: "Please accept the terms and conditions",
-        variant: "destructive"
-      })
-      return
-    }
-
-    const submitData = {
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      email: formData.email,
-      phone: formData.phone,
-      password: formData.password,
-      role: activeTab === 0 ? 'applicant' : 'recruiter',
-      emailVerified: emailVerified,
-      phoneVerified: phoneVerified,
-      // Role-specific fields for jobseekers
-      ...(activeTab === 0 && {
-        skills: formData.skills,
-        qualification: formData.qualification
-      }),
-      // Role-specific fields for employers
-      ...(activeTab === 1 && {
-        companyName: formData.companyName,
-        position: formData.position
-      })
-    }
-
-    setLoading(true)
-
-    try {
-      const result = await register(submitData)
-
-      if (!result.success) {
-        // Handle field-specific errors
-        if (result.field === 'email') {
-          setEmailError(true)
-          setEmailErrorMessage(result.error)
-        } else if (result.field === 'phone') {
-          setPhoneError(true)
-          setPhoneErrorMessage(result.error)
-        } else {
-          // Check if it's a duplicate account error
-          if (result.error && result.error.includes('already exists')) {
-            toast({
-              title: "Account Already Exists",
-              description: `${result.error}. Please try logging in instead.`,
-              variant: "destructive",
-              action: (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setLocation('/login')}
-                >
-                  Go to Login
-                </Button>
-              )
-            })
-          } else {
-            // General error
-            toast({
-              title: "Registration Failed",
-              description: result.error || "Failed to create account",
-              variant: "destructive"
-            })
-          }
-        }
-      } else {
-        // Registration successful
-        // Show success message with username if available
-        const username = result.data?.user?.username
-        const usernameInfo = result.data?.usernameGeneration
-        
-        let successMessage = "Account created successfully!"
-        if (username) {
-          successMessage += ` Your username is: ${username}`
-          if (usernameInfo?.method === 'numbered') {
-            successMessage += " (auto-generated)"
-          }
-        }
-        
-        toast({
-          title: "Welcome to FinAutoJobs!",
-          description: successMessage,
-          variant: "default"
-        })
-        
-        // The AuthContext will handle redirection based on role
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create account",
-        variant: "destructive"
-      })
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // OTP verification functions
-  const handleSendEmailOTP = async () => {
-    if (!formData.email) {
-      toast({ title: "Error", description: "Please enter your email address", variant: "destructive" })
-      return
-    }
-    if (!validateEmail(formData.email)) {
-      toast({ title: "Error", description: "Please enter a valid email address", variant: "destructive" })
-      return
-    }
-    try {
-      const result = await sendEmailOTP(formData.email)
-      if (result.success) {
-        setEmailOTPSent(true)
-        setShowEmailOTP(true)
-        toast({ title: "Success", description: "OTP sent to your email address", variant: "default" })
-      } else {
-        toast({ title: "Error", description: result.error || "Failed to send OTP", variant: "destructive" })
-      }
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to send OTP", variant: "destructive" })
-    }
-  }
-
-  const handleSendPhoneOTP = async () => {
-    if (!formData.phone) {
-      toast({
-        title: "Error",
-        description: "Please enter your phone number",
-        variant: "destructive"
-      })
-      return
-    }
-
-    if (!validatePhoneNumber(formData.phone)) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid Indian phone number (e.g., +91 9876543210)",
-        variant: "destructive"
-      })
-      return
-    }
-
-    try {
-      const result = await sendSMSOTP(formData.phone)
-      if (result.success) {
-        setPhoneOTPSent(true)
-        setShowPhoneOTP(true)
-        toast({
-          title: "Success",
-          description: "OTP sent to your phone number",
-          variant: "default"
-        })
-      } else {
-        toast({
-          title: "Error",
-          description: result.error || "Failed to send SMS OTP",
-          variant: "destructive"
-        })
-      }
-    } catch (error) {
-      console.error('Phone OTP error:', error)
-      toast({
-        title: "Error",
-        description: "Failed to send SMS OTP",
-        variant: "destructive"
-      })
-    }
-  }
-
-  const handleEmailOTPVerification = async (data) => {
-    try {
-      setEmailVerified(true)
-      setShowEmailOTP(false)
-      setFormData(prev => ({ ...prev, emailVerified: true }))
-      toast({
-        title: "Success",
-        description: "Email verified successfully",
-        variant: "default"
-      })
-    } catch (error) {
-      console.error('Email OTP verification error:', error)
-      toast({
-        title: "Error",
-        description: "Failed to verify OTP",
-        variant: "destructive"
-      })
-    }
-  }
-
-  const handlePhoneOTPVerification = async (data) => {
-    try {
-      setPhoneVerified(true)
-      setShowPhoneOTP(false)
-      setFormData(prev => ({ ...prev, phoneVerified: true }))
-      toast({
-        title: "Success",
-        description: "Phone number verified successfully",
-        variant: "default"
-      })
-    } catch (error) {
-      console.error('Phone OTP verification error:', error)
-      toast({
-        title: "Error",
-        description: "Failed to verify OTP",
-        variant: "destructive"
-      })
-    }
   }
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue)
   }
 
-  const handleOAuthSuccess = (authResult) => {
-    // Handle successful OAuth authentication
-    console.log('OAuth success:', authResult)
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }))
+    }
+  }
+
+  const validateForm = () => {
+    const newErrors = {}
+
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = 'First name is required'
+    }
+
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = 'Last name is required'
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required'
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email is invalid'
+    }
+
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Phone number is required'
+    } else if (!/^\+?[\d\s\-\(\)]{10,}$/.test(formData.phone)) {
+      newErrors.phone = 'Phone number is invalid'
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'Password is required'
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters'
+    }
+
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'Please confirm your password'
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match'
+    }
+
+    if (!agreedToTerms) {
+      newErrors.terms = 'You must agree to the terms and conditions'
+    }
+
+    // Role-specific validation
+    if (activeTab === 1) { // Recruiter
+      if (!formData.company.trim()) {
+        newErrors.company = 'Company name is required for recruiters'
+      }
+      if (!formData.position.trim()) {
+        newErrors.position = 'Position is required for recruiters'
+      }
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setRegistrationError('')
+
+    if (!validateForm()) {
+      return
+    }
+
+    try {
+      const registrationData = {
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        username: formData.username.trim() || undefined,
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
+        password: formData.password,
+        role: formData.role,
+        ...(formData.role === 'recruiter' && {
+          company: formData.company.trim(),
+          position: formData.position.trim()
+        }),
+        ...(formData.role === 'applicant' && {
+          skills: formData.skills,
+          qualification: formData.qualification,
+          experience: formData.experience
+        })
+      }
+
+      await register(registrationData)
+      
+      toast({
+        title: "Success!",
+        description: "Account created successfully. Welcome to FinAutoJobs!",
+        variant: "default"
+      })
+
+      // Redirect based on role
+      if (formData.role === 'recruiter') {
+        setLocation('/recruiter-dashboard')
+      } else {
+        setLocation('/applicant-dashboard')
+      }
+
+    } catch (error) {
+      console.error('Registration error:', error)
+      setRegistrationError(error.message || 'Registration failed. Please try again.')
+      
+      toast({
+        title: "Registration Failed",
+        description: error.message || "Please check your information and try again.",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleOAuthSuccess = (userData) => {
     toast({
-      title: "Registration Successful",
-      description: `Successfully registered with ${authResult.provider}!`,
+      title: "Success!",
+      description: "Account created successfully with social login!",
       variant: "default"
     })
     
-    // The OAuthButton component already shows success toast
-    // Redirect based on user role
-    const role = authResult.user.role || (activeTab === 0 ? 'applicant' : 'recruiter')
-    if (role === 'recruiter' || role === 'employer') {
+    // Redirect based on role
+    if (userData.role === 'recruiter') {
       setLocation('/recruiter-dashboard')
     } else {
       setLocation('/applicant-dashboard')
@@ -581,53 +324,56 @@ const RegisterPage = () => {
   }
 
   const handleOAuthError = (error) => {
-    // Handle OAuth authentication error
     console.error('OAuth error:', error)
     toast({
-      title: "Registration Failed",
-      description: error.message || "Failed to register with OAuth provider",
+      title: "Social Login Failed",
+      description: error || "Please try again or use email registration.",
       variant: "destructive"
     })
   }
 
-  const handleGenerateUsername = async () => {
-    if (!formData.firstName || !formData.lastName) {
-      toast({
-        title: "Error",
-        description: "Please enter your first and last name first",
-        variant: "destructive"
-      })
-      return
+  const addSkill = () => {
+    if (newSkill.trim() && !formData.skills.includes(newSkill.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        skills: [...prev.skills, newSkill.trim()]
+      }))
+      setNewSkill('')
     }
+  }
 
+  const removeSkill = (skillToRemove) => {
+    setFormData(prev => ({
+      ...prev,
+      skills: prev.skills.filter(skill => skill !== skillToRemove)
+    }))
+  }
+
+  const generateUsername = async () => {
     try {
-      const role = activeTab === 0 ? 'applicant' : 'recruiter'
-      const response = await authAPI.generateUsername(
-        formData.firstName,
-        formData.lastName,
-        role
-      )
-
-      const result = response.data
-
-      if (result.success) {
-        setFormData({
-          ...formData,
-          username: result.data.recommended
-        })
-        
+      if (!formData.firstName || !formData.lastName) {
         toast({
-          title: "Username Generated",
-          description: `Generated "${result.data.recommended}" using ${result.data.pattern} pattern`,
-          variant: "default"
-        })
-      } else {
-        toast({
-          title: "Generation Failed",
-          description: result.message || "Failed to generate username",
+          title: "Missing Information",
+          description: "Please enter your first and last name first.",
           variant: "destructive"
         })
+        return
       }
+
+      const baseUsername = `${formData.firstName.toLowerCase()}${formData.lastName.toLowerCase()}`
+      const randomSuffix = Math.floor(Math.random() * 1000)
+      const generatedUsername = `${baseUsername}${randomSuffix}`
+      
+      setFormData(prev => ({
+        ...prev,
+        username: generatedUsername
+      }))
+
+      toast({
+        title: "Username Generated",
+        description: `Generated username: ${generatedUsername}`,
+        variant: "default"
+      })
     } catch (error) {
       console.error('Username generation error:', error)
       toast({
@@ -639,919 +385,314 @@ const RegisterPage = () => {
   }
 
   return (
-    <>
+    <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', minHeight: { xs: 'auto', sm: '100vh' }, alignItems: 'center', p: { xs: 1, sm: 3 } }}>
       <Box sx={{ 
-        minHeight: '100vh',
-        height: 'auto',
-        display: 'flex',
-        flexDirection: { xs: 'column', md: 'row' },
-        overflow: 'auto'
+        width: { xs: 'calc(100% - 16px)', sm: '800px', md: '1000px', lg: '1200px' }, 
+        px: { xs: 1, sm: 3, md: 4 },
+        maxWidth: '100vw'
       }}>
-      {/* Left Side - Branding */}
-      {!isMobile && (
-        <BrandingSection sx={{ 
-          width: { xs: '100%', md: '40%' }, 
-          display: 'flex', 
-          alignItems: 'center', 
-          p: { xs: 3, sm: 4, md: 6 }
-        }}>
-          <Box sx={{ position: 'relative', zIndex: 1, width: '100%' }}>
-            {/* Logo and Title */}
-            <Box sx={{ mb: 6 }}>
-              <Typography variant="h2" fontWeight="bold" gutterBottom sx={{ 
-                color: 'white',
-                fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' }
-              }}>
-                🚀 FinAutoJobs
-              </Typography>
-              <Typography variant="h6" sx={{ 
-                color: 'rgba(255, 255, 255, 0.9)', 
-                lineHeight: 1.6,
-                fontSize: { xs: '0.9rem', sm: '1rem', md: '1.25rem' }
-              }}>
-                Join the premier platform connecting talent with opportunities in Finance & Automotive industries
-              </Typography>
-            </Box>
+        {/* Header */}
+        <Box sx={{ textAlign: 'center', mb: { xs: 3, sm: 4 } }}>
+          <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ fontSize: { xs: '1.75rem', sm: '2rem' } }}>
+            Create Your Account 🚀
+          </Typography>
+          <Typography variant="body1" color="text.secondary" paragraph sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+            Join thousands of professionals finding their dream jobs
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Already have an account?{' '}
+            <Link to="/login" style={{ color: theme.palette.primary.main, textDecoration: 'none', fontWeight: 600 }}>
+              Sign in here
+            </Link>
+          </Typography>
+        </Box>
 
-            {/* Features */}
-            <Box sx={{ mb: 6 }}>
-              <FeatureCard sx={{ mb: 3 }}>
-                <Avatar sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)' }}>
-                  <Calculate />
-                </Avatar>
-                <Box>
-                  <Typography variant="h6" fontWeight="bold" sx={{ 
-                    color: 'white',
-                    fontSize: { xs: '0.9rem', sm: '1rem', md: '1.25rem' }
-                  }}>
-                    💼 Finance Roles
-                  </Typography>
-                  <Typography variant="body2" sx={{ 
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    fontSize: { xs: '0.75rem', sm: '0.875rem' }
-                  }}>
-                    Investment Banking, Financial Analysis, Risk Management
-                  </Typography>
-                </Box>
-              </FeatureCard>
-
-              <FeatureCard sx={{ mb: 3 }}>
-                <Avatar sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)' }}>
-                  <DirectionsCar />
-                </Avatar>
-                <Box>
-                  <Typography variant="h6" fontWeight="bold" sx={{ 
-                    color: 'white',
-                    fontSize: { xs: '0.9rem', sm: '1rem', md: '1.25rem' }
-                  }}>
-                    🚗 Automotive Careers
-                  </Typography>
-                  <Typography variant="body2" sx={{ 
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    fontSize: { xs: '0.75rem', sm: '0.875rem' }
-                  }}>
-                    Engineering, Manufacturing, Sales & Marketing
-                  </Typography>
-                </Box>
-              </FeatureCard>
-
-              <FeatureCard>
-                <Avatar sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)' }}>
-                  <TrendingUp />
-                </Avatar>
-                <Box>
-                  <Typography variant="h6" fontWeight="bold" sx={{ 
-                    color: 'white',
-                    fontSize: { xs: '0.9rem', sm: '1rem', md: '1.25rem' }
-                  }}>
-                    📈 Career Growth
-                  </Typography>
-                  <Typography variant="body2" sx={{ 
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    fontSize: { xs: '0.75rem', sm: '0.875rem' }
-                  }}>
-                    Premium opportunities with top-tier companies
-                  </Typography>
-                </Box>
-              </FeatureCard>
-            </Box>
-
-            {/* Stats */}
-            <Grid container spacing={4}>
-              <Grid item xs={4}>
-                <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="h3" fontWeight="bold" sx={{ color: 'white' }}>
-                    50K+
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
-                    Active Jobs
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={4}>
-                <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="h3" fontWeight="bold" sx={{ color: 'white' }}>
-                    25K+
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
-                    Companies
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={4}>
-                <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="h3" fontWeight="bold" sx={{ color: 'white' }}>
-                    100K+
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
-                    Professionals
-                  </Typography>
-                </Box>
-              </Grid>
-            </Grid>
-          </Box>
-        </BrandingSection>
-      )}
-
-      {/* Right Side - Registration Form */}
-      <Box
-        sx={{
-          flex: 1,
-          display: 'flex',
-          alignItems: { xs: 'flex-start', md: 'flex-start' },
-          justifyContent: 'center',
-          p: { xs: 2, sm: 3, md: 6 },
-          background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-          overflowY: 'auto',
-          minHeight: '100vh'
-        }}
-      >
-        <Box sx={{ 
-          maxWidth: { xs: '100%', sm: '450px' }, 
-          width: '100%', 
-          mx: 'auto', 
-          px: { xs: 1, sm: 2 },
-          my: { xs: 0, sm: 0 },
-          pb: { xs: 4, sm: 2 }
-        }}>
-          {/* Mobile Logo */}
-          {isMobile && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
-              <Avatar
-                sx={{
-                  width: 64,
-                  height: 64,
-                  bgcolor: 'primary.main',
-                }}
-              >
-                <Business sx={{ fontSize: 32 }} />
-              </Avatar>
-            </Box>
-          )}
-
-          {/* Header */}
-          <Box sx={{ textAlign: 'center', mb: { xs: 3, sm: 4 } }}>
-            <Typography 
-              variant="h4" 
-              fontWeight="bold" 
-              gutterBottom
-              sx={{ 
-                fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' }
-              }}
+        <StyledCard>
+          <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
+            {/* Role Tabs */}
+            <Tabs
+              value={activeTab}
+              onChange={handleTabChange}
+              variant="fullWidth"
+              sx={{ mb: { xs: 3, sm: 4 } }}
             >
-              🎉 Join Us!
-            </Typography>
-            <Typography 
-              variant="body1" 
-              color="text.secondary" 
-              paragraph
-              sx={{ 
-                fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem' },
-                px: { xs: 1, sm: 0 }
-              }}
-            >
-              Create your account and start your career journey
-            </Typography>
-            <Typography 
-              variant="body2" 
-              color="text.secondary"
-              sx={{ 
-                fontSize: { xs: '0.875rem', sm: '1rem' },
-                px: { xs: 1, sm: 0 }
-              }}
-            >
-              Already have an account?{' '}
-              <Link to="/login" style={{ color: theme.palette.primary.main, textDecoration: 'none', fontWeight: 600 }}>
-                Sign in here
-              </Link>
-            </Typography>
-          </Box>
+              <Tab
+                icon={<Person />}
+                label="Job Seeker"
+                iconPosition="start"
+                sx={{ textTransform: 'none', fontWeight: 600 }}
+              />
+              <Tab
+                icon={<Work />}
+                label="Recruiter / HR"
+                iconPosition="start"
+                sx={{ textTransform: 'none', fontWeight: 600 }}
+              />
+            </Tabs>
 
-          <StyledCard>
-            <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
-              {/* Role Tabs */}
-              <Tabs
-                value={activeTab}
-                onChange={handleTabChange}
-                variant="fullWidth"
-                sx={{ 
-                  mb: 4,
-                  '& .MuiTab-root': {
-                    fontSize: { xs: '0.875rem', sm: '1rem' },
-                    minHeight: { xs: 48, sm: 56 },
-                    padding: { xs: '8px 12px', sm: '12px 16px' }
-                  }
-                }}
-              >
-                <Tab
-                  icon={<Person sx={{ fontSize: { xs: 20, sm: 24 } }} />}
-                  label={isMobile ? "Applicant" : "Applicant"}
-                  iconPosition="start"
-                  sx={{ textTransform: 'none', fontWeight: 600 }}
-                />
-                <Tab
-                  icon={<Work sx={{ fontSize: { xs: 20, sm: 24 } }} />}
-                  label={isMobile ? "Recruiter" : "Recruiter / HR"}
-                  iconPosition="start"
-                  sx={{ textTransform: 'none', fontWeight: 600 }}
-                />
-              </Tabs>
+            {/* Registration Form */}
+            <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
+              {/* Registration Error Alert */}
+              {registrationError && (
+                <Alert severity="error" sx={{ mb: 3 }}>
+                  {registrationError}
+                </Alert>
+              )}
 
-              {/* Registration Form */}
-              <Box component="form" onSubmit={handleSubmit}>
-                {/* Name Fields */}
-                <Grid container spacing={{ xs: 2.75, sm: 3 }} sx={{ mb: 3 }}>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      name="firstName"
-                      label="First Name"
-                      value={formData.firstName}
-                      onChange={handleChange}
-                      required
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Person color="primary" />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      name="lastName"
-                      label="Last Name"
-                      value={formData.lastName}
-                      onChange={handleChange}
-                      required
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Person color="primary" />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Grid>
-                </Grid>
-
-                {/* Username Field - Optional with Auto-Generation */}
-                <Box sx={{ mb: { xs: 3.75, sm: 4 }, mt: { xs: 3.75, sm: 3 } }}>
+              {/* Name Fields */}
+              <Grid container spacing={{ xs: 2.75, sm: 3 }} sx={{ mb: { xs: 3.75, sm: 4 } }}>
+                <Grid item xs={12} sm={6}>
                   <TextField
                     fullWidth
-                    name="username"
-                    label="Username (Optional)"
-                    value={formData.username}
+                    name="firstName"
+                    label="First Name"
+                    value={formData.firstName}
                     onChange={handleChange}
-                    helperText={formData.username ? "Username will be validated" : "Leave empty to auto-generate based on your name"}
+                    error={!!errors.firstName}
+                    helperText={errors.firstName}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
-                          <Person color="primary" />
-                        </InputAdornment>
-                      ),
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <Button
-                            size="small"
-                            onClick={handleGenerateUsername}
-                            disabled={!formData.firstName || !formData.lastName}
-                            sx={{ 
-                              minWidth: 'auto',
-                              px: 1,
-                              fontSize: '0.75rem'
-                            }}
-                          >
-                            Generate
-                          </Button>
+                          <Person color={errors.firstName ? "error" : "primary"} />
                         </InputAdornment>
                       ),
                     }}
                   />
-                  {formData.username && (
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                      💡 Tip: Username will be auto-generated if left empty
-                    </Typography>
-                  )}
-                </Box>
-
-                  {/* Email Field with Verification */}
-                  <Box sx={{ mb: { xs: 4, sm: 4.5 } }}>
-                    <Box sx={{ 
-                      display: 'flex', 
-                      flexDirection: { xs: 'column', sm: 'row' },
-                      gap: 2, 
-                      alignItems: { xs: 'stretch', sm: 'flex-start' }
-                    }}>
-                      <TextField
-                        fullWidth
-                        name="email"
-                        label="Email Address *"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
-                        error={emailError}
-                        helperText={emailErrorMessage || (emailError ? "Please enter a valid email address" : "Email is required • Verification is optional")}
-                        InputProps={{
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <Email color="primary" />
-                            </InputAdornment>
-                          ),
-                          endAdornment: emailVerified ? (
-                            <InputAdornment position="end">
-                              <CheckCircle color="success" />
-                            </InputAdornment>
-                          ) : null,
-                        }}
-                      />
-                      <Box sx={{ 
-                        display: 'flex', 
-                        flexDirection: { xs: 'row', sm: 'column' },
-                        gap: 1,
-                        minWidth: { xs: 'auto', sm: 140 }
-                      }}>
-                        <Button
-                          variant="outlined"
-                          size="medium"
-                          onClick={handleSendEmailOTP}
-                          disabled={!formData.email || emailVerified || emailOTPSent || emailError}
-                          startIcon={<Email sx={{ display: { xs: 'none', sm: 'block' } }} />}
-                          sx={{ 
-                            minWidth: { xs: 'auto', sm: 140 },
-                            height: { xs: 'auto', sm: 56 },
-                            whiteSpace: 'nowrap',
-                            flex: { xs: 1, sm: 'none' },
-                            fontSize: { xs: '0.875rem', sm: '1rem' }
-                          }}
-                        >
-                          {emailVerified ? 'Verified' : emailOTPSent ? 'OTP Sent' : isMobile ? 'Verify' : 'Verify (Optional)'}
-                        </Button>
-                        {!emailVerified && !emailOTPSent && (
-                          <Button
-                            variant="text"
-                            size="small"
-                            onClick={() => {
-                              toast({
-                                title: "Email Verification Skipped",
-                                description: "You can verify your email later in your profile settings",
-                                variant: "default"
-                              })
-                            }}
-                            sx={{ 
-                              fontSize: '0.75rem',
-                              minHeight: 'auto',
-                              py: 0.5,
-                              flex: { xs: 1, sm: 'none' }
-                            }}
-                          >
-                            Skip
-                          </Button>
-                        )}
-                      </Box>
-                    </Box>
-                    {emailVerified ? (
-                      <Box sx={{ mt: 1 }}>
-                        <Chip
-                          label="Email Verified"
-                          color="success"
-                          size="small"
-                          icon={<CheckCircle />}
-                        />
-                      </Box>
-                    ) : (
-                      <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                        📧 Email verification is optional but recommended for account recovery and notifications
-                      </Typography>
-                    )}
-                  </Box>
-
-                {/* Phone Number Field with Verification */}
-                <Box sx={{ mb: { xs: 4, sm: 4.5 } }}>
-                  <Box sx={{ 
-                    display: 'flex', 
-                    flexDirection: { xs: 'column', sm: 'row' },
-                    gap: 2, 
-                    alignItems: { xs: 'stretch', sm: 'flex-start' }
-                  }}>
-                    <TextField
-                      fullWidth
-                      name="phone"
-                      label="Phone Number *"
-                      type="tel"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      required
-                      placeholder="+91 9876543210"
-                      error={phoneError}
-                      helperText={phoneErrorMessage || (phoneError ? "Please enter a valid Indian phone number (e.g., +91 9876543210)" : "Phone number is required • Verification is optional")}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Phone color="primary" />
-                          </InputAdornment>
-                        ),
-                        endAdornment: phoneVerified ? (
-                          <InputAdornment position="end">
-                            <CheckCircle color="success" />
-                          </InputAdornment>
-                        ) : null,
-                      }}
-                    />
-                    <Box sx={{ 
-                      display: 'flex', 
-                      flexDirection: { xs: 'row', sm: 'column' },
-                      gap: 1,
-                      minWidth: { xs: 'auto', sm: 140 }
-                    }}>
-                      <Button
-                        variant="outlined"
-                        size="medium"
-                        onClick={handleSendPhoneOTP}
-                        disabled={!formData.phone || phoneVerified || phoneOTPSent || phoneError}
-                        startIcon={<Phone sx={{ display: { xs: 'none', sm: 'block' } }} />}
-                        sx={{ 
-                          minWidth: { xs: 'auto', sm: 140 },
-                          height: { xs: 'auto', sm: 56 },
-                          whiteSpace: 'nowrap',
-                          flex: { xs: 1, sm: 'none' },
-                          fontSize: { xs: '0.875rem', sm: '1rem' }
-                        }}
-                      >
-                        {phoneVerified ? 'Verified' : phoneOTPSent ? 'OTP Sent' : isMobile ? 'Verify' : 'Verify (Optional)'}
-                      </Button>
-                      {!phoneVerified && !phoneOTPSent && (
-                        <Button
-                          variant="text"
-                          size="small"
-                          onClick={() => {
-                            toast({
-                              title: "Phone Verification Skipped",
-                              description: "You can verify your phone number later in your profile settings",
-                              variant: "default"
-                            })
-                          }}
-                          sx={{ 
-                            fontSize: '0.75rem',
-                            minHeight: 'auto',
-                            py: 0.5,
-                            flex: { xs: 1, sm: 'none' }
-                          }}
-                        >
-                          Skip
-                        </Button>
-                      )}
-                    </Box>
-                  </Box>
-                  {phoneVerified ? (
-                    <Box sx={{ mt: 1 }}>
-                      <Chip
-                        label="Phone Verified"
-                        color="success"
-                        size="small"
-                        icon={<CheckCircle />}
-                      />
-                    </Box>
-                  ) : (
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                      📱 Phone verification is optional but recommended for enhanced security and account recovery
-                    </Typography>
-                  )}
-                </Box>
-
-                {/* Role-specific fields */}
-                {activeTab === 0 ? (
-                  <>
-                    {/* Skills Field */}
-                    <Box sx={{ mb: 3 }}>
-                      <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                        <Autocomplete
-                          fullWidth
-                          options={skillOptions}
-                          value={selectedSkill}
-                          onChange={(event, newValue) => setSelectedSkill(newValue)}
-                          renderInput={(params) => (
-                            <TextField
-                              {...params}
-                              label="Add Skills"
-                              InputProps={{
-                                ...params.InputProps,
-                                startAdornment: (
-                                  <InputAdornment position="start">
-                                    <Work color="primary" />
-                                  </InputAdornment>
-                                ),
-                              }}
-                            />
-                          )}
-                        />
-                        <Button
-                          variant="contained"
-                          onClick={handleSkillAdd}
-                          disabled={!selectedSkill}
-                          startIcon={<Add />}
-                          sx={{ minWidth: 120 }}
-                        >
-                          Add
-                        </Button>
-                      </Box>
-
-                      {/* Selected Skills Display */}
-                      {formData.skills.length > 0 && (
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                          {formData.skills.map((skill, index) => (
-                            <Chip
-                              key={index}
-                              label={skill}
-                              onDelete={() => handleSkillRemove(skill)}
-                              color="primary"
-                              variant="outlined"
-                            />
-                          ))}
-                        </Box>
-                      )}
-                    </Box>
-
-                    {/* Qualification Field */}
-                    <FormControl fullWidth sx={{ mb: 3 }}>
-                      <InputLabel>Highest Qualification</InputLabel>
-                      <Select
-                        name="qualification"
-                        value={formData.qualification}
-                        onChange={handleChange}
-                        startAdornment={
-                          <InputAdornment position="start">
-                            <School color="primary" />
-                          </InputAdornment>
-                        }
-                      >
-                        {qualificationOptions.map((option) => (
-                          <MenuItem key={option} value={option}>
-                            {option}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </>
-                ) : (
-                  <>
-                    {/* Company Name Field */}
-                    <TextField
-                      fullWidth
-                      name="companyName"
-                      label="Company Name"
-                      value={formData.companyName}
-                      onChange={handleChange}
-                      required
-                      sx={{ mb: 3 }}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Business color="primary" />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-
-                    {/* Position Field */}
-                    <TextField
-                      fullWidth
-                      name="position"
-                      label="Your Position"
-                      value={formData.position}
-                      onChange={handleChange}
-                      required
-                      sx={{ mb: 3 }}
-                      placeholder="e.g., HR Manager, Talent Acquisition"
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Work color="primary" />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </>
-                )}
-
-                {/* Password Fields */}
-                <Grid container spacing={{ xs: 2.75, sm: 3 }} sx={{ mb: { xs: 4, sm: 4.5 } }}>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      name="password"
-                      label="Password"
-                      type={showPassword ? 'text' : 'password'}
-                      value={formData.password}
-                      onChange={handleChange}
-                      required
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Lock color="primary" />
-                          </InputAdornment>
-                        ),
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <IconButton
-                              onClick={() => setShowPassword(!showPassword)}
-                              edge="end"
-                            >
-                              {showPassword ? <VisibilityOff /> : <Visibility />}
-                            </IconButton>
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                    
-                    {/* Password Strength Indicator */}
-                    {formData.password && (
-                      <Box sx={{ mt: 1, mb: 2 }}>
-                        <Typography variant="caption" sx={{ mb: 1, display: 'block', fontWeight: 'medium' }}>
-                          Password Requirements:
-                        </Typography>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            {passwordStrength.hasMinLength ? (
-                              <CheckCircle sx={{ fontSize: 16, color: 'success.main' }} />
-                            ) : (
-                              <Cancel sx={{ fontSize: 16, color: 'error.main' }} />
-                            )}
-                            <Typography variant="caption" color={passwordStrength.hasMinLength ? 'success.main' : 'error.main'}>
-                              At least 8 characters
-                            </Typography>
-                          </Box>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            {passwordStrength.hasUppercase ? (
-                              <CheckCircle sx={{ fontSize: 16, color: 'success.main' }} />
-                            ) : (
-                              <Cancel sx={{ fontSize: 16, color: 'error.main' }} />
-                            )}
-                            <Typography variant="caption" color={passwordStrength.hasUppercase ? 'success.main' : 'error.main'}>
-                              One uppercase letter (A-Z)
-                            </Typography>
-                          </Box>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            {passwordStrength.hasLowercase ? (
-                              <CheckCircle sx={{ fontSize: 16, color: 'success.main' }} />
-                            ) : (
-                              <Cancel sx={{ fontSize: 16, color: 'error.main' }} />
-                            )}
-                            <Typography variant="caption" color={passwordStrength.hasLowercase ? 'success.main' : 'error.main'}>
-                              One lowercase letter (a-z)
-                            </Typography>
-                          </Box>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            {passwordStrength.hasNumber ? (
-                              <CheckCircle sx={{ fontSize: 16, color: 'success.main' }} />
-                            ) : (
-                              <Cancel sx={{ fontSize: 16, color: 'error.main' }} />
-                            )}
-                            <Typography variant="caption" color={passwordStrength.hasNumber ? 'success.main' : 'error.main'}>
-                              One number (0-9)
-                            </Typography>
-                          </Box>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            {passwordStrength.hasSpecialChar ? (
-                              <CheckCircle sx={{ fontSize: 16, color: 'success.main' }} />
-                            ) : (
-                              <Cancel sx={{ fontSize: 16, color: 'error.main' }} />
-                            )}
-                            <Typography variant="caption" color={passwordStrength.hasSpecialChar ? 'success.main' : 'error.main'}>
-                              One special character (@$!%*?&)
-                            </Typography>
-                          </Box>
-                        </Box>
-                      </Box>
-                    )}
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      name="confirmPassword"
-                      label="Confirm Password"
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      required
-                      error={!!(formData.confirmPassword && formData.password && formData.password !== formData.confirmPassword)}
-                      helperText={
-                        formData.confirmPassword && formData.password
-                          ? formData.password === formData.confirmPassword
-                            ? "✓ Passwords match"
-                            : "✗ Passwords do not match"
-                          : ""
-                      }
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Security
-                              color={
-                                formData.confirmPassword && formData.password
-                                  ? formData.password === formData.confirmPassword
-                                    ? "primary"
-                                    : "secondary"
-                                  : "primary"
-                              }
-                              sx={{
-                                color: formData.confirmPassword && formData.password
-                                  ? formData.password === formData.confirmPassword
-                                    ? "success.main"
-                                    : "error.main"
-                                  : "primary.main"
-                              }}
-                            />
-                          </InputAdornment>
-                        ),
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <IconButton
-                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                              edge="end"
-                            >
-                              {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                            </IconButton>
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Grid>
                 </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    name="lastName"
+                    label="Last Name"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    error={!!errors.lastName}
+                    helperText={errors.lastName}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Person color={errors.lastName ? "error" : "primary"} />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+              </Grid>
 
-                {/* Terms and Conditions */}
-                <FormControlLabel
-                  sx={{ mb: { xs: 3, sm: 3.5 } }}
-                  control={
-                    <Checkbox
-                      checked={acceptTerms}
-                      onChange={(e) => setAcceptTerms(e.target.checked)}
-                      color="primary"
-                    />
-                  }
-                  label={
-                    <Typography variant="body2">
-                      I agree to the{' '}
-                      <Link to="/terms-of-service" style={{ color: theme.palette.primary.main }}>
-                        Terms & Conditions
-                      </Link>{' '}
-                      and{' '}
-                      <Link to="/privacy-policy" style={{ color: theme.palette.primary.main }}>
-                        Privacy Policy
-                      </Link>
-                    </Typography>
-                  }
-                />
-
-                {/* Submit Button */}
-                <Button
-                  type="submit"
+              {/* Username Field */}
+              <Box sx={{ mb: { xs: 3.75, sm: 4 } }}>
+                <TextField
                   fullWidth
-                  variant="contained"
-                  size="large"
-                  disabled={loading}
-                  sx={{
-                    py: 2,
-                    mb: 3,
-                    color: 'white',
-                    background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-                    '&:hover': {
-                      background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.secondary.dark} 100%)`,
-                    },
+                  name="username"
+                  label="Username (Optional)"
+                  value={formData.username}
+                  onChange={handleChange}
+                  error={!!errors.username}
+                  helperText={errors.username || "Leave empty to auto-generate from your name"}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <AlternateEmail color={errors.username ? "error" : "primary"} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: !formData.username && (
+                      <InputAdornment position="end">
+                        <Button
+                          size="small"
+                          onClick={generateUsername}
+                          variant="outlined"
+                          sx={{ minWidth: 'auto', px: 2 }}
+                        >
+                          Generate
+                        </Button>
+                      </InputAdornment>
+                    ),
                   }}
-                >
-                  {loading ? 'Creating Account...' : 'Create Account'}
-                </Button>
-
-                {/* Already have account message */}
-                <Box sx={{ mt: 2, textAlign: 'center' }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Already have an account?{' '}
-                    <Link 
-                      to="/login" 
-                      style={{ 
-                        color: theme.palette.primary.main,
-                        textDecoration: 'none',
-                        fontWeight: 500
-                      }}
-                    >
-                      Sign in here
-                    </Link>
+                />
+                {!formData.username && (
+                  <Typography variant="caption" color="primary.main" sx={{ mt: 1, display: 'block' }}>
+                    💡 Tip: Username will be auto-generated if left empty
                   </Typography>
-                </Box>
+                )}
+              </Box>
 
-                <Divider sx={{ my: 3 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Or sign up with
-                  </Typography>
-                </Divider>
-
-                <OAuthButtons
-                  role={activeTab === 0 ? 'applicant' : 'recruiter'}
-                  onSuccess={handleOAuthSuccess}
-                  onError={handleOAuthError}
+              {/* Email Field */}
+              <Box sx={{ mb: { xs: 4, sm: 4.5 } }}>
+                <TextField
+                  fullWidth
+                  name="email"
+                  label="Email Address"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  error={!!errors.email}
+                  helperText={errors.email}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Email color={errors.email ? "error" : "primary"} />
+                      </InputAdornment>
+                    ),
+                  }}
                 />
               </Box>
-            </CardContent>
-          </StyledCard>
-        </Box>
+
+              {/* Phone Field */}
+              <Box sx={{ mb: { xs: 4, sm: 4.5 } }}>
+                <TextField
+                  fullWidth
+                  name="phone"
+                  label="Phone Number"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  error={!!errors.phone}
+                  helperText={errors.phone}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Phone color={errors.phone ? "error" : "primary"} />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Box>
+
+              {/* Password Fields */}
+              <Grid container spacing={{ xs: 2.75, sm: 3 }} sx={{ mb: { xs: 4, sm: 4.5 } }}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    name="password"
+                    label="Password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={formData.password}
+                    onChange={handleChange}
+                    error={!!errors.password}
+                    helperText={errors.password}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Lock color={errors.password ? "error" : "primary"} />
+                        </InputAdornment>
+                      ),
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={() => setShowPassword(!showPassword)}
+                            edge="end"
+                          >
+                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    name="confirmPassword"
+                    label="Confirm Password"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    error={!!errors.confirmPassword}
+                    helperText={errors.confirmPassword}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Lock color={errors.confirmPassword ? "error" : "primary"} />
+                        </InputAdornment>
+                      ),
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            edge="end"
+                          >
+                            {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+              </Grid>
+
+              {/* Terms and Conditions */}
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={agreedToTerms}
+                    onChange={(e) => setAgreedToTerms(e.target.checked)}
+                    color="primary"
+                  />
+                }
+                label={
+                  <Typography variant="body2">
+                    I agree to the{' '}
+                    <Link href="/terms" style={{ color: theme.palette.primary.main }}>
+                      Terms of Service
+                    </Link>{' '}
+                    and{' '}
+                    <Link href="/privacy" style={{ color: theme.palette.primary.main }}>
+                      Privacy Policy
+                    </Link>
+                  </Typography>
+                }
+                sx={{ mb: { xs: 3, sm: 3.5 } }}
+              />
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                size="large"
+                disabled={loading}
+                sx={{
+                  py: 2,
+                  mb: 3,
+                  borderRadius: '8px',
+                  fontWeight: 600,
+                  fontSize: { xs: '1rem', sm: '1.1rem' },
+                  textTransform: 'none',
+                  color: 'white',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  border: 'none',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 8px 25px rgba(102, 126, 234, 0.6)',
+                    background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)',
+                  },
+                  '&:active': {
+                    transform: 'translateY(0px)',
+                  },
+                  '&:disabled': {
+                    background: 'linear-gradient(135deg, #a0a0a0 0%, #808080 100%)',
+                    transform: 'none',
+                    boxShadow: 'none',
+                  },
+                }}
+              >
+                {loading ? 'Creating Account...' : 'Create Account'}
+              </Button>
+
+              <Divider sx={{ my: 3 }} />
+
+              <OAuthButtons
+                role={activeTab === 0 ? 'applicant' : 'recruiter'}
+                onSuccess={handleOAuthSuccess}
+                onError={handleOAuthError}
+              />
+            </Box>
+          </CardContent>
+        </StyledCard>
       </Box>
-      </Box>
+    </Box>
+  );
+};
 
-      {/* Email OTP Verification Dialog */}
-      {console.log('🔍 Rendering Dialog - showEmailOTP:', showEmailOTP)}
-      <Dialog 
-        open={showEmailOTP} 
-        onClose={() => setShowEmailOTP(false)} 
-        maxWidth="sm" 
-        fullWidth
-        PaperProps={{
-          sx: {
-            m: { xs: 2, sm: 3 },
-            width: { xs: 'calc(100% - 32px)', sm: 'auto' }
-          }
-        }}
-      >
-        <DialogTitle>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Email color="primary" />
-            <Typography variant="h6">Verify Email Address</Typography>
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            We've sent a 6-digit verification code to <strong>{formData.email}</strong>
-          </Typography>
-          <OTPVerification
-            identifier={formData.email}
-            type="email"
-            onVerified={handleEmailOTPVerification}
-            onResend={handleSendEmailOTP}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowEmailOTP(false)}>Cancel</Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Phone OTP Verification Dialog */}
-      <Dialog 
-        open={showPhoneOTP} 
-        onClose={() => setShowPhoneOTP(false)} 
-        maxWidth="sm" 
-        fullWidth
-        PaperProps={{
-          sx: {
-            m: { xs: 2, sm: 3 },
-            width: { xs: 'calc(100% - 32px)', sm: 'auto' }
-          }
-        }}
-      >
-        <DialogTitle>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Phone color="primary" />
-            <Typography variant="h6">Verify Phone Number</Typography>
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            We've sent a 6-digit verification code to <strong>{formData.phone}</strong>
-          </Typography>
-          <OTPVerification
-            identifier={formData.phone}
-            type="sms"
-            onVerified={handlePhoneOTPVerification}
-            onResend={handleSendPhoneOTP}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowPhoneOTP(false)}>Cancel</Button>
-        </DialogActions>
-      </Dialog>
-    </>
-  )
-}
-
-export default RegisterPage
+export default RegisterPage;

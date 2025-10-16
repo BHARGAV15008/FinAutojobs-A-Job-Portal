@@ -127,7 +127,7 @@ const SalaryCalculatorPage = () => {
     };
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Container maxWidth="md" sx={{ py: 4 }}>
             <Box sx={{ textAlign: 'center', mb: 6 }}>
                 <Typography variant="h3" component="h1" gutterBottom fontWeight="bold">
                     Salary Calculator

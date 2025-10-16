@@ -1,0 +1,208 @@
+/* Responsive styles for very small screens (Galaxy Z Fold, etc.) */
+
+/* Extra small screens (344px and below) */
+@media (max-width: 344px) {
+  /* Reduce font sizes for tiny screens */
+  .MuiTypography-h1 {
+    font-size: 1.5rem !important;
+  }
+  
+  .MuiTypography-h2 {
+    font-size: 1.3rem !important;
+  }
+  
+  .MuiTypography-h3 {
+    font-size: 1.2rem !important;
+  }
+  
+  .MuiTypography-h4 {
+    font-size: 1.1rem !important;
+  }
+  
+  .MuiTypography-h5 {
+    font-size: 1rem !important;
+  }
+  
+  .MuiTypography-h6 {
+    font-size: 0.9rem !important;
+  }
+
+  /* Reduce padding and margins */
+  .MuiPaper-root {
+    padding: 8px !important;
+  }
+  
+  .MuiCard-root {
+    margin-bottom: 8px !important;
+  }
+  
+  .MuiGrid-container {
+    margin: 0 !important;
+  }
+  
+  .MuiGrid-item {
+    padding: 4px !important;
+  }
+
+  /* Button adjustments */
+  .MuiButton-root {
+    padding: 6px 12px !important;
+    font-size: 0.8rem !important;
+  }
+  
+  .MuiButton-sizeSmall {
+    padding: 4px 8px !important;
+    font-size: 0.7rem !important;
+  }
+
+  /* Form field adjustments */
+  .MuiTextField-root {
+    margin-bottom: 8px !important;
+  }
+  
+  .MuiInputBase-root {
+    font-size: 0.8rem !important;
+  }
+
+  /* Chip adjustments */
+  .MuiChip-root {
+    font-size: 0.7rem !important;
+    height: 24px !important;
+  }
+
+  /* Avatar adjustments */
+  .MuiAvatar-root {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  /* Reduce spacing in lists */
+  .MuiList-root {
+    padding: 4px 0 !important;
+  }
+  
+  .MuiListItem-root {
+    padding: 4px 8px !important;
+  }
+
+  /* Table adjustments */
+  .MuiTableCell-root {
+    padding: 4px 8px !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* Dialog adjustments */
+  .MuiDialog-paper {
+    margin: 8px !important;
+    max-width: calc(100vw - 16px) !important;
+  }
+
+  /* Stepper adjustments */
+  .MuiStep-root {
+    padding: 4px !important;
+  }
+  
+  .MuiStepLabel-label {
+    font-size: 0.7rem !important;
+  }
+}
+
+/* Small folded screens (345px to 400px) */
+@media (min-width: 345px) and (max-width: 400px) {
+  .MuiTypography-h1 {
+    font-size: 1.8rem !important;
+  }
+  
+  .MuiTypography-h2 {
+    font-size: 1.6rem !important;
+  }
+  
+  .MuiTypography-h3 {
+    font-size: 1.4rem !important;
+  }
+
+  .MuiPaper-root {
+    padding: 12px !important;
+  }
+  
+  .MuiButton-root {
+    padding: 8px 16px !important;
+    font-size: 0.85rem !important;
+  }
+}
+
+/* Ensure no horizontal overflow */
+@media (max-width: 400px) {
+  * {
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
+  }
+  
+  .MuiContainer-root {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+  
+  /* Hide or minimize unnecessary elements */
+  .MuiToolbar-root {
+    min-height: 48px !important;
+  }
+  
+  /* Ensure grids stack properly */
+  .MuiGrid-item {
+    flex-basis: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  /* Company cards and job cards full width */
+  .MuiCard-root {
+    width: 100% !important;
+  }
+  
+  /* Search bars full width */
+  .MuiTextField-root {
+    width: 100% !important;
+  }
+  
+  /* Reduce navbar padding */
+  .MuiAppBar-root .MuiToolbar-root {
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+  }
+}
+
+/* Specific fixes for job cards and company cards */
+@media (max-width: 344px) {
+  /* Job card layout adjustments */
+  .job-card-container {
+    flex-direction: column !important;
+  }
+  
+  .job-card-content {
+    text-align: center !important;
+  }
+  
+  .job-card-salary {
+    margin-top: 8px !important;
+    text-align: center !important;
+  }
+  
+  /* Company card adjustments */
+  .company-card-header {
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+  
+  .company-logo {
+    margin-bottom: 8px !important;
+  }
+  
+  /* Filter panel adjustments */
+  .filter-panel {
+    padding: 8px !important;
+  }
+  
+  .filter-section {
+    margin-bottom: 12px !important;
+  }
+}

@@ -13,8 +13,12 @@ const Section = styled(Box)(({ theme }) => ({
 
 const PrivacyPolicyPage = () => {
     return (
-        <Container maxWidth="lg" sx={{ py: 8 }}>
-            <Typography variant="h2" component="h1" gutterBottom align="center">
+        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', py: 8 }}>
+            <Box sx={{ 
+                width: { xs: 'calc(100% - 32px)', sm: '800px', md: '1000px', lg: '1200px' }, 
+                px: { xs: 2, sm: 3, md: 4 } 
+            }}>
+            <Typography variant="h2" component="h1" gutterBottom align="center" color="text.primary">
                 Privacy Policy
             </Typography>
             <Typography variant="subtitle1" paragraph align="center" color="text.secondary" sx={{ mb: 8 }}>
@@ -171,7 +175,8 @@ const PrivacyPolicyPage = () => {
                     </ul>
                 </Section>
             </StyledPaper>
-        </Container>
+            </Box>
+        </Box>
     );
 };
 

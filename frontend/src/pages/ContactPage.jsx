@@ -140,18 +140,23 @@ const ContactPage = () => {
     <Box>
       {/* Hero Section */}
       <HeroSection>
-        <Container maxWidth="lg">
-          <Typography variant="h2" gutterBottom fontWeight="bold">
-            Get in Touch
-          </Typography>
-          <Typography variant="h5" sx={{ maxWidth: 600, mx: 'auto' }}>
-            Have questions about our specialized finance and automotive job portal? We're here to help you succeed in your career journey.
-          </Typography>
-        </Container>
+        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+            <Box sx={{ 
+                width: { xs: 'calc(100% - 32px)', sm: '800px', md: '1000px', lg: '1200px' }, 
+                px: { xs: 2, sm: 3, md: 4 } 
+            }}>
+              <Typography variant="h2" gutterBottom fontWeight="bold" color="white">
+                Get in Touch
+              </Typography>
+              <Typography variant="h5" sx={{ maxWidth: 600, mx: 'auto', color: 'white' }}>
+                Have questions about our specialized finance and automotive job portal? We're here to help you succeed in your career journey.
+              </Typography>
+            </Box>
+        </Box>
       </HeroSection>
 
       {/* Contact Info Cards */}
-      <Container maxWidth="lg" sx={{ mt: -4, position: 'relative', zIndex: 1 }}>
+      <Container maxWidth="md" sx={{ mt: -4, position: 'relative', zIndex: 1 }}>
         <Grid container spacing={3}>
           {contactInfo.map((info, index) => (
             <Grid item xs={12} sm={6} md={3} key={index}>
@@ -173,11 +178,11 @@ const ContactPage = () => {
       </Container>
 
       {/* Contact Form */}
-      <Container maxWidth="lg" sx={{ py: 8 }}>
+      <Container maxWidth="md" sx={{ py: 8 }}>
         <Grid container spacing={6}>
           <Grid item xs={12} md={8}>
             <Paper sx={{ p: 4 }}>
-              <Typography variant="h4" gutterBottom fontWeight="bold">
+              <Typography variant="h4" gutterBottom fontWeight="bold" color="text.primary">
                 Send us a Message
               </Typography>
               <Typography variant="body1" color="text.secondary" paragraph>
@@ -319,8 +324,12 @@ const ContactPage = () => {
 
       {/* Map Section */}
       <Box sx={{ bgcolor: 'grey.100', py: 8 }}>
-        <Container maxWidth="lg">
-          <Typography variant="h4" gutterBottom align="center" fontWeight="bold">
+        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+            <Box sx={{ 
+                width: { xs: 'calc(100% - 32px)', sm: '800px', md: '1000px', lg: '1200px' }, 
+                px: { xs: 2, sm: 3, md: 4 } 
+            }}>
+          <Typography variant="h4" gutterBottom align="center" fontWeight="bold" color="text.primary">
             Find Us
           </Typography>
           <Typography variant="body1" align="center" color="text.secondary" paragraph>
@@ -338,7 +347,8 @@ const ContactPage = () => {
               style={{ border: 0 }}
             />
           </Paper>
-        </Container>
+            </Box>
+        </Box>
       </Box>
     </Box>
   );

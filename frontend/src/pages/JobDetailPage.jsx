@@ -319,7 +319,7 @@ const JobDetailPage = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container maxWidth="md" sx={{ py: 4 }}>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
           <Box sx={{ textAlign: 'center' }}>
             <LinearProgress sx={{ mb: 2 }} />
@@ -332,14 +332,14 @@ const JobDetailPage = () => {
 
   if (!job) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container maxWidth="md" sx={{ py: 4 }}>
         <Alert severity="error">Job not found</Alert>
       </Container>
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="md" sx={{ py: 4 }}>
       {/* Back Button */}
       <Button
         component={Link}

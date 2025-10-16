@@ -6,7 +6,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Container maxWidth="lg">
+      <Container maxWidth="md">
         <Box sx={{ py: 4 }}>
           <Typography variant="h2" component="h1" gutterBottom>
             FinAutoJobs

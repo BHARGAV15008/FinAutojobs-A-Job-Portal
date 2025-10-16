@@ -232,7 +232,7 @@ const HomePage = () => {
 
       {/* Stats Section */}
       <Box sx={{ py: { xs: 8, md: 12 }, backgroundColor: 'background.paper' }}>
-        <Container maxWidth="lg">
+        <Container maxWidth="md">
           <Grid container spacing={4}>
             {stats.map((stat, index) => (
               <Grid item xs={12} sm={6} md={3} key={index}>
@@ -267,7 +267,7 @@ const HomePage = () => {
 
       {/* Features Section */}
       <Box sx={{ py: { xs: 8, md: 12 }, backgroundColor: 'background.default' }}>
-        <Container maxWidth="lg">
+        <Container maxWidth="md">
           <Box sx={{ textAlign: 'center', mb: { xs: 8, md: 12 } }}>
             <Typography variant="h2" component="h2" sx={{ fontWeight: 700, mb: 2 }}>
               Why Choose Us?
@@ -313,7 +313,7 @@ const HomePage = () => {
 
       {/* Featured Jobs */}
       <Box sx={{ py: { xs: 8, md: 12 }, backgroundColor: 'background.paper' }}>
-        <Container maxWidth="lg">
+        <Container maxWidth="md">
           <Box sx={{ textAlign: 'center', mb: { xs: 8, md: 12 } }}>
             <Typography variant="h2" component="h2" sx={{ fontWeight: 700, mb: 2 }}>
               Featured Jobs
@@ -428,7 +428,7 @@ const HomePage = () => {
 
       {/* Popular Searches */}
       <Box sx={{ py: { xs: 8, md: 12 }, backgroundColor: 'background.default' }}>
-        <Container maxWidth="lg">
+        <Container maxWidth="md">
           <Box sx={{ textAlign: 'center', mb: { xs: 8, md: 12 } }}>
             <Typography variant="h2" component="h2" sx={{ fontWeight: 700, mb: 2 }}>
               Popular Searches
@@ -500,7 +500,7 @@ const HomePage = () => {
 
       {/* Featured Companies */}
       <Box sx={{ py: { xs: 8, md: 12 }, backgroundColor: 'background.paper' }}>
-        <Container maxWidth="lg">
+        <Container maxWidth="md">
           <Box sx={{ textAlign: 'center', mb: { xs: 8, md: 12 } }}>
             <Typography variant="h2" component="h2" sx={{ fontWeight: 700, mb: 2 }}>
               Top Companies
@@ -550,7 +550,7 @@ const HomePage = () => {
 
       {/* Testimonials */}
       <Box sx={{ py: { xs: 8, md: 12 }, backgroundColor: 'background.default' }}>
-        <Container maxWidth="lg">
+        <Container maxWidth="md">
           <Box sx={{ textAlign: 'center', mb: { xs: 8, md: 12 } }}>
             <Typography variant="h2" component="h2" sx={{ fontWeight: 700, mb: 2 }}>
               Success Stories

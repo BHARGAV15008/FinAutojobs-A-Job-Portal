@@ -12,6 +12,7 @@ import NotificationSystem from './components/notifications/NotificationSystem';
 import AppRoutes from './routes/AppRoutes'
 import './styles/responsive.css'
 import './styles/dashboard-theme-fix.css'
+import './styles/tiny-screen-responsive.css'
 
 function App() {
   // Memoize query client to prevent recreation on re-renders

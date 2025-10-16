@@ -136,7 +136,7 @@ function CompanyDetailPage() {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4, display: 'flex', justifyContent: 'center' }}>
+      <Container maxWidth="md" sx={{ py: 4, display: 'flex', justifyContent: 'center' }}>
         <CircularProgress size={60} />
       </Container>
     )
@@ -144,7 +144,7 @@ function CompanyDetailPage() {
 
   if (error) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container maxWidth="md" sx={{ py: 4 }}>
         <Alert severity="error">{error}</Alert>
       </Container>
     )
@@ -152,14 +152,14 @@ function CompanyDetailPage() {
 
   if (!company) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container maxWidth="md" sx={{ py: 4 }}>
         <Alert severity="info">Company not found</Alert>
       </Container>
     )
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="md" sx={{ py: 4 }}>
       {/* Company Header */}
       <CompanyHeader>
         <Grid container spacing={3} alignItems="center">

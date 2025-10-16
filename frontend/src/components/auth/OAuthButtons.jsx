@@ -104,32 +104,92 @@ const OAuthButtons = ({ role = 'applicant', onSuccess, onError }) => {
                 </Alert>
             )}
 
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {oauthProviders.map((provider) => (
-                    <Button
-                        key={provider.name}
-                        variant="outlined"
-                        fullWidth
-                        startIcon={loading[provider.name] ? <CircularProgress size={20} /> : provider.icon}
-                        onClick={() => handleOAuthLogin(provider.name)}
-                        disabled={loading[provider.name]}
-                        sx={{
-                            py: 1.5,
-                            borderColor: provider.color,
-                            color: provider.textColor,
-                            backgroundColor: provider.bgColor,
-                            '&:hover': {
+            <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column',
+                gap: 2
+            }}>
+                {/* First row - Google and Microsoft */}
+                <Box sx={{ 
+                    display: 'flex', 
+                    gap: 1.5,
+                    flexDirection: { xs: 'column', sm: 'row' }
+                }}>
+                    {oauthProviders.slice(0, 2).map((provider) => (
+                        <Button
+                            key={provider.name}
+                            variant="outlined"
+                            fullWidth
+                            startIcon={loading[provider.name] ? <CircularProgress size={20} /> : provider.icon}
+                            onClick={() => handleOAuthLogin(provider.name)}
+                            disabled={loading[provider.name]}
+                            sx={{
+                                py: 1.5,
+                                borderRadius: '8px',
+                                borderColor: provider.color,
+                                color: provider.textColor,
                                 backgroundColor: provider.bgColor,
-                                opacity: 0.9,
-                            },
-                            '&:disabled': {
-                                opacity: 0.6,
-                            }
-                        }}
-                    >
-                        {loading[provider.name] ? 'Authenticating...' : provider.label}
-                    </Button>
-                ))}
+                                fontWeight: 500,
+                                textTransform: 'none',
+                                fontSize: '0.9rem',
+                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                '&:hover': {
+                                    backgroundColor: provider.bgColor,
+                                    opacity: 0.9,
+                                    transform: 'translateY(-1px)',
+                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                                },
+                                '&:disabled': {
+                                    opacity: 0.6,
+                                    transform: 'none',
+                                }
+                            }}
+                        >
+                            {loading[provider.name] ? 'Authenticating...' : provider.label}
+                        </Button>
+                    ))}
+                </Box>
+                
+                {/* Second row - Apple and LinkedIn */}
+                <Box sx={{ 
+                    display: 'flex', 
+                    gap: 1.5,
+                    flexDirection: { xs: 'column', sm: 'row' }
+                }}>
+                    {oauthProviders.slice(2, 4).map((provider) => (
+                        <Button
+                            key={provider.name}
+                            variant="outlined"
+                            fullWidth
+                            startIcon={loading[provider.name] ? <CircularProgress size={20} /> : provider.icon}
+                            onClick={() => handleOAuthLogin(provider.name)}
+                            disabled={loading[provider.name]}
+                            sx={{
+                                py: 1.5,
+                                borderRadius: '8px',
+                                borderColor: provider.color,
+                                color: provider.textColor,
+                                backgroundColor: provider.bgColor,
+                                fontWeight: 500,
+                                textTransform: 'none',
+                                fontSize: '0.9rem',
+                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                '&:hover': {
+                                    backgroundColor: provider.bgColor,
+                                    opacity: 0.9,
+                                    transform: 'translateY(-1px)',
+                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                                },
+                                '&:disabled': {
+                                    opacity: 0.6,
+                                    transform: 'none',
+                                }
+                            }}
+                        >
+                            {loading[provider.name] ? 'Authenticating...' : provider.label}
+                        </Button>
+                    ))}
+                </Box>
             </Box>
 
             {/* Development Test Buttons removed for production */}

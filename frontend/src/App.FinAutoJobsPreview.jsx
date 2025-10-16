@@ -47,7 +47,7 @@ const mockJob = {
 
 function ComponentShowcase() {
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="md" sx={{ py: 4 }}>
       <Typography variant="h3" gutterBottom align="center" fontWeight="bold">
         FinAutoJobs - Component Showcase
       </Typography>

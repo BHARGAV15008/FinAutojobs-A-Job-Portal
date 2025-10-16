@@ -176,7 +176,7 @@ const AddJobPage = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="md" sx={{ py: 4 }}>
       {/* Back Button */}
       <Button
         component={Link}

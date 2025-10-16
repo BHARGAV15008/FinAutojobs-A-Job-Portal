@@ -13,14 +13,14 @@ import {
     Chip,
     Paper,
     InputAdornment,
-    Tab,
-    Tabs,
-    Rating,
-    Divider,
-    useTheme,
-    useMediaQuery,
     IconButton,
     Tooltip,
+    Rating,
+    Tabs,
+    Tab,
+    CircularProgress,
+    useTheme,
+    useMediaQuery,
 } from '@mui/material';
 import {
     Search as SearchIcon,
@@ -360,19 +360,33 @@ const CompaniesPage = () => {
 
     if (loading) {
         return (
-            <Container maxWidth="lg" sx={{ py: 4 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-                    <Typography>Loading companies...</Typography>
+            <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', py: 4 }}>
+                <Box sx={{ 
+                    width: { xs: 'calc(100% - 32px)', sm: '800px', md: '1000px', lg: '1200px' }, 
+                    px: { xs: 2, sm: 3, md: 4 },
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    alignItems: 'center', 
+                    minHeight: '50vh', 
+                    flexDirection: 'column'
+                }}>
+                    <Typography variant="h4" gutterBottom>Loading companies...</Typography>
+                    <CircularProgress color="primary" size={40} sx={{ mt: 2 }} />
                 </Box>
-            </Container>
+            </Box>
         );
     }
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', py: 4 }}>
+            <Box sx={{ 
+                width: { xs: 'calc(100% - 16px)', sm: '800px', md: '1000px', lg: '1200px' }, 
+                px: { xs: 1, sm: 3, md: 4 },
+                maxWidth: '100vw'
+            }}>
             {/* Header */}
             <Box sx={{ textAlign: 'center', mb: 6 }}>
-                <Typography variant="h3" component="h1" gutterBottom fontWeight="bold">
+                <Typography variant="h3" component="h1" gutterBottom fontWeight="bold" color="text.primary">
                     Top Companies
                 </Typography>
                 <Typography variant="h6" color="text.secondary" paragraph>
@@ -504,7 +518,8 @@ const CompaniesPage = () => {
                     </Typography>
                 </Box>
             )}
-        </Container>
+            </Box>
+        </Box>
     );
 };
 

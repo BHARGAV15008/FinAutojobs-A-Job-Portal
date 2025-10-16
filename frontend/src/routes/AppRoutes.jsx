@@ -16,6 +16,7 @@ import OTPSignupPage from '../pages/OTPSignupPage';
 import RegisterPage from '../pages/RegisterPage';
 import LoginPage from '../pages/LoginPage';
 import JobsPage from '../pages/JobsPage';
+import AnimationTestPage from '../pages/AnimationTestPage';
 import ForgotPasswordForm from '../components/auth/ForgotPasswordForm';
 import ResetPasswordForm from '../components/auth/ResetPasswordForm';
 import OAuthCallback from '../pages/OAuthCallback';
@@ -110,6 +111,7 @@ const AppRoutes = () => {
             <Route path="/job-alerts">{() => <JobAlertsPage />}</Route>
             <Route path="/add-job">{() => <AddJobPage />}</Route>
             <Route path="/post-job">{() => <AddJobPage />}</Route>
+            <Route path="/animation-test">{() => <AnimationTestPage />}</Route>
             <Route path="/login">{() => <LoginPage />}</Route>
             <Route path="/otp-login">{() => <OTPLoginPage />}</Route>
             <Route path="/register">{() => <RegisterPage />}</Route>
@@ -221,47 +223,58 @@ const AppRoutes = () => {
 
       {/* Footer - Hide on dashboard and auth pages */}
       {!isDashboard && !isAuthPage && (
-        <Box component="footer" sx={{ bgcolor: 'grey.900', color: 'white', py: 1.5, mt: 'auto' }}>
-        <Box sx={{ maxWidth: '1200px', mx: 'auto', px: { xs: 2, sm: 3, lg: 4 } }}>
-          <Box sx={{ 
-            display: 'grid', 
-            gridTemplateColumns: { xs: '1fr', md: 'repeat(4, 1fr)' }, 
-            gap: 1.5 
-          }}>
-            <Box>
-              <Box component="h3" sx={{ fontSize: '0.875rem', fontWeight: 'bold', color: 'primary.main', mb: 0.5 }}>
-                FinAutoJobs
+        <Box component="footer" sx={{ bgcolor: 'grey.900', color: 'white', py: 4, mt: 'auto' }}>
+          <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+            <Box sx={{ 
+              width: { xs: 'calc(100% - 16px)', sm: '800px', md: '1000px', lg: '1200px' }, 
+              px: { xs: 1, sm: 3, md: 4 } 
+            }}>
+              <Box sx={{ 
+                display: 'grid', 
+                gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(4, 1fr)' }, 
+                gap: { xs: 3, md: 4 }
+              }}>
+                <Box>
+                  <Box component="h3" sx={{ fontSize: '1rem', fontWeight: 'bold', color: 'primary.main', mb: 1.5 }}>
+                    FinAutoJobs
+                  </Box>
+                  <Box component="p" sx={{ color: 'grey.400', mb: 1.5, fontSize: '0.875rem', lineHeight: 1.5 }}>
+                    India's leading specialized job platform connecting top talent with premier opportunities in Finance and Automotive sectors.
+                  </Box>
+                </Box>
+                <Box>
+                  <Box component="h4" sx={{ fontWeight: 600, mb: 1.5, fontSize: '0.9rem', color: 'white' }}>For Job Seekers</Box>
+                  <Box component="ul" sx={{ listStyle: 'none', p: 0, '& li': { mb: 0.5 } }}>
+                    <li><Box component="a" href="/jobs" sx={{ color: 'grey.400', textDecoration: 'none', fontSize: '0.9rem', '&:hover': { color: 'primary.main' } }}>Browse Jobs</Box></li>
+                    <li><Box component="a" href="/companies" sx={{ color: 'grey.400', textDecoration: 'none', fontSize: '0.9rem', '&:hover': { color: 'primary.main' } }}>Top Companies</Box></li>
+                    <li><Box component="a" href="/resume-builder" sx={{ color: 'grey.400', textDecoration: 'none', fontSize: '0.9rem', '&:hover': { color: 'primary.main' } }}>Resume Builder</Box></li>
+                    <li><Box component="a" href="/skills-assessment" sx={{ color: 'grey.400', textDecoration: 'none', fontSize: '0.9rem', '&:hover': { color: 'primary.main' } }}>Skills Assessment</Box></li>
+                  </Box>
+                </Box>
+                <Box>
+                  <Box component="h4" sx={{ fontWeight: 600, mb: 1.5, fontSize: '0.9rem', color: 'white' }}>Resources</Box>
+                  <Box component="ul" sx={{ listStyle: 'none', p: 0, '& li': { mb: 0.5 } }}>
+                    <li><Box component="a" href="/salary-insights" sx={{ color: 'grey.400', textDecoration: 'none', fontSize: '0.85rem', '&:hover': { color: 'primary.main' } }}>Salary Insights</Box></li>
+                    <li><Box component="a" href="/salary-calculator" sx={{ color: 'grey.400', textDecoration: 'none', fontSize: '0.85rem', '&:hover': { color: 'primary.main' } }}>Salary Calculator</Box></li>
+                    <li><Box component="a" href="/career-guidance" sx={{ color: 'grey.400', textDecoration: 'none', fontSize: '0.85rem', '&:hover': { color: 'primary.main' } }}>Career Guidance</Box></li>
+                    <li><Box component="a" href="/interview-prep" sx={{ color: 'grey.400', textDecoration: 'none', fontSize: '0.85rem', '&:hover': { color: 'primary.main' } }}>Interview Prep</Box></li>
+                  </Box>
+                </Box>
+                <Box>
+                  <Box component="h4" sx={{ fontWeight: 600, mb: 1.5, fontSize: '0.9rem', color: 'white' }}>Company</Box>
+                  <Box component="ul" sx={{ listStyle: 'none', p: 0, '& li': { mb: 0.5 } }}>
+                    <li><Box component="a" href="/about" sx={{ color: 'grey.400', textDecoration: 'none', fontSize: '0.9rem', '&:hover': { color: 'primary.main' } }}>About Us</Box></li>
+                    <li><Box component="a" href="/contact" sx={{ color: 'grey.400', textDecoration: 'none', fontSize: '0.9rem', '&:hover': { color: 'primary.main' } }}>Contact</Box></li>
+                    <li><Box component="a" href="/privacy-policy" sx={{ color: 'grey.400', textDecoration: 'none', fontSize: '0.9rem', '&:hover': { color: 'primary.main' } }}>Privacy Policy</Box></li>
+                    <li><Box component="a" href="/terms-of-service" sx={{ color: 'grey.400', textDecoration: 'none', fontSize: '0.9rem', '&:hover': { color: 'primary.main' } }}>Terms of Service</Box></li>
+                  </Box>
+                </Box>
               </Box>
-              <Box component="p" sx={{ color: 'grey.400', mb: 0.5, fontSize: '0.875rem' }}>
-                India's #1 job platform connecting millions of job seekers with top employers.
-              </Box>
-            </Box>
-            <Box>
-              <Box component="h4" sx={{ fontWeight: 600, mb: 0.5, fontSize: '0.875rem' }}>For Job Seekers</Box>
-              <Box component="ul" sx={{ listStyle: 'none', p: 0, '& li': { mb: 0.25 } }}>
-                <li><Box component="a" href="/jobs" sx={{ color: 'grey.400', textDecoration: 'none', fontSize: '0.875rem', '&:hover': { color: 'white' } }}>Browse Jobs</Box></li>
-                <li><Box component="a" href="/resume" sx={{ color: 'grey.400', textDecoration: 'none', fontSize: '0.875rem', '&:hover': { color: 'white' } }}>Resume Builder</Box></li>
-              </Box>
-            </Box>
-            <Box>
-              <Box component="h4" sx={{ fontWeight: 600, mb: 0.5, fontSize: '0.875rem' }}>For Employers</Box>
-              <Box component="ul" sx={{ listStyle: 'none', p: 0, '& li': { mb: 0.25 } }}>
-                <li><Box component="a" href="#" sx={{ color: 'grey.400', textDecoration: 'none', fontSize: '0.875rem', '&:hover': { color: 'white' } }}>Post Jobs</Box></li>
-                <li><Box component="a" href="#" sx={{ color: 'grey.400', textDecoration: 'none', fontSize: '0.875rem', '&:hover': { color: 'white' } }}>Search Candidates</Box></li>
-              </Box>
-            </Box>
-            <Box>
-              <Box component="h4" sx={{ fontWeight: 600, mb: 0.5, fontSize: '0.875rem' }}>Company</Box>
-              <Box component="ul" sx={{ listStyle: 'none', p: 0, '& li': { mb: 0.25 } }}>
-                <li><Box component="a" href="#" sx={{ color: 'grey.400', textDecoration: 'none', fontSize: '0.875rem', '&:hover': { color: 'white' } }}>About Us</Box></li>
-                <li><Box component="a" href="#" sx={{ color: 'grey.400', textDecoration: 'none', fontSize: '0.875rem', '&:hover': { color: 'white' } }}>Contact</Box></li>
+              <Box sx={{ borderTop: '1px solid', borderColor: 'grey.800', mt: 4, pt: 3, textAlign: 'center', color: 'grey.400' }}>
+                <Box component="p" sx={{ fontSize: '0.8rem', m: 0 }}>&copy; 2025 FinAutoJobs. All rights reserved.</Box>
               </Box>
             </Box>
           </Box>
-          <Box sx={{ borderTop: '1px solid', borderColor: 'grey.800', mt: 1.5, pt: 0.75, textAlign: 'center', color: 'grey.400' }}>
-            <Box component="p" sx={{ fontSize: '0.875rem', m: 0 }}>&copy; 2025 FinAutoJobs. All rights reserved.</Box>
-          </Box>
-        </Box>
         </Box>
       )}
     </Box>

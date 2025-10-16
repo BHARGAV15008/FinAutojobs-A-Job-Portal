@@ -1003,22 +1003,32 @@ const JobsPage = () => {
 
     if (loading) {
         return (
-            <Container maxWidth="lg" sx={{ py: 4 }}>
+            <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', py: 4 }}>
+            <Box sx={{ 
+                width: { xs: 'calc(100% - 32px)', sm: '800px', md: '1000px', lg: '1200px' }, 
+                px: { xs: 2, sm: 3, md: 4 } 
+            }}>
                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
                     <Box sx={{ textAlign: 'center' }}>
                         <LinearProgress sx={{ mb: 2 }} />
                         <Typography>Loading recruiter jobs...</Typography>
                     </Box>
                 </Box>
-            </Container>
+            </Box>
+        </Box>
         );
     }
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', py: 4 }}>
+            <Box sx={{ 
+                width: { xs: 'calc(100% - 16px)', sm: '800px', md: '1000px', lg: '1200px' }, 
+                px: { xs: 1, sm: 3, md: 4 },
+                maxWidth: '100vw'
+            }}>
             {/* Header */}
             <Box sx={{ textAlign: 'center', mb: 4 }}>
-                <Typography variant="h3" component="h1" gutterBottom fontWeight="bold">
+                <Typography variant="h3" component="h1" gutterBottom fontWeight="bold" color="text.primary">
                     Find Your Perfect Job
                 </Typography>
                 <Typography variant="h6" color="text.secondary" paragraph>
@@ -1181,23 +1191,20 @@ const JobsPage = () => {
                                     setSelectedSalaryRange('');
                                     handleSearch();
                                 }}
-                            >
-                                Clear All Filters
-                            </Button>
-                            <Button 
-                                variant="outlined" 
-                                onClick={async () => {
-                                    try {
-                                        // Create sample jobs for testing
-                                        const sampleJobs = [
-                                            {
-                                                title: "Senior Software Engineer",
-                                                company: "TechCorp",
-                                                location: "Mumbai, India",
-                                                type: "Full-time",
-                                                salary: "₹15-25 LPA",
-                                                experience: "3-5 years",
-                                                description: "We are looking for a skilled software engineer to join our team.",
+                            <Card 
+                            key={job.id} 
+                            className="job-card-container"
+                            sx={{ 
+                                mb: 2, 
+                                cursor: 'pointer',
+                                '&:hover': { 
+                                    boxShadow: 3,
+                                    transform: 'translateY(-2px)',
+                                    transition: 'all 0.2s ease-in-out'
+                                }
+                            }}
+                            onClick={() => setViewDetailsModal({ isOpen: true, job: { ...job, company: "TechCorp", location: "Mumbai, India", type: "Full-time", salary: "₹15-25 LPA", experience: "3-5 years", description: "We are looking for a skilled software engineer to join our team." } })}
+                        >
                                                 skills: ["React", "Node.js", "MongoDB"],
                                                 requirements: ["Bachelor's degree in CS", "3+ years experience"],
                                                 responsibilities: ["Develop web applications", "Code review"],
@@ -1506,7 +1513,7 @@ const JobsPage = () => {
 
             {/* Job Market Insights */}
             <Box sx={{ mt: 6 }}>
-                <Typography variant="h5" gutterBottom fontWeight="bold">
+                <Typography variant="h5" gutterBottom fontWeight="bold" color="text.primary">
                     Job Market Insights
                 </Typography>
                 <Grid container spacing={3}>
@@ -1755,7 +1762,8 @@ const JobsPage = () => {
                 user={user}
                 onSubmit={handleSubmitApplication}
             />
-        </Container>
+            </Box>
+        </Box>
     );
 };
 

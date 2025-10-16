@@ -151,7 +151,7 @@ class EmailService {
               <h2>Dear {{applicantName}},</h2>
               <p>Thank you for applying to the <strong>{{jobTitle}}</strong> position at <strong>{{companyName}}</strong>.</p>
               
-              <div style="background: white; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <div style="background: white; padding: 15px; border-radius: 6px; margin: 20px 0;">
                 <h3>Application Details:</h3>
                 <p><strong>Application ID:</strong> {{applicationId}}</p>
                 <p><strong>Position:</strong> {{jobTitle}}</p>
@@ -196,8 +196,8 @@ class EmailService {
             .content { padding: 20px; background: #f9f9f9; }
             .footer { padding: 20px; text-align: center; color: #666; }
             .button { display: inline-block; padding: 12px 24px; background: #2196F3; color: white; text-decoration: none; border-radius: 4px; }
-            .status-update { background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #4CAF50; margin: 20px 0; }
-            .timeline { background: white; padding: 15px; border-radius: 8px; margin: 20px 0; }
+            .status-update { background: white; padding: 20px; border-radius: 6px; border-left: 4px solid #4CAF50; margin: 20px 0; }
+            .timeline { background: white; padding: 15px; border-radius: 6px; margin: 20px 0; }
           </style>
         </head>
         <body>
@@ -256,8 +256,8 @@ class EmailService {
             .content { padding: 20px; background: #f9f9f9; }
             .footer { padding: 20px; text-align: center; color: #666; }
             .button { display: inline-block; padding: 12px 24px; background: #FF9800; color: white; text-decoration: none; border-radius: 4px; }
-            .applicant-info { background: white; padding: 15px; border-radius: 8px; margin: 20px 0; }
-            .highlight { background: #FFF3E0; padding: 15px; border-radius: 8px; border-left: 4px solid #FF9800; }
+            .applicant-info { background: white; padding: 15px; border-radius: 6px; margin: 20px 0; }
+            .highlight { background: #FFF3E0; padding: 15px; border-radius: 6px; border-left: 4px solid #FF9800; }
           </style>
         </head>
         <body>
@@ -314,7 +314,7 @@ class EmailService {
             .content { padding: 20px; background: #f9f9f9; }
             .footer { padding: 20px; text-align: center; color: #666; }
             .button { display: inline-block; padding: 12px 24px; background: #9C27B0; color: white; text-decoration: none; border-radius: 4px; }
-            .interview-details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #9C27B0; }
+            .interview-details { background: white; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #9C27B0; }
             .calendar-link { background: #E1BEE7; padding: 10px; border-radius: 4px; text-align: center; margin: 15px 0; }
           </style>
         </head>
@@ -382,7 +382,7 @@ class EmailService {
             .content { padding: 20px; background: #f9f9f9; }
             .footer { padding: 20px; text-align: center; color: #666; }
             .button { display: inline-block; padding: 12px 24px; background: #4CAF50; color: white; text-decoration: none; border-radius: 4px; margin: 5px; }
-            .offer-details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4CAF50; }
+            .offer-details { background: white; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #4CAF50; }
             .celebration { text-align: center; font-size: 48px; margin: 20px 0; }
           </style>
         </head>
@@ -949,7 +949,7 @@ class EmailService {
           .container { max-width: 600px; margin: 0 auto; background-color: white; border-radius: 10px; overflow: hidden; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
           .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
           .content { padding: 30px; }
-          .credentials-box { background-color: #f8f9fa; border: 2px solid #e9ecef; border-radius: 8px; padding: 20px; margin: 20px 0; }
+          .credentials-box { background-color: #f8f9fa; border: 2px solid #e9ecef; border-radius: 6px; padding: 20px; margin: 20px 0; }
           .credential-item { margin: 10px 0; padding: 8px; background-color: white; border-radius: 4px; border-left: 4px solid #667eea; }
           .password-highlight { background-color: #fff3cd; border-color: #ffeaa7; font-weight: bold; font-size: 16px; }
           .cta-button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }

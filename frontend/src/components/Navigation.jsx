@@ -227,14 +227,81 @@ const Navigation = () => {
         ))}
       </List>
       
-      {/* Authentication buttons for mobile when not logged in */}
-      {!user && (
-        <>
-          <Divider />
-          <List>
+      <Divider />
+      
+      {/* User menu items for mobile when logged in */}
+      {user ? (
+        <List>
+          {userMenuItems.map((item) => (
+            <ListItem
+              key={item.label}
+              component={Link}
+              href={item.path}
+              onClick={handleDrawerToggle}
+              selected={location === item.path}
+              sx={{ 
+                cursor: 'pointer',
+                position: 'relative',
+                transition: 'all 0.3s ease-in-out',
+                '&:hover': {
+                  bgcolor: 'rgba(25, 118, 210, 0.08)',
+                  transform: 'translateX(4px)',
+                  '& .MuiListItemIcon-root': {
+                    color: 'primary.main',
+                  },
+                  '& .MuiListItemText-primary': {
+                    color: 'primary.main',
+                    fontWeight: 600,
+                  },
+                },
+                '&.Mui-selected': {
+                  bgcolor: 'rgba(25, 118, 210, 0.12)',
+                  '& .MuiListItemIcon-root': {
+                    color: 'primary.main',
+                  },
+                  '& .MuiListItemText-primary': {
+                    color: 'primary.main',
+                    fontWeight: 600,
+                  },
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    right: 0,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: 4,
+                    height: '60%',
+                    bgcolor: 'primary.main',
+                    borderRadius: '4px 0 0 4px',
+                  },
+                },
+              }}
+            >
+              <ListItemIcon 
+                sx={{ 
+                  transition: 'color 0.3s ease-in-out',
+                  color: location === item.path ? 'primary.main' : 'text.secondary',
+                }}
+              >
+                {item.icon}
+              </ListItemIcon>
+              <ListItemText 
+                primary={item.label}
+                sx={{
+                  '& .MuiListItemText-primary': {
+                    transition: 'all 0.3s ease-in-out',
+                    fontWeight: location === item.path ? 600 : 400,
+                    color: location === item.path ? 'primary.main' : 'text.primary',
+                  },
+                }}
+              />
+            </ListItem>
+          ))}
+          
+          {user.role === 'recruiter' && (
             <ListItem
               component={Link}
-              href="/admin-login"
+              href="/recruiter-dashboard/jobs"
               onClick={handleDrawerToggle}
               sx={{ 
                 cursor: 'pointer',
@@ -253,64 +320,127 @@ const Navigation = () => {
               }}
             >
               <ListItemIcon>
-                <Shield />
+                <PostAdd />
               </ListItemIcon>
-              <ListItemText primary="Admin Login" />
+              <ListItemText primary="Post Job" />
             </ListItem>
-            
-            <ListItem
-              component={Link}
-              href="/login"
-              onClick={handleDrawerToggle}
-              sx={{ 
-                cursor: 'pointer',
-                transition: 'all 0.3s ease-in-out',
-                '&:hover': {
-                  bgcolor: 'rgba(25, 118, 210, 0.08)',
-                  transform: 'translateX(4px)',
-                  '& .MuiListItemIcon-root': {
-                    color: 'primary.main',
-                  },
-                  '& .MuiListItemText-primary': {
-                    color: 'primary.main',
-                    fontWeight: 600,
-                  },
+          )}
+          
+          <ListItem
+            onClick={() => {
+              handleDrawerToggle();
+              logout();
+            }}
+            sx={{ 
+              cursor: 'pointer',
+              transition: 'all 0.3s ease-in-out',
+              '&:hover': {
+                bgcolor: 'rgba(244, 67, 54, 0.08)',
+                transform: 'translateX(4px)',
+                '& .MuiListItemIcon-root': {
+                  color: 'error.main',
+                },
+                '& .MuiListItemText-primary': {
+                  color: 'error.main',
+                  fontWeight: 600,
+                },
+              },
+            }}
+          >
+            <ListItemIcon sx={{ color: 'error.main' }}>
+              <Logout />
+            </ListItemIcon>
+            <ListItemText 
+              primary="Logout" 
+              sx={{
+                '& .MuiListItemText-primary': {
+                  color: 'error.main',
                 },
               }}
-            >
-              <ListItemIcon>
-                <Login />
-              </ListItemIcon>
-              <ListItemText primary="Login" />
-            </ListItem>
-            
-            <ListItem
-              component={Link}
-              href="/register"
-              onClick={handleDrawerToggle}
-              sx={{ 
-                cursor: 'pointer',
-                transition: 'all 0.3s ease-in-out',
-                '&:hover': {
-                  bgcolor: 'rgba(25, 118, 210, 0.08)',
-                  transform: 'translateX(4px)',
-                  '& .MuiListItemIcon-root': {
-                    color: 'primary.main',
-                  },
-                  '& .MuiListItemText-primary': {
-                    color: 'primary.main',
-                    fontWeight: 600,
-                  },
+            />
+          </ListItem>
+        </List>
+      ) : (
+        /* Authentication buttons for mobile when not logged in */
+        <List>
+          <ListItem
+            component={Link}
+            href="/admin-login"
+            onClick={handleDrawerToggle}
+            sx={{ 
+              cursor: 'pointer',
+              transition: 'all 0.3s ease-in-out',
+              '&:hover': {
+                bgcolor: 'rgba(25, 118, 210, 0.08)',
+                transform: 'translateX(4px)',
+                '& .MuiListItemIcon-root': {
+                  color: 'primary.main',
                 },
-              }}
-            >
-              <ListItemIcon>
-                <Person />
-              </ListItemIcon>
-              <ListItemText primary="Sign Up" />
-            </ListItem>
-          </List>
-        </>
+                '& .MuiListItemText-primary': {
+                  color: 'primary.main',
+                  fontWeight: 600,
+                },
+              },
+            }}
+          >
+            <ListItemIcon>
+              <Shield />
+            </ListItemIcon>
+            <ListItemText primary="Admin Login" />
+          </ListItem>
+          
+          <ListItem
+            component={Link}
+            href="/login"
+            onClick={handleDrawerToggle}
+            sx={{ 
+              cursor: 'pointer',
+              transition: 'all 0.3s ease-in-out',
+              '&:hover': {
+                bgcolor: 'rgba(25, 118, 210, 0.08)',
+                transform: 'translateX(4px)',
+                '& .MuiListItemIcon-root': {
+                  color: 'primary.main',
+                },
+                '& .MuiListItemText-primary': {
+                  color: 'primary.main',
+                  fontWeight: 600,
+                },
+              },
+            }}
+          >
+            <ListItemIcon>
+              <Login />
+            </ListItemIcon>
+            <ListItemText primary="Login" />
+          </ListItem>
+          
+          <ListItem
+            component={Link}
+            href="/register"
+            onClick={handleDrawerToggle}
+            sx={{ 
+              cursor: 'pointer',
+              transition: 'all 0.3s ease-in-out',
+              '&:hover': {
+                bgcolor: 'rgba(25, 118, 210, 0.08)',
+                transform: 'translateX(4px)',
+                '& .MuiListItemIcon-root': {
+                  color: 'primary.main',
+                },
+                '& .MuiListItemText-primary': {
+                  color: 'primary.main',
+                  fontWeight: 600,
+                },
+              },
+            }}
+          >
+            <ListItemIcon>
+              <Person />
+            </ListItemIcon>
+            <ListItemText primary="Sign Up" />
+          </ListItem>
+        </List>
       )}
     </Box>
   );
@@ -327,14 +457,14 @@ const Navigation = () => {
         borderRadius: 0
       }}
     >
-      <Container maxWidth="lg" sx={{ px: { xs: 3, sm: 4, md: 5 } }}>
-        <Toolbar disableGutters sx={{ py: 0.25, minHeight: { xs: 42, sm: 44 }, justifyContent: 'center' }}>
-          {/* Logo - Desktop */}
-          <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', mr: 2 }}>
+      <Container maxWidth="md" sx={{ px: { xs: 3, sm: 4, md: 5 } }}>
+        <Toolbar disableGutters sx={{ py: 0.25, minHeight: { xs: 42, sm: 44 } }}>
+          {/* Logo - Always visible */}
+          <Box sx={{ display: 'flex', alignItems: 'center', mr: { xs: 'auto', lg: 2 } }}>
             <Link href="/">
               <Box sx={{
-                width: 30,
-                height: 30,
+                width: { xs: 28, lg: 30 },
+                height: { xs: 28, lg: 30 },
                 bgcolor: 'primary.main',
                 borderRadius: 1,
                 display: 'flex',
@@ -342,7 +472,7 @@ const Navigation = () => {
                 justifyContent: 'center',
                 mr: 1
               }}>
-                <Work sx={{ color: 'white', fontSize: 18 }} />
+                <Work sx={{ color: 'white', fontSize: { xs: 16, lg: 18 } }} />
               </Box>
             </Link>
             <Typography
@@ -354,69 +484,15 @@ const Navigation = () => {
                 fontWeight: 700,
                 color: 'text.primary',
                 textDecoration: 'none',
-                fontSize: '0.8rem',
+                fontSize: { xs: '0.75rem', lg: '0.8rem' },
               }}
             >
               FinAutoJobs
             </Typography>
           </Box>
 
-          {/* Mobile menu button */}
-          <Box sx={{ flexGrow: 0, display: { xs: 'flex', md: 'none' }, mr: 1 }}>
-            <IconButton
-              size="large"
-              aria-label="menu"
-              aria-controls="menu-appbar"
-              aria-haspopup="true"
-              onClick={handleDrawerToggle}
-              color="inherit"
-              sx={{ 
-                p: 1,
-                width: 40,
-                height: 40,
-                '&:hover': {
-                  bgcolor: 'rgba(0, 0, 0, 0.04)',
-                },
-              }}
-            >
-              <MenuIcon sx={{ fontSize: 28 }} />
-            </IconButton>
-          </Box>
-
-          {/* Logo - Mobile */}
-          <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center', flexGrow: 1 }}>
-            <Link href="/">
-              <Box sx={{
-                width: 28,
-                height: 28,
-                bgcolor: 'primary.main',
-                borderRadius: 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                mr: 1
-              }}>
-                <Work sx={{ color: 'white', fontSize: 16 }} />
-              </Box>
-            </Link>
-            <Typography
-              variant="subtitle1"
-              noWrap
-              component={Link}
-              href="/"
-              sx={{
-                fontWeight: 700,
-                color: 'text.primary',
-                textDecoration: 'none',
-                fontSize: '0.75rem',
-              }}
-            >
-              FinAutoJobs
-            </Typography>
-          </Box>
-
-          {/* Desktop Navigation */}
-          <Box sx={{ display: { xs: 'none', md: 'flex' }, justifyContent: 'center', flexGrow: 1 }}>
+          {/* Desktop Navigation - Show on large screens only */}
+          <Box sx={{ display: { xs: 'none', lg: 'flex' }, justifyContent: 'center', flexGrow: 1 }}>
             {mainMenuItems.map((item) => (
               <Box
                 key={item.label}
@@ -493,8 +569,30 @@ const Navigation = () => {
             ))}
           </Box>
 
-          {/* User menu */}
-          <Box sx={{ flexGrow: 0 }}>
+          {/* Mobile menu button - Show on tablets and mobile */}
+          <Box sx={{ display: { xs: 'flex', lg: 'none' }, ml: 'auto' }}>
+            <IconButton
+              size="large"
+              aria-label="menu"
+              aria-controls="menu-appbar"
+              aria-haspopup="true"
+              onClick={handleDrawerToggle}
+              color="inherit"
+              sx={{ 
+                p: 1,
+                width: 40,
+                height: 40,
+                '&:hover': {
+                  bgcolor: 'rgba(0, 0, 0, 0.04)',
+                },
+              }}
+            >
+              <MenuIcon sx={{ fontSize: 28 }} />
+            </IconButton>
+          </Box>
+
+          {/* Desktop User menu - Show on large screens only */}
+          <Box sx={{ display: { xs: 'none', lg: 'flex' }, flexGrow: 0 }}>
             {user ? (
               <>
                 {user.role === 'recruiter' && (
@@ -503,16 +601,15 @@ const Navigation = () => {
                     href="/recruiter-dashboard/jobs"
                     variant="contained"
                     color="primary"
-                    startIcon={<PostAdd sx={{ display: { xs: 'none', sm: 'block' } }} />}
+                    startIcon={<PostAdd />}
                     sx={{ 
-                      mr: { xs: 1, sm: 2 },
+                      mr: 2,
                       textTransform: 'none',
                       fontWeight: 600,
-                      px: { xs: 2, sm: 3 },
+                      px: 3,
                       py: 1,
                       borderRadius: 2,
-                      fontSize: { xs: '0.875rem', sm: '1rem' },
-                      minWidth: { xs: 'auto', sm: 'auto' },
+                      fontSize: '1rem',
                       transition: 'all 0.3s ease-in-out',
                       boxShadow: '0 2px 8px rgba(25, 118, 210, 0.3)',
                       '&:hover': {
@@ -522,8 +619,7 @@ const Navigation = () => {
                       },
                     }}
                   >
-                    <Box sx={{ display: { xs: 'none', sm: 'block' } }}>Post Job</Box>
-                    <Box sx={{ display: { xs: 'block', sm: 'none' } }}>Post</Box>
+                    Post Job
                   </Button>
                 )}
                 <Tooltip title="Open settings">
@@ -604,22 +700,21 @@ const Navigation = () => {
                 </Menu>
               </>
             ) : (
-              <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1, alignItems: 'center' }}>
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                 <Button
                   component={Link}
                   href="/admin-login"
                   variant="text"
                   size="small"
-                  startIcon={<Shield sx={{ display: { xs: 'none', sm: 'block' } }} />}
+                  startIcon={<Shield />}
                   sx={{
                     textTransform: 'none',
                     fontWeight: 500,
-                    px: { xs: 1, sm: 1.5 },
+                    px: 1.5,
                     py: 0.25,
                     borderRadius: 1,
                     color: 'text.secondary',
-                    fontSize: { xs: '0.7rem', sm: '0.8rem' },
-                    minWidth: { xs: 'auto', sm: 'auto' },
+                    fontSize: '0.8rem',
                     '&:hover': {
                       bgcolor: 'rgba(0, 0, 0, 0.04)',
                       color: 'primary.main',
@@ -633,21 +728,29 @@ const Navigation = () => {
                   href="/login"
                   variant="outlined"
                   color="primary"
-                  startIcon={<Login sx={{ display: { xs: 'none', sm: 'block' } }} />}
+                  startIcon={<Login />}
                   sx={{
                     textTransform: 'none',
-                    fontWeight: 500,
-                    px: { xs: 1.5, sm: 2 },
-                    py: 0.75,
-                    borderRadius: 2,
-                    fontSize: { xs: '0.8rem', sm: '0.875rem' },
-                    minWidth: { xs: 'auto', sm: 'auto' },
-                    transition: 'all 0.3s ease-in-out',
+                    fontWeight: 600,
+                    px: 3,
+                    py: 1,
+                    borderRadius: '8px',
+                    fontSize: '0.9rem',
+                    minWidth: '120px',
+                    border: '2px solid',
+                    borderColor: 'primary.main',
+                    color: 'primary.main',
+                    bgcolor: 'transparent',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     '&:hover': {
-                      transform: 'translateY(-1px)',
-                      boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
-                      borderColor: 'primary.main',
-                      bgcolor: 'rgba(25, 118, 210, 0.04)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 8px 25px rgba(25, 118, 210, 0.25)',
+                      borderColor: 'primary.dark',
+                      bgcolor: 'rgba(25, 118, 210, 0.05)',
+                      color: 'primary.dark',
+                    },
+                    '&:active': {
+                      transform: 'translateY(0px)',
                     },
                   }}
                 >
@@ -661,17 +764,23 @@ const Navigation = () => {
                   sx={{
                     textTransform: 'none',
                     fontWeight: 600,
-                    px: { xs: 1.5, sm: 2 },
-                    py: 0.75,
-                    borderRadius: 2,
-                    fontSize: { xs: '0.8rem', sm: '0.875rem' },
-                    minWidth: { xs: 'auto', sm: 'auto' },
-                    transition: 'all 0.3s ease-in-out',
-                    boxShadow: '0 2px 8px rgba(25, 118, 210, 0.3)',
+                    px: 3,
+                    py: 1,
+                    borderRadius: '8px',
+                    fontSize: '0.9rem',
+                    minWidth: '120px',
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    border: 'none',
+                    color: 'white',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
                     '&:hover': {
-                      transform: 'translateY(-1px)',
-                      boxShadow: '0 6px 16px rgba(25, 118, 210, 0.4)',
-                      bgcolor: 'primary.dark',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 8px 25px rgba(102, 126, 234, 0.6)',
+                      background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)',
+                    },
+                    '&:active': {
+                      transform: 'translateY(0px)',
                     },
                   }}
                 >

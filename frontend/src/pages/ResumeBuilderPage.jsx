@@ -479,9 +479,14 @@ const ResumeBuilder = () => {
     };
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', py: 4 }}>
+            <Box sx={{ 
+                width: { xs: 'calc(100% - 16px)', sm: '800px', md: '1000px', lg: '1200px' }, 
+                px: { xs: 1, sm: 3, md: 4 },
+                maxWidth: '100vw'
+            }}>
             <Box sx={{ textAlign: 'center', mb: 6 }}>
-                <Typography variant="h3" component="h1" gutterBottom fontWeight="bold">
+                <Typography variant="h3" component="h1" gutterBottom fontWeight="bold" color="text.primary">
                     Resume Builder
                 </Typography>
                 <Typography variant="h6" color="text.secondary">
@@ -502,7 +507,8 @@ const ResumeBuilder = () => {
             </Stepper>
 
             {renderContent()}
-        </Container>
+            </Box>
+        </Box>
     );
 };
 

@@ -49,11 +49,11 @@ router.post('/send-email', authenticateToken, async (req, res) => {
           </div>
           <div style="background-color: white; padding: 30px; margin: 0;">
             <h2 style="color: #333; margin-bottom: 20px; font-size: 20px;">Message from ${recruiterName || 'Recruiter'}</h2>
-            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea; line-height: 1.6;">
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 6px; border-left: 4px solid #667eea; line-height: 1.6;">
               ${message.replace(/\n/g, '<br>')}
             </div>
             ${recruiterEmail ? `
-            <div style="margin-top: 20px; padding: 15px; background-color: #e8f4f8; border-radius: 8px; border-left: 4px solid #17a2b8;">
+            <div style="margin-top: 20px; padding: 15px; background-color: #e8f4f8; border-radius: 6px; border-left: 4px solid #17a2b8;">
               <p style="margin: 0; font-size: 14px; color: #333;">
                 <strong>Recruiter Contact:</strong><br>
                 ${recruiterName || 'Recruiter'}<br>

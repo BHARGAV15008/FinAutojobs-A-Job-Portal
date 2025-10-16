@@ -438,7 +438,7 @@ h6, .MuiTypography-h6 {
 
 /* Loading and skeleton responsive */
 .MuiSkeleton-root {
-  border-radius: 8px !important;
+  border-radius: 6px !important;
 }
 
 /* Responsive utilities */

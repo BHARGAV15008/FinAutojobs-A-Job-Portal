@@ -120,21 +120,26 @@ const AboutPage = () => {
     <Box>
       {/* Hero Section */}
       <HeroSection>
-        <Container maxWidth="lg">
-          <Typography variant="h2" gutterBottom fontWeight="bold">
-            About FinAutoJobs
-          </Typography>
-          <Typography variant="h5" sx={{ mb: 4, maxWidth: 800, mx: 'auto' }}>
-            India's leading specialized job portal connecting top talent with premier opportunities in Finance and Automotive sectors
-          </Typography>
-          <Button variant="contained" color="secondary" size="large">
-            Join Our Mission
-          </Button>
-        </Container>
+        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+            <Box sx={{ 
+                width: { xs: 'calc(100% - 32px)', sm: '800px', md: '1000px', lg: '1200px' }, 
+                px: { xs: 2, sm: 3, md: 4 } 
+            }}>
+              <Typography variant="h2" gutterBottom fontWeight="bold" color="white">
+                About FinAutoJobs
+              </Typography>
+              <Typography variant="h5" sx={{ mb: 4, maxWidth: 800, mx: 'auto', color: 'white' }}>
+                India's leading specialized job portal connecting top talent with premier opportunities in Finance and Automotive sectors
+              </Typography>
+              <Button variant="contained" color="secondary" size="large">
+                Join Our Mission
+              </Button>
+            </Box>
+        </Box>
       </HeroSection>
 
       {/* Stats Section */}
-      <Container maxWidth="lg" sx={{ mt: -6, position: 'relative', zIndex: 1 }}>
+      <Container maxWidth="md" sx={{ mt: -6, position: 'relative', zIndex: 1 }}>
         <Grid container spacing={3}>
           {stats.map((stat, index) => (
             <Grid item xs={6} md={3} key={index}>
@@ -153,7 +158,7 @@ const AboutPage = () => {
       </Container>
 
       {/* Mission Section */}
-      <Container maxWidth="lg" sx={{ py: 8 }}>
+      <Container maxWidth="md" sx={{ py: 8 }}>
         <Grid container spacing={6} alignItems="center">
           <Grid item xs={12} md={6}>
             <Typography variant="h3" gutterBottom fontWeight="bold">
@@ -190,7 +195,11 @@ const AboutPage = () => {
 
       {/* Values Section */}
       <Box sx={{ bgcolor: 'grey.50', py: 8 }}>
-        <Container maxWidth="lg">
+        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+            <Box sx={{ 
+                width: { xs: 'calc(100% - 32px)', sm: '800px', md: '1000px', lg: '1200px' }, 
+                px: { xs: 2, sm: 3, md: 4 } 
+            }}>
           <Typography variant="h3" gutterBottom align="center" fontWeight="bold">
             Our Values
           </Typography>
@@ -215,11 +224,12 @@ const AboutPage = () => {
               </Grid>
             ))}
           </Grid>
-        </Container>
+            </Box>
+        </Box>
       </Box>
 
       {/* Team Section */}
-      <Container maxWidth="lg" sx={{ py: 8 }}>
+      <Container maxWidth="md" sx={{ py: 8 }}>
         <Typography variant="h3" gutterBottom align="center" fontWeight="bold">
           Meet Our Team
         </Typography>
@@ -267,7 +277,7 @@ const AboutPage = () => {
 
       {/* CTA Section */}
       <Box sx={{ bgcolor: 'primary.main', color: 'white', py: 8 }}>
-        <Container maxWidth="lg" sx={{ textAlign: 'center' }}>
+        <Container maxWidth="md" sx={{ textAlign: 'center' }}>
           <Typography variant="h3" gutterBottom align="center" fontWeight="bold">
             Ready to Accelerate Your Career?
           </Typography>

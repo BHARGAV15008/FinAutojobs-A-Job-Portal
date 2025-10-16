@@ -99,7 +99,7 @@ const PricingPage = () => {
     const [annualBilling, setAnnualBilling] = useState(false);
 
     return (
-        <Container maxWidth="lg" sx={{ py: 8 }}>
+        <Container maxWidth="md" sx={{ py: 8 }}>
             {/* Header */}
             <Box textAlign="center" mb={8}>
                 <Typography variant="h2" component="h1" gutterBottom>

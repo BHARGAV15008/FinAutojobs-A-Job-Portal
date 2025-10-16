@@ -441,10 +441,15 @@ const SalaryInsightsPage = () => {
     };
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', py: 4 }}>
+            <Box sx={{ 
+                width: { xs: 'calc(100% - 16px)', sm: '800px', md: '1000px', lg: '1200px' }, 
+                px: { xs: 1, sm: 3, md: 4 },
+                maxWidth: '100vw'
+            }}>
             {/* Header */}
             <Box sx={{ textAlign: 'center', mb: 6 }}>
-                <Typography variant="h3" component="h1" gutterBottom fontWeight="bold">
+                <Typography variant="h3" component="h1" gutterBottom fontWeight="bold" color="text.primary">
                     Salary Insights
                 </Typography>
                 <Typography variant="h6" color="text.secondary" paragraph>
@@ -597,7 +602,7 @@ const SalaryInsightsPage = () => {
             </Grid>
 
             {/* Salary Cards */}
-            <Typography variant="h5" gutterBottom fontWeight="bold" sx={{ mb: 3 }}>
+            <Typography variant="h5" gutterBottom fontWeight="bold" color="text.primary" sx={{ mb: 3 }}>
                 Salary Breakdown by Role
             </Typography>
             <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -609,7 +614,7 @@ const SalaryInsightsPage = () => {
             </Grid>
 
             {/* Salary Comparison Table */}
-            <Typography variant="h5" gutterBottom fontWeight="bold" sx={{ mb: 3 }}>
+            <Typography variant="h5" gutterBottom fontWeight="bold" color="text.primary" sx={{ mb: 3 }}>
                 Detailed Salary Comparison
             </Typography>
             <Box sx={{ mb: 4 }}>
@@ -617,14 +622,14 @@ const SalaryInsightsPage = () => {
             </Box>
 
             {/* Salary Trends */}
-            <Typography variant="h5" gutterBottom fontWeight="bold" sx={{ mb: 3 }}>
+            <Typography variant="h5" gutterBottom fontWeight="bold" color="text.primary" sx={{ mb: 3 }}>
                 Industry Salary Trends
             </Typography>
             <SalaryTrends />
 
             {/* Tips and Insights */}
             <Box sx={{ mt: 4 }}>
-                <Typography variant="h5" gutterBottom fontWeight="bold">
+                <Typography variant="h5" gutterBottom fontWeight="bold" color="text.primary">
                     Salary Negotiation Tips
                 </Typography>
                 <Grid container spacing={3}>
@@ -670,7 +675,8 @@ const SalaryInsightsPage = () => {
                     </Grid>
                 </Grid>
             </Box>
-        </Container>
+            </Box>
+        </Box>
     );
 };
 

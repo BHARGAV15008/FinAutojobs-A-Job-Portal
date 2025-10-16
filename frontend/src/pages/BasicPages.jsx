@@ -4,7 +4,7 @@ import { ArrowBack, Work, Person, Business, TrendingUp, School, Psychology, Info
 
 // Basic page template
 const BasicPage = ({ title, description, icon: Icon, backLink = "/" }) => (
-  <Container maxWidth="lg" sx={{ py: 4 }}>
+  <Container maxWidth="md" sx={{ py: 4 }}>
     <Button
       component={Link}
       href={backLink}

@@ -591,63 +591,6 @@ const HomePageNew = () => {
                 </Box>
             </Container>
 
-            {/* Download App Section */}
-            <Box
-                sx={{
-                    bgcolor: 'primary.900',
-                    color: 'white',
-                    mt: 8,
-                    py: 8,
-                    position: 'relative',
-                    overflow: 'hidden',
-                }}
-            >
-                <Container maxWidth={false} sx={{ px: { xs: 2, sm: 3, md: 4 } }}>
-                    <Grid container spacing={4} alignItems="center">
-                        <Grid item xs={12} md={6}>
-                            <Typography variant="h3" gutterBottom fontWeight="bold">
-                                Get the FinAutoJobs App
-                            </Typography>
-                            <Typography variant="h6" paragraph sx={{ color: 'primary.100' }}>
-                                Search and apply for jobs on the go. Get instant notifications for your applications.
-                            </Typography>
-                            <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
-                                <Button
-                                    variant="contained"
-                                    color="secondary"
-                                    size="large"
-                                    startIcon={<Download />}
-                                >
-                                    App Store
-                                </Button>
-                                <Button
-                                    variant="contained"
-                                    color="secondary"
-                                    size="large"
-                                    startIcon={<Download />}
-                                >
-                                    Play Store
-                                </Button>
-                            </Box>
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <Box
-                                component="img"
-                                src="https://images.unsplash.com/photo-1621691187532-bbeb671757ac?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTAwNDR8MHwxfHNlYXJjaHwyfHxtb2JpbGUlMjBwaG9uZSUyMGFwcCUyMGludGVyZmFjZXxlbnwwfDF8fHwxNzU3MDYxODk2fDA&ixlib=rb-4.1.0&q=85"
-                                alt="Mobile phone mockup showing job search app interface - Maccy on Unsplash"
-                                sx={{
-                                    width: '100%',
-                                    maxWidth: 400,
-                                    height: 'auto',
-                                    display: 'block',
-                                    margin: '0 auto',
-                                }}
-                            />
-                        </Grid>
-                    </Grid>
-                </Container>
-            </Box>
-
             {/* New Features Section */}
             <Container maxWidth={false} sx={{ mt: 8, px: { xs: 2, sm: 3, md: 4 } }}>
                 <Typography variant="h4" gutterBottom align="center" fontWeight="bold">
@@ -730,7 +673,11 @@ const HomePageNew = () => {
 
             {/* Testimonials Section */}
             <Box sx={{ py: 8, bgcolor: 'grey.50' }}>
-                <Container maxWidth={false} sx={{ px: { xs: 2, sm: 3, md: 4 } }}>
+                <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                    <Box sx={{ 
+                        width: { xs: 'calc(100% - 32px)', sm: '800px', md: '1000px', lg: '1200px' }, 
+                        px: { xs: 2, sm: 3, md: 4 } 
+                    }}>
                     <Typography variant="h4" gutterBottom align="center" fontWeight="bold">
                         Success Stories
                     </Typography>
@@ -772,12 +719,17 @@ const HomePageNew = () => {
                             </Grid>
                         ))}
                     </Grid>
-                </Container>
+                    </Box>
+                </Box>
             </Box>
 
             {/* Call to Action */}
             <Box sx={{ textAlign: 'center', py: 8 }}>
-                <Container maxWidth={false} sx={{ px: { xs: 2, sm: 3, md: 4 } }}>
+                <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                    <Box sx={{ 
+                        width: { xs: 'calc(100% - 32px)', sm: '800px', md: '1000px', lg: '1200px' }, 
+                        px: { xs: 2, sm: 3, md: 4 } 
+                    }}>
                     <Typography variant="h3" gutterBottom fontWeight="bold">
                         Ready to Start Your Career Journey?
                     </Typography>
@@ -804,7 +756,8 @@ const HomePageNew = () => {
                             Watch How It Works
                         </Button>
                     </Box>
-                </Container>
+                    </Box>
+                </Box>
             </Box>
         </Box>
     );

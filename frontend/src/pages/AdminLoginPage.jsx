@@ -173,15 +173,15 @@ const AdminLoginPage = () => {
               <Paper
                 sx={{
                   p: 2,
-                  mb: 3,
                   bgcolor: 'rgba(255, 193, 7, 0.1)',
                   border: '1px solid rgba(255, 193, 7, 0.3)',
                   borderRadius: 2,
+                  mb: 4,
                 }}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                   <Shield sx={{ color: 'warning.main' }} />
-                  <Typography variant="body2" color="warning.dark" fontWeight="500">
+                  <Typography variant="body2" color="warning.dark" fontWeight="500" sx={{ ml: 2 }}>
                     This is a restricted area. Unauthorized access is prohibited.
                   </Typography>
                 </Box>

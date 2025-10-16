@@ -198,7 +198,7 @@ to {
   max-width: 350px;
   pointer-events: auto;
   padding: 8px 10px;
-  border-radius: 8px;
+  border-radius: 6px;
 `,Yv=wr("div")`
   display: flex;
   justify-content: center;
