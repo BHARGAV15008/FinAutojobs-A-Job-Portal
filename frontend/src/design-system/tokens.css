@@ -1,0 +1,106 @@
+/* Design tokens inspired by soft professional palettes and smooth theme aesthetics.
+   These map into Tailwind's CSS variables already used in the project. */
+
+:root {
+  /* Brand colors (soft purple/indigo + blue accents) */
+  --brand-primary-50: 245 100% 97%;
+  --brand-primary-100: 243 94% 92%;
+  --brand-primary-200: 242 91% 85%;
+  --brand-primary-300: 245 89% 80%;
+  --brand-primary-400: 245 83% 70%;
+  --brand-primary-500: 253 89% 66%; /* #8B5CF6 */
+  --brand-primary-600: 252 95% 63%; /* #7C3AED */
+  --brand-primary-700: 258 90% 53%; /* #6D28D9 */
+  --brand-primary-800: 263 84% 47%; /* #5B21B6 */
+  --brand-primary-900: 262 83% 35%; /* #4C1D95 */
+
+  --brand-accent-500: 217 91% 60%; /* #3b82f6 */
+  --brand-accent-600: 221 83% 53%; /* #2563eb */
+
+  /* Neutrals */
+  --brand-neutral-50: 0 0% 98%;
+  --brand-neutral-100: 0 0% 96%;
+  --brand-neutral-200: 0 0% 90%;
+  --brand-neutral-300: 0 0% 83%;
+  --brand-neutral-400: 0 0% 64%;
+  --brand-neutral-500: 0 0% 45%;
+  --brand-neutral-600: 0 0% 32%;
+  --brand-neutral-700: 0 0% 25%;
+  --brand-neutral-800: 0 0% 15%;
+  --brand-neutral-900: 0 0% 10%;
+
+  /* Surface + feedback */
+  --brand-success-500: 142 71% 45%;
+  --brand-warning-500: 38 92% 50%;
+  --brand-error-500: 0 84% 60%;
+
+  /* Gradients reminiscent of snapit-style soft glow */
+  --brand-gradient-primary: linear-gradient(135deg, hsl(var(--brand-primary-500)) 0%, hsl(var(--brand-primary-700)) 100%);
+  --brand-gradient-accent: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+  /* Radii, spacing, shadow, easing */
+  --ds-radius-sm: 8px;
+  --ds-radius-md: 12px;
+  --ds-radius-lg: 16px;
+  --ds-radius-xl: 20px;
+
+  --ds-shadow-sm: 0 1px 2px rgba(0,0,0,.06);
+  --ds-shadow-md: 0 4px 10px rgba(0,0,0,.08);
+  --ds-shadow-lg: 0 12px 30px rgba(0,0,0,.12);
+  --ds-shadow-xl: 0 20px 48px rgba(0,0,0,.16);
+
+  --ds-ease: cubic-bezier(.22,.61,.36,1);
+  --ds-fast: 150ms var(--ds-ease);
+  --ds-base: 220ms var(--ds-ease);
+  --ds-slow: 320ms var(--ds-ease);
+
+  /* Map to Tailwind CSS variable scheme used in project */
+  --background: 0 0% 100%;
+  --foreground: 222 84% 5%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 84% 5%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 84% 5%;
+  --primary: var(--brand-primary-600);
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 20% 96%;
+  --secondary-foreground: 222 84% 5%;
+  --muted: 210 20% 96%;
+  --muted-foreground: 215 16% 47%;
+  --accent: var(--brand-accent-600);
+  --accent-foreground: 210 40% 98%;
+  --destructive: var(--brand-error-500);
+  --destructive-foreground: 210 40% 98%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: var(--brand-primary-600);
+  --radius: 12px;
+}
+
+.dark {
+  --background: 222 84% 6%;
+  --foreground: 210 40% 98%;
+  --card: 222 50% 8%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222 50% 8%;
+  --popover-foreground: 210 40% 98%;
+  --primary: var(--brand-primary-500);
+  --primary-foreground: 222 84% 6%;
+  --secondary: 218 23% 14%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 218 23% 14%;
+  --muted-foreground: 215 20% 65%;
+  --accent: var(--brand-accent-500);
+  --accent-foreground: 222 84% 6%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217 15% 24%;
+  --input: 217 15% 24%;
+  --ring: var(--brand-primary-500);
+}
+
+/* Utility surface tokens */
+:root {
+  --surface-elevated: var(--ds-shadow-md);
+  --surface-float: var(--ds-shadow-lg);
+}

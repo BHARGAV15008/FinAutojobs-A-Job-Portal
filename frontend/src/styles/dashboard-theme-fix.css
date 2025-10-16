@@ -192,12 +192,12 @@ html:not(.dark) select {
   background-color: #1f2937 !important; /* Very dark background */
 }
 
-/* FOCUS STATES - Enhanced visibility */
+/* FOCUS STATES - Minimal highlighting */
 .light input:focus,
 .light textarea:focus,
 .light select:focus {
   border-color: #2563eb !important; /* Blue border */
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2) !important; /* Blue glow */
+  box-shadow: none !important; /* Remove glow effect */
   outline: none !important;
 }
 
@@ -205,7 +205,7 @@ html:not(.dark) select {
 .dark textarea:focus,
 .dark select:focus {
   border-color: #60a5fa !important; /* Light blue border */
-  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2) !important; /* Light blue glow */
+  box-shadow: none !important; /* Remove glow effect */
   outline: none !important;
 }
 

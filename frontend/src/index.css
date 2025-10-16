@@ -324,6 +324,18 @@ select {
   font-size: 0.875rem !important;
   font-weight: 400 !important;
 }
+
+/* Remove focus highlighting from all input fields */
+input:focus,
+textarea:focus,
+select:focus,
+button:focus,
+[role="button"]:focus,
+a:focus,
+*:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
 .form-label {
   font-size: 0.875rem !important;
   font-weight: 500 !important;

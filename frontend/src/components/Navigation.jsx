@@ -316,15 +316,25 @@ const Navigation = () => {
   );
 
   return (
-    <AppBar position="sticky" color="default" elevation={1} sx={{ bgcolor: 'background.paper' }}>
-      <Container maxWidth={false} sx={{ px: { xs: 2, sm: 3, md: 4 } }}>
-        <Toolbar disableGutters sx={{ py: 1, minHeight: { xs: 56, sm: 60 } }}>
+    <AppBar 
+      position="sticky" 
+      color="default" 
+      elevation={0} 
+      sx={{ 
+        bgcolor: 'rgba(255, 255, 255, 0.7)', 
+        backdropFilter: 'blur(5px)',
+        borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
+        borderRadius: 0
+      }}
+    >
+      <Container maxWidth="lg" sx={{ px: { xs: 3, sm: 4, md: 5 } }}>
+        <Toolbar disableGutters sx={{ py: 0.25, minHeight: { xs: 42, sm: 44 }, justifyContent: 'center' }}>
           {/* Logo - Desktop */}
           <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', mr: 2 }}>
             <Link href="/">
               <Box sx={{
-                width: 36,
-                height: 36,
+                width: 30,
+                height: 30,
                 bgcolor: 'primary.main',
                 borderRadius: 1,
                 display: 'flex',
@@ -332,11 +342,11 @@ const Navigation = () => {
                 justifyContent: 'center',
                 mr: 1
               }}>
-                <Work sx={{ color: 'white', fontSize: 20 }} />
+                <Work sx={{ color: 'white', fontSize: 18 }} />
               </Box>
             </Link>
             <Typography
-              variant="h6"
+              variant="subtitle1"
               noWrap
               component={Link}
               href="/"
@@ -344,6 +354,7 @@ const Navigation = () => {
                 fontWeight: 700,
                 color: 'text.primary',
                 textDecoration: 'none',
+                fontSize: '0.8rem',
               }}
             >
               FinAutoJobs
@@ -385,11 +396,11 @@ const Navigation = () => {
                 justifyContent: 'center',
                 mr: 1
               }}>
-                <Work sx={{ color: 'white', fontSize: 18 }} />
+                <Work sx={{ color: 'white', fontSize: 16 }} />
               </Box>
             </Link>
             <Typography
-              variant="h6"
+              variant="subtitle1"
               noWrap
               component={Link}
               href="/"
@@ -397,14 +408,15 @@ const Navigation = () => {
                 fontWeight: 700,
                 color: 'text.primary',
                 textDecoration: 'none',
+                fontSize: '0.75rem',
               }}
             >
               FinAutoJobs
             </Typography>
           </Box>
 
-          {/* Desktop menu */}
-          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, ml: 4 }}>
+          {/* Desktop Navigation */}
+          <Box sx={{ display: { xs: 'none', md: 'flex' }, justifyContent: 'center', flexGrow: 1 }}>
             {mainMenuItems.map((item) => (
               <Box
                 key={item.label}
@@ -428,13 +440,13 @@ const Navigation = () => {
                     alignItems: 'center',
                     fontWeight: location === item.path ? 600 : 500,
                     textTransform: 'none',
-                    fontSize: '0.875rem',
-                    px: 2,
-                    py: 1,
-                    borderRadius: 1,
+                    fontSize: '0.75rem',
+                    px: 1.5,
+                    py: 0.75,
+                    borderRadius: 0,
                     transition: 'all 0.3s ease-in-out',
                     '&:hover': {
-                      bgcolor: 'rgba(25, 118, 210, 0.08)',
+                      bgcolor: 'transparent',
                       color: 'primary.main',
                       transform: 'translateY(-1px)',
                       fontWeight: 600,
