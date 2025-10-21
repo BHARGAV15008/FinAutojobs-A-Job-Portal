@@ -1121,18 +1121,26 @@ const JobsPage = () => {
             </Box>
 
             {/* Results Header */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h6">
-                    {filteredJobs.length} jobs found
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                    {/* View Format Toggle */}
-                    <Box sx={{ display: 'flex', border: '1px solid #e0e0e0', borderRadius: 1, overflow: 'hidden' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', mb: 3 }}>
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', width: '100%' }}>
+                    {/* View Format Toggle - Full Width */}
+                    <Box sx={{ 
+                        display: 'flex', 
+                        border: '1px solid #e0e0e0', 
+                        borderRadius: 1, 
+                        overflow: 'hidden',
+                        flex: 1
+                    }}>
                         <Button
                             size="small"
                             variant={viewFormat === 'table' ? 'contained' : 'text'}
                             onClick={() => setViewFormat('table')}
-                            sx={{ minWidth: 'auto', px: 2 }}
+                            sx={{ 
+                                flex: 1,
+                                minWidth: 'auto', 
+                                px: 2,
+                                borderRadius: 0
+                            }}
                         >
                             📊 Table
                         </Button>
@@ -1140,7 +1148,12 @@ const JobsPage = () => {
                             size="small"
                             variant={viewFormat === 'list' ? 'contained' : 'text'}
                             onClick={() => setViewFormat('list')}
-                            sx={{ minWidth: 'auto', px: 2 }}
+                            sx={{ 
+                                flex: 1,
+                                minWidth: 'auto', 
+                                px: 2,
+                                borderRadius: 0
+                            }}
                         >
                             📋 List
                         </Button>
@@ -1148,7 +1161,12 @@ const JobsPage = () => {
                             size="small"
                             variant={viewFormat === 'grid' ? 'contained' : 'text'}
                             onClick={() => setViewFormat('grid')}
-                            sx={{ minWidth: 'auto', px: 2 }}
+                            sx={{ 
+                                flex: 1,
+                                minWidth: 'auto', 
+                                px: 2,
+                                borderRadius: 0
+                            }}
                         >
                             🔲 Grid
                         </Button>

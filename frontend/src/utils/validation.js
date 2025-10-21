@@ -21,16 +21,47 @@ const commonValidations = {
   required: (message = 'This field is required') => yup.string().required(message),
 };
 
-// Applicant Profile Validation Schema
+// Enhanced Applicant Profile Validation Schema
 export const applicantProfileSchema = yup.object({
+  // Basic Information
   firstName: commonValidations.name,
   lastName: commonValidations.name,
   email: commonValidations.email,
   mobile: commonValidations.phone,
+  alternatePhone: commonValidations.phone.nullable(),
+  dateOfBirth: yup.date().max(new Date(), 'Date of birth cannot be in the future').required('Date of birth is required'),
+  gender: yup.string().oneOf(['Male', 'Female', 'Other', 'Prefer not to say'], 'Invalid gender').required('Gender is required'),
+  maritalStatus: yup.string().oneOf(['Single', 'Married', 'Divorced', 'Widowed', 'Other'], 'Invalid marital status').required('Marital status is required'),
+  nationality: yup.string().required('Nationality is required'),
+  
+  // Location Information
   location: yup.string().required('Location is required'),
+  willingToRelocate: yup.boolean().required('Please specify relocation preference'),
+  
+  // Professional Information
+  expectedSalary: yup.string().required('Expected salary is required'),
+  noticePeriod: yup.string().oneOf(['Immediate', '15 days', '30 days', '60 days', '90 days'], 'Invalid notice period').required('Notice period is required'),
+  workMode: yup.string().oneOf(['Remote', 'On-site', 'Hybrid'], 'Invalid work mode preference').required('Work mode preference is required'),
+  
+  // Social Links
   githubUrl: commonValidations.url.nullable(),
   linkedinUrl: commonValidations.url.nullable(),
-  education: yup.string().required('Education level is required'),
+  portfolioUrl: commonValidations.url.nullable(),
+  stackoverflowUrl: commonValidations.url.nullable(),
+  behanceUrl: commonValidations.url.nullable(),
+  mediumUrl: commonValidations.url.nullable(),
+  
+  // Education
+  education: yup.array().of(yup.object({
+    level: yup.string().required('Education level is required'),
+    degree: yup.string().required('Degree is required'),
+    fieldOfStudy: yup.string().required('Field of study is required'),
+    institution: yup.string().required('Institution is required'),
+    percentage: yup.number().min(0).max(100).required('Percentage is required'),
+    graduationYear: yup.number().min(1950).max(new Date().getFullYear() + 10).required('Graduation year is required')
+  })).min(1, 'At least one education entry is required'),
+  
+  // Experience
   hasExperience: yup.boolean(),
   yearsOfExperience: yup.number().when('hasExperience', {
     is: true,
@@ -47,9 +78,24 @@ export const applicantProfileSchema = yup.object({
     then: () => yup.string().required('Current company is required'),
     otherwise: () => yup.string().nullable(),
   }),
+  
+  // Skills and Certifications
   bio: yup.string().max(500, 'Bio must be less than 500 characters'),
   skills: yup.array().min(1, 'At least one skill is required'),
+  certifications: yup.array().of(yup.object({
+    name: yup.string().required('Certification name is required'),
+    issuingOrganization: yup.string().required('Issuing organization is required'),
+    issueDate: yup.date().required('Issue date is required'),
+    expiryDate: yup.date().nullable()
+  })),
+  
+  // Documents
   resume: yup.mixed().required('Resume is required'),
+  
+  // Preferences
+  jobTypes: yup.array().of(yup.string()).min(1, 'Select at least one job type'),
+  industries: yup.array().of(yup.string()).min(1, 'Select at least one industry'),
+  preferredLocations: yup.array().of(yup.string()).min(1, 'Select at least one preferred location')
 });
 
 // Job Posting Validation Schema

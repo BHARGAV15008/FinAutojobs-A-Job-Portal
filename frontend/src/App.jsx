@@ -14,6 +14,7 @@ import './styles/responsive.css'
 import './styles/dashboard-theme-fix.css'
 import './styles/tiny-screen-responsive.css'
 import './styles/modern-ui-enhancements.css'
+import './styles/typography.css'
 
 function App() {
   // Memoize query client to prevent recreation on re-renders

@@ -12,6 +12,7 @@ import {
   EnhancedApplicationsTab,
   EnhancedAnalyticsTab,
 } from "../components/dashboard/EnhancedDashboardTabs";
+import EnhancedApplicantDashboardTabs from "../components/dashboard/EnhancedApplicantDashboardTabs";
 import MyApplicationsTab from "../components/dashboard/applicant/MyApplicationsTab";
 import JobAlertsTab from "../components/dashboard/JobAlertsTab";
 import RecentActivity from "../components/dashboard/RecentActivity";
@@ -625,32 +626,8 @@ const ApplicantDashboardContent = () => {
       title="Applicant Dashboard"
       userRole="applicant"
       user={user}
-      breadcrumbs={
-        activeTab !== "overview"
-          ? [
-              { name: "Dashboard", path: "/applicant-dashboard" },
-              {
-                name:
-                  activeTab.charAt(0).toUpperCase() +
-                  activeTab.slice(1).replace("-", " "),
-                path: `/${activeTab}`,
-              },
-            ]
-          : []
-      }
     >
-      <div className="space-y-6">
-        {/* Tab Content */}
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.3 }}
-        >
-          {renderTabContent()}
-        </motion.div>
-      </div>
+      <EnhancedApplicantDashboardTabs user={user || authUser} />
 
       {/* Job Application Modal */}
       <JobApplicationModal

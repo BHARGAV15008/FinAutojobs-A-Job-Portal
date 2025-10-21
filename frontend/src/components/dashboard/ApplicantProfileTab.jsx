@@ -4,17 +4,25 @@ import {
   Select, MenuItem, FormControl, InputLabel, Switch, FormControlLabel,
   Chip, IconButton, Dialog, DialogTitle, DialogContent, DialogActions,
   Divider, List, ListItem, ListItemText, ListItemIcon, Accordion,
-  AccordionSummary, AccordionDetails, Alert, Snackbar, Autocomplete
+  AccordionSummary, AccordionDetails, Alert, Snackbar, Autocomplete,
+  LinearProgress, Stepper, Step, StepLabel, Paper
 } from '@mui/material';
 import {
   Edit, Save, Cancel, Upload, Delete, Add, ExpandMore, Person,
   Email, Phone, LocationOn, LinkedIn, GitHub, School, Work,
-  Language, Psychology, EmojiEvents, Link as LinkIcon
+  Language, Psychology, EmojiEvents, Link as LinkIcon, CheckCircle,
+  Warning, Info, TrendingUp
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
+import CompleteProfileForm from '../profile/CompleteProfileForm';
+import { calculateProfileCompletion, getIncompleteFields } from '../../utils/profileSchema';
 
 const ApplicantProfileTab = ({ user, onUpdate }) => {
   const [editing, setEditing] = useState(false);
+  const [showCompleteForm, setShowCompleteForm] = useState(false);
+  const [profileCompletion, setProfileCompletion] = useState(0);
+  const [incompleteFields, setIncompleteFields] = useState([]);
+  
   const [profileData, setProfileData] = useState({
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
@@ -33,8 +41,27 @@ const ApplicantProfileTab = ({ user, onUpdate }) => {
     skills: user?.skills || [],
     languages: user?.languages || [],
     certifications: user?.certifications || [],
-    achievements: user?.achievements || []
+    achievements: user?.achievements || [],
+    // Enhanced profile fields
+    dateOfBirth: user?.dateOfBirth || '',
+    gender: user?.gender || '',
+    maritalStatus: user?.maritalStatus || '',
+    nationality: user?.nationality || 'Indian',
+    expectedSalary: user?.expectedSalary || '',
+    noticePeriod: user?.noticePeriod || '30 days',
+    workMode: user?.workMode || 'Hybrid',
+    education: user?.education || [],
+    socialLinks: user?.socialLinks || {},
+    professionalCertifications: user?.professionalCertifications || []
   });
+
+  // Calculate profile completion on component mount and data changes
+  React.useEffect(() => {
+    const completion = calculateProfileCompletion(profileData);
+    const incomplete = getIncompleteFields(profileData);
+    setProfileCompletion(completion);
+    setIncompleteFields(incomplete);
+  }, [profileData]);
   
   const [newSkill, setNewSkill] = useState('');
   const [newLanguage, setNewLanguage] = useState('');
@@ -180,6 +207,71 @@ const ApplicantProfileTab = ({ user, onUpdate }) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
+        {/* Profile Completion Card */}
+        <Card sx={{ mb: 3, bgcolor: profileCompletion >= 80 ? 'success.light' : profileCompletion >= 50 ? 'warning.light' : 'error.light' }}>
+          <CardContent>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                {profileCompletion >= 80 ? <CheckCircle color="success" /> : 
+                 profileCompletion >= 50 ? <Warning color="warning" /> : 
+                 <Info color="error" />}
+                Profile Completion
+              </Typography>
+              <Typography variant="h5" fontWeight="bold">
+                {profileCompletion}%
+              </Typography>
+            </Box>
+            <LinearProgress 
+              variant="determinate" 
+              value={profileCompletion} 
+              sx={{ height: 8, borderRadius: 4, mb: 2 }}
+              color={profileCompletion >= 80 ? 'success' : profileCompletion >= 50 ? 'warning' : 'error'}
+            />
+            <Typography variant="body2" sx={{ mb: 2 }}>
+              {profileCompletion >= 80 
+                ? '🎉 Excellent! Your profile is complete and ready for job applications.'
+                : profileCompletion >= 50 
+                ? '⚡ Good progress! Complete a few more sections to boost your profile.'
+                : '🚀 Get started! Complete your profile to unlock better job opportunities.'}
+            </Typography>
+            
+            {incompleteFields.length > 0 && (
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" gutterBottom>Missing sections:</Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {incompleteFields.map((field, index) => (
+                    <Chip 
+                      key={index} 
+                      label={field} 
+                      size="small" 
+                      color="warning" 
+                      variant="outlined" 
+                    />
+                  ))}
+                </Box>
+              </Box>
+            )}
+            
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Button
+                variant="contained"
+                startIcon={<TrendingUp />}
+                onClick={() => setShowCompleteForm(true)}
+                size="small"
+              >
+                Complete Profile
+              </Button>
+              {profileCompletion >= 70 && (
+                <Chip 
+                  label="✅ Ready for Quick Apply" 
+                  color="success" 
+                  size="small"
+                />
+              )}
+            </Box>
+          </CardContent>
+        </Card>
+
         <Card sx={{ mb: 3 }}>
           <CardContent sx={{ p: 4 }}>
             <Box display="flex" justifyContent="between" alignItems="center" mb={3}>
@@ -623,6 +715,36 @@ const ApplicantProfileTab = ({ user, onUpdate }) => {
           Profile updated successfully!
         </Alert>
       </Snackbar>
+
+      {/* Complete Profile Form Dialog */}
+      <Dialog 
+        open={showCompleteForm} 
+        onClose={() => setShowCompleteForm(false)}
+        maxWidth="lg"
+        fullWidth
+        PaperProps={{
+          sx: { minHeight: '90vh' }
+        }}
+      >
+        <DialogTitle>
+          <Typography variant="h5">Complete Your Profile</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Fill in all sections to maximize your job opportunities
+          </Typography>
+        </DialogTitle>
+        <DialogContent sx={{ p: 0 }}>
+          <CompleteProfileForm
+            initialData={profileData}
+            onSave={(data) => {
+              setProfileData(data);
+              onUpdate(data);
+              setShowCompleteForm(false);
+              setSnackbarOpen(true);
+            }}
+            onCancel={() => setShowCompleteForm(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 };

@@ -1,0 +1,306 @@
+2025-10-21 22:09:10,332 - INFO - 🚀 Starting comprehensive FinAutoJobs testing...
+2025-10-21 22:09:10,340 - INFO - ✅ Backend is healthy
+2025-10-21 22:11:23,101 - INFO - ✅ Chrome WebDriver initialized successfully
+2025-10-21 22:11:23,104 - INFO - 🧹 Cleaning database...
+2025-10-21 22:11:23,121 - ERROR - ❌ Failed to clean database: 404
+2025-10-21 22:11:28,122 - INFO - 🧪 Testing homepage load...
+2025-10-21 22:11:34,143 - INFO - 📍 Navigated to: http://localhost:3000
+2025-10-21 22:11:43,063 - INFO - ✅ Homepage loaded successfully
+2025-10-21 22:11:43,063 - INFO - 🧪 Testing registration for applicant: applicant1_yky0dm@test.com
+2025-10-21 22:11:51,363 - INFO - 📍 Navigated to: http://localhost:3000/register
+2025-10-21 22:11:59,259 - WARNING - ⚠️ Role selection not found, continuing...
+2025-10-21 22:12:03,544 - INFO - ✅ Registration successful for applicant1_yky0dm@test.com
+2025-10-21 22:12:05,544 - INFO - 🧪 Testing registration for applicant: applicant2_4cmwn0@test.com
+2025-10-21 22:12:09,185 - INFO - 📍 Navigated to: http://localhost:3000/register
+2025-10-21 22:12:16,971 - WARNING - ⚠️ Role selection not found, continuing...
+2025-10-21 22:12:21,321 - INFO - ✅ Registration successful for applicant2_4cmwn0@test.com
+2025-10-21 22:12:23,322 - INFO - 🧪 Testing registration for recruiter: recruiter1_2ilute@test.com
+2025-10-21 22:12:26,888 - INFO - 📍 Navigated to: http://localhost:3000/register
+2025-10-21 22:12:33,844 - WARNING - ⚠️ Role selection not found, continuing...
+2025-10-21 22:12:38,161 - INFO - ✅ Registration successful for recruiter1_2ilute@test.com
+2025-10-21 22:12:40,162 - INFO - 🧪 Testing registration for recruiter: recruiter2_2l3nl5@test.com
+2025-10-21 22:12:43,691 - INFO - 📍 Navigated to: http://localhost:3000/register
+2025-10-21 22:12:52,017 - WARNING - ⚠️ Role selection not found, continuing...
+2025-10-21 22:12:56,229 - INFO - ✅ Registration successful for recruiter2_2l3nl5@test.com
+2025-10-21 22:12:58,230 - INFO - 🧪 Testing login for: applicant1_yky0dm@test.com
+2025-10-21 22:13:01,822 - INFO - 📍 Navigated to: http://localhost:3000/login
+2025-10-21 22:13:11,881 - ERROR - ❌ Element not found: name=email
+2025-10-21 22:13:22,291 - ERROR - ❌ Element not found: css selector=input[type='email']
+2025-10-21 22:13:22,291 - ERROR - ❌ Could not fill email field
+2025-10-21 22:13:22,293 - INFO - 🧪 Testing logout functionality...
+2025-10-21 22:13:22,324 - ERROR - ❌ Click failed for css selector=button:contains('Logout'): Message: invalid selector: An invalid or illegal selector was specified
+  (Session info: chrome=141.0.7390.78); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#invalidselectorexception
+Stacktrace:
+#0 0x56020ce9c67a <unknown>
+#1 0x56020c91b566 <unknown>
+#2 0x56020c922208 <unknown>
+#3 0x56020c9249a8 <unknown>
+#4 0x56020c924a33 <unknown>
+#5 0x56020c96d16f <unknown>
+#6 0x56020c96d921 <unknown>
+#7 0x56020c9bbe94 <unknown>
+#8 0x56020c99365d <unknown>
+#9 0x56020c9b9328 <unknown>
+#10 0x56020c993403 <unknown>
+#11 0x56020c95fb02 <unknown>
+#12 0x56020c9607c1 <unknown>
+#13 0x56020ce60448 <unknown>
+#14 0x56020ce642af <unknown>
+#15 0x56020ce478d9 <unknown>
+#16 0x56020ce64e55 <unknown>
+#17 0x56020ce2d13f <unknown>
+#18 0x56020ce894b8 <unknown>
+#19 0x56020ce89693 <unknown>
+#20 0x56020ce9b613 <unknown>
+#21 0x7fcff7c969cb <unknown>
+#22 0x7fcff7d1aa0c <unknown>
+
+2025-10-21 22:13:22,360 - ERROR - ❌ Click failed for css selector=a:contains('Logout'): Message: invalid selector: An invalid or illegal selector was specified
+  (Session info: chrome=141.0.7390.78); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#invalidselectorexception
+Stacktrace:
+#0 0x56020ce9c67a <unknown>
+#1 0x56020c91b566 <unknown>
+#2 0x56020c922208 <unknown>
+#3 0x56020c9249a8 <unknown>
+#4 0x56020c924a33 <unknown>
+#5 0x56020c96d16f <unknown>
+#6 0x56020c96d921 <unknown>
+#7 0x56020c9bbe94 <unknown>
+#8 0x56020c99365d <unknown>
+#9 0x56020c9b9328 <unknown>
+#10 0x56020c993403 <unknown>
+#11 0x56020c95fb02 <unknown>
+#12 0x56020c9607c1 <unknown>
+#13 0x56020ce60448 <unknown>
+#14 0x56020ce642af <unknown>
+#15 0x56020ce478d9 <unknown>
+#16 0x56020ce64e55 <unknown>
+#17 0x56020ce2d13f <unknown>
+#18 0x56020ce894b8 <unknown>
+#19 0x56020ce89693 <unknown>
+#20 0x56020ce9b613 <unknown>
+#21 0x7fcff7c969cb <unknown>
+#22 0x7fcff7d1aa0c <unknown>
+
+2025-10-21 22:13:22,393 - ERROR - ❌ Click failed for css selector=button:contains('Sign Out'): Message: invalid selector: An invalid or illegal selector was specified
+  (Session info: chrome=141.0.7390.78); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#invalidselectorexception
+Stacktrace:
+#0 0x56020ce9c67a <unknown>
+#1 0x56020c91b566 <unknown>
+#2 0x56020c922208 <unknown>
+#3 0x56020c9249a8 <unknown>
+#4 0x56020c924a33 <unknown>
+#5 0x56020c96d16f <unknown>
+#6 0x56020c96d921 <unknown>
+#7 0x56020c9bbe94 <unknown>
+#8 0x56020c99365d <unknown>
+#9 0x56020c9b9328 <unknown>
+#10 0x56020c993403 <unknown>
+#11 0x56020c95fb02 <unknown>
+#12 0x56020c9607c1 <unknown>
+#13 0x56020ce60448 <unknown>
+#14 0x56020ce642af <unknown>
+#15 0x56020ce478d9 <unknown>
+#16 0x56020ce64e55 <unknown>
+#17 0x56020ce2d13f <unknown>
+#18 0x56020ce894b8 <unknown>
+#19 0x56020ce89693 <unknown>
+#20 0x56020ce9b613 <unknown>
+#21 0x7fcff7c969cb <unknown>
+#22 0x7fcff7d1aa0c <unknown>
+
+2025-10-21 22:13:22,424 - ERROR - ❌ Click failed for css selector=a:contains('Sign Out'): Message: invalid selector: An invalid or illegal selector was specified
+  (Session info: chrome=141.0.7390.78); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#invalidselectorexception
+Stacktrace:
+#0 0x56020ce9c67a <unknown>
+#1 0x56020c91b566 <unknown>
+#2 0x56020c922208 <unknown>
+#3 0x56020c9249a8 <unknown>
+#4 0x56020c924a33 <unknown>
+#5 0x56020c96d16f <unknown>
+#6 0x56020c96d921 <unknown>
+#7 0x56020c9bbe94 <unknown>
+#8 0x56020c99365d <unknown>
+#9 0x56020c9b9328 <unknown>
+#10 0x56020c993403 <unknown>
+#11 0x56020c95fb02 <unknown>
+#12 0x56020c9607c1 <unknown>
+#13 0x56020ce60448 <unknown>
+#14 0x56020ce642af <unknown>
+#15 0x56020ce478d9 <unknown>
+#16 0x56020ce64e55 <unknown>
+#17 0x56020ce2d13f <unknown>
+#18 0x56020ce894b8 <unknown>
+#19 0x56020ce89693 <unknown>
+#20 0x56020ce9b613 <unknown>
+#21 0x7fcff7c969cb <unknown>
+#22 0x7fcff7d1aa0c <unknown>
+
+2025-10-21 22:13:32,894 - ERROR - ❌ Click failed for css selector=[data-testid='logout']: Message: 
+Stacktrace:
+#0 0x56020ce9c67a <unknown>
+#1 0x56020c91b566 <unknown>
+#2 0x56020c96d68d <unknown>
+#3 0x56020c96d921 <unknown>
+#4 0x56020c9bbe94 <unknown>
+#5 0x56020c99365d <unknown>
+#6 0x56020c9b9328 <unknown>
+#7 0x56020c993403 <unknown>
+#8 0x56020c95fb02 <unknown>
+#9 0x56020c9607c1 <unknown>
+#10 0x56020ce60448 <unknown>
+#11 0x56020ce642af <unknown>
+#12 0x56020ce478d9 <unknown>
+#13 0x56020ce64e55 <unknown>
+#14 0x56020ce2d13f <unknown>
+#15 0x56020ce894b8 <unknown>
+#16 0x56020ce89693 <unknown>
+#17 0x56020ce9b613 <unknown>
+#18 0x7fcff7c969cb <unknown>
+#19 0x7fcff7d1aa0c <unknown>
+
+2025-10-21 22:13:32,897 - WARNING - ⚠️ Logout functionality not found
+2025-10-21 22:13:34,897 - INFO - 🧪 Testing login for: applicant2_4cmwn0@test.com
+2025-10-21 22:13:38,361 - INFO - 📍 Navigated to: http://localhost:3000/login
+2025-10-21 22:13:48,836 - ERROR - ❌ Element not found: name=email
+2025-10-21 22:13:59,214 - ERROR - ❌ Element not found: css selector=input[type='email']
+2025-10-21 22:13:59,214 - ERROR - ❌ Could not fill email field
+2025-10-21 22:13:59,214 - INFO - 🧪 Testing logout functionality...
+2025-10-21 22:13:59,234 - ERROR - ❌ Click failed for css selector=button:contains('Logout'): Message: invalid selector: An invalid or illegal selector was specified
+  (Session info: chrome=141.0.7390.78); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#invalidselectorexception
+Stacktrace:
+#0 0x56020ce9c67a <unknown>
+#1 0x56020c91b566 <unknown>
+#2 0x56020c922208 <unknown>
+#3 0x56020c9249a8 <unknown>
+#4 0x56020c924a33 <unknown>
+#5 0x56020c96d16f <unknown>
+#6 0x56020c96d921 <unknown>
+#7 0x56020c9bbe94 <unknown>
+#8 0x56020c99365d <unknown>
+#9 0x56020c9b9328 <unknown>
+#10 0x56020c993403 <unknown>
+#11 0x56020c95fb02 <unknown>
+#12 0x56020c9607c1 <unknown>
+#13 0x56020ce60448 <unknown>
+#14 0x56020ce642af <unknown>
+#15 0x56020ce478d9 <unknown>
+#16 0x56020ce64e55 <unknown>
+#17 0x56020ce2d13f <unknown>
+#18 0x56020ce894b8 <unknown>
+#19 0x56020ce89693 <unknown>
+#20 0x56020ce9b613 <unknown>
+#21 0x7fcff7c969cb <unknown>
+#22 0x7fcff7d1aa0c <unknown>
+
+2025-10-21 22:13:59,251 - ERROR - ❌ Click failed for css selector=a:contains('Logout'): Message: invalid selector: An invalid or illegal selector was specified
+  (Session info: chrome=141.0.7390.78); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#invalidselectorexception
+Stacktrace:
+#0 0x56020ce9c67a <unknown>
+#1 0x56020c91b566 <unknown>
+#2 0x56020c922208 <unknown>
+#3 0x56020c9249a8 <unknown>
+#4 0x56020c924a33 <unknown>
+#5 0x56020c96d16f <unknown>
+#6 0x56020c96d921 <unknown>
+#7 0x56020c9bbe94 <unknown>
+#8 0x56020c99365d <unknown>
+#9 0x56020c9b9328 <unknown>
+#10 0x56020c993403 <unknown>
+#11 0x56020c95fb02 <unknown>
+#12 0x56020c9607c1 <unknown>
+#13 0x56020ce60448 <unknown>
+#14 0x56020ce642af <unknown>
+#15 0x56020ce478d9 <unknown>
+#16 0x56020ce64e55 <unknown>
+#17 0x56020ce2d13f <unknown>
+#18 0x56020ce894b8 <unknown>
+#19 0x56020ce89693 <unknown>
+#20 0x56020ce9b613 <unknown>
+#21 0x7fcff7c969cb <unknown>
+#22 0x7fcff7d1aa0c <unknown>
+
+2025-10-21 22:13:59,270 - ERROR - ❌ Click failed for css selector=button:contains('Sign Out'): Message: invalid selector: An invalid or illegal selector was specified
+  (Session info: chrome=141.0.7390.78); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#invalidselectorexception
+Stacktrace:
+#0 0x56020ce9c67a <unknown>
+#1 0x56020c91b566 <unknown>
+#2 0x56020c922208 <unknown>
+#3 0x56020c9249a8 <unknown>
+#4 0x56020c924a33 <unknown>
+#5 0x56020c96d16f <unknown>
+#6 0x56020c96d921 <unknown>
+#7 0x56020c9bbe94 <unknown>
+#8 0x56020c99365d <unknown>
+#9 0x56020c9b9328 <unknown>
+#10 0x56020c993403 <unknown>
+#11 0x56020c95fb02 <unknown>
+#12 0x56020c9607c1 <unknown>
+#13 0x56020ce60448 <unknown>
+#14 0x56020ce642af <unknown>
+#15 0x56020ce478d9 <unknown>
+#16 0x56020ce64e55 <unknown>
+#17 0x56020ce2d13f <unknown>
+#18 0x56020ce894b8 <unknown>
+#19 0x56020ce89693 <unknown>
+#20 0x56020ce9b613 <unknown>
+#21 0x7fcff7c969cb <unknown>
+#22 0x7fcff7d1aa0c <unknown>
+
+2025-10-21 22:13:59,292 - ERROR - ❌ Click failed for css selector=a:contains('Sign Out'): Message: invalid selector: An invalid or illegal selector was specified
+  (Session info: chrome=141.0.7390.78); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#invalidselectorexception
+Stacktrace:
+#0 0x56020ce9c67a <unknown>
+#1 0x56020c91b566 <unknown>
+#2 0x56020c922208 <unknown>
+#3 0x56020c9249a8 <unknown>
+#4 0x56020c924a33 <unknown>
+#5 0x56020c96d16f <unknown>
+#6 0x56020c96d921 <unknown>
+#7 0x56020c9bbe94 <unknown>
+#8 0x56020c99365d <unknown>
+#9 0x56020c9b9328 <unknown>
+#10 0x56020c993403 <unknown>
+#11 0x56020c95fb02 <unknown>
+#12 0x56020c9607c1 <unknown>
+#13 0x56020ce60448 <unknown>
+#14 0x56020ce642af <unknown>
+#15 0x56020ce478d9 <unknown>
+#16 0x56020ce64e55 <unknown>
+#17 0x56020ce2d13f <unknown>
+#18 0x56020ce894b8 <unknown>
+#19 0x56020ce89693 <unknown>
+#20 0x56020ce9b613 <unknown>
+#21 0x7fcff7c969cb <unknown>
+#22 0x7fcff7d1aa0c <unknown>
+
+2025-10-21 22:14:09,811 - ERROR - ❌ Click failed for css selector=[data-testid='logout']: Message: 
+Stacktrace:
+#0 0x56020ce9c67a <unknown>
+#1 0x56020c91b566 <unknown>
+#2 0x56020c96d68d <unknown>
+#3 0x56020c96d921 <unknown>
+#4 0x56020c9bbe94 <unknown>
+#5 0x56020c99365d <unknown>
+#6 0x56020c9b9328 <unknown>
+#7 0x56020c993403 <unknown>
+#8 0x56020c95fb02 <unknown>
+#9 0x56020c9607c1 <unknown>
+#10 0x56020ce60448 <unknown>
+#11 0x56020ce642af <unknown>
+#12 0x56020ce478d9 <unknown>
+#13 0x56020ce64e55 <unknown>
+#14 0x56020ce2d13f <unknown>
+#15 0x56020ce894b8 <unknown>
+#16 0x56020ce89693 <unknown>
+#17 0x56020ce9b613 <unknown>
+#18 0x7fcff7c969cb <unknown>
+#19 0x7fcff7d1aa0c <unknown>
+
+2025-10-21 22:14:09,812 - WARNING - ⚠️ Logout functionality not found
+2025-10-21 22:14:11,812 - INFO - 🧪 Testing login for: recruiter1_2ilute@test.com
+2025-10-21 22:14:15,401 - INFO - 📍 Navigated to: http://localhost:3000/login
+2025-10-21 22:14:22,835 - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ConnectionResetError(104, 'Connection reset by peer')': /session/f00cb9762bcb225ba828f0b300119b00
+2025-10-21 22:14:22,839 - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f7cd933dfd0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/f00cb9762bcb225ba828f0b300119b00
+2025-10-21 22:14:22,844 - WARNING - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f7cd9339260>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/f00cb9762bcb225ba828f0b300119b00
+2025-10-21 22:14:22,847 - INFO - 🔒 WebDriver closed

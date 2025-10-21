@@ -66,14 +66,9 @@ const UserManagementTab = () => {
       }
     } catch (error) {
       console.error('❌ Error fetching users:', error);
-      // Fallback to mock data
-      setUsers([
-        { id: 1, name: 'John Doe', email: 'john@example.com', role: 'applicant', status: 'active', joinDate: '2024-01-15', lastLogin: '2024-03-22', profileComplete: 85 },
-        { id: 2, name: 'Sarah Johnson', email: 'sarah@techcorp.com', role: 'recruiter', status: 'active', joinDate: '2024-02-20', lastLogin: '2024-03-21', profileComplete: 100 },
-        { id: 3, name: 'Mike Wilson', email: 'mike@example.com', role: 'applicant', status: 'pending', joinDate: '2024-03-10', lastLogin: '2024-03-20', profileComplete: 45 },
-        { id: 4, name: 'Lisa Chen', email: 'lisa@startup.com', role: 'recruiter', status: 'active', joinDate: '2024-03-15', lastLogin: '2024-03-22', profileComplete: 90 },
-        { id: 5, name: 'David Brown', email: 'david@company.com', role: 'applicant', status: 'suspended', joinDate: '2024-02-05', lastLogin: '2024-03-15', profileComplete: 60 }
-      ]);
+      // No fallback to mock data - show empty state
+      console.warn('No users data available');
+      setUsers([]);
     } finally {
       setLoading(false);
     }

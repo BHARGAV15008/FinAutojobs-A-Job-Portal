@@ -70,7 +70,10 @@ module.exports = {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        heading: ['Work Sans', 'Inter', 'system-ui', 'sans-serif'],
+        body: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Work Sans', 'Inter', 'system-ui', 'sans-serif'],
       },
       fontSize: {
         'xs': ['0.75rem', { lineHeight: '1.4' }],
@@ -86,6 +89,17 @@ module.exports = {
         '7xl': ['2.25rem', { lineHeight: '1.1' }],
         '8xl': ['2.25rem', { lineHeight: '1.1' }],
         '9xl': ['2.25rem', { lineHeight: '1.1' }],
+      },
+      fontWeight: {
+        thin: '100',
+        extralight: '200',
+        light: '300',
+        normal: '400',
+        medium: '500',
+        semibold: '600',
+        bold: '700',
+        extrabold: '800',
+        black: '900',
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',

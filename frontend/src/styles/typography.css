@@ -1,0 +1,234 @@
+/* Enhanced Typography System for FinAutoJobs */
+
+/* Font Face Declarations for better performance */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap');
+
+/* Typography Utility Classes */
+
+/* Heading Styles */
+.heading-hero {
+  font-family: 'Work Sans', 'Inter', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.heading-section {
+  font-family: 'Work Sans', 'Inter', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.heading-card {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: clamp(1.125rem, 2vw, 1.5rem);
+  line-height: 1.3;
+}
+
+/* Body Text Styles */
+.body-large {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+
+.body-regular {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.body-small {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Job-specific Typography */
+.job-title {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 1.25rem;
+  line-height: 1.3;
+  color: #1f2937;
+}
+
+.company-name {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 1rem;
+  line-height: 1.4;
+  color: #3b82f6;
+}
+
+.job-meta {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: #6b7280;
+}
+
+.salary-text {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 1.125rem;
+  line-height: 1.3;
+  color: #059669;
+}
+
+/* Button Typography */
+.btn-primary-text {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 0.875rem;
+  line-height: 1.2;
+  letter-spacing: 0.025em;
+}
+
+.btn-secondary-text {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 0.875rem;
+  line-height: 1.2;
+}
+
+/* Navigation Typography */
+.nav-link {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 0.875rem;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+}
+
+.nav-brand {
+  font-family: 'Work Sans', 'Inter', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.25rem;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+/* Form Typography */
+.form-label {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: #374151;
+}
+
+.form-input {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.form-helper {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: #6b7280;
+}
+
+/* Dashboard Typography */
+.dashboard-metric {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 2rem;
+  line-height: 1.1;
+  color: #1f2937;
+}
+
+.dashboard-label {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: #6b7280;
+}
+
+/* Responsive Typography */
+@media (max-width: 768px) {
+  .heading-hero {
+    font-size: 2rem;
+    line-height: 1.2;
+  }
+  
+  .heading-section {
+    font-size: 1.5rem;
+    line-height: 1.3;
+  }
+  
+  .job-title {
+    font-size: 1.125rem;
+  }
+  
+  .dashboard-metric {
+    font-size: 1.5rem;
+  }
+}
+
+/* Dark Mode Typography */
+@media (prefers-color-scheme: dark) {
+  .job-title {
+    color: #f9fafb;
+  }
+  
+  .form-label {
+    color: #d1d5db;
+  }
+  
+  .dashboard-metric {
+    color: #f9fafb;
+  }
+}
+
+/* Print Styles */
+@media print {
+  * {
+    font-family: 'Inter', system-ui, sans-serif !important;
+  }
+  
+  .heading-hero,
+  .heading-section {
+    font-family: 'Work Sans', 'Inter', system-ui, sans-serif !important;
+  }
+}
+
+/* Performance Optimizations */
+.font-display-swap {
+  font-display: swap;
+}
+
+/* Accessibility Improvements */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .job-title,
+  .company-name,
+  .salary-text {
+    font-weight: 700;
+  }
+}

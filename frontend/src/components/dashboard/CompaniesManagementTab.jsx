@@ -21,45 +21,9 @@ const CompaniesManagementTab = () => {
             setCompanies(response.data);
         } catch (error) {
             console.error('Error fetching companies:', error);
-            // Fallback to mock data
-            setCompanies([
-                {
-                    id: 1,
-                    name: 'TechCorp Solutions',
-                    email: 'hr@techcorp.com',
-                    industry: 'Technology',
-                    size: '100-500',
-                    status: 'verified',
-                    joinDate: '2024-01-15',
-                    jobsPosted: 25,
-                    applicationsReceived: 150,
-                    verifiedAt: '2024-01-20'
-                },
-                {
-                    id: 2,
-                    name: 'StartupXYZ',
-                    email: 'careers@startupxyz.com',
-                    industry: 'Fintech',
-                    size: '10-50',
-                    status: 'pending',
-                    joinDate: '2024-02-10',
-                    jobsPosted: 8,
-                    applicationsReceived: 45,
-                    verifiedAt: null
-                },
-                {
-                    id: 3,
-                    name: 'WebSolutions Inc',
-                    email: 'jobs@websolutions.com',
-                    industry: 'Web Development',
-                    size: '50-100',
-                    status: 'verified',
-                    joinDate: '2024-01-25',
-                    jobsPosted: 15,
-                    applicationsReceived: 89,
-                    verifiedAt: '2024-01-30'
-                }
-            ]);
+            // No fallback to mock data - show empty state
+            console.warn('No companies data available');
+            setCompanies([]);
         } finally {
             setLoading(false);
         }

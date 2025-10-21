@@ -73,7 +73,41 @@ const ApplicantAnalyticsTab = ({ user }) => {
   };
 
   useEffect(() => {
-    setAnalytics(mockAnalytics);
+    const fetchAnalytics = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          console.warn('No auth token found');
+          setAnalytics({});
+          return;
+        }
+
+        const response = await fetch(`/api/analytics/applicant?timeRange=${timeRange}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.analytics) {
+            setAnalytics(data.analytics);
+          } else {
+            console.warn('No analytics data found');
+            setAnalytics({});
+          }
+        } else {
+          console.error('Failed to fetch analytics:', response.status);
+          setAnalytics({});
+        }
+      } catch (error) {
+        console.error('Error fetching analytics:', error);
+        setAnalytics({});
+      }
+    };
+
+    fetchAnalytics();
   }, [timeRange]);
 
   const getActivityIcon = (type) => {

@@ -54,9 +54,6 @@ const SkillsAssessmentPage = React.lazy(() => import('../pages/SkillsAssessmentP
   default: () => <div>Skills Assessment Page Loading...</div> 
 })));
 
-const ResumeBuilderPage = React.lazy(() => import('../pages/ResumeBuilderPage').catch(() => ({ 
-  default: () => <div>Resume Builder Page Loading...</div> 
-})));
 
 const SignupPage = React.lazy(() => import('../pages/SignupPage').catch(() => ({ 
   default: () => <div>Signup Page Loading...</div> 
@@ -68,6 +65,10 @@ const JobAlertsPage = React.lazy(() => import('../pages/JobAlertsPage').catch(()
 
 const AddJobPage = React.lazy(() => import('../pages/AddJobPage').catch(() => ({ 
   default: () => <div>Add Job Page Loading...</div> 
+})));
+
+const MessagesPage = React.lazy(() => import('../pages/MessagesPage').catch(() => ({ 
+  default: () => <div>Messages Page Loading...</div> 
 })));
 
 
@@ -112,8 +113,8 @@ const AppRoutes = () => {
             <Route path="/companies">{() => <CompaniesPage />}</Route>
             <Route path="/salary-insights">{() => <SalaryInsightsPage />}</Route>
             <Route path="/skills-assessment">{() => <SkillsAssessmentPage />}</Route>
-            <Route path="/resume">{() => <ResumeBuilderPage />}</Route>
             <Route path="/job-alerts">{() => <JobAlertsPage />}</Route>
+            <Route path="/messages">{() => <MessagesPage />}</Route>
             <Route path="/add-job">{() => <AddJobPage />}</Route>
             <Route path="/post-job">{() => <AddJobPage />}</Route>
             <Route path="/animation-test">{() => <AnimationTestPage />}</Route>

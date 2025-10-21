@@ -1,0 +1,81 @@
+{
+  "healthChecks": [
+    {
+      "phase": "error_detection",
+      "status": "warning",
+      "errors": 3,
+      "fixes": 1,
+      "timestamp": "2025-10-21T12:11:42.269Z"
+    }
+  ],
+  "errorDetection": {
+    "errors": [
+      {
+        "type": "API_ENDPOINT_ERROR",
+        "location": "backend",
+        "message": "POST /api/auth/register returned 400",
+        "severity": "high"
+      },
+      {
+        "type": "API_ENDPOINT_ERROR",
+        "location": "backend",
+        "message": "POST /api/auth/login returned 400",
+        "severity": "high"
+      },
+      {
+        "type": "MISSING_ENV_FILE",
+        "location": "database",
+        "message": ".env file not found",
+        "severity": "medium"
+      }
+    ],
+    "fixes": [
+      {
+        "type": "CREATE_ENV_FILE",
+        "location": "database",
+        "description": "Create .env file with default values"
+      }
+    ],
+    "success": false
+  },
+  "testResults": [
+    {
+      "testType": "api",
+      "status": "failed",
+      "attempt": 3,
+      "error": "Tests failed with exit code 1",
+      "timestamp": "2025-10-21T12:12:13.095Z"
+    },
+    {
+      "testType": "forms",
+      "status": "failed",
+      "attempt": 3,
+      "error": "Tests failed with exit code 1",
+      "timestamp": "2025-10-21T12:12:42.027Z"
+    },
+    {
+      "testType": "e2e",
+      "status": "failed",
+      "attempt": 3,
+      "error": "Tests failed with exit code 1",
+      "timestamp": "2025-10-21T12:21:43.036Z"
+    }
+  ],
+  "overallStatus": "failed",
+  "generatedAt": "2025-10-21T12:21:43.229Z",
+  "environment": {
+    "nodeVersion": "v24.9.0",
+    "platform": "linux",
+    "arch": "x64",
+    "cwd": "/run/media/technog/Practices/FinAutojobs-A-Job-Portal/testing"
+  },
+  "configuration": {
+    "maxRetries": 3,
+    "testTypes": [
+      "api",
+      "forms",
+      "e2e"
+    ],
+    "projectRoot": "/run/media/technog/Practices/FinAutojobs-A-Job-Portal/"
+  }
+}

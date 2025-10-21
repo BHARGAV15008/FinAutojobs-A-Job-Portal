@@ -30,8 +30,11 @@ import {
   Home,
   Visibility,
   Groups,
+  RocketLaunch
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
+import SmartApplicationSystem from './application/SmartApplicationSystem';
+import { useAuth } from '../contexts/AuthContext';
 
 const StyledJobCard = styled(Card)(({ theme, featured }) => ({
   height: '100%',
@@ -51,8 +54,10 @@ const StyledJobCard = styled(Card)(({ theme, featured }) => ({
 }));
 
 const JobCard = ({ job, onFavoriteToggle, onBookmarkToggle, isFavorited = false, isBookmarked = false }) => {
+  const { user } = useAuth();
   const [localFavorited, setLocalFavorited] = useState(isFavorited);
   const [localBookmarked, setLocalBookmarked] = useState(isBookmarked);
+  const [showApplicationSystem, setShowApplicationSystem] = useState(false);
 
   const handleFavoriteClick = (e) => {
     e.preventDefault();
@@ -89,6 +94,29 @@ const JobCard = ({ job, onFavoriteToggle, onBookmarkToggle, isFavorited = false,
       }
     };
     return `${formatAmount(min)} - ${formatAmount(max)}`;
+  };
+
+  const handleSmartApply = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) {
+      // Redirect to login
+      window.location.href = '/login';
+      return;
+    }
+    setShowApplicationSystem(true);
+  };
+
+  const handleApplicationSubmit = async (applicationData) => {
+    try {
+      console.log('Application submitted:', applicationData);
+      // Here you would make API call to submit application
+      // await submitJobApplication(applicationData);
+      alert('Application submitted successfully!');
+    } catch (error) {
+      console.error('Application submission failed:', error);
+      alert('Failed to submit application. Please try again.');
+    }
   };
 
   return (
@@ -279,8 +307,16 @@ const JobCard = ({ job, onFavoriteToggle, onBookmarkToggle, isFavorited = false,
           variant="contained"
           size="small"
           fullWidth
+          startIcon={<RocketLaunch />}
+          onClick={handleSmartApply}
+          sx={{
+            background: 'linear-gradient(45deg, #667eea 30%, #764ba2 90%)',
+            '&:hover': {
+              background: 'linear-gradient(45deg, #5a67d8 30%, #6b46c1 90%)',
+            }
+          }}
         >
-          Apply Now
+          Smart Apply
         </Button>
       </CardActions>
 
@@ -302,6 +338,15 @@ const JobCard = ({ job, onFavoriteToggle, onBookmarkToggle, isFavorited = false,
         >
           FEATURED
         </Box>
+      )}
+
+      {/* Smart Application System Dialog */}
+      {showApplicationSystem && (
+        <SmartApplicationSystem
+          job={job}
+          onApplicationSubmit={handleApplicationSubmit}
+          onClose={() => setShowApplicationSystem(false)}
+        />
       )}
     </StyledJobCard>
   );
