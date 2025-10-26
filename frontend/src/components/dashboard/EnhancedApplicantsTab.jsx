@@ -428,101 +428,151 @@ const EnhancedApplicantsTab = () => {
       transition={{ duration: 0.5 }}
     >
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            👥 Applicant Management
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            Manage and track all job applications
-          </p>
-        </div>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
+              <span className="mr-3 text-blue-600">👥</span>
+              Applicant Management
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mt-2">
+              Manage and track all job applications • {mockApplicants.length} total applicants
+            </p>
+          </div>
 
-        {/* View Mode Toggle */}
-        <div className="flex space-x-2">
-          <motion.button
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
-              viewMode === 'table'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-            }`}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setViewMode('table')}
-          >
-            📋 Table View
-          </motion.button>
-          <motion.button
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
-              viewMode === 'cards'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-            }`}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setViewMode('cards')}
-          >
-            📊 Card View
-          </motion.button>
+          {/* View Mode Toggle */}
+          <div className="flex space-x-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+            <motion.button
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                viewMode === 'table'
+                  ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              }`}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setViewMode('table')}
+            >
+              📋 Table
+            </motion.button>
+            <motion.button
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                viewMode === 'cards'
+                  ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              }`}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setViewMode('cards')}
+            >
+              📊 Cards
+            </motion.button>
+          </div>
         </div>
       </div>
 
       {/* Status Filter Tabs */}
-      <div className="flex flex-wrap gap-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-        {Object.entries(statusConfig).map(([status, config]) => (
-          <motion.button
-            key={status}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-              selectedStatus === status
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
-            }`}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setSelectedStatus(status)}
-          >
-            {config.label}
-            <span className="ml-2 px-2 py-1 bg-gray-200 dark:bg-gray-600 text-xs rounded-full">
-              {config.count}
-            </span>
-          </motion.button>
-        ))}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-1">
+        <div className="flex flex-wrap gap-1">
+          {Object.entries(statusConfig).map(([status, config]) => (
+            <motion.button
+              key={status}
+              className={`relative px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
+                selectedStatus === status
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-200'
+              }`}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setSelectedStatus(status)}
+            >
+              <span>{config.label}</span>
+              <span className={`px-2 py-1 text-xs rounded-full font-semibold ${
+                selectedStatus === status
+                  ? 'bg-white/20 text-white'
+                  : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300'
+              }`}>
+                {config.count}
+              </span>
+            </motion.button>
+          ))}
+        </div>
       </div>
 
       {/* Search and Sort Controls */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center">
-        <div className="flex-1">
-          <input
-            type="text"
-            placeholder="Search applicants by name, email, job title, or skills..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-        <div className="flex gap-2">
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-          >
-            <option value="appliedDate">Applied Date</option>
-            <option value="name">Name</option>
-            <option value="rating">Rating</option>
-            <option value="experience">Experience</option>
-          </select>
-          <button
-            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-            className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-          >
-            {sortOrder === 'asc' ? '↑' : '↓'}
-          </button>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+        <div className="flex flex-col sm:flex-row gap-4 items-center">
+          <div className="flex-1 relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <span className="text-gray-400">🔍</span>
+            </div>
+            <input
+              type="text"
+              placeholder="Search applicants by name, email, job title, or skills..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white dark:focus:bg-gray-600 transition-colors"
+            />
+          </div>
+          <div className="flex gap-2">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="appliedDate">📅 Applied Date</option>
+              <option value="name">👤 Name</option>
+              <option value="rating">⭐ Rating</option>
+              <option value="experience">💼 Experience</option>
+            </select>
+            <motion.button
+              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              className="px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              title={`Sort ${sortOrder === 'asc' ? 'Descending' : 'Ascending'}`}
+            >
+              {sortOrder === 'asc' ? '↑ ASC' : '↓ DESC'}
+            </motion.button>
+          </div>
         </div>
       </div>
 
       {/* Applicants Display */}
       <AnimatePresence mode="wait">
-        {viewMode === 'table' ? (
+        {filteredAndSortedApplicants.length === 0 ? (
+          <motion.div
+            key="empty"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center"
+          >
+            <div className="text-6xl mb-4">👥</div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              No Applicants Found
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              {searchQuery 
+                ? `No applicants match your search "${searchQuery}"`
+                : selectedStatus !== 'all' 
+                ? `No applicants with status "${statusConfig[selectedStatus]?.label}"`
+                : "No applicants have applied yet"
+              }
+            </p>
+            {(searchQuery || selectedStatus !== 'all') && (
+              <motion.button
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedStatus('all');
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Clear Filters
+              </motion.button>
+            )}
+          </motion.div>
+        ) : viewMode === 'table' ? (
           <motion.div
             key="table"
             initial={{ opacity: 0, x: -20 }}

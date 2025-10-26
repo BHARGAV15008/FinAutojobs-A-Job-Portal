@@ -116,43 +116,12 @@ const ApplicantJobsTab = ({ user }) => {
   ];
 
   useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem('authToken');
-        
-        const response = await fetch('/api/jobs/recommended', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.jobs) {
-            setJobs(data.jobs);
-            setFilteredJobs(data.jobs);
-          } else {
-            console.warn('No jobs found');
-            setJobs([]);
-            setFilteredJobs([]);
-          }
-        } else {
-          console.error('Failed to fetch jobs:', response.status);
-          setJobs([]);
-          setFilteredJobs([]);
-        }
-      } catch (error) {
-        console.error('Error fetching jobs:', error);
-        setJobs([]);
-        setFilteredJobs([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchJobs();
+    // Simulate API call
+    setTimeout(() => {
+      setJobs(mockJobs);
+      setFilteredJobs(mockJobs);
+      setLoading(false);
+    }, 1000);
   }, []);
 
   useEffect(() => {

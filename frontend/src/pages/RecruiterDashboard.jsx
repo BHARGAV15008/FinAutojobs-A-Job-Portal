@@ -50,6 +50,7 @@ const RecruiterDashboardContent = () => {
     dashboardContext = {
       currentUser: null,
       isAuthenticated: false,
+      refreshData: () => Promise.resolve(),
       getStats: () => ({
         activeJobs: 0,
         totalApplications: 0,
@@ -111,26 +112,123 @@ const RecruiterDashboardContent = () => {
     // Manual check for accepted applications completed
   }
 
-  // Handle job editing
+  // Handle job editing - redirect to post tab with data
   const handleEditJob = (job) => {
-    // Job editing initiated
+    console.log('🔍 Edit job initiated:', job);
+    // Set the job data for editing
     setEditingJob(job);
+    // Redirect to jobs tab and post sub-tab
     setActiveTab("jobs");
     setActiveJobTab("post");
-    // Job editing state updated
+    // Update URL to prevent URL parsing from overriding the tab change
+    window.history.pushState({}, '', '/recruiter-dashboard/jobs/post');
   };
 
-  // Listen for edit job events
+  // Handle job update
+  const handleUpdateJob = async (jobId, updateData) => {
+    console.log('🔍 Updating job:', jobId, updateData);
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(updateData)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('✅ Job updated successfully:', result);
+      
+      // Refresh dashboard data to show updated job
+      if (refreshDashboard) {
+        refreshDashboard();
+      }
+      
+      // Close modal
+      setEditingJob(null);
+      
+      return result;
+    } catch (error) {
+      console.error('❌ Failed to update job:', error);
+      throw error;
+    }
+  };
+
+  // Listen for edit job events and dashboard management
   useEffect(() => {
     const handleEditJobEvent = (event) => {
+      console.log('🔍 RecruiterDashboard received editJob event:', event);
+      console.log('🔍 Event detail:', event.detail);
+      console.log('🔍 Job data:', event.detail.job);
       handleEditJob(event.detail.job);
     };
 
+    const handleRefreshDashboard = () => {
+      console.log('🔄 RecruiterDashboard received refreshDashboard event');
+      if (refreshData) {
+        refreshData();
+      }
+    };
+
+    const handleClearEditingJob = () => {
+      console.log('🧹 RecruiterDashboard received clearEditingJob event');
+      setEditingJob(null);
+    };
+
     window.addEventListener('editJob', handleEditJobEvent);
+    window.addEventListener('refreshDashboard', handleRefreshDashboard);
+    window.addEventListener('clearEditingJob', handleClearEditingJob);
+    console.log('✅ Dashboard event listeners added to RecruiterDashboard');
+    
     return () => {
       window.removeEventListener('editJob', handleEditJobEvent);
+      window.removeEventListener('refreshDashboard', handleRefreshDashboard);
+      window.removeEventListener('clearEditingJob', handleClearEditingJob);
+      console.log('🧹 Dashboard event listeners removed from RecruiterDashboard');
     };
-  }, []);
+  }, [refreshData]);
+
+  // Periodic check for jobs past deadline (every 5 minutes)
+  useEffect(() => {
+    const checkJobDeadlines = async () => {
+      try {
+        console.log('🕐 Checking for jobs past deadline...');
+        const response = await fetch(`${API_BASE_URL}/jobs/check-deadlines`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.updatedCount > 0) {
+            console.log(`✅ ${result.updatedCount} jobs moved to closed status due to deadline`);
+            // Refresh dashboard to show updated job statuses
+            if (refreshData) {
+              refreshData();
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error checking job deadlines:', error);
+      }
+    };
+
+    // Check immediately on mount
+    checkJobDeadlines();
+    
+    // Then check every 5 minutes
+    const interval = setInterval(checkJobDeadlines, 5 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, [refreshData]);
 
   // Use real authenticated user data with proper registration data mapping
   const user = currentUser ? {

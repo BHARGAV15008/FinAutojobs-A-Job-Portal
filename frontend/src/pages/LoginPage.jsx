@@ -122,19 +122,37 @@ const LoginPage = () => {
 
       const result = await login(loginData)
       
-      toast({
-        title: "Welcome back!",
-        description: "Successfully logged in to your account.",
-        variant: "default"
-      })
+      if (result.success) {
+        // Show success message
+        toast({
+          title: "Welcome back!",
+          description: result.message || "Successfully logged in to your account.",
+          variant: "default"
+        })
 
-      // Redirect based on role
-      if (result.user?.role === 'recruiter') {
-        setLocation('/recruiter-dashboard')
-      } else if (result.user?.role === 'admin') {
-        setLocation('/admin-dashboard')
+        // Wait a moment for the user to see the success message
+        setTimeout(() => {
+          // Redirect based on role
+          const role = result.user?.role;
+          if (role === 'recruiter' || role === 'employer') {
+            setLocation('/recruiter-dashboard')
+          } else if (role === 'admin') {
+            setLocation('/admin-dashboard')
+          } else {
+            setLocation('/applicant-dashboard')
+          }
+        }, 1000) // 1 second delay to show success message
+
       } else {
-        setLocation('/applicant-dashboard')
+        // Handle login failure
+        const errorMessage = result.error || 'Login failed. Please check your credentials.'
+        setLoginError(errorMessage)
+        
+        toast({
+          title: "Login Failed",
+          description: errorMessage,
+          variant: "destructive"
+        })
       }
 
     } catch (error) {
@@ -157,12 +175,18 @@ const LoginPage = () => {
       variant: "default"
     })
     
-    // Redirect based on role
-    if (userData.role === 'recruiter') {
-      setLocation('/recruiter-dashboard')
-    } else {
-      setLocation('/applicant-dashboard')
-    }
+    // Wait a moment for the user to see the success message
+    setTimeout(() => {
+      // Redirect based on role
+      const role = userData.role;
+      if (role === 'recruiter' || role === 'employer') {
+        setLocation('/recruiter-dashboard')
+      } else if (role === 'admin') {
+        setLocation('/admin-dashboard')
+      } else {
+        setLocation('/applicant-dashboard')
+      }
+    }, 1000) // 1 second delay to show success message
   }
 
   const handleOAuthError = (error) => {

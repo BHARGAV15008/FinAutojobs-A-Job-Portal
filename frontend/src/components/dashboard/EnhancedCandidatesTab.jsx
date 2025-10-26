@@ -61,12 +61,21 @@ const EnhancedCandidatesTab = () => {
       applicationId: app._id,
       jobId: app.jobId,
       candidateId: app.applicantId,
-      name: app.applicantSnapshot?.fullName || 'Unknown Candidate',
+      name: app.applicantSnapshot?.fullName || app.applicantSnapshot?.full_name || 'Unknown Candidate',
       email: app.applicantSnapshot?.email || '',
       phone: app.applicantSnapshot?.phone || app.applicationData?.phone || '',
-      currentRole: app.applicationData?.currentJobTitle || 'Not specified',
+      location: app.applicantSnapshot?.location || app.applicationData?.location || 'Location not specified',
+      bio: app.applicantSnapshot?.bio || app.applicationData?.bio || '',
+      summary: app.applicantSnapshot?.bio || app.applicationData?.bio || app.applicantSnapshot?.professionalSummary || '',
+      qualification: app.applicantSnapshot?.qualification || app.applicationData?.qualification || 'Not specified',
+      currentRole: app.applicantSnapshot?.currentJobTitle || app.applicationData?.currentJobTitle || app.applicantSnapshot?.currentRole || 'Not specified',
+      currentJobTitle: app.applicantSnapshot?.currentJobTitle || app.applicationData?.currentJobTitle || 'Not specified',
+      expectedSalary: app.applicantSnapshot?.expectedSalary || app.applicationData?.expectedSalary || 'Not specified',
       experience: (() => {
-        // Try to get experience from different sources
+        // Try to get experience from different sources - prioritize applicantSnapshot first
+        const snapshotExperience = app.applicantSnapshot?.experience;
+        const snapshotYears = app.applicantSnapshot?.yearsOfExperience;
+        
         const appExperience = app.applicationData?.experience;
         const yearsOfExperience = app.applicationData?.yearsOfExperience;
         const experienceMin = app.applicationData?.experienceMin;
@@ -85,6 +94,8 @@ const EnhancedCandidatesTab = () => {
         
         // Debug: Log available experience data
         console.log('🔍 Experience data for', app.applicantSnapshot?.fullName || 'Unknown', {
+          snapshotExperience,
+          snapshotYears,
           appExperience,
           yearsOfExperience,
           experienceMin,
@@ -101,8 +112,14 @@ const EnhancedCandidatesTab = () => {
           fullApplicantSnapshot: app.applicantSnapshot
         });
         
-        // Priority: nested professional info > flat application data > profile data > default
-        if (professionalTotalExp !== undefined && professionalTotalExp !== null) {
+        // Priority: applicantSnapshot > nested professional info > flat application data > profile data > default
+        if (snapshotExperience && snapshotExperience.trim()) {
+          // Applicant snapshot experience (from submitted application)
+          return snapshotExperience;
+        } else if (snapshotYears !== undefined && snapshotYears !== null) {
+          // Applicant snapshot years of experience
+          return `${snapshotYears} years`;
+        } else if (professionalTotalExp !== undefined && professionalTotalExp !== null) {
           // Professional info total experience (from form)
           return `${professionalTotalExp} years`;
         } else if (professionalWorkExp && professionalWorkExp.trim()) {
@@ -123,39 +140,142 @@ const EnhancedCandidatesTab = () => {
         } else if (experienceLevel && experienceLevel.trim()) {
           // Experience level (e.g., "Senior", "Mid-level")
           return experienceLevel;
-        } else if (experienceMin !== undefined && experienceMax !== undefined) {
-          // If we have min/max range from application
-          return experienceMin === experienceMax 
-            ? `${experienceMin} years` 
-            : `${experienceMin}-${experienceMax} years`;
         } else if (yearsOfExperience !== undefined && yearsOfExperience !== null) {
-          // Single years value from application
+          // Years of experience as number
           return `${yearsOfExperience} years`;
         } else if (profileExperience && profileExperience.trim()) {
-          // Experience text from profile
+          // Profile experience
           return profileExperience;
         } else if (profileYears !== undefined && profileYears !== null) {
-          // Years from profile
+          // Profile years of experience
           return `${profileYears} years`;
         } else {
+          // Default fallback
           return 'Not specified';
         }
       })(),
-      location: app.applicantSnapshot?.location || app.applicationData?.location || 'Not specified',
-      skills: app.applicationData?.skills || [],
-      education: [],
-      workExperience: [],
-      portfolioLinks: [],
+      skills: (() => {
+        // Extract skills from various sources
+        const snapshotSkills = app.applicantSnapshot?.skills;
+        const appDataSkills = app.applicationData?.skills;
+        
+        // Handle different skill formats (array or string)
+        let skillsArray = [];
+        if (Array.isArray(snapshotSkills) && snapshotSkills.length > 0) {
+          skillsArray = snapshotSkills;
+        } else if (typeof snapshotSkills === 'string' && snapshotSkills.trim()) {
+          try {
+            skillsArray = JSON.parse(snapshotSkills);
+          } catch {
+            skillsArray = snapshotSkills.split(',').map(s => s.trim());
+          }
+        } else if (Array.isArray(appDataSkills) && appDataSkills.length > 0) {
+          skillsArray = appDataSkills;
+        } else if (typeof appDataSkills === 'string' && appDataSkills.trim()) {
+          try {
+            skillsArray = JSON.parse(appDataSkills);
+          } catch {
+            skillsArray = appDataSkills.split(',').map(s => s.trim());
+          }
+        }
+        
+        return skillsArray;
+      })(),
+      education: app.applicantSnapshot?.education || app.applicationData?.education || [],
+      workExperience: app.applicantSnapshot?.workExperience || app.applicationData?.workExperience || [],
+      portfolioLinks: (() => {
+        // Enhanced portfolio links mapping from multiple sources
+        const links = [];
+        
+        // From application data
+        if (app.applicationData?.portfolioLinks) {
+          links.push(...app.applicationData.portfolioLinks);
+        }
+        
+        // From applicant snapshot
+        if (app.applicantSnapshot?.portfolioLinks) {
+          links.push(...app.applicantSnapshot.portfolioLinks);
+        }
+        
+        // Individual social links from applicant snapshot
+        if (app.applicantSnapshot?.linkedin_url || app.applicantSnapshot?.linkedinUrl) {
+          links.push({
+            type: 'LinkedIn',
+            url: app.applicantSnapshot.linkedin_url || app.applicantSnapshot.linkedinUrl,
+            label: 'LinkedIn Profile'
+          });
+        }
+        
+        if (app.applicantSnapshot?.github_url || app.applicantSnapshot?.githubUrl) {
+          links.push({
+            type: 'GitHub',
+            url: app.applicantSnapshot.github_url || app.applicantSnapshot.githubUrl,
+            label: 'GitHub Repository'
+          });
+        }
+        
+        if (app.applicantSnapshot?.portfolio_url || app.applicantSnapshot?.portfolioUrl) {
+          links.push({
+            type: 'Portfolio',
+            url: app.applicantSnapshot.portfolio_url || app.applicantSnapshot.portfolioUrl,
+            label: 'Personal Portfolio'
+          });
+        }
+        
+        return links;
+      })(),
       status: app.status || 'pending',
-      appliedDate: app.appliedAt ? new Date(app.appliedAt).toISOString().split('T')[0] : '',
-      lastActivity: app.updatedAt ? new Date(app.updatedAt).toISOString().split('T')[0] : '',
-      rating: 0,
+      appliedDate: app.appliedAt ? new Date(app.appliedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : app.createdAt ? new Date(app.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Unknown',
+      lastActivity: app.updatedAt ? new Date(app.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '',
+      rating: app.rating || 0,
       notes: app.recruiterNotes || '',
       isShortlisted: app.status === 'shortlisted',
       interviewScheduled: false,
-      resumeUrl: app.applicationData?.resumeUrl || '',
-      jobTitle: app.jobSnapshot?.title || 'Unknown Position',
-      company: app.jobSnapshot?.company || 'Unknown Company'
+      // Enhanced resume URL detection with comprehensive field checking
+      resumeUrl: (() => {
+        const resumeUrl = app.applicationData?.resumeUrl || 
+                         app.applicationData?.resume || 
+                         app.resume || 
+                         app.resumeUrl || 
+                         app.documents?.resumeUrl || 
+                         app.documents?.resume || 
+                         app.candidateData?.resumeUrl ||
+                         app.candidateData?.resume ||
+                         app.userProfile?.resumeUrl ||
+                         app.userProfile?.resume ||
+                         app.profileData?.resumeUrl ||
+                         app.profileData?.resume ||
+                         app.applicantSnapshot?.resumeUrl ||
+                         app.applicantSnapshot?.resume || '';
+        
+        // Log resume detection for debugging specific candidates
+        if (app.applicantSnapshot?.fullName === 'john wick' || app.candidateName === 'john wick') {
+          console.log('🔍 Resume detection for john wick:', {
+            'app.applicationData?.resumeUrl': app.applicationData?.resumeUrl,
+            'app.applicationData?.resume': app.applicationData?.resume,
+            'app.resume': app.resume,
+            'app.resumeUrl': app.resumeUrl,
+            'app.documents?.resumeUrl': app.documents?.resumeUrl,
+            'app.documents?.resume': app.documents?.resume,
+            'app.candidateData?.resumeUrl': app.candidateData?.resumeUrl,
+            'app.candidateData?.resume': app.candidateData?.resume,
+            'app.userProfile?.resumeUrl': app.userProfile?.resumeUrl,
+            'app.userProfile?.resume': app.userProfile?.resume,
+            'app.profileData?.resumeUrl': app.profileData?.resumeUrl,
+            'app.profileData?.resume': app.profileData?.resume,
+            'app.applicantSnapshot?.resumeUrl': app.applicantSnapshot?.resumeUrl,
+            'app.applicantSnapshot?.resume': app.applicantSnapshot?.resume,
+            'finalResumeUrl': resumeUrl,
+            'fullAppData': app
+          });
+        }
+        
+        return resumeUrl;
+      })(),
+      jobTitle: app.jobSnapshot?.title || app.jobTitle || 'Unknown Position',
+      company: app.jobSnapshot?.company || app.companyName || 'Unknown Company',
+      // Store original application data for debugging
+      originalApplicationData: app
     }));
   }, [applications]);
 
@@ -440,22 +560,47 @@ const EnhancedCandidatesTab = () => {
     
     try {
       console.log('🔍 Attempting to download resume for:', candidate.name);
+      console.log('🔍 Candidate data:', candidate);
       
-      // First try to get resume from application (priority: application resume > profile resume)
-      let resumeUrl = candidate.resumeUrl || candidate.resume;
+      // Enhanced resume URL detection with multiple fallbacks
+      let resumeUrl = candidate.resumeUrl || 
+                     candidate.resume || 
+                     candidate.applicationData?.resumeUrl ||
+                     candidate.applicationData?.resume ||
+                     candidate.documents?.resumeUrl ||
+                     candidate.documents?.resume;
+      
       let resumeSource = resumeUrl ? 'application' : 'profile';
       
-      // If no resume in application, fetch from user profile
+      console.log('🔍 Initial resume URL check:', resumeUrl);
+      
+      // If no resume in application data, try API-based download first
       if (!resumeUrl && candidate.candidateId) {
-        console.log('📄 No resume in application, fetching from user profile...');
+        console.log('📄 No resume URL found, trying API download methods...');
+        
+        // Try the candidatesAPI downloadResume function first
         try {
-          // Try multiple possible API endpoints for user profile
+          console.log('🔍 Trying candidatesAPI.downloadResume...');
+          const result = await candidatesAPI.downloadResume(candidate.candidateId);
+          if (result.success) {
+            console.log('✅ Resume downloaded via API successfully');
+            alert(`✅ Resume downloaded successfully for ${candidate.name}`);
+            return;
+          }
+        } catch (apiError) {
+          console.log('⚠️ API download failed:', apiError.message);
+        }
+        
+        // If API download fails, try fetching profile data
+        try {
           const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
           const possibleEndpoints = [
             `${apiUrl}/users/${candidate.candidateId}/profile`,
             `${apiUrl}/users/${candidate.candidateId}`,
             `${apiUrl}/profile/${candidate.candidateId}`,
-            `${apiUrl}/applicants/${candidate.candidateId}/profile`
+            `${apiUrl}/applicants/${candidate.candidateId}/profile`,
+            `${apiUrl}/candidates/${candidate.candidateId}/profile`,
+            `${apiUrl}/applications/${candidate.applicationId || candidate.id}`
           ];
           
           let profileData = null;
@@ -482,17 +627,24 @@ const EnhancedCandidatesTab = () => {
           }
           
           if (profileData) {
-            // Try different possible resume field names
-            resumeUrl = profileData.data?.resume || 
-                       profileData.data?.resumeUrl || 
-                       profileData.resume || 
-                       profileData.resumeUrl ||
-                       profileData.data?.profile?.resume ||
-                       profileData.data?.profile?.resumeUrl;
-            if (resumeUrl) {
-              resumeSource = 'profile';
+            // Enhanced resume field detection
+            const possibleResumeFields = [
+              'resume', 'resumeUrl', 'resume_url',
+              'data.resume', 'data.resumeUrl', 'data.resume_url',
+              'profile.resume', 'profile.resumeUrl', 'profile.resume_url',
+              'documents.resume', 'documents.resumeUrl', 'documents.resume_url',
+              'applicationData.resume', 'applicationData.resumeUrl'
+            ];
+            
+            for (const field of possibleResumeFields) {
+              const fieldValue = field.split('.').reduce((obj, key) => obj?.[key], profileData);
+              if (fieldValue && typeof fieldValue === 'string' && fieldValue.trim()) {
+                resumeUrl = fieldValue.trim();
+                resumeSource = 'profile';
+                console.log('📄 Found resume in profile field:', field, '=', resumeUrl);
+                break;
+              }
             }
-            console.log('📄 Found resume in profile:', resumeUrl);
           }
         } catch (profileError) {
           console.error('Failed to fetch profile:', profileError);
@@ -500,9 +652,47 @@ const EnhancedCandidatesTab = () => {
       }
       
       if (resumeUrl) {
-        // Create download link
+        // Validate URL format
+        let downloadUrl = resumeUrl;
+        
+        // If it's a relative URL, make it absolute
+        if (resumeUrl.startsWith('/')) {
+          const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+          downloadUrl = `${baseUrl}${resumeUrl}`;
+        }
+        
+        console.log('📄 Final download URL:', downloadUrl);
+        
+        // Try direct download first
+        try {
+          const response = await fetch(downloadUrl, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+          
+          if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${candidate.name.replace(/\s+/g, '_')}_Resume.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            
+            console.log('✅ Resume download completed for:', candidate.name, 'from', resumeSource);
+            alert(`✅ Resume downloaded successfully for ${candidate.name}`);
+            return;
+          }
+        } catch (fetchError) {
+          console.log('⚠️ Direct fetch failed, trying link method:', fetchError.message);
+        }
+        
+        // Fallback to link method
         const link = document.createElement('a');
-        link.href = resumeUrl;
+        link.href = downloadUrl;
         link.download = `${candidate.name.replace(/\s+/g, '_')}_Resume.pdf`;
         link.target = '_blank';
         document.body.appendChild(link);
@@ -510,9 +700,17 @@ const EnhancedCandidatesTab = () => {
         document.body.removeChild(link);
         
         console.log('✅ Resume download initiated for:', candidate.name, 'from', resumeSource);
-        alert(`✅ Resume download started for ${candidate.name} (from ${resumeSource})`);
+        alert(`✅ Resume download started for ${candidate.name}`);
       } else {
         console.log('❌ No resume found for:', candidate.name);
+        console.log('🔍 Candidate fields checked:', {
+          resumeUrl: candidate.resumeUrl,
+          resume: candidate.resume,
+          applicationData: candidate.applicationData,
+          documents: candidate.documents,
+          candidateId: candidate.candidateId
+        });
+        
         const message = `❌ No resume found for ${candidate.name}.\n\nPossible solutions:\n• Ask the candidate to upload their resume\n• Check if resume was uploaded during application\n• Contact the candidate directly for their resume`;
         alert(message);
       }

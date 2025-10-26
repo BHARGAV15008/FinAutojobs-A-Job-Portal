@@ -113,46 +113,8 @@ const ApplicantApplicationsTab = ({ user }) => {
   ];
 
   useEffect(() => {
-    const fetchApplications = async () => {
-      try {
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-          console.warn('No auth token found');
-          setApplications([]);
-          setFilteredApplications([]);
-          return;
-        }
-
-        const response = await fetch('/api/applications/my-applications', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.applications) {
-            setApplications(data.applications);
-            setFilteredApplications(data.applications);
-          } else {
-            console.warn('No applications found');
-            setApplications([]);
-            setFilteredApplications([]);
-          }
-        } else {
-          console.error('Failed to fetch applications:', response.status);
-          setApplications([]);
-          setFilteredApplications([]);
-        }
-      } catch (error) {
-        console.error('Error fetching applications:', error);
-        setApplications([]);
-        setFilteredApplications([]);
-      }
-    };
-
-    fetchApplications();
+    setApplications(mockApplications);
+    setFilteredApplications(mockApplications);
   }, []);
 
   useEffect(() => {

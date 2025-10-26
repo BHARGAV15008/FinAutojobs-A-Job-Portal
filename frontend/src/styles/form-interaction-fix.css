@@ -1,0 +1,63 @@
+/* TARGETED FIX: Only fix job posting form at /recruiter-dashboard/jobs/post */
+/* This CSS only affects the EnhancedJobPostingTab component with data-component="job-posting-form" */
+
+/* Target only the job posting form container and its elements */
+[data-component="job-posting-form"],
+[data-component="job-posting-form"] *,
+[data-component="job-posting-form"] .dashboard-card,
+[data-component="job-posting-form"] .form-section,
+[data-component="job-posting-form"] form {
+  pointer-events: auto !important;
+}
+
+/* Ensure all form inputs in job posting form are clickable */
+[data-component="job-posting-form"] input,
+[data-component="job-posting-form"] textarea,
+[data-component="job-posting-form"] select {
+  pointer-events: auto !important;
+  cursor: text !important;
+  user-select: text !important;
+  touch-action: auto !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* Ensure buttons in job posting form are clickable */
+[data-component="job-posting-form"] button,
+[data-component="job-posting-form"] [role="button"] {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* Ensure proper focus states for job posting form */
+[data-component="job-posting-form"] input:focus,
+[data-component="job-posting-form"] textarea:focus,
+[data-component="job-posting-form"] select:focus {
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+  z-index: 10 !important;
+}
+
+/* Dark mode support for job posting form only */
+.dark [data-component="job-posting-form"] input,
+.dark [data-component="job-posting-form"] textarea,
+.dark [data-component="job-posting-form"] select {
+  pointer-events: auto !important;
+  cursor: text !important;
+  background-color: #4b5563 !important;
+  border-color: #6b7280 !important;
+  color: #ffffff !important;
+}
+
+.dark [data-component="job-posting-form"] button {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+/* Ensure labels are clickable */
+[data-component="job-posting-form"] label {
+  pointer-events: auto !important;
+  cursor: default !important;
+}

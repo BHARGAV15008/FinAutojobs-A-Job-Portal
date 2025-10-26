@@ -40,21 +40,24 @@ const JobChart = ({ userRole }) => {
   const maxValue = Math.max(...chartData.data.flatMap(d => Object.values(d).filter(v => typeof v === 'number')), 1) || 1;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+    <div 
+      className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
+      style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
+    >
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6 font-inter dashboard-text">
           {chartData.title}
         </h3>
         <div className="flex items-center space-x-4 text-sm">
           <div className="flex items-center">
             <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-            <span className="text-gray-600 dark:text-gray-400">
+            <span className="text-gray-600 dark:text-gray-300 font-inter dashboard-secondary">
               {userRole === 'applicant' ? 'Applications' : 'Posted Jobs'}
             </span>
           </div>
           <div className="flex items-center">
             <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-            <span className="text-gray-600 dark:text-gray-400">
+            <span className="text-gray-600 dark:text-gray-300 font-inter dashboard-secondary">
               {userRole === 'applicant' ? 'Interviews' : 'Hired'}
             </span>
           </div>
@@ -87,7 +90,7 @@ const JobChart = ({ userRole }) => {
                     transition={{ duration: 0.8, delay: index * 0.1 + 0.2 }}
                   />
                 </div>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
+                <span className="text-xs text-gray-500 dark:text-gray-300 font-inter dashboard-muted">
                   {item.month}
                 </span>
               </div>
@@ -103,7 +106,7 @@ const JobChart = ({ userRole }) => {
               sum + (userRole === 'applicant' ? item.applications : item.posted), 0
             )}
           </p>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-gray-600 dark:text-gray-300 font-inter dashboard-secondary">
             Total {userRole === 'applicant' ? 'Applications' : 'Jobs Posted'}
           </p>
         </div>
@@ -113,7 +116,7 @@ const JobChart = ({ userRole }) => {
               sum + (userRole === 'applicant' ? item.interviews : item.hired), 0
             )}
           </p>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-gray-600 dark:text-gray-300 font-inter dashboard-secondary">
             Total {userRole === 'applicant' ? 'Interviews' : 'Hired'}
           </p>
         </div>

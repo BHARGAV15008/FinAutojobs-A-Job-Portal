@@ -13,6 +13,7 @@ const notificationSchema = new mongoose.Schema({
       'application_status_update',
       'new_job_posted',
       'application_received', 
+      'new_application', // Added for recruiter notifications
       'job_application',
       'profile_update',
       'system_alert',
@@ -35,7 +36,9 @@ const notificationSchema = new mongoose.Schema({
       'new_user_registration',
       'company_verification_request',
       'report_submitted',
-      'suspicious_activity'
+      'suspicious_activity',
+      'job_update', // For WebSocket events
+      'application_update' // For WebSocket events
     ],
     required: true
   },

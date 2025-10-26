@@ -1,5 +1,5 @@
 import { db } from '../config/database.js';
-import * as schema from '../schema.js';
+import * as schema from '../models/Others/schema.js';
 import { eq, and, desc, asc, count, sum, avg, sql } from 'drizzle-orm';
 import { format, subDays } from 'date-fns';
 

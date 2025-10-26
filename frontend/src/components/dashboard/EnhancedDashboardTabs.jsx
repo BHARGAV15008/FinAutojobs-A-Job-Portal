@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import API_BASE_URL from '../../services/apiConfig';
-import EditJobModal from '../modals/EditJobModal';
 import JobDetailsModal from '../modals/JobDetailsModal';
 import CandidateProfileModal from '../modals/CandidateProfileModal';
 import ContactModal from '../modals/ContactModal';
@@ -1473,12 +1472,25 @@ export const EnhancedJobsTab = ({
   const [saving, setSaving] = useState({});
   const [deleting, setDeleting] = useState({});
   const [updating, setUpdating] = useState({});
-  const [editModal, setEditModal] = useState({ isOpen: false, job: null });
   const [applicationsModal, setApplicationsModal] = useState({ isOpen: false, job: null, applications: [] });
   const [candidateModal, setCandidateModal] = useState({ isOpen: false, candidate: null });
   const [contactModal, setContactModal] = useState({ isOpen: false, candidate: null });
   const [scheduleInterviewModal, setScheduleInterviewModal] = useState({ isOpen: false, candidate: null, job: null, application: null });
   const [openDropdown, setOpenDropdown] = useState(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openDropdown && !event.target.closest('.relative')) {
+        setOpenDropdown(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openDropdown]);
 
   // Filter jobs based on job type and current filters
   const getJobsByType = () => {
@@ -1682,17 +1694,27 @@ export const EnhancedJobsTab = ({
     }
   };
 
-  // Handle edit job (open modal instead of redirecting)
+  // Handle edit job (redirect to post tab with data)
   const handleEdit = (jobId) => {
     console.log('🔍 Edit job clicked, jobId:', jobId);
+    console.log('🔍 Available jobs:', jobs);
+    console.log('🔍 Jobs length:', jobs?.length);
+    
     const currentJob = jobs.find(job => job.id === jobId || job._id === jobId);
     console.log('🔍 Found job for editing:', currentJob);
     
     if (currentJob) {
-      setEditModal({ isOpen: true, job: currentJob });
-      console.log('✅ Edit modal opened for job:', currentJob.jobTitle || currentJob.title);
+      // Dispatch custom event to trigger edit in parent dashboard
+      const editEvent = new CustomEvent('editJob', {
+        detail: { job: currentJob }
+      });
+      window.dispatchEvent(editEvent);
+      console.log('✅ Edit event dispatched for job:', currentJob.jobTitle || currentJob.title);
+      console.log('✅ Event dispatched successfully');
     } else {
       console.log('❌ Job not found for editing');
+      console.log('❌ Searched for jobId:', jobId);
+      console.log('❌ Available job IDs:', jobs?.map(j => ({ id: j.id, _id: j._id })));
       alert('Job not found. Please refresh the page and try again.');
     }
   };
@@ -1801,6 +1823,14 @@ export const EnhancedJobsTab = ({
     
     const applicant = app.applicant || app.applicantId || {};
     const appInfo = app.applicationInfo || app.applicationData || {};
+    const firstJob = appInfo.firstJob || appInfo.job || {};
+    
+    console.log('🔍 Job title field:', firstJob.jobTitle);
+    console.log('🔍 Company field:', firstJob.companyName);
+    console.log('🔍 Skills field:', firstJob.requiredSkills);
+    console.log('🔍 Salary field:', firstJob.salaryRange);
+    console.log('🔍 Job urgency field:', firstJob.jobUrgency);
+    console.log('🔍 Job urgency type:', typeof firstJob.jobUrgency);
     
     console.log('Applicant data:', applicant);
     console.log('Application info:', appInfo);
@@ -2148,53 +2178,61 @@ export const EnhancedJobsTab = ({
           {viewMode === "table" ? (
             /* Table View */
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
+              <div 
+                className="overflow-x-auto max-w-full" 
+                style={{ 
+                  scrollbarWidth: 'thin',
+                  scrollBehavior: 'smooth',
+                  maxWidth: '100%',
+                  overflowY: 'visible'
+                }}
+              >
+                <table className="w-full" style={{ minWidth: '1200px' }}>
                   <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ minWidth: '200px' }}>
                         Job
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ minWidth: '150px' }}>
                         Company
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ minWidth: '120px' }}>
                         Location
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ minWidth: '140px' }}>
                         Salary
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ minWidth: '100px' }}>
                         Type
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ minWidth: '120px' }}>
                         Experience
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ minWidth: '120px' }}>
                         Industry
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ minWidth: '110px' }}>
                         Work Mode
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ minWidth: '130px' }}>
                         Urgency
                       </th>
                       {userRole === "applicant" && (
                         <>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ minWidth: '120px' }}>
                             Recommended
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ minWidth: '100px' }}>
                             Favorite
                           </th>
                         </>
                       )}
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ minWidth: '180px' }}>
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700" style={{ position: 'relative' }}>
                     {displayedJobs.map((job, index) => (
                       <motion.tr
                         key={job.id}
@@ -2292,15 +2330,15 @@ export const EnhancedJobsTab = ({
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            job.urgency === 'high-priority' 
+                            job.jobUrgency === 'High Priority' 
                               ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' 
-                              : job.urgency === 'urgent'
+                              : job.jobUrgency === 'Urgent'
                               ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
                               : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                           }`}>
-                            {job.urgency === 'high-priority' ? '🔴 High Priority' : 
-                             job.urgency === 'urgent' ? '🟡 Urgent' : 
-                             '🟢 Normal'}
+                            {job.jobUrgency === 'High Priority' ? '🔴 High Priority' : 
+                             job.jobUrgency === 'Urgent' ? '🟡 Urgent' : 
+                             '🟢 Normal Priority'}
                           </span>
                         </td>
                         {userRole === "applicant" && (
@@ -2344,39 +2382,75 @@ export const EnhancedJobsTab = ({
                             </td>
                           </>
                         )}
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium relative">
                           {userRole === "recruiter" ? (
-                            <div className="flex flex-wrap gap-1">
+                            <div className="relative">
                               <motion.button
-                                className="px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors duration-200 text-xs"
-                                whileHover={{ scale: 1.05 }}
+                                id={`action-btn-${job.id}`}
+                                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
+                                whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.95 }}
-                                title="View Applications"
-                                onClick={() => handleViewApplications(job._id || job.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenDropdown(openDropdown === job.id ? null : job.id);
+                                }}
+                                title="Actions"
                               >
-                                👥 Applications
+                                <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                                </svg>
                               </motion.button>
-                              <motion.button
-                                className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-200 text-xs"
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                title="Edit Job"
-                                onClick={() => handleEdit(job.id)}
-                              >
-                                ✏️ Edit
-                              </motion.button>
-                              <motion.button
-                                className={`px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors duration-200 text-xs ${
-                                  deleting[job.id] ? 'opacity-50 cursor-not-allowed' : ''
-                                }`}
-                                whileHover={{ scale: deleting[job.id] ? 1 : 1.05 }}
-                                whileTap={{ scale: deleting[job.id] ? 1 : 0.95 }}
-                                title="Delete Job"
-                                onClick={() => handleDelete(job.id)}
-                                disabled={deleting[job.id]}
-                              >
-                                {deleting[job.id] ? '⏳ Deleting...' : '🗑️ Delete'}
-                              </motion.button>
+                              
+                              {/* Dropdown Menu */}
+                              <AnimatePresence>
+                                {openDropdown === job.id && (
+                                  <motion.div
+                                    initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                    transition={{ duration: 0.15 }}
+                                    className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700"
+                                    style={{
+                                      zIndex: 9999
+                                    }}
+                                    onMouseLeave={() => setOpenDropdown(null)}
+                                  >
+                                    <div className="py-1">
+                                      <button
+                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-600 dark:hover:text-green-400 transition-colors duration-200 flex items-center gap-2"
+                                        onClick={() => {
+                                          handleViewApplications(job._id || job.id);
+                                          setOpenDropdown(null);
+                                        }}
+                                      >
+                                        <span>👥</span>
+                                        <span>View Applications</span>
+                                      </button>
+                                      <button
+                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 flex items-center gap-2"
+                                        onClick={() => {
+                                          handleEdit(job._id || job.id);
+                                          setOpenDropdown(null);
+                                        }}
+                                      >
+                                        <span>✏️</span>
+                                        <span>Edit Job</span>
+                                      </button>
+                                      <button
+                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        onClick={() => {
+                                          handleDelete(job.id);
+                                          setOpenDropdown(null);
+                                        }}
+                                        disabled={deleting[job.id]}
+                                      >
+                                        <span>{deleting[job.id] ? '⏳' : '🗑️'}</span>
+                                        <span>{deleting[job.id] ? 'Deleting...' : 'Delete Job'}</span>
+                                      </button>
+                                    </div>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
                             </div>
                           ) : (
                             <motion.button
@@ -2433,17 +2507,17 @@ export const EnhancedJobsTab = ({
                         }`}>
                           {job.status || 'Active'}
                         </span>
-                        {job.urgency && (
+                        {job.jobUrgency && job.jobUrgency !== 'Normal Priority' && (
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            job.urgency === 'high-priority' 
+                            job.jobUrgency === 'High Priority' 
                               ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' 
-                              : job.urgency === 'urgent'
+                              : job.jobUrgency === 'Urgent'
                               ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
                               : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
                           }`}>
-                            {job.urgency === 'high-priority' ? '🔴 High Priority' : 
-                             job.urgency === 'urgent' ? '🟡 Urgent' : 
-                             '🟢 Normal'}
+                            {job.jobUrgency === 'High Priority' ? '🔴 High Priority' : 
+                             job.jobUrgency === 'Urgent' ? '🟡 Urgent' : 
+                             '🟢 Normal Priority'}
                           </span>
                         )}
                       </div>
@@ -2587,40 +2661,69 @@ export const EnhancedJobsTab = ({
                     )}
                   </div>
 
-                  {/* Action Buttons */}
+                  {/* Action Menu */}
                   <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                     {userRole === "recruiter" ? (
-                      <div className="flex flex-wrap gap-2">
+                      <div className="relative flex justify-end">
                         <motion.button
-                          className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 text-xs font-medium"
-                          whileHover={{ scale: 1.05 }}
+                          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
+                          whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.95 }}
-                          title="View Applications"
-                          onClick={() => handleViewApplications(job._id || job.id)}
+                          onClick={() => setOpenDropdown(openDropdown === job.id ? null : job.id)}
+                          title="Actions"
                         >
-                          👥 Applications
+                          <svg className="w-6 h-6 text-gray-600 dark:text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                          </svg>
                         </motion.button>
-                        <motion.button
-                          className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-xs font-medium"
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          title="Edit Job"
-                          onClick={() => handleEdit(job.id)}
-                        >
-                          ✏️ Edit
-                        </motion.button>
-                        <motion.button
-                          className={`px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 text-xs font-medium ${
-                            deleting[job.id] ? 'opacity-50 cursor-not-allowed' : ''
-                          }`}
-                          whileHover={{ scale: deleting[job.id] ? 1 : 1.05 }}
-                          whileTap={{ scale: deleting[job.id] ? 1 : 0.95 }}
-                          title="Delete Job"
-                          onClick={() => handleDelete(job.id)}
-                          disabled={deleting[job.id]}
-                        >
-                          {deleting[job.id] ? '⏳ Deleting...' : '🗑️ Delete'}
-                        </motion.button>
+                        
+                        {/* Dropdown Menu */}
+                        <AnimatePresence>
+                          {openDropdown === job.id && (
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                              animate={{ opacity: 1, scale: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                              transition={{ duration: 0.15 }}
+                              className="absolute right-0 bottom-full mb-2 w-52 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50"
+                              onMouseLeave={() => setOpenDropdown(null)}
+                            >
+                              <div className="py-1">
+                                <button
+                                  className="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-600 dark:hover:text-green-400 transition-colors duration-200 flex items-center gap-3"
+                                  onClick={() => {
+                                    handleViewApplications(job._id || job.id);
+                                    setOpenDropdown(null);
+                                  }}
+                                >
+                                  <span className="text-lg">👥</span>
+                                  <span>View Applications</span>
+                                </button>
+                                <button
+                                  className="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 flex items-center gap-3"
+                                  onClick={() => {
+                                    handleEdit(job._id || job.id);
+                                    setOpenDropdown(null);
+                                  }}
+                                >
+                                  <span className="text-lg">✏️</span>
+                                  <span>Edit Job</span>
+                                </button>
+                                <button
+                                  className="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors duration-200 flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  onClick={() => {
+                                    handleDelete(job.id);
+                                    setOpenDropdown(null);
+                                  }}
+                                  disabled={deleting[job.id]}
+                                >
+                                  <span className="text-lg">{deleting[job.id] ? '⏳' : '🗑️'}</span>
+                                  <span>{deleting[job.id] ? 'Deleting...' : 'Delete Job'}</span>
+                                </button>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
                     ) : (
                       <div className="flex space-x-3">
@@ -2651,13 +2754,6 @@ export const EnhancedJobsTab = ({
         </div>
       </div>
 
-      {/* Job Edit Modal */}
-      <EditJobModal
-        open={editModal.isOpen}
-        onClose={() => setEditModal({ isOpen: false, job: null })}
-        job={editModal.job}
-        onUpdate={handleUpdateJob}
-      />
 
       {/* Applications Modal */}
       <ApplicationsModal
@@ -2835,7 +2931,8 @@ const JobEditModal = ({ isOpen, job, onClose, onSave }) => {
         
         // Contact Information
         contactEmail: job.contactEmail || "",
-        urgency: job.urgency || "normal",
+        urgency: job.jobUrgency === 'High Priority' ? 'high-priority' :
+                 job.jobUrgency === 'Urgent' ? 'urgent' : 'normal',
         
         // AI Enhancement
         keywordsForAI: job.keywordsForAI || "",
@@ -4427,7 +4524,6 @@ export const EnhancedActiveJobsTab = () => {
   const { dashboardData, loading, updateJob, deleteJob } = useDashboard();
   const activeJobs = dashboardData?.activeJobs || [];
   const [selectedJob, setSelectedJob] = useState(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const handleStatusChange = async (jobId, newStatus) => {
     try {
@@ -4584,27 +4680,6 @@ export const EnhancedActiveJobsTab = () => {
         )}
       </div>
 
-      {/* Edit Job Modal */}
-      <EditJobModal
-        open={isEditModalOpen}
-        onClose={() => {
-          setIsEditModalOpen(false);
-          setSelectedJob(null);
-        }}
-        job={selectedJob}
-        onUpdate={async (jobId, updateData) => {
-          try {
-            console.log('🔍 Updating job in EnhancedActiveJobsTab:', jobId, updateData);
-            await updateJob(jobId, updateData);
-            console.log('✅ Job updated successfully');
-            setIsEditModalOpen(false);
-            setSelectedJob(null);
-          } catch (error) {
-            console.error('❌ Failed to update job:', error);
-            alert('Failed to update job. Please try again.');
-          }
-        }}
-      />
     </motion.div>
   );
 };
@@ -4658,11 +4733,25 @@ const ApplicationsModal = ({ isOpen, job, applications, onClose, onViewCandidate
                   <div><strong>Work Mode:</strong> {job.workArrangement || 'Not specified'}</div>
                   <div><strong>Salary:</strong> {job.salary || job.formattedSalary || (job.salaryRange?.min && job.salaryRange?.max ? `₹${(job.salaryRange.min / 100000).toFixed(1)}L - ₹${(job.salaryRange.max / 100000).toFixed(1)}L ${job.salaryRange.period || 'Yearly'}` : 'Negotiable')}</div>
                   <div><strong>Experience:</strong> {
-                    job.experience?.minimum !== undefined && job.experience?.maximum !== undefined 
-                      ? `${job.experience.minimum}-${job.experience.maximum} years`
-                      : job.experienceMin !== undefined && job.experienceMax !== undefined 
-                      ? `${job.experienceMin}-${job.experienceMax} years`
-                      : 'Not specified'
+                    (() => {
+                      // Check experience object with min/max
+                      if (job.experience?.min !== undefined && job.experience?.max !== undefined) {
+                        return `${job.experience.min}-${job.experience.max} years`;
+                      }
+                      // Check experience object with minimum/maximum
+                      if (job.experience?.minimum !== undefined && job.experience?.maximum !== undefined) {
+                        return `${job.experience.minimum}-${job.experience.maximum} years`;
+                      }
+                      // Check flat experienceMin/experienceMax fields
+                      if (job.experienceMin !== undefined && job.experienceMax !== undefined) {
+                        return `${job.experienceMin}-${job.experienceMax} years`;
+                      }
+                      // Check if experience is a string
+                      if (typeof job.experience === 'string' && job.experience.trim()) {
+                        return job.experience;
+                      }
+                      return 'Not specified';
+                    })()
                   }</div>
                   {job.applicationDeadline && (
                     <div><strong>Application Deadline:</strong> {new Date(job.applicationDeadline).toLocaleDateString()}</div>

@@ -122,6 +122,24 @@ export const notifications = sqliteTable('notifications', {
   createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`)
 });
 
+// Saved Jobs schema
+export const savedJobs = sqliteTable('saved_jobs', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  jobId: integer('job_id').notNull().references(() => jobs.id, { onDelete: 'cascade' }),
+  createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`)
+});
+
+// User Sessions schema (for OAuth and session management)
+export const userSessions = sqliteTable('user_sessions', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  sessionToken: text('session_token').notNull().unique(),
+  refreshToken: text('refresh_token'),
+  expiresAt: text('expires_at').notNull(),
+  createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`)
+});
+
 export const seedTestData = async (db) => {
   await db.exec(`
     -- Insert test users

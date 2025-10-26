@@ -289,12 +289,12 @@ const ScheduleModal = ({
         />
 
         {/* Modal */}
-        <div className="flex min-h-full items-center justify-center p-4">
+        <div className="flex min-h-full items-center justify-center p-2 sm:p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className={`relative w-full max-w-5xl rounded-2xl shadow-2xl ${
+            className={`relative w-full max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl rounded-lg sm:rounded-2xl shadow-2xl max-h-[95vh] overflow-hidden ${
               darkMode ? 'bg-gray-800' : 'bg-white'
             }`}
             onClick={(e) => e.stopPropagation()}

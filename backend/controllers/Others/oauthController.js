@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { db } from '../config/database.js';
-import { users, userSessions } from '../schema.js';
+import { users, userSessions } from '../models/Others/schema.js';
 import { eq } from 'drizzle-orm';
 import { generateToken, generateRefreshToken } from './authController.js';
 import { z } from 'zod';

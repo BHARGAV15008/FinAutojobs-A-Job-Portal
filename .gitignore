@@ -54,3 +54,7 @@ Dockerfile
 oauth-config.json
 .env.exampl1
 config.env
+
+*.md
+*.pdf
+*.docx

@@ -228,18 +228,18 @@ Best regards,
         />
 
         {/* Modal */}
-        <div className="flex min-h-full items-center justify-center p-4">
+        <div className="flex min-h-full items-center justify-center p-2 sm:p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className={`relative w-full max-w-4xl rounded-2xl shadow-2xl ${
+            className={`relative w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-2xl xl:max-w-4xl rounded-lg sm:rounded-2xl shadow-2xl max-h-[95vh] overflow-hidden ${
               darkMode ? 'bg-gray-800' : 'bg-white'
             }`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className={`px-8 py-6 border-b ${
+            <div className={`px-3 sm:px-6 lg:px-8 py-4 sm:py-6 border-b ${
               darkMode ? 'border-gray-700' : 'border-gray-200'
             }`}>
               <div className="flex items-center justify-between">

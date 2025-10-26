@@ -1,0 +1,279 @@
+/* ULTIMATE DARK MODE TEXT VISIBILITY OVERRIDE */
+/* This file ensures EVERY single text element is visible in dark mode */
+
+/* Base dark mode - everything is white by default */
+.dark {
+  color: #ffffff !important;
+}
+
+/* Force ALL elements to inherit white color */
+.dark *,
+.dark *::before,
+.dark *::after {
+  color: inherit !important;
+}
+
+/* Specific overrides for ALL possible text elements */
+.dark p,
+.dark span,
+.dark div,
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6,
+.dark a,
+.dark label,
+.dark button,
+.dark input,
+.dark textarea,
+.dark select,
+.dark li,
+.dark td,
+.dark th,
+.dark caption,
+.dark legend,
+.dark figcaption,
+.dark summary,
+.dark details,
+.dark small,
+.dark strong,
+.dark em,
+.dark b,
+.dark i,
+.dark u,
+.dark s,
+.dark mark,
+.dark del,
+.dark ins,
+.dark sub,
+.dark sup,
+.dark code,
+.dark pre,
+.dark kbd,
+.dark samp,
+.dark var,
+.dark time,
+.dark address,
+.dark blockquote,
+.dark cite,
+.dark q,
+.dark abbr,
+.dark dfn {
+  color: #ffffff !important;
+}
+
+/* Override ALL Tailwind text color classes */
+.dark .text-black,
+.dark .text-white,
+.dark .text-gray-50,
+.dark .text-gray-100,
+.dark .text-gray-200,
+.dark .text-gray-300,
+.dark .text-gray-400,
+.dark .text-gray-500,
+.dark .text-gray-600,
+.dark .text-gray-700,
+.dark .text-gray-800,
+.dark .text-gray-900 {
+  color: #ffffff !important;
+}
+
+/* Keep colored text visible but adjust for dark mode */
+.dark .text-blue-50,
+.dark .text-blue-100,
+.dark .text-blue-200,
+.dark .text-blue-300,
+.dark .text-blue-400,
+.dark .text-blue-500,
+.dark .text-blue-600,
+.dark .text-blue-700,
+.dark .text-blue-800,
+.dark .text-blue-900 {
+  color: #60a5fa !important;
+}
+
+.dark .text-green-50,
+.dark .text-green-100,
+.dark .text-green-200,
+.dark .text-green-300,
+.dark .text-green-400,
+.dark .text-green-500,
+.dark .text-green-600,
+.dark .text-green-700,
+.dark .text-green-800,
+.dark .text-green-900 {
+  color: #4ade80 !important;
+}
+
+.dark .text-yellow-50,
+.dark .text-yellow-100,
+.dark .text-yellow-200,
+.dark .text-yellow-300,
+.dark .text-yellow-400,
+.dark .text-yellow-500,
+.dark .text-yellow-600,
+.dark .text-yellow-700,
+.dark .text-yellow-800,
+.dark .text-yellow-900 {
+  color: #facc15 !important;
+}
+
+.dark .text-red-50,
+.dark .text-red-100,
+.dark .text-red-200,
+.dark .text-red-300,
+.dark .text-red-400,
+.dark .text-red-500,
+.dark .text-red-600,
+.dark .text-red-700,
+.dark .text-red-800,
+.dark .text-red-900 {
+  color: #f87171 !important;
+}
+
+.dark .text-purple-50,
+.dark .text-purple-100,
+.dark .text-purple-200,
+.dark .text-purple-300,
+.dark .text-purple-400,
+.dark .text-purple-500,
+.dark .text-purple-600,
+.dark .text-purple-700,
+.dark .text-purple-800,
+.dark .text-purple-900 {
+  color: #a78bfa !important;
+}
+
+/* Force visibility for elements with background colors */
+.dark [class*="bg-white"],
+.dark [class*="bg-gray-50"],
+.dark [class*="bg-gray-100"],
+.dark [class*="bg-gray-200"] {
+  color: #ffffff !important;
+}
+
+.dark [class*="bg-white"] *,
+.dark [class*="bg-gray-50"] *,
+.dark [class*="bg-gray-100"] *,
+.dark [class*="bg-gray-200"] * {
+  color: #ffffff !important;
+}
+
+/* Ensure status badges are visible */
+.dark .bg-yellow-100,
+.dark .bg-yellow-200 {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+}
+
+.dark .bg-green-100,
+.dark .bg-green-200 {
+  background-color: #10b981 !important;
+  color: #000000 !important;
+}
+
+.dark .bg-red-100,
+.dark .bg-red-200 {
+  background-color: #ef4444 !important;
+  color: #000000 !important;
+}
+
+.dark .bg-blue-100,
+.dark .bg-blue-200 {
+  background-color: #3b82f6 !important;
+  color: #ffffff !important;
+}
+
+.dark .bg-purple-100,
+.dark .bg-purple-200 {
+  background-color: #8b5cf6 !important;
+  color: #ffffff !important;
+}
+
+.dark .bg-gray-100,
+.dark .bg-gray-200 {
+  background-color: #6b7280 !important;
+  color: #ffffff !important;
+}
+
+/* Override any CSS that might set text to transparent or invisible */
+.dark * {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Ensure placeholder text is visible */
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #9ca3af !important;
+}
+
+/* Ensure SVG text is visible */
+.dark svg text {
+  fill: #ffffff !important;
+}
+
+/* Force visibility for any remaining edge cases */
+.dark [style*="color"] {
+  color: #ffffff !important;
+}
+
+/* CRITICAL: Ensure form inputs remain interactive and functional */
+.dark input,
+.dark textarea,
+.dark select {
+  pointer-events: auto !important;
+  user-select: text !important;
+  cursor: text !important;
+  background-color: #374151 !important;
+  border-color: #6b7280 !important;
+  color: #ffffff !important;
+}
+
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #9ca3af !important;
+  opacity: 1 !important;
+}
+
+/* Ensure form labels are visible */
+.dark label {
+  color: #e5e7eb !important;
+}
+
+/* Ensure buttons remain clickable */
+.dark button {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+/* Ensure select dropdowns work */
+.dark select option {
+  background-color: #374151 !important;
+  color: #ffffff !important;
+}
+
+/* Fix any overlay issues - only target specific overlay elements */
+.dark .overlay,
+.dark .backdrop,
+.dark [class*="overlay"],
+.dark [class*="backdrop"] {
+  z-index: auto !important;
+}
+
+/* Ensure form sections don't block interactions */
+.dark .form-section,
+.dark .dashboard-card {
+  pointer-events: auto !important;
+}

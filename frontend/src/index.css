@@ -1,3 +1,6 @@
+/* Import Google Fonts for Stylish Typography */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600&family=Fira+Code:wght@300;400;500;600&family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;500;600;700&family=Lato:wght@300;400;700&family=Montserrat:wght@300;400;500;600;700&family=Source+Sans+Pro:wght@300;400;600;700&family=Nunito:wght@300;400;600;700&display=swap");
+
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
@@ -10,8 +13,109 @@
 /* Import theme settings */
 @import "./styles/theme-settings.css";
 
-/* Import Google Fonts for Stylish Typography */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600&family=Fira+Code:wght@300;400;500;600&family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;500;600;700&family=Lato:wght@300;400;700&family=Montserrat:wght@300;400;500;600;700&family=Source+Sans+Pro:wght@300;400;600;700&family=Nunito:wght@300;400;600;700&display=swap");
+/* Import font improvements */
+@import "./styles/fonts.css";
+
+/* Import ultimate dark mode override */
+@import "./styles/dark-mode-override.css";
+
+/* Import modal responsive styles */
+@import "./styles/modal-responsive.css";
+
+/* Import form interaction fix */
+@import "./styles/form-interaction-fix.css";
+
+/* Global dark mode text visibility fix */
+.dark {
+  color: #ffffff;
+}
+
+.dark * {
+  color: inherit;
+}
+
+/* Ensure all text is visible in dark mode */
+.dark .text-gray-900,
+.dark .text-gray-800,
+.dark .text-gray-700,
+.dark .text-gray-600,
+.dark .text-gray-500,
+.dark .text-gray-400 {
+  color: #ffffff !important;
+}
+
+/* Secondary text should be light gray */
+.dark .text-sm.text-gray-600,
+.dark .text-sm.text-gray-500,
+.dark .text-sm.text-gray-400 {
+  color: #e2e8f0 !important;
+}
+
+/* Muted text should be visible */
+.dark .text-xs.text-gray-500,
+.dark .text-xs.text-gray-400 {
+  color: #cbd5e0 !important;
+}
+
+/* ULTIMATE OVERRIDE - Force ALL elements to have white text in dark mode */
+.dark {
+  color: #ffffff !important;
+}
+
+.dark *:not([class*="text-blue"]):not([class*="text-green"]):not([class*="text-yellow"]):not([class*="text-red"]):not([class*="text-purple"]) {
+  color: #ffffff !important;
+}
+
+/* Ensure all dashboard components are visible */
+.dark .bg-white,
+.dark .bg-gray-50,
+.dark .bg-gray-100 {
+  color: #ffffff !important;
+}
+
+.dark .bg-white *,
+.dark .bg-gray-50 *,
+.dark .bg-gray-100 * {
+  color: #ffffff !important;
+}
+
+/* Force visibility for any remaining elements */
+.dark p,
+.dark span,
+.dark div,
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6,
+.dark label,
+.dark button {
+  color: #ffffff !important;
+}
+
+/* CRITICAL: Fix form input interactions in dark mode */
+.dark input[type="text"],
+.dark input[type="email"],
+.dark input[type="password"],
+.dark input[type="number"],
+.dark input[type="date"],
+.dark input[type="tel"],
+.dark textarea,
+.dark select {
+  pointer-events: auto !important;
+  cursor: text !important;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+}
+
+.dark button,
+.dark [role="button"] {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
 
 @keyframes fadeIn {
   from {

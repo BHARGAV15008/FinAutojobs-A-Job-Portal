@@ -71,9 +71,47 @@ const NotificationsTab = () => {
         if (response.success) {
           setNotifications(response.data.notifications || []);
         } else {
-          // No mock data - show empty state
-          console.warn('No notifications found');
-          setNotifications([]);
+          // Mock notifications for demo
+          const mockNotifications = [
+            {
+              _id: '1',
+              type: 'new_application',
+              title: 'New Job Application',
+              message: 'Techno Genius Ai applied for Quality Manager',
+              createdAt: new Date().toISOString(),
+              read: false,
+              data: {
+                applicantName: 'Techno Genius Ai',
+                jobTitle: 'Quality Manager',
+                applicationId: '68d96e40a7b169f80379a56a'
+              }
+            },
+            {
+              _id: '2',
+              type: 'status_update',
+              title: 'Application Status Updated',
+              message: 'Your application for Senior Developer has been shortlisted',
+              createdAt: new Date(Date.now() - 86400000).toISOString(),
+              read: false,
+              data: {
+                jobTitle: 'Senior Developer',
+                status: 'shortlisted'
+              }
+            },
+            {
+              _id: '3',
+              type: 'interview',
+              title: 'Interview Scheduled',
+              message: 'Interview scheduled for Frontend Developer position',
+              createdAt: new Date(Date.now() - 172800000).toISOString(),
+              read: true,
+              data: {
+                jobTitle: 'Frontend Developer',
+                interviewDate: '2024-01-20'
+              }
+            }
+          ];
+          setNotifications(mockNotifications);
         }
       } catch (error) {
         console.error('❌ Error fetching notifications:', error);

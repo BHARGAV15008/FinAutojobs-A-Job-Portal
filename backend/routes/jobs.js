@@ -814,9 +814,14 @@ router.post('/', jobValidation, authenticateToken, async (req, res) => {
       aiKeywords,
       isAiEnhanced,
       contactEmail,
-      jobUrgency
+      jobUrgency,
+      status
     } = req.body;
 
+    // Debug: Log the status received from frontend
+    console.log('🔍 Status received from frontend:', status);
+    console.log('🔍 Full request body status field:', req.body.status);
+    
     // Create job data with comprehensive schema
     const jobData = {
       jobTitle,
@@ -866,12 +871,16 @@ router.post('/', jobValidation, authenticateToken, async (req, res) => {
           designation: recruiter.companyInfo?.designation
         }
       },
-      status: 'active'
+      status: status || 'active'
     };
 
     // Create and save job
     const newJob = new Job(jobData);
     const savedJob = await newJob.save();
+    
+    // Debug: Log the final saved job status
+    console.log('✅ Job saved with status:', savedJob.status);
+    console.log('🔍 Expected status was:', status || 'active');
 
     // Create notifications for relevant applicants
     console.log('🔔 Creating job alert notifications for applicants...');
@@ -948,6 +957,13 @@ router.post('/', jobValidation, authenticateToken, async (req, res) => {
 
     // Notify matching applicants about new job
     await notifyMatchingApplicants(savedJob);
+    
+    // Send WebSocket notification for real-time updates
+    const websocketService = req.app.get('websocketService');
+    if (websocketService) {
+      websocketService.notifyJobUpdate('created', savedJob.toObject(), req.user.id);
+      console.log('✅ WebSocket notification sent for job creation');
+    }
     
     res.status(201).json({
       success: true,
@@ -1090,6 +1106,14 @@ router.put('/:id', authenticateToken, async (req, res) => {
       updatedDate: updatedJob.updatedDate,
       postedBy: updatedJob.postedBy
     };
+
+    // Send WebSocket notification for real-time updates
+    const websocketService = req.app.get('websocketService');
+    if (websocketService) {
+      const action = existingJob.status !== updatedJob.status ? 'status_changed' : 'updated';
+      websocketService.notifyJobUpdate(action, updatedJob, req.user.id);
+      console.log(`✅ WebSocket notification sent for job ${action}`);
+    }
 
     res.json({
       success: true,
@@ -1308,6 +1332,43 @@ router.get('/:jobId/applications', authenticateToken, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch applications',
+      error: error.message
+    });
+  }
+});
+
+// Check and update jobs past deadline
+router.post('/check-deadlines', authenticateToken, async (req, res) => {
+  try {
+    console.log('🕐 Checking jobs past deadline...');
+    
+    const now = new Date();
+    
+    // Find and update jobs that are active but past their deadline
+    const result = await Job.updateMany(
+      {
+        status: 'active',
+        applicationDeadline: { $lt: now },
+        autoStatusManagement: true
+      },
+      {
+        $set: { status: 'closed' }
+      }
+    );
+    
+    console.log(`✅ Updated ${result.modifiedCount} jobs to closed status`);
+    
+    res.json({
+      success: true,
+      message: `${result.modifiedCount} jobs updated to closed status`,
+      updatedCount: result.modifiedCount
+    });
+    
+  } catch (error) {
+    console.error('❌ Error checking job deadlines:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to check job deadlines',
       error: error.message
     });
   }

@@ -118,7 +118,8 @@ const JobMetrics = ({ userRole }) => {
       {metrics.map((metric, index) => (
         <motion.div
           key={metric.title}
-          className={`rounded-xl border border-gray-200 dark:border-gray-700 ${metric.bgColor} p-6`}
+          className={`rounded-xl border border-gray-200 dark:border-gray-700 ${metric.bgColor} p-6 font-inter`}
+          style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -130,14 +131,14 @@ const JobMetrics = ({ userRole }) => {
 
           <div className="flex items-end justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-1 font-inter dashboard-secondary">
                 {metric.title}
               </p>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white font-inter dashboard-text">
                 {metric.value}
               </h3>
             </div>
-            <div className={`flex items-center text-sm font-medium ${
+            <div className={`flex items-center text-sm font-medium font-inter ${
               metric.changeType === 'positive' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
             }`}>
               <span className="mr-1">

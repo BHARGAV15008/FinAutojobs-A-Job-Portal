@@ -363,7 +363,7 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
           <div key={item.name}>
             <motion.button
               className={`
-                w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg
+                w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg
                 transition-colors duration-200
                 ${item.current
                   ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200'
@@ -383,13 +383,11 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <div className="flex items-center">
-                <span className="text-lg mr-3">{item.emoji}</span>
-                {item.name}
-              </div>
+              <span className="text-lg mr-3 flex-shrink-0">{item.emoji}</span>
+              <span className="flex-1 text-left">{item.name}</span>
               {item.submenu && (
                 <svg
-                  className={`w-4 h-4 transition-transform duration-200 ${expandedMenus[item.name] ? 'rotate-90' : ''
+                  className={`w-4 h-4 ml-auto flex-shrink-0 transition-transform duration-200 ${expandedMenus[item.name] ? 'rotate-90' : ''
                     }`}
                   fill="none"
                   stroke="currentColor"

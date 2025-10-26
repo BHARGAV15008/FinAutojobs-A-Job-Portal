@@ -18,6 +18,7 @@ const ModernDashboardLayout = ({
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const { darkMode } = useTheme();
   const { dashboardData } = useDashboard();
   let notifications = dashboardData?.notifications || [];
@@ -27,17 +28,28 @@ const ModernDashboardLayout = ({
     console.log('✅ Loaded', notifications.length, 'real notifications:', notifications.map(n => n.title));
   }
 
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024); // lg breakpoint
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Close sidebar on mobile when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (sidebarOpen && !event.target.closest('.sidebar') && !event.target.closest('.sidebar-toggle')) {
+      if (isMobile && sidebarOpen && !event.target.closest('.sidebar') && !event.target.closest('.sidebar-toggle')) {
         setSidebarOpen(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [sidebarOpen]);
+  }, [sidebarOpen, isMobile]);
 
   // Animation variants
   const layoutVariants = {
@@ -82,9 +94,9 @@ const ModernDashboardLayout = ({
 
       {/* Mobile Sidebar */}
       <AnimatePresence>
-        {sidebarOpen && (
+        {isMobile && sidebarOpen && (
           <motion.div
-            className="fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-900 shadow-xl lg:hidden sidebar"
+            className="fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-900 shadow-xl sidebar"
             variants={sidebarVariants}
             animate="open"
             exit="closed"
@@ -102,11 +114,11 @@ const ModernDashboardLayout = ({
         )}
       </AnimatePresence>
 
-      {/* Mobile sidebar overlay */}
+      {/* Mobile sidebar overlay - Only show on mobile when sidebar is open */}
       <AnimatePresence>
-        {sidebarOpen && (
+        {isMobile && sidebarOpen && (
           <motion.div
-            className="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 lg:hidden"
+            className="fixed inset-0 z-40 bg-gray-600 bg-opacity-75"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

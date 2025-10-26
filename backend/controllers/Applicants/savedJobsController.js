@@ -1,5 +1,5 @@
 import { db } from '../config/database.js';
-import { savedJobs, jobs, companies } from '../schema.js';
+import { savedJobs, jobs, companies } from '../models/Others/schema.js';
 import { eq, and, sql } from 'drizzle-orm';
 
 // Get current user's saved jobs

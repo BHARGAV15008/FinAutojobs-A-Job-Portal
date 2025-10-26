@@ -67,10 +67,6 @@ const AddJobPage = React.lazy(() => import('../pages/AddJobPage').catch(() => ({
   default: () => <div>Add Job Page Loading...</div> 
 })));
 
-const MessagesPage = React.lazy(() => import('../pages/MessagesPage').catch(() => ({ 
-  default: () => <div>Messages Page Loading...</div> 
-})));
-
 
 const AppRoutes = () => {
   const { loading } = useAuth();
@@ -114,7 +110,6 @@ const AppRoutes = () => {
             <Route path="/salary-insights">{() => <SalaryInsightsPage />}</Route>
             <Route path="/skills-assessment">{() => <SkillsAssessmentPage />}</Route>
             <Route path="/job-alerts">{() => <JobAlertsPage />}</Route>
-            <Route path="/messages">{() => <MessagesPage />}</Route>
             <Route path="/add-job">{() => <AddJobPage />}</Route>
             <Route path="/post-job">{() => <AddJobPage />}</Route>
             <Route path="/animation-test">{() => <AnimationTestPage />}</Route>

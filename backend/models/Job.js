@@ -2,6 +2,14 @@ import mongoose from 'mongoose';
 
 // Enhanced Job Schema with automatic status management based on deadline
 const JobSchema = new mongoose.Schema({
+  // Unique Job ID (to satisfy database index constraint)
+  jobId: {
+    type: mongoose.Schema.Types.ObjectId,
+    default: () => new mongoose.Types.ObjectId(),
+    unique: true,
+    index: true
+  },
+  
   // Basic Information
   jobTitle: {
     type: String,

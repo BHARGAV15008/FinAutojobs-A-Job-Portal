@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
+    Container,
     Box,
     Typography,
     Button,
@@ -59,7 +60,25 @@ const AlertCard = styled(Card)(({ theme }) => ({
 }));
 
 const JobAlertsPage = () => {
-    const [alerts, setAlerts] = useState([
+    const [alerts, setAlerts] = useState([]);
+    const [openDialog, setOpenDialog] = useState(false);
+    const [editingAlert, setEditingAlert] = useState(null);
+    const [recentJobs, setRecentJobs] = useState([]);
+    const [formData, setFormData] = useState({
+        title: '',
+        keywords: '',
+        location: '',
+        experience: '',
+        salaryMin: '',
+        jobType: '',
+        frequency: 'daily',
+        emailEnabled: true,
+        smsEnabled: false,
+        active: true,
+    });
+
+    // Mock alerts data
+    const mockAlerts = [
         {
             id: 1,
             title: 'Senior Financial Analyst',
@@ -72,13 +91,14 @@ const JobAlertsPage = () => {
             emailEnabled: true,
             smsEnabled: false,
             active: true,
-            matchingJobs: 12,
-            lastNotified: '2 hours ago',
+            createdAt: '2024-01-15',
+            matchingJobs: 23,
+            lastNotified: '2024-01-20',
         },
         {
             id: 2,
             title: 'Automotive Engineer',
-            keywords: 'automotive, engineer, manufacturing',
+            keywords: 'automotive, engineer, mechanical',
             location: 'Pune',
             experience: '2-4 years',
             salaryMin: 600000,
@@ -87,24 +107,58 @@ const JobAlertsPage = () => {
             emailEnabled: true,
             smsEnabled: true,
             active: true,
+            createdAt: '2024-01-10',
+            matchingJobs: 15,
+            lastNotified: '2024-01-18',
+        },
+        {
+            id: 3,
+            title: 'Investment Banking Associate',
+            keywords: 'investment banking, M&A, valuation',
+            location: 'Mumbai',
+            experience: '4-6 years',
+            salaryMin: 1500000,
+            jobType: 'Full-time',
+            frequency: 'immediate',
+            emailEnabled: true,
+            smsEnabled: true,
+            active: false,
+            createdAt: '2024-01-05',
             matchingJobs: 8,
-            lastNotified: '1 day ago',
-        }
-    ]);
+            lastNotified: '2024-01-12',
+        },
+    ];
 
-    const [openDialog, setOpenDialog] = useState(false);
-    const [editingAlert, setEditingAlert] = useState(null);
-    const [formData, setFormData] = useState({
-        title: '',
-        keywords: '',
-        location: '',
-        experience: '',
-        salaryMin: '',
-        jobType: 'Full-time',
-        frequency: 'daily',
-        emailEnabled: true,
-        smsEnabled: false,
-    });
+    // Mock recent matching jobs
+    const mockRecentJobs = [
+        {
+            id: 1,
+            title: 'Senior Financial Analyst',
+            company: 'HDFC Bank',
+            location: 'Mumbai',
+            salary: '₹12-18 LPA',
+            postedDate: '2024-01-20',
+            alertId: 1,
+        },
+        {
+            id: 2,
+            title: 'Financial Analyst - Risk Management',
+            company: 'ICICI Bank',
+            location: 'Mumbai',
+            salary: '₹10-15 LPA',
+            postedDate: '2024-01-19',
+            alertId: 1,
+        },
+        {
+            id: 3,
+            title: 'Automotive Design Engineer',
+            company: 'Tata Motors',
+            location: 'Pune',
+            salary: '₹8-12 LPA',
+            postedDate: '2024-01-18',
+            alertId: 2,
+        },
+    ];
 
     const locations = ['Mumbai', 'Delhi', 'Bangalore', 'Pune', 'Chennai', 'Hyderabad'];
     const experienceLevels = ['0-1 years', '1-3 years', '3-5 years', '5-8 years', '8+ years'];
@@ -116,24 +170,10 @@ const JobAlertsPage = () => {
         { value: 'monthly', label: 'Monthly' },
     ];
 
-    const recentJobs = [
-        {
-            id: 1,
-            title: 'Senior Financial Analyst',
-            company: 'HDFC Bank',
-            location: 'Mumbai',
-            salary: '₹8-12L',
-            postedDate: '2 hours ago',
-        },
-        {
-            id: 2,
-            title: 'Investment Banking Associate',
-            company: 'Goldman Sachs',
-            location: 'Mumbai',
-            salary: '₹15-25L',
-            postedDate: '4 hours ago',
-        },
-    ];
+    useEffect(() => {
+        setAlerts(mockAlerts);
+        setRecentJobs(mockRecentJobs);
+    }, []);
 
     const handleCreateAlert = () => {
         setEditingAlert(null);
@@ -143,10 +183,11 @@ const JobAlertsPage = () => {
             location: '',
             experience: '',
             salaryMin: '',
-            jobType: 'Full-time',
+            jobType: '',
             frequency: 'daily',
             emailEnabled: true,
             smsEnabled: false,
+            active: true,
         });
         setOpenDialog(true);
     };
@@ -157,33 +198,42 @@ const JobAlertsPage = () => {
         setOpenDialog(true);
     };
 
+    const handleDeleteAlert = (alertId) => {
+        setAlerts(alerts.filter(alert => alert.id !== alertId));
+    };
+
+    const handleToggleAlert = (alertId) => {
+        setAlerts(alerts.map(alert =>
+            alert.id === alertId ? { ...alert, active: !alert.active } : alert
+        ));
+    };
+
     const handleSaveAlert = () => {
         if (editingAlert) {
-            setAlerts(alerts.map(alert => 
-                alert.id === editingAlert.id ? { ...formData, id: editingAlert.id } : alert
+            // Update existing alert
+            setAlerts(alerts.map(alert =>
+                alert.id === editingAlert.id ? { ...alert, ...formData } : alert
             ));
         } else {
+            // Create new alert
             const newAlert = {
                 ...formData,
                 id: Date.now(),
-                active: true,
-                matchingJobs: Math.floor(Math.random() * 20) + 1,
-                lastNotified: 'Never',
+                createdAt: new Date().toISOString().split('T')[0],
+                matchingJobs: Math.floor(Math.random() * 50),
+                lastNotified: new Date().toISOString().split('T')[0],
             };
             setAlerts([...alerts, newAlert]);
         }
         setOpenDialog(false);
     };
 
-    const handleDeleteAlert = (alertId) => {
-        setAlerts(alerts.filter(alert => alert.id !== alertId));
-    };
-
     const formatSalary = (amount) => {
         if (amount >= 100000) {
-            return `₹${(amount / 100000).toFixed(0)}L`;
+            return `₹${(amount / 100000).toFixed(1)}L`;
+        } else {
+            return `₹${(amount / 1000).toFixed(0)}K`;
         }
-        return `₹${(amount / 1000).toFixed(0)}K`;
     };
 
     const AlertCardComponent = ({ alert }) => (
@@ -193,15 +243,22 @@ const JobAlertsPage = () => {
                     <Typography variant="h6" fontWeight="bold">
                         {alert.title}
                     </Typography>
-                    <Chip
-                        label={alert.active ? 'Active' : 'Paused'}
-                        color={alert.active ? 'success' : 'default'}
-                        size="small"
-                    />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Switch
+                            checked={alert.active}
+                            onChange={() => handleToggleAlert(alert.id)}
+                            size="small"
+                        />
+                        <Chip
+                            label={alert.active ? 'Active' : 'Paused'}
+                            color={alert.active ? 'success' : 'default'}
+                            size="small"
+                        />
+                    </Box>
                 </Box>
 
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    {alert.keywords}
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                    Keywords: {alert.keywords}
                 </Typography>
 
                 <Grid container spacing={1} sx={{ mb: 2 }}>
@@ -349,6 +406,22 @@ const JobAlertsPage = () => {
                     </Grid>
                     <Grid item xs={12} md={6}>
                         <FormControl fullWidth>
+                            <InputLabel>Job Type</InputLabel>
+                            <Select
+                                value={formData.jobType}
+                                onChange={(e) => setFormData({ ...formData, jobType: e.target.value })}
+                                label="Job Type"
+                            >
+                                {jobTypes.map((type) => (
+                                    <MenuItem key={type} value={type}>
+                                        {type}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                        <FormControl fullWidth>
                             <InputLabel>Notification Frequency</InputLabel>
                             <Select
                                 value={formData.frequency}
@@ -363,8 +436,8 @@ const JobAlertsPage = () => {
                             </Select>
                         </FormControl>
                     </Grid>
-                    <Grid item xs={12}>
-                        <Box sx={{ display: 'flex', gap: 2 }}>
+                    <Grid item xs={12} md={6}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                             <FormControlLabel
                                 control={
                                     <Switch
@@ -397,117 +470,200 @@ const JobAlertsPage = () => {
     );
 
     return (
-        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', py: 4 }}>
-            <Box sx={{ 
-                width: { xs: 'calc(100% - 16px)', sm: '800px', md: '1000px', lg: '1200px' }, 
-                px: { xs: 1, sm: 3, md: 4 },
-                maxWidth: '100vw'
-            }}>
-                {/* Header */}
-                <Box sx={{ textAlign: 'center', mb: 4 }}>
-                    <Typography variant="h3" component="h1" gutterBottom fontWeight="bold" color="text.primary">
+        <Container maxWidth="md" sx={{ py: 4 }}>
+            {/* Header */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                <Box>
+                    <Typography variant="h3" component="h1" gutterBottom fontWeight="bold">
                         Job Alerts
                     </Typography>
-                    <Typography variant="h6" color="text.secondary" paragraph>
-                        Get notified when new jobs match your criteria and never miss an opportunity
+                    <Typography variant="h6" color="text.secondary">
+                        Get notified when new jobs match your criteria
                     </Typography>
                 </Box>
+                <Button
+                    variant="contained"
+                    startIcon={<Add />}
+                    onClick={handleCreateAlert}
+                    size="large"
+                >
+                    Create Alert
+                </Button>
+            </Box>
 
-                {/* Create Alert Button */}
-                <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
+            {/* Stats */}
+            <Grid container spacing={3} sx={{ mb: 4 }}>
+                <Grid item xs={12} md={3}>
+                    <Paper sx={{ p: 3, textAlign: 'center' }}>
+                        <NotificationsActive sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
+                        <Typography variant="h4" fontWeight="bold" color="primary">
+                            {alerts.filter(alert => alert.active).length}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            Active Alerts
+                        </Typography>
+                    </Paper>
+                </Grid>
+                <Grid item xs={12} md={3}>
+                    <Paper sx={{ p: 3, textAlign: 'center' }}>
+                        <TrendingUp sx={{ fontSize: 40, color: 'success.main', mb: 1 }} />
+                        <Typography variant="h4" fontWeight="bold" color="success.main">
+                            {alerts.reduce((sum, alert) => sum + alert.matchingJobs, 0)}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            Matching Jobs
+                        </Typography>
+                    </Paper>
+                </Grid>
+                <Grid item xs={12} md={3}>
+                    <Paper sx={{ p: 3, textAlign: 'center' }}>
+                        <Email sx={{ fontSize: 40, color: 'info.main', mb: 1 }} />
+                        <Typography variant="h4" fontWeight="bold" color="info.main">
+                            {alerts.filter(alert => alert.emailEnabled).length}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            Email Alerts
+                        </Typography>
+                    </Paper>
+                </Grid>
+                <Grid item xs={12} md={3}>
+                    <Paper sx={{ p: 3, textAlign: 'center' }}>
+                        <Sms sx={{ fontSize: 40, color: 'warning.main', mb: 1 }} />
+                        <Typography variant="h4" fontWeight="bold" color="warning.main">
+                            {alerts.filter(alert => alert.smsEnabled).length}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            SMS Alerts
+                        </Typography>
+                    </Paper>
+                </Grid>
+            </Grid>
+
+            {/* Alerts Grid */}
+            <Typography variant="h5" gutterBottom fontWeight="bold" sx={{ mb: 3 }}>
+                Your Job Alerts
+            </Typography>
+            {alerts.length === 0 ? (
+                <Paper sx={{ p: 6, textAlign: 'center' }}>
+                    <NotificationsActive sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+                    <Typography variant="h6" color="text.secondary" gutterBottom>
+                        No job alerts created yet
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" paragraph>
+                        Create your first job alert to get notified about relevant opportunities
+                    </Typography>
                     <Button
                         variant="contained"
                         startIcon={<Add />}
                         onClick={handleCreateAlert}
-                        size="large"
                     >
-                        Create Alert
+                        Create Your First Alert
                     </Button>
-                </Box>
-
-                {/* Stats */}
+                </Paper>
+            ) : (
                 <Grid container spacing={3} sx={{ mb: 4 }}>
-                    <Grid item xs={12} md={3}>
-                        <Paper sx={{ p: 3, textAlign: 'center' }}>
-                            <NotificationsActive sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
-                            <Typography variant="h4" fontWeight="bold" color="primary">
-                                {alerts.filter(alert => alert.active).length}
+                    {alerts.map((alert) => (
+                        <Grid item xs={12} md={6} lg={4} key={alert.id}>
+                            <AlertCardComponent alert={alert} />
+                        </Grid>
+                    ))}
+                </Grid>
+            )}
+
+            {/* Recent Matching Jobs */}
+            {recentJobs.length > 0 && (
+                <Box sx={{ mt: 6 }}>
+                    <Typography variant="h5" gutterBottom fontWeight="bold">
+                        Recent Matching Jobs
+                    </Typography>
+                    <Paper>
+                        <List>
+                            {recentJobs.map((job, index) => (
+                                <React.Fragment key={job.id}>
+                                    <ListItem>
+                                        <ListItemText
+                                            primary={
+                                                <Typography variant="subtitle1" fontWeight="bold">
+                                                    {job.title}
+                                                </Typography>
+                                            }
+                                            secondary={
+                                                <Box>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        {job.company} • {job.location}
+                                                    </Typography>
+                                                    <Typography variant="body2" color="primary" fontWeight="bold">
+                                                        {job.salary}
+                                                    </Typography>
+                                                </Box>
+                                            }
+                                        />
+                                        <ListItemSecondaryAction>
+                                            <Typography variant="caption" color="text.secondary">
+                                                {job.postedDate}
+                                            </Typography>
+                                        </ListItemSecondaryAction>
+                                    </ListItem>
+                                    {index < recentJobs.length - 1 && <Divider />}
+                                </React.Fragment>
+                            ))}
+                        </List>
+                    </Paper>
+                </Box>
+            )}
+
+            {/* Tips */}
+            <Box sx={{ mt: 6 }}>
+                <Typography variant="h5" gutterBottom fontWeight="bold">
+                    Tips for Effective Job Alerts
+                </Typography>
+                <Grid container spacing={3}>
+                    <Grid item xs={12} md={6}>
+                        <Alert severity="info">
+                            <Typography variant="subtitle2" gutterBottom>
+                                Use Specific Keywords
                             </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                Active Alerts
+                            <Typography variant="body2">
+                                Include specific job titles, skills, and industry terms to get more relevant matches.
                             </Typography>
-                        </Paper>
+                        </Alert>
                     </Grid>
-                    <Grid item xs={12} md={3}>
-                        <Paper sx={{ p: 3, textAlign: 'center' }}>
-                            <TrendingUp sx={{ fontSize: 40, color: 'success.main', mb: 1 }} />
-                            <Typography variant="h4" fontWeight="bold" color="success.main">
-                                {alerts.reduce((sum, alert) => sum + alert.matchingJobs, 0)}
+                    <Grid item xs={12} md={6}>
+                        <Alert severity="success">
+                            <Typography variant="subtitle2" gutterBottom>
+                                Set Realistic Criteria
                             </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                Matching Jobs
+                            <Typography variant="body2">
+                                Balance specificity with flexibility to ensure you don't miss good opportunities.
                             </Typography>
-                        </Paper>
+                        </Alert>
                     </Grid>
-                    <Grid item xs={12} md={3}>
-                        <Paper sx={{ p: 3, textAlign: 'center' }}>
-                            <Email sx={{ fontSize: 40, color: 'info.main', mb: 1 }} />
-                            <Typography variant="h4" fontWeight="bold" color="info.main">
-                                {alerts.filter(alert => alert.emailEnabled).length}
+                    <Grid item xs={12} md={6}>
+                        <Alert severity="warning">
+                            <Typography variant="subtitle2" gutterBottom>
+                                Review Regularly
                             </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                Email Alerts
+                            <Typography variant="body2">
+                                Update your alerts as your career goals and preferences change.
                             </Typography>
-                        </Paper>
+                        </Alert>
                     </Grid>
-                    <Grid item xs={12} md={3}>
-                        <Paper sx={{ p: 3, textAlign: 'center' }}>
-                            <Sms sx={{ fontSize: 40, color: 'warning.main', mb: 1 }} />
-                            <Typography variant="h4" fontWeight="bold" color="warning.main">
-                                {alerts.filter(alert => alert.smsEnabled).length}
+                    <Grid item xs={12} md={6}>
+                        <Alert severity="error">
+                            <Typography variant="subtitle2" gutterBottom>
+                                Act Quickly
                             </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                SMS Alerts
+                            <Typography variant="body2">
+                                Good opportunities move fast. Apply promptly when you receive relevant alerts.
                             </Typography>
-                        </Paper>
+                        </Alert>
                     </Grid>
                 </Grid>
-
-                {/* Alerts Grid */}
-                <Typography variant="h5" gutterBottom fontWeight="bold" sx={{ mb: 3 }}>
-                    Your Job Alerts
-                </Typography>
-                {alerts.length === 0 ? (
-                    <Paper sx={{ p: 6, textAlign: 'center' }}>
-                        <NotificationsActive sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-                        <Typography variant="h6" color="text.secondary" gutterBottom>
-                            No job alerts created yet
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" paragraph>
-                            Create your first job alert to get notified about relevant opportunities
-                        </Typography>
-                        <Button
-                            variant="contained"
-                            startIcon={<Add />}
-                            onClick={handleCreateAlert}
-                        >
-                            Create Your First Alert
-                        </Button>
-                    </Paper>
-                ) : (
-                    <Grid container spacing={3} sx={{ mb: 4 }}>
-                        {alerts.map((alert) => (
-                            <Grid item xs={12} md={6} lg={4} key={alert.id}>
-                                <AlertCardComponent alert={alert} />
-                            </Grid>
-                        ))}
-                    </Grid>
-                )}
-
-                {/* Create/Edit Dialog */}
-                <CreateEditDialog />
             </Box>
-        </Box>
+
+            {/* Create/Edit Dialog */}
+            <CreateEditDialog />
+        </Container>
     );
 };
 

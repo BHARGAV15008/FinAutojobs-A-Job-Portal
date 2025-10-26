@@ -1,6 +1,6 @@
 import csrf from 'csurf';
 import { db } from '../config/database.js';
-import { userSessions } from '../schema.js';
+import { userSessions } from '../models/Others/schema.js';
 import { eq } from 'drizzle-orm';
 
 // Configure CSRF protection

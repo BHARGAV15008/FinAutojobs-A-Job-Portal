@@ -205,15 +205,63 @@ const JobApplicationModal = ({ open, onClose, job, user, onSubmit }) => {
 
   const validateStep = (step) => {
     switch (step) {
-      case 0: // Profile Review
-        return applicationData.firstName && applicationData.lastName && applicationData.email && applicationData.phone;
-      case 1: // Application Details
-        // Resume is required only if user doesn't have resume in profile
-        const resumeValid = hasProfileResume || applicationData.resumeFile;
-        return applicationData.coverLetter.length > 50 && resumeValid;
-      case 2: // Submit
+      case 0:
+        // Profile Review Step - Check required fields that aren't auto-filled
+        const requiredFields = [];
+        
+        // Name fields - mandatory if not in profile
+        if (!applicationData.firstName) requiredFields.push('First Name');
+        if (!applicationData.lastName) requiredFields.push('Last Name');
+        
+        // Email - mandatory if not in profile
+        if (!applicationData.email) requiredFields.push('Email');
+        
+        // Phone - mandatory if not in profile
+        if (!applicationData.phone) requiredFields.push('Phone');
+        
+        // Location - mandatory if not in profile
+        if (!applicationData.location) requiredFields.push('Current Location');
+        
+        // Experience - mandatory if not in profile
+        if (!applicationData.experience && !applicationData.yearsOfExperience) {
+          requiredFields.push('Years of Experience');
+        }
+        
+        if (requiredFields.length > 0) {
+          console.log('❌ Missing required fields:', requiredFields);
+          return false;
+        }
+        
         return true;
+        
+      case 1:
+        // Application Details Step
+        const applicationRequiredFields = [];
+        
+        // Cover Letter - always mandatory
+        if (!applicationData.coverLetter || applicationData.coverLetter.trim().length < 50) {
+          applicationRequiredFields.push('Cover Letter (minimum 50 characters)');
+        }
+        
+        // Resume - mandatory if not in profile
+        if (!hasProfileResume && !applicationData.resumeFile) {
+          applicationRequiredFields.push('Resume');
+        }
+        
+        // Expected Salary - mandatory if not in profile
+        if (!applicationData.expectedSalary) {
+          applicationRequiredFields.push('Expected Salary');
+        }
+        
+        if (applicationRequiredFields.length > 0) {
+          console.log('❌ Missing required application fields:', applicationRequiredFields);
+          return false;
+        }
+        
+        return true;
+        
       default:
+        return true;
         return false;
     }
   };
@@ -254,19 +302,81 @@ const JobApplicationModal = ({ open, onClose, job, user, onSubmit }) => {
       const companyName = job.company || job.companyName;
       const userId = user.id || user._id || user.userId;
       
+      // Create comprehensive applicant snapshot from profile data
+      const applicantSnapshot = {
+        // Basic Information (from form + profile)
+        fullName: `${applicationData.firstName || user.firstName || ''} ${applicationData.lastName || user.lastName || ''}`.trim(),
+        full_name: `${applicationData.firstName || user.firstName || ''} ${applicationData.lastName || user.lastName || ''}`.trim(),
+        firstName: applicationData.firstName || user.firstName || '',
+        lastName: applicationData.lastName || user.lastName || '',
+        email: applicationData.email || user.email || '',
+        phone: applicationData.phone || user.phone || '',
+        location: applicationData.currentLocation || user.location || user.current_location || '',
+        
+        // Professional Information (from form + profile)
+        currentJobTitle: applicationData.currentJobTitle || user.current_job_title || '',
+        currentCompany: applicationData.currentCompany || user.current_company || '',
+        experience: applicationData.experience || user.experience || '',
+        yearsOfExperience: applicationData.yearsOfExperience || user.experience_years || user.yearsOfExperience || 0,
+        expectedSalary: applicationData.expectedSalary || user.expected_salary || '',
+        
+        // Profile Details (from user profile)
+        bio: user.bio || '',
+        qualification: user.qualification || user.highest_qualification || '',
+        skills: user.skills ? (typeof user.skills === 'string' ? JSON.parse(user.skills) : user.skills) : [],
+        
+        // Social Links (from user profile)
+        linkedin_url: user.linkedin_url || '',
+        linkedinUrl: user.linkedin_url || '',
+        github_url: user.github_url || '',
+        githubUrl: user.github_url || '',
+        portfolio_url: user.portfolio_url || '',
+        portfolioUrl: user.portfolio_url || '',
+        
+        // Resume Information
+        resumeUrl: profileResumeUrl || user.resume_url || '',
+        resume: profileResumeUrl || user.resume_url || '',
+        
+        // Additional Profile Data
+        profilePicture: user.profile_picture || '',
+        workExperience: user.workExperience || user.work_experience || [],
+        education: user.education || user.education_history || [],
+        
+        // Application Specific Data
+        coverLetter: applicationData.coverLetter || '',
+        linkedinProfileUrl: applicationData.linkedinProfileUrl || user.linkedin_url || '',
+        portfolioLinks: [
+          ...(user.linkedin_url ? [{ type: 'LinkedIn', url: user.linkedin_url, label: 'LinkedIn Profile' }] : []),
+          ...(user.github_url ? [{ type: 'GitHub', url: user.github_url, label: 'GitHub Repository' }] : []),
+          ...(user.portfolio_url ? [{ type: 'Portfolio', url: user.portfolio_url, label: 'Personal Portfolio' }] : [])
+        ],
+        
+        // Preferences
+        noticePeriod: applicationData.noticePeriod || '',
+        howDidYouHear: applicationData.howDidYouHear || '',
+        willingToRelocate: applicationData.willingToRelocate || false,
+        preferRemoteWork: applicationData.preferRemoteWork || false,
+        additionalInformation: applicationData.additionalInformation || ''
+      };
+      
       console.log('🔍 Job application data being submitted:', {
         jobId,
         jobTitle,
         companyName,
         userId,
+        applicantSnapshot,
         jobFields: Object.keys(job),
         userFields: Object.keys(user)
       });
       
+      // Add all data to form
       formData.append('jobId', jobId);
       formData.append('jobTitle', jobTitle);
       formData.append('companyName', companyName);
       formData.append('userId', userId);
+      
+      // Add comprehensive applicant snapshot
+      formData.append('applicantSnapshot', JSON.stringify(applicantSnapshot));
       
       await onSubmit(formData);
       onClose();

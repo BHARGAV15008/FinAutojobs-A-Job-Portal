@@ -1,0 +1,244 @@
+/* Import Inter font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* Font family utilities */
+.font-inter {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+/* Ensure consistent font rendering */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Base body font */
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+/* Dark mode text improvements */
+.dark * {
+  color-scheme: dark;
+}
+
+/* Ensure proper text contrast in dark mode - Use white and light colors */
+.dark .text-gray-900 {
+  color: #ffffff !important;
+}
+
+.dark .text-gray-800 {
+  color: #f7fafc !important;
+}
+
+.dark .text-gray-700 {
+  color: #e2e8f0 !important;
+}
+
+.dark .text-gray-600 {
+  color: #cbd5e0 !important;
+}
+
+.dark .text-gray-500 {
+  color: #a0aec0 !important;
+}
+
+.dark .text-gray-400 {
+  color: #cbd5e0 !important;
+}
+
+/* Force white text for primary headings in dark mode */
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+  color: #ffffff !important;
+}
+
+/* Force white text for important content */
+.dark .text-white {
+  color: #ffffff !important;
+}
+
+/* Better visibility for secondary text */
+.dark .text-muted {
+  color: #e2e8f0 !important;
+}
+
+/* Ensure all dashboard text is visible */
+.dark .dashboard-text {
+  color: #ffffff !important;
+}
+
+.dark .dashboard-secondary {
+  color: #e2e8f0 !important;
+}
+
+.dark .dashboard-muted {
+  color: #cbd5e0 !important;
+}
+
+/* Force ALL text elements to be visible in dark mode */
+.dark * {
+  color-scheme: dark;
+}
+
+/* Comprehensive dark mode text overrides */
+.dark p, .dark span, .dark div, .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+  color: inherit;
+}
+
+/* Specific overrides for common text classes */
+.dark .text-gray-900,
+.dark .text-gray-800,
+.dark .text-gray-700 {
+  color: #ffffff !important;
+}
+
+.dark .text-gray-600,
+.dark .text-gray-500 {
+  color: #e2e8f0 !important;
+}
+
+.dark .text-gray-400,
+.dark .text-gray-300 {
+  color: #cbd5e0 !important;
+}
+
+/* Ensure button text is visible */
+.dark button {
+  color: inherit;
+}
+
+/* Ensure all dashboard content is readable */
+.dark [class*="bg-white"] * {
+  color: #ffffff;
+}
+
+.dark [class*="bg-gray-50"] * {
+  color: #ffffff;
+}
+
+/* Force visibility for specific dashboard elements */
+.dark .bg-white.dark\\:bg-gray-800 * {
+  color: #ffffff !important;
+}
+
+.dark .bg-gray-50.dark\\:bg-gray-700 * {
+  color: #ffffff !important;
+}
+
+/* Override any remaining invisible text */
+.dark .text-black {
+  color: #ffffff !important;
+}
+
+/* Ensure loading and status text is visible */
+.dark .animate-spin + span {
+  color: #ffffff !important;
+}
+
+/* NUCLEAR OPTION - Force ALL text to be visible in dark mode */
+.dark *:not(input):not(textarea):not(select):not(button) {
+  color: #ffffff !important;
+}
+
+/* Ensure form elements remain functional */
+.dark input,
+.dark textarea,
+.dark select {
+  pointer-events: auto !important;
+  cursor: text !important;
+}
+
+.dark button {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+/* Override for specific elements that should have different colors */
+.dark .text-blue-600,
+.dark .text-blue-500,
+.dark .text-blue-400 {
+  color: #60a5fa !important;
+}
+
+.dark .text-green-600,
+.dark .text-green-500,
+.dark .text-green-400 {
+  color: #4ade80 !important;
+}
+
+.dark .text-yellow-600,
+.dark .text-yellow-500,
+.dark .text-yellow-400 {
+  color: #facc15 !important;
+}
+
+.dark .text-red-600,
+.dark .text-red-500,
+.dark .text-red-400 {
+  color: #f87171 !important;
+}
+
+.dark .text-purple-600,
+.dark .text-purple-500,
+.dark .text-purple-400 {
+  color: #a78bfa !important;
+}
+
+/* Ensure badges and status indicators are visible */
+.dark .bg-yellow-100 {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+}
+
+.dark .bg-green-100 {
+  background-color: #10b981 !important;
+  color: #000000 !important;
+}
+
+.dark .bg-red-100 {
+  background-color: #ef4444 !important;
+  color: #000000 !important;
+}
+
+.dark .bg-gray-100 {
+  background-color: #6b7280 !important;
+  color: #ffffff !important;
+}
+
+/* Improved button styling */
+.btn-primary {
+  @apply bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200;
+}
+
+.dark .btn-primary {
+  @apply bg-blue-500 hover:bg-blue-600;
+}
+
+/* Card styling improvements */
+.card {
+  @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700;
+}
+
+/* Consistent spacing */
+.section-spacing {
+  @apply space-y-6 md:space-y-8;
+}
+
+/* Typography improvements */
+.heading-primary {
+  @apply text-2xl md:text-3xl font-bold text-gray-900 dark:text-white font-inter;
+}
+
+.heading-secondary {
+  @apply text-lg md:text-xl font-semibold text-gray-900 dark:text-white font-inter;
+}
+
+.text-body {
+  @apply text-gray-600 dark:text-gray-400 font-inter;
+}
+
+.text-muted {
+  @apply text-gray-500 dark:text-gray-500 font-inter;
+}

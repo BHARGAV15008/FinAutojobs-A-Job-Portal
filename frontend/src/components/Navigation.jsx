@@ -37,7 +37,6 @@ import {
   TrendingUp,
   Notifications,
   Psychology,
-  Message,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext.jsx';
 
@@ -72,7 +71,6 @@ const Navigation = () => {
     { label: 'Companies', path: '/companies', icon: <Business /> },
     { label: 'Salary Insights', path: '/salary-insights', icon: <TrendingUp /> },
     { label: 'Skills Assessment', path: '/skills-assessment', icon: <School /> },
-    ...(user ? [{ label: 'Messages', path: '/messages', icon: <Message /> }] : []),
     ...(user && user.role === 'jobseeker' ? [{ label: 'Job Alerts', path: '/job-alerts', icon: <Notifications /> }] : []),
   ];
 

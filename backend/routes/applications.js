@@ -331,6 +331,18 @@ router.post('/', upload.single('resume'), authenticateToken, async (req, res) =>
       console.warn('⚠️ Failed to create notification:', notifError.message);
     }
 
+    // Send WebSocket notification for real-time updates
+    const websocketService = req.app.get('websocketService');
+    if (websocketService) {
+      websocketService.notifyApplicationUpdate(
+        'created',
+        application.toObject(),
+        req.user.userId,
+        job.postedBy
+      );
+      console.log('✅ WebSocket notification sent for new application');
+    }
+
     res.status(201).json({
       success: true,
       message: 'Application submitted successfully',

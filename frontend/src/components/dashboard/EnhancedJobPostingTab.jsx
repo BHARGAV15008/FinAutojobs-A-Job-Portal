@@ -134,7 +134,8 @@ const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
         applicationDeadline: editingJob.applicationDeadline ? 
           new Date(editingJob.applicationDeadline).toISOString().split('T')[0] : 
           new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        urgency: editingJob.jobUrgency?.toLowerCase().replace(' priority', '').replace(' ', '-') || 'normal',
+        urgency: editingJob.jobUrgency === 'High Priority' ? 'high-priority' : 
+                 editingJob.jobUrgency === 'Urgent' ? 'urgent' : 'normal',
         
         // AI Enhancement
         keywordsForAI: '',
@@ -255,18 +256,23 @@ const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
         // Contact and urgency
         contactEmail: currentUser?.email || 'hr@company.com',
         jobUrgency: formData.urgency === 'urgent' ? 'Urgent' : 
-                   formData.urgency === 'high' ? 'High Priority' : 'Normal Priority',
+                   formData.urgency === 'high-priority' ? 'High Priority' : 'Normal Priority',
         
         aiKeywords: formData.requiredSkills || [],
         isAiEnhanced: false,
         
         // Set status based on whether it's a draft or active job
-        status: isDraft ? 'draft' : 'active'
+        status: isDraft ? 'draft' : 'active',
+        
+        // Enable automatic status management for deadline handling
+        autoStatusManagement: true
       };
       
       console.log('🔍 Job payload being sent:', jobPayload);
       console.log('🔍 Job status:', isDraft ? 'draft' : 'active');
       console.log('🔍 Editing job?', !!editingJob);
+      console.log('🔍 isDraft flag:', isDraft);
+      console.log('🔍 Status field in payload:', jobPayload.status);
       
       let result;
       if (editingJob) {
@@ -301,6 +307,17 @@ const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
         };
         
         onJobSaved(enhancedResult);
+      }
+      
+      // Refresh dashboard to show job in correct tab and clear editing state
+      if (editingJob) {
+        console.log('🔄 Refreshing dashboard after job update');
+        // Trigger dashboard refresh to move job to correct tab
+        window.dispatchEvent(new CustomEvent('refreshDashboard'));
+        // Clear editing job state after successful update
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('clearEditingJob'));
+        }, 1000);
       }
       
       // Reset form after successful submission (only for new jobs, not edits)
@@ -518,7 +535,10 @@ const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
   }
 
   return (
-    <motion.div className={`dashboard-card rounded-xl p-6 shadow-sm border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+    <motion.div 
+      data-component="job-posting-form" 
+      className={`dashboard-card rounded-xl p-6 shadow-sm border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}
+    >
       <div className="flex items-center gap-3 mb-6">
         <Briefcase className="w-8 h-8 text-blue-600" />
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">

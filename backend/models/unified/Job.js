@@ -98,4 +98,4 @@ jobSchema.index({ jobStatus: 1, isActive: 1 });
 jobSchema.index({ 'requirements.skills': 1 });
 jobSchema.index({ createdAt: -1 });
 
-export default mongoose.models.Job || mongoose.model('Job', jobSchema);
+export default mongoose.model('Job', jobSchema);

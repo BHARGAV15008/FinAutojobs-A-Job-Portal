@@ -25,14 +25,19 @@ export const useRealTimeNotifications = () => {
 
     // Initialize socket connection with better error handling
     if (!socket) {
+      console.log('🔌 Initializing WebSocket connection to:', SOCKET_URL);
       socket = io(SOCKET_URL, {
-        transports: ['polling', 'websocket'], // Try polling first, then websocket
+        transports: ['polling', 'websocket'], // Try polling first, then upgrade to websocket
         withCredentials: true,
-        timeout: 20000,
-        forceNew: true,
+        timeout: 30000,
+        forceNew: false, // Reuse existing connection if available
         reconnection: true,
-        reconnectionAttempts: 3,
-        reconnectionDelay: 1000
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        autoConnect: true,
+        upgrade: true,
+        rememberUpgrade: true
       });
 
       socket.on('connect', () => {
@@ -167,6 +172,71 @@ export const useRealTimeNotifications = () => {
             body: data.message,
             icon: '/favicon.ico'
           });
+        }
+      });
+
+      // Listen for job updates (created, updated, deleted, status changed)
+      socket.on('job_updated', (data) => {
+        console.log('📨 Job update received:', data);
+        
+        // Trigger dashboard refresh
+        if (refreshStats) {
+          refreshStats();
+        }
+
+        // Show notification for job updates
+        const actionText = {
+          created: 'New job posted',
+          updated: 'Job updated',
+          deleted: 'Job removed',
+          status_changed: 'Job status changed'
+        }[data.action] || 'Job updated';
+
+        setNotifications(prev => [{
+          id: Date.now(),
+          type: 'job_update',
+          title: actionText,
+          message: `${data.job?.title || 'A job'} has been ${data.action}`,
+          timestamp: new Date(data.timestamp),
+          read: false,
+          data: data.job
+        }, ...prev]);
+      });
+
+      // Listen for application updates
+      socket.on('application_updated', (data) => {
+        console.log('📨 Application update received:', data);
+        
+        // Trigger dashboard refresh
+        if (refreshStats) {
+          refreshStats();
+        }
+
+        const actionText = {
+          created: 'New application received',
+          updated: 'Application updated',
+          status_changed: 'Application status changed'
+        }[data.action] || 'Application updated';
+
+        setNotifications(prev => [{
+          id: Date.now(),
+          type: 'application_update',
+          title: actionText,
+          message: data.application?.jobTitle ? `Application for ${data.application.jobTitle}` : 'Application updated',
+          timestamp: new Date(data.timestamp),
+          read: false,
+          data: data.application
+        }, ...prev]);
+      });
+
+      // Listen for data refresh signals
+      socket.on('data_refresh_needed', (data) => {
+        console.log('📨 Data refresh signal received:', data);
+        
+        // Trigger dashboard refresh
+        if (refreshStats) {
+          console.log('🔄 Refreshing dashboard data...');
+          refreshStats();
         }
       });
     }

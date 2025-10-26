@@ -98,17 +98,11 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('user', JSON.stringify(user));
         setUser(user);
         
-        // Redirect based on user role
-        const role = user.role;
-        if (role === 'recruiter' || role === 'employer') {
-          window.location.replace('/recruiter-dashboard');
-        } else if (role === 'admin') {
-          window.location.replace('/admin-dashboard');
-        } else {
-          window.location.replace('/applicant-dashboard');
-        }
-        
-        return { success: true };
+        return { 
+          success: true, 
+          user: user,
+          message: 'Successfully logged in with social authentication!'
+        };
       } else {
         // Regular email/password login with retry logic
         let response;
@@ -135,17 +129,11 @@ export const AuthProvider = ({ children }) => {
           localStorage.setItem('user', JSON.stringify(user)); // Store user data for offline access
           setUser(user);
           
-          // Redirect based on user role
-          const role = user.role;
-          if (role === 'recruiter' || role === 'employer') {
-            window.location.replace('/recruiter-dashboard');
-          } else if (role === 'admin') {
-            window.location.replace('/admin-dashboard');
-          } else {
-            window.location.replace('/applicant-dashboard');
-          }
-          
-          return { success: true };
+          return { 
+            success: true, 
+            user: user,
+            message: 'Successfully logged in!'
+          };
         } else {
           return { success: false, error: data.message || 'Login failed' };
         }
@@ -215,17 +203,11 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('user', JSON.stringify(user)); // Store user data for offline access
         setUser(user);
         
-        // Redirect based on user role
-        const role = user.role;
-        if (role === 'recruiter' || role === 'employer') {
-          window.location.replace('/recruiter-dashboard');
-        } else if (role === 'admin') {
-          window.location.replace('/admin-dashboard');
-        } else {
-          window.location.replace('/applicant-dashboard');
-        }
-        
-        return { success: true };
+        return { 
+          success: true, 
+          user: user,
+          message: 'Account created successfully! Welcome to FinAutoJobs!'
+        };
       } else {
         return { success: false, error: data.message || 'Registration failed' };
       }

@@ -12,7 +12,6 @@ import {
   EnhancedApplicationsTab,
   EnhancedAnalyticsTab,
 } from "../components/dashboard/EnhancedDashboardTabs";
-import EnhancedApplicantDashboardTabs from "../components/dashboard/EnhancedApplicantDashboardTabs";
 import MyApplicationsTab from "../components/dashboard/applicant/MyApplicationsTab";
 import JobAlertsTab from "../components/dashboard/JobAlertsTab";
 import RecentActivity from "../components/dashboard/RecentActivity";
@@ -403,22 +402,23 @@ const ApplicantDashboardContent = () => {
             
             {/* Welcome Section */}
             <motion.div
-              className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-8 text-white"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-700 dark:to-purple-700 rounded-xl p-6 md:p-8 text-white shadow-lg"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
+              style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
             >
               <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-3xl font-bold mb-2">
+                <div className="flex-1">
+                  <h2 className="text-2xl md:text-3xl font-bold mb-2 text-white dashboard-text">
                     Welcome back, {user.firstName} {user.lastName}! 👋
                   </h2>
-                  <p className="text-blue-100 text-lg">
+                  <p className="text-blue-100 dark:text-white text-base md:text-lg font-medium dashboard-secondary">
                     Ready to find your next opportunity? Let's get started!
                   </p>
                 </div>
-                <div className="hidden md:block">
-                  <div className="text-6xl">🚀</div>
+                <div className="hidden md:block ml-4">
+                  <div className="text-5xl md:text-6xl">🚀</div>
                 </div>
               </div>
             </motion.div>
@@ -447,13 +447,16 @@ const ApplicantDashboardContent = () => {
               transition={{ duration: 0.5, delay: 0.4 }}
             >
               {/* Recent Applications */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div 
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+                style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
+              >
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white font-inter dashboard-text">
                     Recent Applications
                   </h3>
                   <button
-                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400 text-sm font-medium"
+                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium transition-colors duration-200"
                     onClick={() => handleTabChange("applications")}
                   >
                     View all
@@ -471,10 +474,10 @@ const ApplicantDashboardContent = () => {
                         className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
                       >
                         <div>
-                          <h4 className="font-medium text-gray-900 dark:text-white">
+                          <h4 className="font-medium text-gray-900 dark:text-white font-inter dashboard-text">
                             {app.jobSnapshot?.title || app.jobTitle || app.jobId?.title || app.jobId?.jobTitle || app.job?.title || app.job?.jobTitle || app.jobSnapshot?.jobTitle || app.title || app.position || 'Job Title Not Available'}
                           </h4>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                          <p className="text-sm text-gray-600 dark:text-gray-300 font-inter dashboard-secondary">
                             {app.jobSnapshot?.company || app.company || app.companyName || app.jobId?.companyName || app.jobId?.company || app.job?.companyName || app.job?.company || app.jobSnapshot?.companyName || app.employer || 'Company Not Available'}
                           </p>
                         </div>
@@ -496,8 +499,8 @@ const ApplicantDashboardContent = () => {
                   ) : (
                     <div className="text-center py-8">
                       <div className="text-4xl mb-2">📝</div>
-                      <p className="text-gray-500 dark:text-gray-400">No applications yet</p>
-                      <p className="text-sm text-gray-400 dark:text-gray-500">
+                      <p className="text-gray-500 dark:text-white font-inter dashboard-text">No applications yet</p>
+                      <p className="text-sm text-gray-400 dark:text-gray-300 font-inter dashboard-secondary">
                         {isAuthenticated ? "Start applying to jobs to see them here" : "Login to see your applications"}
                       </p>
                     </div>
@@ -506,13 +509,16 @@ const ApplicantDashboardContent = () => {
               </div>
 
               {/* Recommended Jobs */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div 
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+                style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
+              >
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white font-inter dashboard-text">
                     Recommended Jobs
                   </h3>
                   <button
-                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400 text-sm font-medium"
+                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium transition-colors duration-200"
                     onClick={() => handleTabChange("recommended")}
                   >
                     View all
@@ -524,7 +530,7 @@ const ApplicantDashboardContent = () => {
                   {loadingRecommendations ? (
                     <div className="flex items-center justify-center py-8">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                      <span className="ml-2 text-gray-600 dark:text-gray-400">Loading recommendations...</span>
+                      <span className="ml-2 text-gray-600 dark:text-white dashboard-text">Loading recommendations...</span>
                     </div>
                   ) : recommendedJobs && recommendedJobs.length > 0 ? (
                     recommendedJobs.slice(0, 3).map((job) => (
@@ -534,10 +540,10 @@ const ApplicantDashboardContent = () => {
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <h4 className="font-medium text-gray-900 dark:text-white">
+                            <h4 className="font-medium text-gray-900 dark:text-white font-inter dashboard-text">
                               {job.jobTitle || job.title || 'Job Title Not Available'}
                             </h4>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                            <p className="text-sm text-gray-600 dark:text-gray-300 font-inter dashboard-secondary">
                               {job.companyName || job.company || 'Company Not Available'} • {job.location || 'Location Not Available'}
                             </p>
                             {/* Match score indicator */}
@@ -561,12 +567,12 @@ const ApplicantDashboardContent = () => {
                             {/* Additional job details */}
                             <div className="mt-2 space-y-1">
                               {job.jobType && (
-                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                <p className="text-xs text-gray-500 dark:text-gray-300 dashboard-muted">
                                   📋 {job.jobType}
                                 </p>
                               )}
                               {job.experience && (
-                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                <p className="text-xs text-gray-500 dark:text-gray-300 dashboard-muted">
                                   🎯 {typeof job.experience === 'string' ? 
                                       (job.experience.toLowerCase().includes('experience') ? job.experience : `${job.experience} experience required`) : 
                                       typeof job.experience === 'number' ? `${job.experience} years experience required` :
@@ -579,14 +585,14 @@ const ApplicantDashboardContent = () => {
                                 </p>
                               )}
                               {job.requiredSkills && Array.isArray(job.requiredSkills) && job.requiredSkills.length > 0 && (
-                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                <p className="text-xs text-gray-500 dark:text-gray-300 dashboard-muted">
                                   💡 Skills: {job.requiredSkills.slice(0, 3).join(', ')}{job.requiredSkills.length > 3 ? '...' : ''}
                                 </p>
                               )}
                             </div>
                           </div>
                           <button
-                            className="ml-4 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                            className="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white text-sm rounded-lg font-medium font-inter transition-colors duration-200"
                             onClick={() => handleApplyJob(job.id || job._id || job.jobId)}
                           >
                             Apply
@@ -597,8 +603,8 @@ const ApplicantDashboardContent = () => {
                   ) : (
                     <div className="text-center py-8">
                       <div className="text-4xl mb-2">⭐</div>
-                      <p className="text-gray-500 dark:text-gray-400">No personalized recommendations yet</p>
-                      <p className="text-sm text-gray-400 dark:text-gray-500">
+                      <p className="text-gray-500 dark:text-white font-inter dashboard-text">No personalized recommendations yet</p>
+                      <p className="text-sm text-gray-400 dark:text-gray-300 font-inter dashboard-secondary">
                         {isAuthenticated ? 
                           "Complete your profile with skills and preferences to get better job recommendations" : 
                           "Login to see personalized job recommendations based on your skills"}
@@ -606,7 +612,7 @@ const ApplicantDashboardContent = () => {
                       {isAuthenticated && (
                         <button
                           onClick={() => handleTabChange("profile")}
-                          className="mt-2 text-blue-600 hover:text-blue-700 text-sm font-medium"
+                          className="mt-2 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium font-inter transition-colors duration-200"
                         >
                           Complete Profile →
                         </button>
@@ -626,8 +632,32 @@ const ApplicantDashboardContent = () => {
       title="Applicant Dashboard"
       userRole="applicant"
       user={user}
+      breadcrumbs={
+        activeTab !== "overview"
+          ? [
+              { name: "Dashboard", path: "/applicant-dashboard" },
+              {
+                name:
+                  activeTab.charAt(0).toUpperCase() +
+                  activeTab.slice(1).replace("-", " "),
+                path: `/${activeTab}`,
+              },
+            ]
+          : []
+      }
     >
-      <EnhancedApplicantDashboardTabs user={user || authUser} />
+      <div className="space-y-6">
+        {/* Tab Content */}
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.3 }}
+        >
+          {renderTabContent()}
+        </motion.div>
+      </div>
 
       {/* Job Application Modal */}
       <JobApplicationModal

@@ -281,28 +281,49 @@ const RegisterPage = () => {
         })
       }
 
-      await register(registrationData)
+      const result = await register(registrationData)
       
-      toast({
-        title: "Success!",
-        description: "Account created successfully. Welcome to FinAutoJobs!",
-        variant: "default"
-      })
+      if (result.success) {
+        // Show success message
+        toast({
+          title: "Success!",
+          description: result.message || "Account created successfully. Welcome to FinAutoJobs!",
+          variant: "default"
+        })
 
-      // Redirect based on role
-      if (formData.role === 'recruiter') {
-        setLocation('/recruiter-dashboard')
+        // Wait a moment for the user to see the success message
+        setTimeout(() => {
+          // Redirect based on role
+          const role = result.user?.role || formData.role;
+          if (role === 'recruiter' || role === 'employer') {
+            setLocation('/recruiter-dashboard')
+          } else if (role === 'admin') {
+            setLocation('/admin-dashboard')
+          } else {
+            setLocation('/applicant-dashboard')
+          }
+        }, 1500) // 1.5 second delay to show success message
+
       } else {
-        setLocation('/applicant-dashboard')
+        // Handle registration failure
+        const errorMessage = result.error || 'Registration failed. Please try again.'
+        setRegistrationError(errorMessage)
+        
+        toast({
+          title: "Registration Failed",
+          description: errorMessage,
+          variant: "destructive"
+        })
       }
 
     } catch (error) {
       console.error('Registration error:', error)
-      setRegistrationError(error.message || 'Registration failed. Please try again.')
+      const errorMessage = error.message || 'Registration failed. Please try again.'
+      setRegistrationError(errorMessage)
       
       toast({
         title: "Registration Failed",
-        description: error.message || "Please check your information and try again.",
+        description: errorMessage,
         variant: "destructive"
       })
     }
@@ -315,12 +336,18 @@ const RegisterPage = () => {
       variant: "default"
     })
     
-    // Redirect based on role
-    if (userData.role === 'recruiter') {
-      setLocation('/recruiter-dashboard')
-    } else {
-      setLocation('/applicant-dashboard')
-    }
+    // Wait a moment for the user to see the success message
+    setTimeout(() => {
+      // Redirect based on role
+      const role = userData.role;
+      if (role === 'recruiter' || role === 'employer') {
+        setLocation('/recruiter-dashboard')
+      } else if (role === 'admin') {
+        setLocation('/admin-dashboard')
+      } else {
+        setLocation('/applicant-dashboard')
+      }
+    }, 1500) // 1.5 second delay to show success message
   }
 
   const handleOAuthError = (error) => {
@@ -618,6 +645,120 @@ const RegisterPage = () => {
                   />
                 </Grid>
               </Grid>
+
+              {/* Role-specific fields */}
+              {activeTab === 1 && (
+                <Grid container spacing={{ xs: 2.75, sm: 3 }} sx={{ mb: { xs: 3.75, sm: 4 } }}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      name="company"
+                      label="Company Name"
+                      value={formData.company}
+                      onChange={handleChange}
+                      error={!!errors.company}
+                      helperText={errors.company}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Business color={errors.company ? "error" : "primary"} />
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      name="position"
+                      label="Your Position/Title"
+                      value={formData.position}
+                      onChange={handleChange}
+                      error={!!errors.position}
+                      helperText={errors.position}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Work color={errors.position ? "error" : "primary"} />
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  </Grid>
+                </Grid>
+              )}
+
+              {/* Applicant-specific fields */}
+              {activeTab === 0 && (
+                <Grid container spacing={{ xs: 2.75, sm: 3 }} sx={{ mb: { xs: 3.75, sm: 4 } }}>
+                  <Grid item xs={12} sm={6}>
+                    <FormControl fullWidth error={!!errors.qualification}>
+                      <InputLabel>Qualification</InputLabel>
+                      <Select
+                        name="qualification"
+                        value={formData.qualification}
+                        onChange={handleChange}
+                        label="Qualification"
+                      >
+                        {qualificationOptions.map((option) => (
+                          <MenuItem key={option} value={option}>
+                            {option}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <FormControl fullWidth error={!!errors.experience}>
+                      <InputLabel>Experience Level</InputLabel>
+                      <Select
+                        name="experience"
+                        value={formData.experience}
+                        onChange={handleChange}
+                        label="Experience Level"
+                      >
+                        {experienceOptions.map((option) => (
+                          <MenuItem key={option} value={option}>
+                            {option}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Autocomplete
+                      multiple
+                      options={skillOptions}
+                      value={formData.skills}
+                      onChange={(event, newValue) => {
+                        setFormData(prev => ({
+                          ...prev,
+                          skills: newValue
+                        }))
+                      }}
+                      renderTags={(value, getTagProps) =>
+                        value.map((option, index) => (
+                          <Chip
+                            variant="outlined"
+                            label={option}
+                            {...getTagProps({ index })}
+                            key={option}
+                          />
+                        ))
+                      }
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Skills"
+                          placeholder="Select your skills"
+                          error={!!errors.skills}
+                          helperText={errors.skills}
+                        />
+                      )}
+                    />
+                  </Grid>
+                </Grid>
+              )}
 
               {/* Terms and Conditions */}
               <FormControlLabel

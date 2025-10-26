@@ -1,0 +1,377 @@
+/* Modal Responsive Styles */
+/* Ensures all modals are properly responsive across all device sizes */
+
+/* Global modal fixes for all existing modals */
+.fixed.inset-0.z-50 .flex.min-h-full {
+  padding: 0.5rem !important;
+}
+
+@media (min-width: 640px) {
+  .fixed.inset-0.z-50 .flex.min-h-full {
+    padding: 1rem !important;
+  }
+}
+
+/* Override any fixed max-width that's too large */
+[class*="max-w-6xl"],
+[class*="max-w-5xl"],
+[class*="max-w-4xl"] {
+  max-width: calc(100vw - 1rem) !important;
+}
+
+@media (min-width: 480px) {
+  [class*="max-w-6xl"],
+  [class*="max-w-5xl"],
+  [class*="max-w-4xl"] {
+    max-width: 28rem !important;
+  }
+}
+
+@media (min-width: 640px) {
+  [class*="max-w-6xl"],
+  [class*="max-w-5xl"],
+  [class*="max-w-4xl"] {
+    max-width: 32rem !important;
+  }
+}
+
+@media (min-width: 768px) {
+  [class*="max-w-4xl"] {
+    max-width: 42rem !important;
+  }
+  
+  [class*="max-w-5xl"],
+  [class*="max-w-6xl"] {
+    max-width: 48rem !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  [class*="max-w-4xl"] {
+    max-width: 56rem !important;
+  }
+  
+  [class*="max-w-5xl"] {
+    max-width: 64rem !important;
+  }
+  
+  [class*="max-w-6xl"] {
+    max-width: 72rem !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  [class*="max-w-4xl"] {
+    max-width: 56rem !important;
+  }
+  
+  [class*="max-w-5xl"] {
+    max-width: 80rem !important;
+  }
+  
+  [class*="max-w-6xl"] {
+    max-width: 96rem !important;
+  }
+}
+
+/* Base modal container */
+.modal-container {
+  padding: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .modal-container {
+    padding: 1rem;
+  }
+}
+
+/* Modal sizing for different screen sizes */
+.responsive-modal {
+  width: 100%;
+  max-width: 20rem; /* 320px - very small screens */
+  margin: 0 auto;
+}
+
+@media (min-width: 480px) {
+  .responsive-modal {
+    max-width: 28rem; /* 448px - small phones */
+  }
+}
+
+@media (min-width: 640px) {
+  .responsive-modal {
+    max-width: 32rem; /* 512px - large phones */
+  }
+}
+
+@media (min-width: 768px) {
+  .responsive-modal {
+    max-width: 42rem; /* 672px - tablets */
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-modal {
+    max-width: 56rem; /* 896px - small laptops */
+  }
+}
+
+@media (min-width: 1280px) {
+  .responsive-modal {
+    max-width: 72rem; /* 1152px - large screens */
+  }
+}
+
+/* Modal content scrolling */
+.modal-content {
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+@media (min-width: 640px) {
+  .modal-content {
+    max-height: 90vh;
+  }
+}
+
+/* Responsive text sizing */
+.modal-title {
+  font-size: 1.125rem; /* 18px */
+  line-height: 1.75rem;
+}
+
+@media (min-width: 640px) {
+  .modal-title {
+    font-size: 1.25rem; /* 20px */
+    line-height: 1.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .modal-title {
+    font-size: 1.5rem; /* 24px */
+    line-height: 2rem;
+  }
+}
+
+/* Responsive button sizing */
+.modal-button {
+  padding: 0.375rem 0.75rem; /* 6px 12px */
+  font-size: 0.75rem; /* 12px */
+}
+
+@media (min-width: 640px) {
+  .modal-button {
+    padding: 0.5rem 1rem; /* 8px 16px */
+    font-size: 0.875rem; /* 14px */
+  }
+}
+
+/* Responsive spacing */
+.modal-spacing {
+  padding: 0.75rem; /* 12px */
+}
+
+@media (min-width: 640px) {
+  .modal-spacing {
+    padding: 1.5rem; /* 24px */
+  }
+}
+
+@media (min-width: 1024px) {
+  .modal-spacing {
+    padding: 2rem; /* 32px */
+  }
+}
+
+/* Responsive grid layouts */
+.modal-grid-1 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .modal-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .modal-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+/* Responsive flex layouts */
+.modal-flex-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .modal-flex-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+/* Responsive tabs */
+.modal-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  overflow-x: auto;
+}
+
+@media (min-width: 640px) {
+  .modal-tabs {
+    gap: 0.5rem;
+  }
+}
+
+.modal-tab {
+  flex-shrink: 0;
+  padding: 0.375rem 0.5rem;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .modal-tab {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* Responsive action buttons */
+.modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+@media (min-width: 640px) {
+  .modal-actions {
+    gap: 0.75rem;
+  }
+}
+
+.modal-action-button {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+}
+
+@media (min-width: 640px) {
+  .modal-action-button {
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* Hide text on very small screens, show icons only */
+.modal-button-text-hide {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .modal-button-text-hide {
+    display: inline;
+  }
+}
+
+.modal-button-text-mobile {
+  display: inline;
+}
+
+@media (min-width: 640px) {
+  .modal-button-text-mobile {
+    display: none;
+  }
+}
+
+/* Responsive avatar sizes */
+.modal-avatar {
+  width: 3rem;
+  height: 3rem;
+}
+
+@media (min-width: 640px) {
+  .modal-avatar {
+    width: 4rem;
+    height: 4rem;
+  }
+}
+
+/* Responsive icon sizes */
+.modal-icon-sm {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .modal-icon-sm {
+    width: 1rem;
+    height: 1rem;
+  }
+}
+
+.modal-icon-md {
+  width: 1rem;
+  height: 1rem;
+}
+
+@media (min-width: 640px) {
+  .modal-icon-md {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}
+
+/* Ensure modals work on very small screens (Samsung Galaxy Fold, etc.) */
+@media (max-width: 320px) {
+  .responsive-modal {
+    max-width: calc(100vw - 1rem);
+    margin: 0.5rem;
+  }
+  
+  .modal-spacing {
+    padding: 0.5rem;
+  }
+  
+  .modal-button {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.625rem;
+  }
+  
+  .modal-title {
+    font-size: 1rem;
+  }
+  
+  .modal-avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+}
+
+/* Fix for landscape orientation on small devices */
+@media (max-height: 500px) and (orientation: landscape) {
+  .modal-content {
+    max-height: 80vh;
+  }
+  
+  .modal-spacing {
+    padding: 0.5rem;
+  }
+}

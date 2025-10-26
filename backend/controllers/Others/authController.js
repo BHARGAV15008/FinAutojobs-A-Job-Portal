@@ -1,7 +1,9 @@
+
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import mongoDataService from '../../services/mongoDataService.js';
-import BaseUser from '../../models/unified/BaseUser.js';
+import { db } from '../db.js';
+import { users } from '../models/user/User.js';
+import { eq, or } from 'drizzle-orm';
 import UsernameGenerator from '../utils/usernameGenerator.js';
 
 // In-memory OTP storage (in production, use Redis or database)
@@ -98,8 +100,8 @@ export const register = async (req, res) => {
     }
 
     // Check if user already exists by email
-    const existingEmailUser = await mongoDataService.getUserByEmail(email);
-    if (existingEmailUser) {
+    const existingEmailUser = await db.select().from(users).where(eq(users.email, email));
+    if (existingEmailUser.length > 0) {
       return res.status(409).json({ 
         message: 'User with this email already exists',
         field: 'email'
@@ -122,9 +124,9 @@ export const register = async (req, res) => {
 
     // Check if provided username is available
     let finalUsername = username;
-    const existingUsernameUser = await BaseUser.findOne({ username });
+    const existingUsernameUser = await db.select().from(users).where(eq(users.username, username));
     
-    if (existingUsernameUser) {
+    if (existingUsernameUser.length > 0) {
       // Generate a unique username
       const usernameResult = await UsernameGenerator.generateUniqueUsername(firstName, lastName);
       
@@ -166,25 +168,22 @@ export const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // Create new user
-    const newUserData = {
+    const newUser = {
       username: finalUsername,
       email,
       password: hashedPassword,
-      firstName,
-      lastName,
       fullName,
       phone,
-      role,
-      status: 'active',
-      isEmailVerified: false,
-      isPhoneVerified: false
+      role
     };
 
-    const user = await mongoDataService.createUser(newUserData);
+    const insertedUser = await db.insert(users).values(newUser).returning();
 
-    if (!user) {
+    if (!insertedUser || insertedUser.length === 0) {
       throw new Error('Failed to create user');
     }
+
+    const user = insertedUser[0];
 
     // Generate tokens
     const token = generateToken({

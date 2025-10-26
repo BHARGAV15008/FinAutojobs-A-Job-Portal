@@ -100,12 +100,15 @@ const RecentActivity = ({ userRole }) => {
   const activities = getActivities();
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+    <div 
+      className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
+      style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
+    >
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white font-inter dashboard-text">
           Recent Activity
         </h3>
-        <button className="text-blue-600 hover:text-blue-700 dark:text-blue-400 text-sm font-medium">
+        <button className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium font-inter transition-colors duration-200">
           View All
         </button>
       </div>
@@ -126,16 +129,16 @@ const RecentActivity = ({ userRole }) => {
             </div>
             
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">
+              <p className="text-sm font-medium text-gray-900 dark:text-white font-inter dashboard-text">
                 {activity.title}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-300 mt-1 font-inter dashboard-secondary">
                 {activity.time}
               </p>
             </div>
             
             <div className="flex-shrink-0">
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(activity.status)}`}>
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-inter ${getStatusColor(activity.status)}`}>
                 {activity.status}
               </span>
             </div>

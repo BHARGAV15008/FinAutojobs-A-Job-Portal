@@ -1,5 +1,5 @@
 import { db } from '../config/database.js';
-import { users, applications, jobs, companies } from '../schema.js';
+import { users, applications, jobs, companies } from '../models/Others/schema.js';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 

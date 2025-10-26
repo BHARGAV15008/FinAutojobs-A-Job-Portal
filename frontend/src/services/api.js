@@ -108,6 +108,8 @@ export const applicationsAPI = {
 export const candidatesAPI = {
   getCandidates: (params) => api.get('/applications', { params }),
   getCandidate: (id) => api.get(`/applications/${id}`),
+  getCandidateProfile: (candidateId) => api.get(`/candidates/${candidateId}/profile`),
+  getCandidateDetails: (candidateId) => api.get(`/users/${candidateId}`),
   updateCandidateStatus: (id, status, notes = '') => api.put(`/applications/${id}/status`, { status, notes }),
   sendEmail: (id, emailData) => api.post(`/candidates/${id}/send-email`, emailData),
   downloadResume: async (id) => {

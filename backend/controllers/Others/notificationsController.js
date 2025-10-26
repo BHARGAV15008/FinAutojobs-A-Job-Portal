@@ -1,6 +1,5 @@
 import { db } from '../config/database.js';
-import * as schema from '../schema.js';
-import * as dashboardSchema from '../schema/dashboardSchema.js';
+import { notifications } from '../models/Others/schema.js';
 import { eq, desc, and } from 'drizzle-orm';
 
 export const getNotifications = async (req, res, next) => {
@@ -8,16 +7,16 @@ export const getNotifications = async (req, res, next) => {
     const userId = req.user.userId;
     const limit = parseInt(req.query.limit) || 50;
     
-    const notifications = await db
+    const notificationsList = await db
       .select()
-      .from(dashboardSchema.notifications)
-      .where(eq(dashboardSchema.notifications.userId, userId))
-      .orderBy(desc(dashboardSchema.notifications.createdAt))
+      .from(notifications)
+      .where(eq(notifications.userId, userId))
+      .orderBy(desc(notifications.createdAt))
       .limit(limit);
     
     res.json({
       success: true,
-      data: notifications,
+      data: notificationsList,
     });
   } catch (error) {
     next(error);

@@ -375,9 +375,9 @@ const JobManagementTab = () => {
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(job.status)}`}>
                       {job.status}
                     </span>
-                    {job.urgency !== 'Normal Priority' && (
+                    {job.jobUrgency !== 'Normal Priority' && (
                       <div className="text-xs text-orange-600 dark:text-orange-400 mt-1">
-                        {job.urgency}
+                        {job.jobUrgency}
                       </div>
                     )}
                   </td>
