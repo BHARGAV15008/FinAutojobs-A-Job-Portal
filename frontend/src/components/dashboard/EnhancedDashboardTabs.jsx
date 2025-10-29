@@ -412,6 +412,59 @@ export const EnhancedProfileTab = ({
           },
         ],
       };
+
+      // Helper function to format date
+      const formatDate = (dateString) => {
+        if (!dateString) return null;
+        try {
+          const date = new Date(dateString);
+          // Format as: Month Year (e.g., "June 2019")
+          return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        } catch (e) {
+          return dateString;
+        }
+      };
+
+      // Education Section - only include if there's data
+      const educationSection = user?.education && user.education.length > 0 ? {
+        title: "Education",
+        icon: "🎓",
+        isArray: true,
+        items: user.education.map((edu, index) => ({
+          id: index,
+          title: `${edu.degree}${edu.fieldOfStudy ? ` in ${edu.fieldOfStudy}` : ''}`,
+          subtitle: edu.institution,
+          details: [
+            edu.startDate && `${formatDate(edu.startDate)} - ${edu.isCurrentlyStudying ? 'Present' : formatDate(edu.endDate) || 'N/A'}`,
+            edu.grade && `Grade: ${edu.grade}`
+          ].filter(Boolean)
+        }))
+      } : null;
+
+      // Work Experience Section - only include if there's data
+      const workExperienceSection = user?.workExperience && user.workExperience.length > 0 ? {
+        title: "Work Experience",
+        icon: "💼",
+        isArray: true,
+        items: user.workExperience.map((exp, index) => ({
+          id: index,
+          title: exp.jobTitle || exp.position || 'Position',
+          subtitle: `${exp.companyName || exp.company || 'Company'}${exp.location ? ` • ${exp.location}` : ''}`,
+          details: [
+            exp.startDate && `${formatDate(exp.startDate)} - ${exp.isCurrentJob || exp.isCurrentlyWorking ? 'Present' : formatDate(exp.endDate) || 'N/A'}`,
+            exp.description
+          ].filter(Boolean)
+        }))
+      } : null;
+
+      // Only return sections that have data
+      return [
+        personalInfo, 
+        professionalDetails, 
+        educationSection, 
+        workExperienceSection, 
+        linksSection
+      ].filter(Boolean);
     } else if (userRole === "recruiter") {
       // Recruiter profile processing
       
@@ -898,29 +951,62 @@ export const EnhancedProfileTab = ({
             </div>
 
             <div className="space-y-4 flex-1 overflow-y-auto">
-              {section.fields.map((field, fieldIndex) => (
-                <div
-                  key={fieldIndex}
-                  className="border-l-4 border-blue-200 dark:border-blue-700 pl-4 overflow-hidden min-w-0"
-                >
-                  <div className="flex items-center space-x-2 mb-1">
-                    <span>{field.icon}</span>
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {field.label}
-                    </span>
-                  </div>
+              {section.isArray ? (
+                // Render array items (education, work experience)
+                section.items && section.items.length > 0 ? (
+                  section.items.map((item) => (
+                    <div
+                      key={item.id}
+                      className="border-l-4 border-blue-200 dark:border-blue-700 pl-4 pb-4 mb-4 border-b border-gray-200 dark:border-gray-700 last:border-b-0"
+                    >
+                      <h5 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                        {item.title}
+                      </h5>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        {item.subtitle}
+                      </p>
+                      {item.details && item.details.length > 0 && (
+                        <div className="space-y-1">
+                          {item.details.map((detail, idx) => (
+                            <p key={idx} className="text-xs text-gray-500 dark:text-gray-500">
+                              {detail}
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-400 dark:text-gray-500 italic">
+                    No {section.title.toLowerCase()} added yet
+                  </p>
+                )
+              ) : (
+                // Render regular fields
+                section.fields && section.fields.map((field, fieldIndex) => (
                   <div
-                    className={`text-sm ${
-                      field.value
-                        ? "text-gray-900 dark:text-white"
-                        : "text-gray-400 dark:text-gray-500 italic"
-                    } ${field.multiline ? "whitespace-pre-wrap" : "break-words overflow-wrap-anywhere"} leading-relaxed max-w-full`}
-                    style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
+                    key={fieldIndex}
+                    className="border-l-4 border-blue-200 dark:border-blue-700 pl-4 overflow-hidden min-w-0"
                   >
-                    {typeof field.value === 'string' ? (field.value || "Not provided") : (field.value || "Not provided")}
+                    <div className="flex items-center space-x-2 mb-1">
+                      <span>{field.icon}</span>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {field.label}
+                      </span>
+                    </div>
+                    <div
+                      className={`text-sm ${
+                        field.value
+                          ? "text-gray-900 dark:text-white"
+                          : "text-gray-400 dark:text-gray-500 italic"
+                      } ${field.multiline ? "whitespace-pre-wrap" : "break-words overflow-wrap-anywhere"} leading-relaxed max-w-full`}
+                      style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
+                    >
+                      {typeof field.value === 'string' ? (field.value || "Not provided") : (field.value || "Not provided")}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </motion.div>
         ))}

@@ -176,8 +176,8 @@ const DashboardHeader = ({
             </button>
 
             {/* Title and breadcrumbs */}
-            <div className="ml-2 sm:ml-4 lg:ml-0">
-              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white truncate max-w-48 sm:max-w-none">
+            <div className="ml-2 sm:ml-4 lg:ml-0 min-w-0 flex-shrink">
+              <h1 className="text-sm sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white truncate max-w-[120px] xs:max-w-[150px] sm:max-w-xs md:max-w-md lg:max-w-none">
                 {title}
               </h1>
               {showBreadcrumbs && breadcrumbs && breadcrumbs.length > 0 && (

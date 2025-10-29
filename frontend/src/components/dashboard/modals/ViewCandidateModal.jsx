@@ -56,7 +56,18 @@ const ViewCandidateModal = ({ open, onClose, candidate }) => {
           </Box>
           <Tooltip title="Download Resume">
             <IconButton
-              onClick={() => window.open(candidate.resumeUrl, "_blank")}
+              onClick={() => {
+                // Try to construct the new filename format first
+                const username = candidate.username || candidate.candidateUsername;
+                if (username) {
+                  const newFormatUrl = `/uploads/documents/resume_${username}.pdf`;
+                  window.open(newFormatUrl, "_blank");
+                } else if (candidate.resumeUrl) {
+                  window.open(candidate.resumeUrl, "_blank");
+                } else {
+                  alert('Resume not available for this candidate');
+                }
+              }}
             >
               <CloudDownload />
             </IconButton>

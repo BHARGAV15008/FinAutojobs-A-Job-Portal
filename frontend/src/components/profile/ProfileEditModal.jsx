@@ -72,7 +72,10 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
           // Document URLs - check multiple sources
           resume_url: actualUser.resume_url || actualUser.documents?.resumeUrl || '',
           cover_letter_url: actualUser.cover_letter_url || actualUser.documents?.coverLetterUrl || '',
-          portfolio_url: actualUser.portfolio_url || actualUser.documents?.portfolioUrl || actualUser.professionalLinks?.personalWebsite || ''
+          portfolio_url: actualUser.portfolio_url || actualUser.documents?.portfolioUrl || actualUser.professionalLinks?.personalWebsite || '',
+          // Education and Work Experience
+          education: actualUser.education || [],
+          workExperience: actualUser.workExperience || []
         }),
         ...(userRole === 'recruiter' && {
           company: actualUser.companyInfo?.companyName || actualUser.companyName || actualUser.company || '',
@@ -281,6 +284,261 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
                         </div>
                       )}
                     </div>
+                  </div>
+
+                  {/* Education Section */}
+                  <div className="border-t pt-4 mt-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>🎓 Education</h3>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newEducation = [...(formData.education || []), {
+                            institution: '',
+                            degree: '',
+                            fieldOfStudy: '',
+                            startDate: '',
+                            endDate: '',
+                            grade: '',
+                            isCurrentlyStudying: false
+                          }];
+                          setFormData({...formData, education: newEducation});
+                        }}
+                        className="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      >
+                        + Add Education
+                      </button>
+                    </div>
+                    {formData.education && formData.education.length > 0 ? (
+                      formData.education.map((edu, index) => (
+                        <div key={index} className={`mb-4 p-4 border rounded-lg ${darkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-gray-50'}`}>
+                          <div className="grid grid-cols-2 gap-3">
+                            <input
+                              type="text"
+                              placeholder="Institution"
+                              value={edu.institution || ''}
+                              onChange={(e) => {
+                                const newEducation = [...formData.education];
+                                newEducation[index].institution = e.target.value;
+                                setFormData({...formData, education: newEducation});
+                              }}
+                              className={`px-3 py-2 border rounded-lg ${darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
+                            />
+                            <input
+                              type="text"
+                              placeholder="Degree"
+                              value={edu.degree || ''}
+                              onChange={(e) => {
+                                const newEducation = [...formData.education];
+                                newEducation[index].degree = e.target.value;
+                                setFormData({...formData, education: newEducation});
+                              }}
+                              className={`px-3 py-2 border rounded-lg ${darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
+                            />
+                            <input
+                              type="text"
+                              placeholder="Field of Study"
+                              value={edu.fieldOfStudy || ''}
+                              onChange={(e) => {
+                                const newEducation = [...formData.education];
+                                newEducation[index].fieldOfStudy = e.target.value;
+                                setFormData({...formData, education: newEducation});
+                              }}
+                              className={`px-3 py-2 border rounded-lg ${darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
+                            />
+                            <input
+                              type="text"
+                              placeholder="Grade/GPA"
+                              value={edu.grade || ''}
+                              onChange={(e) => {
+                                const newEducation = [...formData.education];
+                                newEducation[index].grade = e.target.value;
+                                setFormData({...formData, education: newEducation});
+                              }}
+                              className={`px-3 py-2 border rounded-lg ${darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
+                            />
+                            <input
+                              type="date"
+                              placeholder="Start Date"
+                              value={edu.startDate || ''}
+                              onChange={(e) => {
+                                const newEducation = [...formData.education];
+                                newEducation[index].startDate = e.target.value;
+                                setFormData({...formData, education: newEducation});
+                              }}
+                              className={`px-3 py-2 border rounded-lg ${darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
+                            />
+                            <input
+                              type="date"
+                              placeholder="End Date"
+                              value={edu.endDate || ''}
+                              onChange={(e) => {
+                                const newEducation = [...formData.education];
+                                newEducation[index].endDate = e.target.value;
+                                setFormData({...formData, education: newEducation});
+                              }}
+                              disabled={edu.isCurrentlyStudying}
+                              className={`px-3 py-2 border rounded-lg ${darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
+                            />
+                          </div>
+                          <div className="flex justify-between items-center mt-2">
+                            <label className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={edu.isCurrentlyStudying || false}
+                                onChange={(e) => {
+                                  const newEducation = [...formData.education];
+                                  newEducation[index].isCurrentlyStudying = e.target.checked;
+                                  setFormData({...formData, education: newEducation});
+                                }}
+                                className="mr-2"
+                              />
+                              <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Currently studying here</span>
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newEducation = formData.education.filter((_, i) => i !== index);
+                                setFormData({...formData, education: newEducation});
+                              }}
+                              className="px-3 py-1 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>No education added yet. Click "Add Education" to get started.</p>
+                    )}
+                  </div>
+
+                  {/* Work Experience Section */}
+                  <div className="border-t pt-4 mt-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>💼 Work Experience</h3>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newWorkExperience = [...(formData.workExperience || []), {
+                            company: '',
+                            position: '',
+                            location: '',
+                            startDate: '',
+                            endDate: '',
+                            isCurrentlyWorking: false,
+                            description: ''
+                          }];
+                          setFormData({...formData, workExperience: newWorkExperience});
+                        }}
+                        className="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      >
+                        + Add Experience
+                      </button>
+                    </div>
+                    {formData.workExperience && formData.workExperience.length > 0 ? (
+                      formData.workExperience.map((exp, index) => (
+                        <div key={index} className={`mb-4 p-4 border rounded-lg ${darkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-gray-50'}`}>
+                          <div className="grid grid-cols-2 gap-3">
+                            <input
+                              type="text"
+                              placeholder="Company"
+                              value={exp.company || ''}
+                              onChange={(e) => {
+                                const newWorkExperience = [...formData.workExperience];
+                                newWorkExperience[index].company = e.target.value;
+                                setFormData({...formData, workExperience: newWorkExperience});
+                              }}
+                              className={`px-3 py-2 border rounded-lg ${darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
+                            />
+                            <input
+                              type="text"
+                              placeholder="Position/Role"
+                              value={exp.position || ''}
+                              onChange={(e) => {
+                                const newWorkExperience = [...formData.workExperience];
+                                newWorkExperience[index].position = e.target.value;
+                                setFormData({...formData, workExperience: newWorkExperience});
+                              }}
+                              className={`px-3 py-2 border rounded-lg ${darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
+                            />
+                            <input
+                              type="text"
+                              placeholder="Location"
+                              value={exp.location || ''}
+                              onChange={(e) => {
+                                const newWorkExperience = [...formData.workExperience];
+                                newWorkExperience[index].location = e.target.value;
+                                setFormData({...formData, workExperience: newWorkExperience});
+                              }}
+                              className={`px-3 py-2 border rounded-lg ${darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
+                            />
+                            <div></div>
+                            <input
+                              type="date"
+                              placeholder="Start Date"
+                              value={exp.startDate || ''}
+                              onChange={(e) => {
+                                const newWorkExperience = [...formData.workExperience];
+                                newWorkExperience[index].startDate = e.target.value;
+                                setFormData({...formData, workExperience: newWorkExperience});
+                              }}
+                              className={`px-3 py-2 border rounded-lg ${darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
+                            />
+                            <input
+                              type="date"
+                              placeholder="End Date"
+                              value={exp.endDate || ''}
+                              onChange={(e) => {
+                                const newWorkExperience = [...formData.workExperience];
+                                newWorkExperience[index].endDate = e.target.value;
+                                setFormData({...formData, workExperience: newWorkExperience});
+                              }}
+                              disabled={exp.isCurrentlyWorking}
+                              className={`px-3 py-2 border rounded-lg ${darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
+                            />
+                          </div>
+                          <textarea
+                            placeholder="Job Description"
+                            value={exp.description || ''}
+                            onChange={(e) => {
+                              const newWorkExperience = [...formData.workExperience];
+                              newWorkExperience[index].description = e.target.value;
+                              setFormData({...formData, workExperience: newWorkExperience});
+                            }}
+                            rows={3}
+                            className={`w-full mt-3 px-3 py-2 border rounded-lg ${darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
+                          />
+                          <div className="flex justify-between items-center mt-2">
+                            <label className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={exp.isCurrentlyWorking || false}
+                                onChange={(e) => {
+                                  const newWorkExperience = [...formData.workExperience];
+                                  newWorkExperience[index].isCurrentlyWorking = e.target.checked;
+                                  setFormData({...formData, workExperience: newWorkExperience});
+                                }}
+                                className="mr-2"
+                              />
+                              <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Currently working here</span>
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newWorkExperience = formData.workExperience.filter((_, i) => i !== index);
+                                setFormData({...formData, workExperience: newWorkExperience});
+                              }}
+                              className="px-3 py-1 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>No work experience added yet. Click "Add Experience" to get started.</p>
+                    )}
                   </div>
                 </div>
               )}

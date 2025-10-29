@@ -175,6 +175,7 @@ import otpRoutes from './routes/otpRoutes.js';
 import candidatesRoutes from './routes/Applicants/candidates.js';
 import interviewRoutes from './routes/interviews.js';
 import fileUploadRoutes from './routes/fileUpload.js';
+import filesRoutes from './routes/files.js';
 
 // Mount routes under /api
 const apiRouter = express.Router();
@@ -209,6 +210,9 @@ console.log('✅ /api/interviews routes registered successfully - Interview mana
 console.log('🔄 Registering /api/file-upload routes...');
 apiRouter.use('/file-upload', fileUploadRoutes);
 console.log('✅ /api/file-upload routes registered successfully - File upload enabled!');
+console.log('🔄 Registering /api/files routes...');
+apiRouter.use('/files', filesRoutes);
+console.log('✅ /api/files routes registered successfully - Resume and file uploads enabled!');
 
 // Development routes (only in development mode)
 if (process.env.NODE_ENV !== 'production') {

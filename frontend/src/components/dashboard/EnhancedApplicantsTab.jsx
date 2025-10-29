@@ -312,22 +312,13 @@ const EnhancedApplicantsTab = () => {
     alert(`Opening messaging with ${candidate.name}...`);
   };
 
-  const handleDownloadResume = async (candidateId) => {
+  const handleDownloadResume = async (candidateId, candidateName, candidateUsername) => {
     try {
-      const response = await candidatesAPI.downloadCandidateResume(candidateId);
+      const response = await candidatesAPI.downloadCandidateResume(candidateId, candidateName, candidateUsername);
       
-      if (response.data instanceof Blob) {
-        const url = window.URL.createObjectURL(response.data);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `candidate_${candidateId}_resume.pdf`);
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        window.URL.revokeObjectURL(url);
+      if (response.success) {
+        alert('✅ Resume downloaded successfully!');
       }
-      
-      alert('✅ Resume downloaded successfully!');
     } catch (error) {
       console.error('Failed to download resume:', error);
       throw error;

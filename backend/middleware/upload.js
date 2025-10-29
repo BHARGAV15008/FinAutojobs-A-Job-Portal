@@ -29,12 +29,45 @@ const storage = multer.diskStorage({
     
     cb(null, uploadPath);
   },
-  filename: (req, file, cb) => {
-    // Generate unique filename
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const extension = path.extname(file.originalname);
-    const baseName = path.basename(file.originalname, extension);
-    cb(null, `${baseName}-${uniqueSuffix}${extension}`);
+  filename: async (req, file, cb) => {
+    try {
+      // Get user data to access username if available
+      if (req.user && req.user.userId) {
+        const { BaseUser } = await import('../models/unified/BaseUser.js');
+        const user = await BaseUser.default.findById(req.user.userId);
+        const username = user?.username || req.user.userId;
+        
+        const extension = path.extname(file.originalname);
+        let filename;
+        
+        if (file.fieldname === 'resume') {
+          filename = `resume_${username}${extension}`;
+        } else if (file.fieldname === 'profileImage') {
+          filename = `profile_${username}${extension}`;
+        } else {
+          // For other document types
+          const baseName = path.basename(file.originalname, extension)
+            .replace(/[^a-zA-Z0-9]/g, '_')
+            .substring(0, 30);
+          filename = `${file.fieldname}_${username}_${baseName}${extension}`;
+        }
+        
+        cb(null, filename);
+      } else {
+        // Fallback for cases without user context
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const extension = path.extname(file.originalname);
+        const baseName = path.basename(file.originalname, extension);
+        cb(null, `${baseName}-${uniqueSuffix}${extension}`);
+      }
+    } catch (error) {
+      console.error('❌ Error generating filename:', error);
+      // Fallback to original naming if user lookup fails
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const extension = path.extname(file.originalname);
+      const baseName = path.basename(file.originalname, extension);
+      cb(null, `${baseName}-${uniqueSuffix}${extension}`);
+    }
   }
 });
 

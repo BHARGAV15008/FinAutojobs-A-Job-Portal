@@ -581,7 +581,7 @@ const EnhancedCandidatesTab = () => {
         // Try the candidatesAPI downloadResume function first
         try {
           console.log('🔍 Trying candidatesAPI.downloadResume...');
-          const result = await candidatesAPI.downloadResume(candidate.candidateId);
+          const result = await candidatesAPI.downloadResume(candidate.candidateId, candidate.name, candidate.username);
           if (result.success) {
             console.log('✅ Resume downloaded via API successfully');
             alert(`✅ Resume downloaded successfully for ${candidate.name}`);

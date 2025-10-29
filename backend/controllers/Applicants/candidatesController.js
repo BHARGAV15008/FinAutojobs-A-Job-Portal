@@ -341,90 +341,129 @@ export const downloadCandidateResume = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Get candidate details
-    const candidateResult = await db.select({
-      id: users.id,
-      name: users.full_name,
-      resume_url: users.resume_url
-    })
-    .from(users)
-    .where(and(eq(users.id, parseInt(id)), eq(users.role, 'applicant')))
-    .limit(1);
-
-    if (candidateResult.length === 0) {
+    // Import BaseUser for MongoDB operations
+    const { BaseUser } = await import('../../models/UserModels.js');
+    
+    // Get candidate details from MongoDB
+    const candidate = await BaseUser.findById(id);
+    
+    if (!candidate || candidate.role !== 'applicant') {
       return res.status(404).json({ 
         message: 'Candidate not found' 
       });
     }
 
-    const candidate = candidateResult[0];
-
-    if (!candidate.resume_url) {
-      return res.status(404).json({ 
-        message: 'Resume not found for this candidate' 
-      });
-    }
-
-    // Handle different resume URL formats
-    let resumePath;
-    if (candidate.resume_url.startsWith('http')) {
-      // External URL - redirect to the URL
-      return res.redirect(candidate.resume_url);
-    } else if (candidate.resume_url.startsWith('/uploads/')) {
-      // Relative path from uploads
-      resumePath = path.join(process.cwd(), candidate.resume_url.substring(1));
-    } else if (candidate.resume_url.includes('uploads/')) {
-      // Path includes uploads
-      resumePath = path.join(process.cwd(), candidate.resume_url);
-    } else {
-      // Assume it's just a filename in resumes folder
-      resumePath = path.join(process.cwd(), 'uploads', 'resumes', candidate.resume_url);
-    }
+    const username = candidate.username;
+    const candidateName = candidate.fullName || candidate.firstName + ' ' + candidate.lastName;
+    const projectRoot = path.join(process.cwd(), '..');
     
-    // Check if file exists and serve it
-    if (fs.existsSync(resumePath)) {
-      const fileExtension = path.extname(resumePath).toLowerCase();
-      const fileName = `${candidate.name.replace(/[^a-zA-Z0-9]/g, '_')}_Resume${fileExtension}`;
-      
-      // Set appropriate headers
-      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-      res.setHeader('Content-Type', fileExtension === '.pdf' ? 'application/pdf' : 'application/octet-stream');
-      
-      // Stream the file
-      const fileStream = fs.createReadStream(resumePath);
-      fileStream.pipe(res);
-      
-      fileStream.on('error', (error) => {
-        console.error('File stream error:', error);
-        res.status(500).json({ 
-          message: 'Error reading resume file' 
-        });
-      });
-    } else {
-      // Check in applications folder as backup
-      const backupPath = path.join(process.cwd(), 'uploads', 'applications', candidate.resume_url);
-      if (fs.existsSync(backupPath)) {
-        const fileExtension = path.extname(backupPath).toLowerCase();
-        const fileName = `${candidate.name.replace(/[^a-zA-Z0-9]/g, '_')}_Resume${fileExtension}`;
-        
-        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-        res.setHeader('Content-Type', fileExtension === '.pdf' ? 'application/pdf' : 'application/octet-stream');
-        
-        const fileStream = fs.createReadStream(backupPath);
-        fileStream.pipe(res);
-      } else {
-        return res.status(404).json({
-          message: 'Resume file not found on server',
-          resume_url: candidate.resume_url,
-          candidate_name: candidate.name
-        });
+    // Try different possible resume file extensions and locations with new username format
+    const possiblePaths = [
+      // New username-based format
+      path.join(projectRoot, 'uploads', 'documents', `resume_${username}.pdf`),
+      path.join(projectRoot, 'uploads', 'documents', `resume_${username}.doc`),
+      path.join(projectRoot, 'uploads', 'documents', `resume_${username}.docx`),
+      path.join(projectRoot, 'uploads', 'applications', `resume_${username}.pdf`),
+      path.join(projectRoot, 'uploads', 'applications', `resume_${username}.doc`),
+      path.join(projectRoot, 'uploads', 'applications', `resume_${username}.docx`),
+    ];
+    
+    // Also check if there's a resume URL in the profile
+    const existingResumeUrl = candidate.resume_url || candidate.documents?.resumeUrl;
+    if (existingResumeUrl) {
+      if (existingResumeUrl.startsWith('http')) {
+        // External URL - redirect to the URL
+        return res.redirect(existingResumeUrl);
+      } else if (existingResumeUrl.startsWith('/uploads/')) {
+        // Relative path from uploads
+        possiblePaths.unshift(path.join(projectRoot, existingResumeUrl.substring(1)));
+      } else if (existingResumeUrl.includes('uploads/')) {
+        // Path includes uploads
+        possiblePaths.unshift(path.join(projectRoot, existingResumeUrl));
       }
     }
+    
+    let resumePath = null;
+    let filename = `resume_${username}.pdf`;
+    
+    // Check each possible path
+    for (const filePath of possiblePaths) {
+      if (fs.existsSync(filePath)) {
+        resumePath = filePath;
+        filename = path.basename(filePath);
+        break;
+      }
+    }
+    
+    // If no file found with new format, try old format patterns
+    if (!resumePath) {
+      const oldFormatDirs = [
+        path.join(projectRoot, 'uploads', 'documents'),
+        path.join(projectRoot, 'uploads', 'applications')
+      ];
+      
+      for (const dir of oldFormatDirs) {
+        if (fs.existsSync(dir)) {
+          const files = fs.readdirSync(dir);
+          const matchingFile = files.find(file => 
+            (file.startsWith(`resume-${id}-`) || file.startsWith(`resume_${id}_`)) && 
+            (file.endsWith('.pdf') || file.endsWith('.doc') || file.endsWith('.docx'))
+          );
+          if (matchingFile) {
+            resumePath = path.join(dir, matchingFile);
+            filename = matchingFile;
+            break;
+          }
+        }
+      }
+    }
+    
+    if (!resumePath) {
+      return res.status(404).json({
+        message: `Resume not found for candidate ${candidateName}`,
+        candidate_id: id,
+        username: username,
+        searched_locations: possiblePaths
+      });
+    }
+    
+    // Set appropriate headers for file download
+    const ext = path.extname(resumePath).toLowerCase();
+    let contentType = 'application/octet-stream';
+    
+    if (ext === '.pdf') {
+      contentType = 'application/pdf';
+    } else if (ext === '.doc') {
+      contentType = 'application/msword';
+    } else if (ext === '.docx') {
+      contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    }
+    
+    // Use clean filename for download
+    const cleanName = candidateName.replace(/[^a-zA-Z0-9]/g, '_');
+    const downloadFilename = `${cleanName}_Resume${ext}`;
+    
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${downloadFilename}"`);
+    
+    // Stream the file
+    const fileStream = fs.createReadStream(resumePath);
+    fileStream.pipe(res);
+    
+    fileStream.on('error', (error) => {
+      console.error('File stream error:', error);
+      res.status(500).json({ 
+        message: 'Error reading resume file' 
+      });
+    });
+    
+    console.log(`✅ Resume downloaded: ${filename} for candidate ${candidateName} (${username})`);
 
   } catch (error) {
     console.error('Download resume error:', error);
     res.status(500).json({ 
-      message: 'Internal server error while downloading resume' 
+      message: 'Internal server error while downloading resume',
+      error: error.message
     });
   }
 };

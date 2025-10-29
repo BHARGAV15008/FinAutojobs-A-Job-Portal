@@ -23,9 +23,23 @@ const storage = multer.diskStorage({
     }
     cb(null, uploadDir);
   },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'resume-' + uniqueSuffix + path.extname(file.originalname));
+  filename: async function (req, file, cb) {
+    try {
+      // Get user data to access username
+      const user = await BaseUser.findById(req.user.userId);
+      const username = user?.username || req.user.userId;
+      
+      // Create readable filename
+      const extension = path.extname(file.originalname);
+      const filename = `resume_${username}${extension}`;
+      
+      cb(null, filename);
+    } catch (error) {
+      console.error('❌ Error generating filename:', error);
+      // Fallback to original naming if user lookup fails
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, 'resume-' + req.user.userId + '-' + uniqueSuffix + path.extname(file.originalname));
+    }
   }
 });
 
@@ -676,27 +690,87 @@ router.post('/', (req, res, next) => {
       }
     }
 
-    // Create comprehensive applicant snapshot
+    // Create comprehensive applicant snapshot with ALL profile details
     const applicantSnapshot = {
-      fullName: `${req.body.firstName || applicantUser.firstName || ''} ${req.body.lastName || applicantUser.lastName || ''}`,
+      // Personal Information
+      fullName: `${req.body.firstName || applicantUser.firstName || ''} ${req.body.lastName || applicantUser.lastName || ''}`.trim(),
+      firstName: req.body.firstName || applicantUser.firstName || '',
+      lastName: req.body.lastName || applicantUser.lastName || '',
       email: req.body.email || applicantUser.email,
       phone: req.body.phone || applicantUser.phone || '',
       location: req.body.location || applicantUser.currentLocation?.city || applicantUser.location || '',
+      bio: applicantUser.bio || '',
+      
+      // Professional Information
       currentJobTitle: req.body.currentJobTitle || applicantUser.careerInfo?.currentJobTitle || '',
       currentCompany: req.body.currentCompany || applicantUser.careerInfo?.currentCompany || '',
-      experience: req.body.experience || applicantUser.yearsOfExperience || '',
-      skills: Array.isArray(applicantUser.skills?.primary) ? applicantUser.skills.primary : (applicantUser.skills || []),
+      experience: req.body.experience || applicantUser.yearsOfExperience || applicantUser.experience_years || '',
+      yearsOfExperience: applicantUser.yearsOfExperience || applicantUser.experience_years || 0,
+      
+      // Skills
+      skills: Array.isArray(applicantUser.skills?.primary) 
+        ? applicantUser.skills.primary 
+        : (Array.isArray(applicantUser.skills) ? applicantUser.skills : []),
+      technicalSkills: applicantUser.skills?.technical || [],
+      softSkills: applicantUser.skills?.soft || [],
+      
+      // Education - Complete details
       education: Array.isArray(applicantUser.education) ? applicantUser.education.map(edu => ({
-        degree: edu.degree || '',
         institution: edu.institution || '',
-        fieldOfStudy: edu.fieldOfStudy || ''
+        degree: edu.degree || '',
+        fieldOfStudy: edu.fieldOfStudy || '',
+        startDate: edu.startDate || null,
+        endDate: edu.endDate || null,
+        grade: edu.grade || '',
+        isCurrentlyStudying: edu.isCurrentlyStudying || false,
+        achievements: edu.achievements || []
       })) : [],
+      
+      // Work Experience - Complete details
       workExperience: Array.isArray(applicantUser.workExperience) ? applicantUser.workExperience.map(exp => ({
-        jobTitle: exp.jobTitle || '',
-        companyName: exp.companyName || '',
-        description: exp.description || ''
-      })) : []
+        companyName: exp.companyName || exp.company || '',
+        jobTitle: exp.jobTitle || exp.position || '',
+        location: exp.location || '',
+        startDate: exp.startDate || null,
+        endDate: exp.endDate || null,
+        isCurrentJob: exp.isCurrentJob || exp.isCurrentlyWorking || false,
+        description: exp.description || '',
+        achievements: exp.achievements || [],
+        technologies: exp.technologies || []
+      })) : [],
+      
+      // Professional Links
+      linkedinUrl: req.body.linkedinUrl || applicantUser.linkedin_url || applicantUser.professionalLinks?.linkedin || '',
+      githubUrl: req.body.githubUrl || applicantUser.github_url || applicantUser.professionalLinks?.github || '',
+      portfolioUrl: req.body.portfolioUrl || applicantUser.portfolio_url || applicantUser.professionalLinks?.personalWebsite || applicantUser.documents?.portfolioUrl || '',
+      
+      // Documents
+      resumeUrl: req.file ? `/uploads/applications/${req.file.filename}` : (applicantUser.resume_url || applicantUser.documents?.resumeUrl || ''),
+      
+      // Additional Profile Data
+      languages: applicantUser.languages || [],
+      certifications: applicantUser.certifications || [],
+      projects: applicantUser.projects || [],
+      
+      // Job Preferences
+      jobPreferences: {
+        willingToRelocate: req.body.willingToRelocate === 'true' || applicantUser.jobPreferences?.willingToRelocate || false,
+        remoteWorkPreference: req.body.remoteWorkPreference === 'true' || applicantUser.jobPreferences?.remoteWorkPreference || false,
+        preferredLocations: applicantUser.jobPreferences?.preferredLocations || [],
+        preferredJobTypes: applicantUser.jobPreferences?.preferredJobTypes || []
+      }
     };
+
+    // Log the comprehensive snapshot for debugging
+    console.log('📋 Comprehensive Applicant Snapshot Created:');
+    console.log('  - Education entries:', applicantSnapshot.education.length);
+    console.log('  - Work Experience entries:', applicantSnapshot.workExperience.length);
+    console.log('  - LinkedIn:', applicantSnapshot.linkedinUrl ? '✓' : '✗');
+    console.log('  - GitHub:', applicantSnapshot.githubUrl ? '✓' : '✗');
+    console.log('  - Portfolio:', applicantSnapshot.portfolioUrl ? '✓' : '✗');
+    console.log('  - Skills:', applicantSnapshot.skills.length);
+    console.log('  - Languages:', applicantSnapshot.languages.length);
+    console.log('  - Certifications:', applicantSnapshot.certifications.length);
 
     // Create application
     console.log('🔍 Creating new application...');

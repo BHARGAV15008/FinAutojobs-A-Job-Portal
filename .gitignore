@@ -37,6 +37,11 @@ frontend/.env.local
 frontend/.env.development
 frontend/.env.production
 
+# Keep example files
+!backend/.env.example
+!frontend/.env.example
+!.env.example
+
 # Deployment configurations
 render.yaml
 docker-compose.yml

@@ -723,9 +723,9 @@ const JobApplicationModal = ({ open, onClose, job, user, onSubmit }) => {
                 <Typography variant="subtitle1" gutterBottom>
                   Job Details
                 </Typography>
-                <Typography variant="body2"><strong>Position:</strong> {job?.title}</Typography>
-                <Typography variant="body2"><strong>Company:</strong> {job?.company}</Typography>
-                <Typography variant="body2"><strong>Location:</strong> {job?.location}</Typography>
+                <Typography variant="body2"><strong>Position:</strong> {job?.jobTitle || job?.title || 'Not specified'}</Typography>
+                <Typography variant="body2"><strong>Company:</strong> {job?.companyName || job?.company || 'Not specified'}</Typography>
+                <Typography variant="body2"><strong>Location:</strong> {job?.location || 'Not specified'}</Typography>
               </CardContent>
             </Card>
 
@@ -775,9 +775,9 @@ const JobApplicationModal = ({ open, onClose, job, user, onSubmit }) => {
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Box>
-            <Typography variant="h6">Apply for {job.title}</Typography>
+            <Typography variant="h6">Apply for {job.jobTitle || job.title || 'this position'}</Typography>
             <Typography variant="body2" color="text.secondary">
-              at {job.company}
+              at {job.companyName || job.company || 'this company'}
             </Typography>
             {profileLoading && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>

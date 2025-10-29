@@ -34,9 +34,37 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, path.join(__dirname, '../../uploads/documents'));
   },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, `${file.fieldname}-${req.user.userId}-${uniqueSuffix}${path.extname(file.originalname)}`);
+  filename: async (req, file, cb) => {
+    try {
+      // Get user data to access username
+      const user = await BaseUser.findById(req.user.userId);
+      const username = user?.username || req.user.userId;
+      
+      // Create readable filename based on file type
+      const extension = path.extname(file.originalname);
+      let filename;
+      
+      if (file.fieldname === 'resume') {
+        filename = `resume_${username}${extension}`;
+      } else if (file.fieldname === 'coverLetter') {
+        filename = `coverletter_${username}${extension}`;
+      } else if (file.fieldname === 'portfolio') {
+        filename = `portfolio_${username}${extension}`;
+      } else if (file.fieldname === 'profilePicture') {
+        filename = `profile_${username}${extension}`;
+      } else {
+        // Fallback for other document types
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        filename = `${file.fieldname}_${username}_${uniqueSuffix}${extension}`;
+      }
+      
+      cb(null, filename);
+    } catch (error) {
+      console.error('❌ Error generating filename:', error);
+      // Fallback to original naming if user lookup fails
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, `${file.fieldname}-${req.user.userId}-${uniqueSuffix}${path.extname(file.originalname)}`);
+    }
   }
 });
 
@@ -1133,8 +1161,34 @@ router.put('/profile', authenticateToken, upload.fields([
       
       // Education for applicants
       if (updateData.education) {
-        console.log('🔍 Backend: Using existing education array:', updateData.education);
-        transformedData.education = updateData.education;
+        console.log('🔍 Backend: Processing education data:', updateData.education);
+        let educationData = updateData.education;
+        
+        // Handle education that might be sent as JSON string from FormData
+        if (typeof educationData === 'string') {
+          try {
+            educationData = JSON.parse(educationData);
+            console.log('🔍 Education parsed successfully:', educationData);
+          } catch (e) {
+            console.log('🔍 Education parsing failed, using as is');
+            educationData = [];
+          }
+        }
+        
+        // Ensure it's an array and has proper structure
+        if (Array.isArray(educationData)) {
+          transformedData.education = educationData.map(edu => ({
+            institution: edu.institution || '',
+            degree: edu.degree || '',
+            fieldOfStudy: edu.fieldOfStudy || '',
+            startDate: edu.startDate || null,
+            endDate: edu.endDate || null,
+            grade: edu.grade || '',
+            isCurrentlyStudying: edu.isCurrentlyStudying || false
+          }));
+        } else {
+          transformedData.education = [];
+        }
       } else if (updateData.qualification) {
         // Handle simple qualification field by converting to education array
         console.log('🔍 Backend: Converting qualification to education:', updateData.qualification);
@@ -1155,7 +1209,35 @@ router.put('/profile', authenticateToken, upload.fields([
       
       // Work experience for applicants
       if (updateData.workExperience) {
-        transformedData.workExperience = updateData.workExperience;
+        console.log('🔍 Backend: Processing work experience data:', updateData.workExperience);
+        let workExperienceData = updateData.workExperience;
+        
+        // Handle work experience that might be sent as JSON string from FormData
+        if (typeof workExperienceData === 'string') {
+          try {
+            workExperienceData = JSON.parse(workExperienceData);
+            console.log('🔍 Work experience parsed successfully:', workExperienceData);
+          } catch (e) {
+            console.log('🔍 Work experience parsing failed, using as is');
+            workExperienceData = [];
+          }
+        }
+        
+        // Ensure it's an array and has proper structure
+        if (Array.isArray(workExperienceData)) {
+          transformedData.workExperience = workExperienceData.map(exp => ({
+            companyName: exp.company || exp.companyName || '',
+            jobTitle: exp.position || exp.jobTitle || '',
+            location: exp.location || '',
+            startDate: exp.startDate || null,
+            endDate: exp.endDate || null,
+            isCurrentJob: exp.isCurrentlyWorking || exp.isCurrentJob || false,
+            description: exp.description || '',
+            achievements: exp.achievements || []
+          }));
+        } else {
+          transformedData.workExperience = [];
+        }
       } else if (updateData.experience_years || updateData.current_job_title || updateData.current_company) {
         // Handle flat experience fields by converting to workExperience array
         const experienceYears = parseInt(updateData.experience_years) || 1;

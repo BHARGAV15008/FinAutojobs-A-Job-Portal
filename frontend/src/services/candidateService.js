@@ -91,8 +91,61 @@ export const toggleCandidateShortlist = async (candidateId) => {
   }
 };
 
-export const downloadCandidateResume = async (candidateId) => {
+export const downloadCandidateResume = async (candidateId, candidateName, candidateUsername) => {
   try {
+    // First try to get candidate profile to get username and resume URL
+    let resumeUrl = null;
+    let filename = `candidate_resume_${candidateId}.pdf`;
+    
+    try {
+      const profileResponse = await axios.get(`${API_URL}/users/${candidateId}/profile`);
+      const profile = profileResponse.data.data || profileResponse.data;
+      
+      // Get username and construct expected filename
+      const username = profile.username || candidateUsername;
+      if (username) {
+        filename = `resume_${username}.pdf`;
+        resumeUrl = `/uploads/documents/resume_${username}.pdf`;
+      }
+      
+      // Check for existing resume URL in profile
+      const existingResumeUrl = profile.resume_url || profile.documents?.resumeUrl;
+      if (existingResumeUrl) {
+        resumeUrl = existingResumeUrl;
+        // Extract filename from URL for download
+        const urlParts = existingResumeUrl.split('/');
+        const urlFilename = urlParts[urlParts.length - 1];
+        if (urlFilename && urlFilename.includes('.')) {
+          filename = urlFilename;
+        }
+      }
+    } catch (profileError) {
+      console.log('Could not fetch profile, using fallback method');
+    }
+
+    // Try direct file download first if we have a resume URL
+    if (resumeUrl) {
+      try {
+        const directUrl = resumeUrl.startsWith('http') ? resumeUrl : `${API_URL.replace('/api', '')}${resumeUrl}`;
+        const response = await axios.get(directUrl, { responseType: "blob" });
+        
+        // Create download
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", filename);
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        
+        return { success: true };
+      } catch (directError) {
+        console.log('Direct download failed, trying API endpoint');
+      }
+    }
+
+    // Fallback to API endpoint
     const response = await axios.get(
       `${API_URL}/candidates/${candidateId}/resume`,
       {
@@ -104,7 +157,7 @@ export const downloadCandidateResume = async (candidateId) => {
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", `candidate_resume_${candidateId}.pdf`);
+    link.setAttribute("download", filename);
     document.body.appendChild(link);
     link.click();
     link.parentNode.removeChild(link);

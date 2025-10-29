@@ -147,7 +147,7 @@ const RecruiterCandidatesTab = ({ data = {}, onDataUpdate }) => {
           break;
 
         case "download-resume":
-          await downloadCandidateResume(candidate.id);
+          await downloadCandidateResume(candidate.id, candidate.name, candidate.username);
           showNotification("Resume downloaded successfully");
           break;
 

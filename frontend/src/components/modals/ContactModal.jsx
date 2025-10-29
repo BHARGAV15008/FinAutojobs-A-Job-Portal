@@ -242,34 +242,60 @@ Best regards,
             <div className={`px-3 sm:px-6 lg:px-8 py-4 sm:py-6 border-b ${
               darkMode ? 'border-gray-700' : 'border-gray-200'
             }`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-r from-green-500 to-blue-600 flex items-center justify-center text-white text-lg font-bold">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start space-x-3 sm:space-x-4 min-w-0 flex-1">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-r from-green-500 to-blue-600 flex items-center justify-center text-white text-sm sm:text-lg font-bold flex-shrink-0">
                     {candidate.name.split(' ').map(n => n[0]).join('')}
                   </div>
-                  <div>
-                    <h2 className={`text-xl font-bold ${
+                  <div className="min-w-0 flex-1">
+                    <h2 className={`text-base sm:text-xl font-bold truncate ${
                       darkMode ? 'text-white' : 'text-gray-900'
                     }`}>
                       Contact {candidate.name}
                     </h2>
-                    <p className={`text-sm ${
+                    <div className={`text-xs sm:text-sm mt-1 space-y-1 ${
                       darkMode ? 'text-gray-300' : 'text-gray-600'
                     }`}>
-                      {candidate.email} • {candidate.currentRole}
-                    </p>
+                      <p className="truncate">{candidate.email}</p>
+                      <p className="flex flex-wrap gap-x-2 gap-y-1">
+                        {candidate.phone && (
+                          <span className="truncate">{candidate.phone}</span>
+                        )}
+                        {candidate.phone && (candidate.location || candidate.currentLocation) && (
+                          <span>•</span>
+                        )}
+                        {(candidate.location || candidate.currentLocation) && (
+                          <span className="truncate">
+                            {candidate.location || candidate.currentLocation?.city || candidate.currentLocation}
+                          </span>
+                        )}
+                      </p>
+                      {(candidate.currentRole || candidate.currentJobTitle || candidate.experience) && (
+                        <p className="flex flex-wrap gap-x-2 gap-y-1 text-xs">
+                          {(candidate.currentRole || candidate.currentJobTitle) && (
+                            <span className="truncate">{candidate.currentRole || candidate.currentJobTitle}</span>
+                          )}
+                          {(candidate.currentRole || candidate.currentJobTitle) && candidate.experience && (
+                            <span>•</span>
+                          )}
+                          {candidate.experience && (
+                            <span className="truncate">{candidate.experience} years exp</span>
+                          )}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 <button
                   onClick={onClose}
-                  className={`p-2 rounded-lg transition-colors ${
+                  className={`p-2 rounded-lg transition-colors flex-shrink-0 ${
                     darkMode 
                       ? 'hover:bg-gray-700 text-gray-400' 
                       : 'hover:bg-gray-100 text-gray-500'
                   }`}
                 >
-                  <XMarkIcon className="w-6 h-6" />
+                  <XMarkIcon className="w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
               </div>
             </div>
@@ -284,44 +310,44 @@ Best regards,
                     Choose Communication Method
                   </h3>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                     {/* Email Option */}
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => setContactMode('email')}
-                      className={`p-8 rounded-xl border-2 border-dashed transition-all ${
+                      className={`p-4 sm:p-6 md:p-8 rounded-xl border-2 border-dashed transition-all ${
                         darkMode 
                           ? 'border-gray-600 hover:border-blue-500 hover:bg-gray-700' 
                           : 'border-gray-300 hover:border-blue-500 hover:bg-blue-50'
                       }`}
                     >
                       <div className="text-center">
-                        <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
-                          <EnvelopeIcon className="w-8 h-8 text-blue-600" />
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 bg-blue-100 rounded-full flex items-center justify-center">
+                          <EnvelopeIcon className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />
                         </div>
-                        <h4 className={`text-xl font-semibold mb-2 ${
+                        <h4 className={`text-base sm:text-lg md:text-xl font-semibold mb-2 ${
                           darkMode ? 'text-white' : 'text-gray-900'
                         }`}>
                           Send Email
                         </h4>
-                        <p className={`text-sm ${
+                        <p className={`text-xs sm:text-sm leading-relaxed ${
                           darkMode ? 'text-gray-300' : 'text-gray-600'
                         }`}>
                           Compose and send professional emails with templates, attachments, and scheduling options.
                         </p>
-                        <div className="mt-4 flex items-center justify-center space-x-4 text-xs">
+                        <div className="mt-3 sm:mt-4 flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-xs">
                           <span className="flex items-center space-x-1">
-                            <DocumentIcon className="w-4 h-4" />
-                            <span>Templates</span>
+                            <DocumentIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                            <span className="whitespace-nowrap">Templates</span>
                           </span>
                           <span className="flex items-center space-x-1">
-                            <PaperClipIcon className="w-4 h-4" />
-                            <span>Attachments</span>
+                            <PaperClipIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                            <span className="whitespace-nowrap">Attachments</span>
                           </span>
                           <span className="flex items-center space-x-1">
-                            <ClockIcon className="w-4 h-4" />
-                            <span>Schedule</span>
+                            <ClockIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                            <span className="whitespace-nowrap">Schedule</span>
                           </span>
                         </div>
                       </div>
@@ -332,38 +358,38 @@ Best regards,
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => setContactMode('messaging')}
-                      className={`p-8 rounded-xl border-2 border-dashed transition-all ${
+                      className={`p-4 sm:p-6 md:p-8 rounded-xl border-2 border-dashed transition-all ${
                         darkMode 
                           ? 'border-gray-600 hover:border-green-500 hover:bg-gray-700' 
                           : 'border-gray-300 hover:border-green-500 hover:bg-green-50'
                       }`}
                     >
                       <div className="text-center">
-                        <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
-                          <DevicePhoneMobileIcon className="w-8 h-8 text-green-600" />
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 bg-green-100 rounded-full flex items-center justify-center">
+                          <DevicePhoneMobileIcon className="w-6 h-6 sm:w-8 sm:h-8 text-green-600" />
                         </div>
-                        <h4 className={`text-xl font-semibold mb-2 ${
+                        <h4 className={`text-base sm:text-lg md:text-xl font-semibold mb-2 ${
                           darkMode ? 'text-white' : 'text-gray-900'
                         }`}>
                           Send Message
                         </h4>
-                        <p className={`text-sm ${
+                        <p className={`text-xs sm:text-sm leading-relaxed ${
                           darkMode ? 'text-gray-300' : 'text-gray-600'
                         }`}>
                           Send SMS directly to candidate's mobile number with quick templates and instant delivery.
                         </p>
-                        <div className="mt-4 flex items-center justify-center space-x-4 text-xs">
+                        <div className="mt-3 sm:mt-4 flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-xs">
                           <span className="flex items-center space-x-1">
-                            <CheckCircleIcon className="w-4 h-4" />
-                            <span>Instant</span>
+                            <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                            <span className="whitespace-nowrap">Instant</span>
                           </span>
                           <span className="flex items-center space-x-1">
-                            <DocumentIcon className="w-4 h-4" />
-                            <span>Templates</span>
+                            <DocumentIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                            <span className="whitespace-nowrap">Templates</span>
                           </span>
                           <span className="flex items-center space-x-1">
-                            <DevicePhoneMobileIcon className="w-4 h-4" />
-                            <span>SMS</span>
+                            <DevicePhoneMobileIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                            <span className="whitespace-nowrap">SMS</span>
                           </span>
                         </div>
                       </div>
