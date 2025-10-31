@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useDashboard } from '../contexts/RealDashboardContext';
 
 // Hook to automatically refresh dashboard data at intervals
-export const useAutoRefresh = (intervalMs = 120000, enabled = true) => { // Increased to 2 minutes
+export const useAutoRefresh = (intervalMs = 300000, enabled = true) => { // Increased to 5 minutes
   const { refreshStats, isAuthenticated } = useDashboard();
   const intervalRef = useRef(null);
 
@@ -17,7 +17,6 @@ export const useAutoRefresh = (intervalMs = 120000, enabled = true) => { // Incr
 
     // Set up auto-refresh interval
     intervalRef.current = setInterval(() => {
-      console.log('🔄 Auto-refreshing dashboard stats...');
       refreshStats();
     }, intervalMs);
 
@@ -32,7 +31,6 @@ export const useAutoRefresh = (intervalMs = 120000, enabled = true) => { // Incr
 
   // Manual refresh function
   const manualRefresh = () => {
-    console.log('🔄 Manual refresh triggered');
     refreshStats();
   };
 
@@ -45,7 +43,6 @@ export const useEventRefresh = (events = []) => {
 
   useEffect(() => {
     const handleRefresh = () => {
-      console.log('🔄 Event-triggered refresh');
       refreshStats();
     };
 
@@ -72,13 +69,11 @@ export const useVisibilityRefresh = () => {
 
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        console.log('🔄 Page became visible, refreshing stats...');
         refreshStats();
       }
     };
 
     const handleFocus = () => {
-      console.log('🔄 Window focused, refreshing stats...');
       refreshStats();
     };
 

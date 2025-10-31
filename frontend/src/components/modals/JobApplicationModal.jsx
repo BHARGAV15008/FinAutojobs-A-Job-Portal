@@ -766,9 +766,10 @@ const JobApplicationModal = ({ open, onClose, job, user, onSubmit }) => {
       fullWidth
       PaperProps={{
         sx: { 
-          maxWidth: { xs: '95vw', sm: '500px', md: '600px', lg: '650px' },
-          maxHeight: '85vh',
-          m: 2
+          maxWidth: { xs: '100%', sm: '500px', md: '600px', lg: '650px' },
+          maxHeight: { xs: '100vh', sm: '90vh' },
+          m: { xs: 0, sm: 2 },
+          borderRadius: { xs: 0, sm: 2 }
         }
       }}
     >
@@ -812,7 +813,7 @@ const JobApplicationModal = ({ open, onClose, job, user, onSubmit }) => {
         </Box>
       </DialogTitle>
 
-      <DialogContent>
+      <DialogContent sx={{ px: { xs: 2, sm: 3 }, py: { xs: 2, sm: 3 } }}>
         <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
           {steps.map((label) => (
             <Step key={label}>
@@ -836,10 +837,12 @@ const JobApplicationModal = ({ open, onClose, job, user, onSubmit }) => {
         </AnimatePresence>
       </DialogContent>
 
-      <DialogActions sx={{ p: 3 }}>
+      <DialogActions sx={{ p: { xs: 2, sm: 3 }, flexWrap: 'wrap', gap: 1 }}>
         <Button
           onClick={onClose}
           disabled={loading}
+          size="small"
+          sx={{ minWidth: { xs: 'auto', sm: '64px' } }}
         >
           Cancel
         </Button>
@@ -848,6 +851,8 @@ const JobApplicationModal = ({ open, onClose, job, user, onSubmit }) => {
           <Button
             onClick={handleBack}
             disabled={loading}
+            size="small"
+            sx={{ minWidth: { xs: 'auto', sm: '64px' } }}
           >
             Back
           </Button>
@@ -858,6 +863,8 @@ const JobApplicationModal = ({ open, onClose, job, user, onSubmit }) => {
             variant="contained"
             onClick={handleNext}
             disabled={!validateStep(activeStep) || loading}
+            size="small"
+            sx={{ minWidth: { xs: 'auto', sm: '64px' } }}
           >
             Next
           </Button>
@@ -867,6 +874,8 @@ const JobApplicationModal = ({ open, onClose, job, user, onSubmit }) => {
             onClick={handleSubmit}
             disabled={loading}
             startIcon={<Send />}
+            size="small"
+            sx={{ minWidth: { xs: 'auto', sm: '100px' } }}
           >
             {loading ? 'Submitting...' : 'Submit Application'}
           </Button>

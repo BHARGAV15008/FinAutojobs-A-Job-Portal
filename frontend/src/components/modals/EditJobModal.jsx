@@ -334,8 +334,14 @@ const EditJobModal = ({ open, onClose, job, onUpdate }) => {
       onClose={handleClose}
       maxWidth="lg"
       fullWidth
+      fullScreen={typeof window !== 'undefined' && window.innerWidth < 900}
       PaperProps={{
-        sx: { minHeight: '90vh' }
+        sx: { 
+          minHeight: { xs: '100vh', md: '90vh' },
+          maxHeight: { xs: '100vh', md: '95vh' },
+          m: { xs: 0, md: 2 },
+          borderRadius: { xs: 0, md: 2 }
+        }
       }}
     >
       <DialogTitle sx={{ pb: 1 }}>
@@ -349,16 +355,16 @@ const EditJobModal = ({ open, onClose, job, onUpdate }) => {
         </Box>
       </DialogTitle>
 
-      <DialogContent sx={{ px: 3 }}>
+      <DialogContent sx={{ px: { xs: 2, sm: 3 }, py: { xs: 2, sm: 3 } }}>
         <Box sx={{ py: 2 }}>
           {/* Basic Information */}
           <Card sx={{ mb: 3 }}>
             <CardContent>
-              <Typography variant="h6" gutterBottom color="primary">
+              <Typography variant="h6" gutterBottom color="primary" sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                 Basic Information
               </Typography>
               
-              <Grid container spacing={3}>
+              <Grid container spacing={{ xs: 2, sm: 3 }}>
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
@@ -745,11 +751,13 @@ const EditJobModal = ({ open, onClose, job, onUpdate }) => {
         </Box>
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, pb: 3 }}>
+      <DialogActions sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 3 }, pt: 2, flexWrap: 'wrap', gap: 1 }}>
         <Button
           onClick={handleClose}
           startIcon={<CancelIcon />}
           disabled={loading}
+          size="small"
+          sx={{ minWidth: { xs: 'auto', sm: '100px' } }}
         >
           Cancel
         </Button>
@@ -758,6 +766,8 @@ const EditJobModal = ({ open, onClose, job, onUpdate }) => {
           variant="contained"
           startIcon={loading ? <CircularProgress size={20} /> : <SaveIcon />}
           disabled={loading}
+          size="small"
+          sx={{ minWidth: { xs: 'auto', sm: '120px' } }}
         >
           {loading ? 'Updating...' : 'Update Job'}
         </Button>

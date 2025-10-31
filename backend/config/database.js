@@ -11,8 +11,8 @@ if (!process.env.MONGODB_URI && !process.env.DATABASE_URL) {
 const MONGODB_URI = process.env.MONGODB_URI || 
                    process.env.DATABASE_URL || 
                    process.env.MONGO_URL ||
-                   // MongoDB Atlas connection string
-                   'mongodb+srv://technogenius1500_db_user:tVvNtwLYocBh1G6u@cluster0.anhj2gs.mongodb.net/finautojobs?retryWrites=true&w=majority&appName=Cluster0' ||
+                   // MongoDB Atlas connection string (Updated with new cluster)
+                   'mongodb+srv://technogenius1500_db_user:kaCi2YhDO3EqGAWr@cluster0.4vnlmzp.mongodb.net/?appName=Cluster0' ||
                    // Only use localhost as last resort for development
                    (process.env.NODE_ENV === 'development' ? 'mongodb://localhost:27017/finautojobs' : null);
 
@@ -31,14 +31,23 @@ const initializeDatabase = async () => {
     console.log('🔄 Connecting to MongoDB...');
     console.log('📍 MongoDB URI:', MONGODB_URI.replace(/\/\/.*:.*@/, '//***:***@'));
     
-    // Minimal connection options for Render compatibility
+    // MongoDB connection options with Stable API (matching MongoDB Atlas requirements)
     const connectionOptions = {
       serverSelectionTimeoutMS: 30000,
       socketTimeoutMS: 45000,
       bufferCommands: false,
       maxPoolSize: 10,
       retryWrites: true,
-      w: 'majority'
+      w: 'majority',
+      serverApi: {
+        version: '1',
+        strict: true,
+        deprecationErrors: true
+      },
+      // SSL/TLS configuration - bypass certificate validation for system date issues
+      tls: true,
+      tlsAllowInvalidCertificates: true,
+      tlsAllowInvalidHostnames: true
     };
 
     await mongoose.connect(MONGODB_URI, connectionOptions);

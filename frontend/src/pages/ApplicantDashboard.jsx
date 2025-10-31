@@ -402,23 +402,23 @@ const ApplicantDashboardContent = () => {
             
             {/* Welcome Section */}
             <motion.div
-              className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-700 dark:to-purple-700 rounded-xl p-6 md:p-8 text-white shadow-lg"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-700 dark:to-purple-700 rounded-lg md:rounded-xl p-4 sm:p-6 md:p-8 text-white shadow-lg"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
               style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <h2 className="text-2xl md:text-3xl font-bold mb-2 text-white dashboard-text">
+              <div className="flex items-center justify-between flex-wrap sm:flex-nowrap">
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 text-white dashboard-text break-words">
                     Welcome back, {user.firstName} {user.lastName}! 👋
                   </h2>
-                  <p className="text-blue-100 dark:text-white text-base md:text-lg font-medium dashboard-secondary">
+                  <p className="text-blue-100 dark:text-white text-sm sm:text-base md:text-lg font-medium dashboard-secondary">
                     Ready to find your next opportunity? Let's get started!
                   </p>
                 </div>
-                <div className="hidden md:block ml-4">
-                  <div className="text-5xl md:text-6xl">🚀</div>
+                <div className="hidden sm:block ml-4 flex-shrink-0">
+                  <div className="text-4xl sm:text-5xl md:text-6xl">🚀</div>
                 </div>
               </div>
             </motion.div>
@@ -427,7 +427,7 @@ const ApplicantDashboardContent = () => {
             <JobMetrics userRole="applicant" />
 
             {/* Charts and Activity */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
               {/* Job Chart */}
               <div className="xl:col-span-2">
                 <JobChart userRole="applicant" />
@@ -441,7 +441,7 @@ const ApplicantDashboardContent = () => {
 
             {/* Quick Actions */}
             <motion.div
-              className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+              className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}

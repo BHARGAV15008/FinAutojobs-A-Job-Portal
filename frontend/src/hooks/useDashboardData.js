@@ -63,13 +63,13 @@ export const useDashboardData = (userRole) => {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
-  // Auto-refresh every 5 minutes
+  // Auto-refresh every 10 minutes
   useEffect(() => {
     fetchDashboardData();
     
     const interval = setInterval(() => {
       fetchDashboardData();
-    }, 5 * 60 * 1000); // 5 minutes
+    }, 10 * 60 * 1000); // 10 minutes
 
     return () => clearInterval(interval);
   }, [fetchDashboardData]);

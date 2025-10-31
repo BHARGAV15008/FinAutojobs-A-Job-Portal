@@ -194,11 +194,10 @@ const RecruiterDashboardContent = () => {
     };
   }, [refreshData]);
 
-  // Periodic check for jobs past deadline (every 5 minutes)
+  // Periodic check for jobs past deadline (every 30 minutes)
   useEffect(() => {
     const checkJobDeadlines = async () => {
       try {
-        console.log('🕐 Checking for jobs past deadline...');
         const response = await fetch(`${API_BASE_URL}/jobs/check-deadlines`, {
           method: 'POST',
           headers: {
@@ -224,8 +223,8 @@ const RecruiterDashboardContent = () => {
     // Check immediately on mount
     checkJobDeadlines();
     
-    // Then check every 5 minutes
-    const interval = setInterval(checkJobDeadlines, 5 * 60 * 1000);
+    // Then check every 30 minutes instead of 5 minutes
+    const interval = setInterval(checkJobDeadlines, 30 * 60 * 1000);
     
     return () => clearInterval(interval);
   }, [refreshData]);
@@ -695,101 +694,34 @@ const RecruiterDashboardContent = () => {
 
             {/* Welcome Section */}
             <motion.div
-              className="bg-gradient-to-r from-green-600 to-teal-600 rounded-xl p-8 text-white"
+              className="bg-gradient-to-r from-green-600 to-teal-600 rounded-lg md:rounded-xl p-4 sm:p-6 md:p-8 text-white"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-3xl font-bold mb-2">
+              <div className="flex items-center justify-between flex-wrap sm:flex-nowrap">
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 break-words">
                     Welcome back, {user.name}! 🚀
                   </h2>
-                  <p className="text-green-100 text-lg">
+                  <p className="text-green-100 text-sm sm:text-base md:text-lg">
                     Ready to find the perfect candidates? Let's build your team!
                   </p>
                 </div>
-                <div className="hidden md:block">
-                  <div className="text-6xl">👥</div>
+                <div className="hidden sm:block ml-4 flex-shrink-0">
+                  <div className="text-4xl sm:text-5xl md:text-6xl">👥</div>
                 </div>
               </div>
             </motion.div>
 
             {/* Job Metrics */}
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Dashboard Metrics</h2>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    console.log('🔄 Manual refresh triggered');
-                    refreshData();
-                  }}
-                  className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
-                >
-                  Refresh Stats
-                </button>
-                <button
-                  onClick={async () => {
-                    console.log('🧪 Testing profile update...');
-                    try {
-                      const testData = {
-                        bio: `Updated at ${new Date().toLocaleTimeString()}`,
-                        companyInfo: {
-                          companyName: 'Test Company Updated',
-                          department: 'Test Department',
-                          designation: 'Test Position'
-                        }
-                      };
-                      console.log('🧪 Test data:', testData);
-                      const result = await handleEditProfile(testData);
-                      console.log('🧪 Test result:', result);
-                      alert('Profile test update completed - check console');
-                    } catch (error) {
-                      console.error('🧪 Test failed:', error);
-                      alert('Profile test update failed - check console');
-                    }
-                  }}
-                  className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
-                >
-                  Test Profile Update
-                </button>
-                <button
-                  onClick={async () => {
-                    console.log('🔗 Testing backend connectivity...');
-                    try {
-                      // Test health endpoint
-                      const healthResponse = await fetch(`${API_BASE_URL}/health`);
-                      console.log('✅ Health check:', healthResponse.status);
-                      
-                      // Test analytics endpoint
-                      const token = localStorage.getItem('token');
-                      const analyticsResponse = await fetch(`${API_BASE_URL}/analytics/realtime/recruiter`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                      });
-                      console.log('✅ Analytics check:', analyticsResponse.status);
-                      
-                      if (analyticsResponse.ok) {
-                        const data = await analyticsResponse.json();
-                        console.log('✅ Analytics data:', data);
-                        alert('Backend connectivity test passed - check console');
-                      } else {
-                        alert('Analytics endpoint returned error - check console');
-                      }
-                    } catch (error) {
-                      console.error('🔗 Connectivity test failed:', error);
-                      alert('Backend connectivity test failed - check console');
-                    }
-                  }}
-                  className="px-3 py-1 text-sm bg-purple-500 text-white rounded hover:bg-purple-600"
-                >
-                  Test Backend
-                </button>
-              </div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Dashboard Metrics</h2>
             </div>
             <JobMetrics userRole="recruiter" />
 
             {/* Charts and Activity */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
               {/* Job Chart */}
               <div className="xl:col-span-2">
                 <JobChart userRole="recruiter" />
@@ -803,7 +735,7 @@ const RecruiterDashboardContent = () => {
 
             {/* Quick Actions */}
             <motion.div
-              className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}

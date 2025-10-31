@@ -134,7 +134,20 @@ const ScheduleInterviewModal = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      maxWidth="md" 
+      fullWidth
+      fullScreen={typeof window !== 'undefined' && window.innerWidth < 600}
+      PaperProps={{
+        sx: { 
+          maxHeight: { xs: '100vh', sm: '90vh' },
+          m: { xs: 0, sm: 2 },
+          borderRadius: { xs: 0, sm: 2 }
+        }
+      }}
+    >
       <DialogTitle>
         <Box
           sx={{
@@ -168,7 +181,7 @@ const ScheduleInterviewModal = ({
         </Box>
       </DialogTitle>
 
-      <DialogContent dividers>
+      <DialogContent dividers sx={{ px: { xs: 2, sm: 3 }, py: { xs: 2, sm: 3 } }}>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
@@ -245,7 +258,7 @@ const ScheduleInterviewModal = ({
         )}
 
         {/* Interview Form */}
-        <Grid container spacing={3}>
+        <Grid container spacing={{ xs: 2, sm: 3 }}>
           <Grid item xs={12} md={6}>
             <LocalizationProvider dateAdapter={AdapterDateFns}>
               <DateTimePicker
@@ -351,12 +364,20 @@ const ScheduleInterviewModal = ({
         </Grid>
       </DialogContent>
 
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+      <DialogActions sx={{ px: { xs: 2, sm: 3 }, py: { xs: 2, sm: 2 }, flexWrap: 'wrap', gap: 1 }}>
+        <Button 
+          onClick={onClose}
+          size="small"
+          sx={{ minWidth: { xs: 'auto', sm: '80px' } }}
+        >
+          Cancel
+        </Button>
         <Button
           variant="contained"
           onClick={handleSubmit}
           startIcon={<Schedule />}
+          size="small"
+          sx={{ minWidth: { xs: 'auto', sm: '140px' } }}
         >
           {selectedInterview ? "Update Interview" : "Schedule Interview"}
         </Button>

@@ -128,7 +128,7 @@ const ModernDashboardLayout = ({
       </AnimatePresence>
 
       {/* Content area */}
-      <div className="dashboard-container relative flex flex-col flex-1 lg:ml-64 overflow-y-auto overflow-x-hidden bg-gray-50 dark:bg-gray-800">
+      <div className="dashboard-container relative flex flex-col flex-1 lg:ml-64 overflow-y-auto overflow-x-hidden bg-gray-50 dark:bg-gray-800 w-full">
         {/* Header */}
         <DashboardHeader
           title={title}
@@ -143,13 +143,13 @@ const ModernDashboardLayout = ({
 
         {/* Main content */}
         <motion.main 
-          className="flex-1 relative z-0 overflow-y-auto focus:outline-none"
+          className="flex-1 relative z-0 overflow-y-auto focus:outline-none w-full"
           variants={contentVariants}
           initial="initial"
           animate="animate"
         >
-          <div className="py-6">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+          <div className="py-4 sm:py-6">
+            <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
               {/* Page content */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}

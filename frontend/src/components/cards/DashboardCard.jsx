@@ -51,9 +51,9 @@ const DashboardCard = ({
   };
 
   const sizeClasses = {
-    small: 'p-4',
-    default: 'p-6',
-    large: 'p-8'
+    small: 'p-3 sm:p-4',
+    default: 'p-4 sm:p-5 md:p-6',
+    large: 'p-6 sm:p-7 md:p-8'
   };
 
   const cardVariants = {
@@ -155,9 +155,9 @@ const DashboardCard = ({
         ) : (
           <>
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4 sm:mb-5 md:mb-6">
               <motion.h3 
-                className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.1 }}
@@ -166,7 +166,7 @@ const DashboardCard = ({
               </motion.h3>
               {icon && (
                 <motion.div 
-                  className={`p-3 rounded-xl bg-gradient-to-br ${gradients[gradient]} text-white shadow-lg`}
+                  className={`p-2 sm:p-2.5 md:p-3 rounded-lg sm:rounded-xl bg-gradient-to-br ${gradients[gradient]} text-white shadow-lg`}
                   variants={animated ? iconVariants : {}}
                   initial={animated ? "initial" : false}
                   animate={animated ? "animate" : false}
@@ -185,7 +185,7 @@ const DashboardCard = ({
                 initial={animated ? "initial" : false}
                 animate={animated ? "animate" : false}
               >
-                <p className="text-3xl font-bold text-gray-900 dark:text-white leading-tight">
+                <p className="text-2xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white leading-tight">
                   {typeof value === 'number' ? value.toLocaleString() : value}
                 </p>
               </motion.div>
