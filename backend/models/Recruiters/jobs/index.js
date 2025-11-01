@@ -57,6 +57,29 @@ export const JobApplicationSchema = new mongoose.Schema({
   interview_scheduled: { type: String },
   interview_type: { type: String },
   interview_notes: { type: String },
+  
+  // Applicant Snapshot - Preserves user data at time of application
+  applicantSnapshot: {
+    fullName: String,
+    email: String,
+    phone: String,
+    location: String,
+    currentJobTitle: String,
+    currentCompany: String,
+    experience: String, // e.g., "1-3", "3-5"
+    skills: [String],
+    education: [mongoose.Schema.Types.Mixed],
+    workExperience: [mongoose.Schema.Types.Mixed]
+  },
+  
+  // Job Snapshot - Preserves job data at time of application
+  jobSnapshot: {
+    jobTitle: String,
+    companyName: String,
+    location: String,
+    jobType: String
+  },
+  
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
   reviewed_at: { type: Date },

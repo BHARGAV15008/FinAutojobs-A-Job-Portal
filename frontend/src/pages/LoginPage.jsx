@@ -196,7 +196,7 @@ const LoginPage = () => {
   return (
     <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', minHeight: '100vh' }}>
       <Box sx={{ 
-        width: { xs: 'calc(100% - 16px)', sm: '800px', md: '1000px', lg: '1200px' }, 
+        width: { xs: 'calc(100% - 16px)', sm: '400px', md: '500px', lg: '600px' }, 
         px: { xs: 1, sm: 3, md: 4 },
         display: 'flex',
         flexDirection: 'column',

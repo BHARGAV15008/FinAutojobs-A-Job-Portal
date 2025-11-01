@@ -42,16 +42,68 @@ export const calculateProfileCompletion = (user, role) => {
 
   let completedFields = 0;
   const totalFields = fieldsToCheck.length;
+  const missingFields = [];
 
   fieldsToCheck.forEach(fieldPath => {
-    const value = getNestedValue(user, fieldPath);
+    let value = getNestedValue(user, fieldPath);
+    
+    // Check alternative field names if primary field is empty
+    if (!isFieldCompleted(value, fieldPath)) {
+      value = checkAlternativeFields(user, fieldPath);
+    }
     
     if (isFieldCompleted(value, fieldPath)) {
       completedFields++;
+    } else {
+      missingFields.push(fieldPath);
     }
   });
 
-  return Math.round((completedFields / totalFields) * 100);
+  const percentage = Math.round((completedFields / totalFields) * 100);
+  
+  // Debug logging
+  console.log('📊 Profile Completion Debug:', {
+    role,
+    totalFields,
+    completedFields,
+    percentage,
+    missingFields,
+    userFields: Object.keys(user || {})
+  });
+
+  return percentage;
+};
+
+/**
+ * Check alternative field names for the same data
+ * @param {Object} user - User object
+ * @param {string} fieldPath - Original field path
+ * @returns {any} - Value from alternative field or undefined
+ */
+const checkAlternativeFields = (user, fieldPath) => {
+  const alternatives = {
+    'yearsOfExperience': ['experience_years', 'experience', 'experienceYears', 'careerInfo.experienceYears'],
+    'currentLocation': ['location', 'city', 'address', 'currentLocation.city'],
+    'qualification': ['education', 'degree', 'education[0].degree', 'highestQualification'],
+    'companyInfo.companyName': ['company', 'companyName', 'companyInfo.name'],
+    'companyInfo.jobTitle': ['job_title', 'jobTitle', 'position', 'designation'],
+    'officeLocation': ['location', 'city', 'officeLocation.city', 'address'],
+    'bio': ['about', 'description', 'summary', 'professionalSummary'],
+    'skills': ['skills.primary', 'skills.technical', 'technicalSkills', 'primarySkills']
+  };
+  
+  const alternativeFields = alternatives[fieldPath];
+  if (!alternativeFields) return undefined;
+  
+  for (const altField of alternativeFields) {
+    const value = getNestedValue(user, altField);
+    if (value !== undefined && value !== null) {
+      console.log(`✅ Found alternative field for ${fieldPath}: ${altField} =`, value);
+      return value;
+    }
+  }
+  
+  return undefined;
 };
 
 /**
@@ -78,12 +130,23 @@ const isFieldCompleted = (value, fieldPath) => {
   
   // Handle strings
   if (typeof value === 'string') {
-    return value.trim().length > 0;
+    const trimmed = value.trim();
+    // Reject placeholder values
+    if (trimmed === 'Not specified' || trimmed === 'N/A' || trimmed === 'null' || trimmed === 'undefined') {
+      return false;
+    }
+    return trimmed.length > 0;
   }
   
   // Handle arrays (like skills)
   if (Array.isArray(value)) {
-    return value.length > 0;
+    // Check if array has valid items (not empty strings)
+    const validItems = value.filter(item => {
+      if (typeof item === 'string') return item.trim().length > 0;
+      if (typeof item === 'object' && item !== null) return Object.keys(item).length > 0;
+      return Boolean(item);
+    });
+    return validItems.length > 0;
   }
   
   // Handle numbers (like yearsOfExperience)
@@ -91,17 +154,35 @@ const isFieldCompleted = (value, fieldPath) => {
     return value >= 0; // 0 is valid for experience
   }
   
-  // Handle objects (like skills.technical)
+  // Handle objects (like skills.technical, currentLocation, companyInfo)
   if (typeof value === 'object') {
-    // For skills object, check if technical or soft arrays have items
+    // For skills object, check if technical, soft, or primary arrays have items
     if (fieldPath === 'skills') {
       return (value.technical && value.technical.length > 0) || 
              (value.soft && value.soft.length > 0) ||
+             (value.primary && value.primary.length > 0) ||
              (Array.isArray(value) && value.length > 0);
     }
     
-    // For other objects, check if they have any properties
-    return Object.keys(value).length > 0;
+    // For location objects, check if city or country exists
+    if (fieldPath === 'currentLocation' || fieldPath === 'officeLocation') {
+      return (value.city && value.city.trim().length > 0) || 
+             (value.country && value.country.trim().length > 0);
+    }
+    
+    // For education array, check if it has valid entries
+    if (fieldPath === 'qualification' && Array.isArray(value)) {
+      return value.some(edu => edu.degree && edu.degree.trim().length > 0);
+    }
+    
+    // For other objects, check if they have any non-empty properties
+    const hasValidProps = Object.values(value).some(v => {
+      if (typeof v === 'string') return v.trim().length > 0;
+      if (typeof v === 'number') return v >= 0;
+      if (Array.isArray(v)) return v.length > 0;
+      return Boolean(v);
+    });
+    return hasValidProps;
   }
   
   return Boolean(value);

@@ -1,6 +1,7 @@
 import { JobApplication, Job } from '../models/Recruiters/jobs/index.js';
 import { User } from '../models/Others/index.js';
 import { NotificationService } from '../../services/notifications.js';
+import { createApplicantSnapshot, mapJobToSnapshot } from '../../services/applicantSnapshotService.js';
 
 // Apply to a job
 export const applyToJob = async (req, res) => {
@@ -22,17 +23,56 @@ export const applyToJob = async (req, res) => {
       return res.status(400).json({ message: 'Application deadline has passed' });
     }
 
-    const existingApplication = await JobApplication.findOne({ 'applicant.applicantId': userId, 'job.jobId': jobId });
+    const existingApplication = await JobApplication.findOne({ user_id: userId, job_id: jobId });
 
     if (existingApplication) {
       return res.status(409).json({ message: 'You have already applied to this job' });
     }
 
+    // Create applicant snapshot from user profile
+    let applicantSnapshot;
+    try {
+      applicantSnapshot = await createApplicantSnapshot(userId);
+      console.log('✅ Created applicant snapshot for user:', userId);
+    } catch (snapshotError) {
+      console.error('❌ Error creating applicant snapshot:', snapshotError);
+      // Continue with application even if snapshot fails
+      applicantSnapshot = {
+        fullName: 'N/A',
+        email: 'N/A',
+        phone: 'N/A',
+        location: 'N/A',
+        currentJobTitle: 'N/A',
+        currentCompany: 'N/A',
+        experience: 'N/A',
+        skills: [],
+        education: [],
+        workExperience: []
+      };
+    }
+
+    // Create job snapshot
+    let jobSnapshot;
+    try {
+      jobSnapshot = mapJobToSnapshot(job);
+      console.log('✅ Created job snapshot for job:', jobId);
+    } catch (snapshotError) {
+      console.error('❌ Error creating job snapshot:', snapshotError);
+      jobSnapshot = {
+        jobTitle: job.title || 'N/A',
+        companyName: 'N/A',
+        location: job.location || 'N/A',
+        jobType: job.job_type || 'N/A'
+      };
+    }
+
     const application = new JobApplication({
-      applicant: { applicantId: userId },
-      job: { jobId: jobId },
-      coverLetter,
-      documents: { resume: resumeUrl }
+      user_id: userId,
+      job_id: jobId,
+      cover_letter: coverLetter,
+      resume_url: resumeUrl,
+      applicantSnapshot: applicantSnapshot,
+      jobSnapshot: jobSnapshot
     });
 
     await application.save();

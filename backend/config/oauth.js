@@ -1,6 +1,5 @@
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import { Strategy as MicrosoftStrategy } from 'passport-microsoft';
 import session from 'express-session';
 import { BaseUser, createUserByRole } from '../models/UserModels.js';
 import jwt from 'jsonwebtoken';
@@ -86,67 +85,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   }));
 }
 
-// Microsoft OAuth Strategy
-if (process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET) {
-  passport.use(new MicrosoftStrategy({
-    clientID: process.env.MICROSOFT_CLIENT_ID,
-    clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
-    callbackURL: "/api/auth/microsoft/callback",
-    scope: ['user.read'],
-    tenant: process.env.MICROSOFT_TENANT_ID || 'common'
-  }, async (accessToken, refreshToken, profile, done) => {
-    try {
-      console.log('🔍 Microsoft OAuth profile:', profile.id, profile.emails[0].value);
-      
-      // Check if user already exists
-      let user = await BaseUser.findOne({ 
-        $or: [
-          { microsoftId: profile.id },
-          { email: profile.emails[0].value }
-        ]
-      });
-
-      if (user) {
-        // Update Microsoft ID if not set
-        if (!user.microsoftId) {
-          user.microsoftId = profile.id;
-          await user.save();
-        }
-        console.log('✅ Existing user found:', user.email);
-        return done(null, user);
-      }
-
-      // Create new user - default to applicant role
-      const userData = {
-        microsoftId: profile.id,
-        firstName: profile.name.givenName,
-        lastName: profile.name.familyName,
-        email: profile.emails[0].value,
-        username: profile.emails[0].value.split('@')[0] + '_' + Date.now(),
-        role: 'applicant', // Default role
-        isEmailVerified: true,
-        authProvider: 'microsoft'
-      };
-
-      user = await createUserByRole(userData);
-      console.log('✅ New Microsoft user created:', user.email);
-      return done(null, user);
-    } catch (error) {
-      console.error('❌ Microsoft OAuth error:', error);
-      return done(error, null);
-    }
-  }));
-}
-
-// Apple OAuth Strategy (Note: Apple OAuth is more complex and requires additional setup)
-// For now, we'll create a placeholder that can be implemented when Apple credentials are available
-export const configureAppleOAuth = () => {
-  if (process.env.APPLE_CLIENT_ID && process.env.APPLE_TEAM_ID && process.env.APPLE_KEY_ID) {
-    console.log('🍎 Apple OAuth configuration detected - implementation needed');
-    // Apple OAuth implementation would go here
-    // Requires additional setup with Apple Sign-In service
-  }
-};
+// Note: LinkedIn OAuth is configured in routes/oauth.js
 
 // OAuth success handler
 export const handleOAuthSuccess = async (user, role = null) => {

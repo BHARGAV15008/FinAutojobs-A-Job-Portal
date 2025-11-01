@@ -6,16 +6,38 @@ class WebSocketService {
   constructor(server) {
     this.io = new Server(server, {
       cors: {
-        origin: [
-          'http://localhost:3000',
-          'http://localhost:5173',
-          'http://localhost:4173',
-          'http://127.0.0.1:3000',
-          'http://127.0.0.1:5173',
-          'http://127.0.0.1:4173',
-          /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:\d+$/,
-          /^http:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+$/
-        ],
+        origin: function(origin, callback) {
+          // Allow requests with no origin (like mobile apps, curl, postman)
+          if (!origin) return callback(null, true);
+          
+          // List of allowed origins
+          const allowedOrigins = [
+            'http://localhost:3000',
+            'http://localhost:5173',
+            'http://localhost:4173',
+            'http://127.0.0.1:3000',
+            'http://127.0.0.1:5173',
+            'http://127.0.0.1:4173'
+          ];
+          
+          // Check if origin is in allowed list
+          if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+          }
+          
+          // Check if origin matches network IP patterns (192.168.x.x or 10.x.x.x)
+          const networkIPPattern = /^http:\/\/(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|127\.0\.0\.1):\d+$/;
+          if (networkIPPattern.test(origin)) {
+            return callback(null, true);
+          }
+          
+          // Allow any localhost or 127.0.0.1 with any port
+          if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+            return callback(null, true);
+          }
+          
+          callback(null, true); // Allow all origins in development
+        },
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         credentials: true,
         allowedHeaders: ['Content-Type', 'Authorization']

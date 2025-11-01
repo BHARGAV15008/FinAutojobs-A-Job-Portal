@@ -892,21 +892,21 @@ const EnhancedCandidatesTab = () => {
 
   return (
     <motion.div
-      className="space-y-6"
+      className="space-y-3"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            🎯 Candidate Management
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            Manage and track potential candidates
-          </p>
-        </div>
+    {/* Header */}
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          🎯 Candidate Management
+        </h2>
+        <p className="text-gray-600 dark:text-gray-400">
+          Manage and track potential candidates
+        </p>
+      </div>
         <div className="flex space-x-2">
           <motion.button
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
@@ -1066,108 +1066,65 @@ const EnhancedCandidatesTab = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="relative">
+                        <div className="flex items-center gap-2">
                           <motion.button
-                            className="flex items-center justify-center w-8 h-8 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors duration-200"
+                            className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-200"
                             whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleDropdown(candidate.id);
-                            }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleViewCandidate(candidate)}
+                            title="View Profile"
                           >
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                            <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
                           </motion.button>
-
-                          {/* Dropdown Menu */}
-                          <AnimatePresence>
-                            {openDropdown === candidate.id && (
-                              <motion.div
-                                initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                                transition={{ duration: 0.15 }}
-                                className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <div className="py-1">
-                                  <motion.button
-                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
-                                    whileHover={{ x: 4 }}
-                                    onClick={() => {
-                                      handleViewCandidate(candidate);
-                                      closeDropdown();
-                                    }}
-                                  >
-                                    <span className="mr-3">👁️</span>
-                                    View Profile
-                                  </motion.button>
-                                  
-                                  <motion.button
-                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
-                                    whileHover={{ x: 4 }}
-                                    onClick={() => {
-                                      handleContactCandidate(candidate);
-                                      closeDropdown();
-                                    }}
-                                  >
-                                    <span className="mr-3">📧</span>
-                                    Contact
-                                  </motion.button>
-                                  
-                                  <motion.button
-                                    className={`w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center ${actionLoading[`${candidate.id}_download`] ? 'opacity-50' : ''}`}
-                                    whileHover={{ x: 4 }}
-                                    onClick={() => {
-                                      handleDownloadResume(candidate);
-                                      closeDropdown();
-                                    }}
-                                    disabled={actionLoading[`${candidate.id}_download`]}
-                                  >
-                                    <span className="mr-3">{actionLoading[`${candidate.id}_download`] ? '⏳' : '📄'}</span>
-                                    Download Resume
-                                  </motion.button>
-                                  
-                                  {selectedStatus === 'interviewed' && (
-                                    <motion.button
-                                      className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
-                                      whileHover={{ x: 4 }}
-                                      onClick={() => {
-                                        handleScheduleInterview(candidate);
-                                        closeDropdown();
-                                      }}
-                                    >
-                                      <span className="mr-3">📅</span>
-                                      Schedule Interview
-                                    </motion.button>
-                                  )}
-                                  
-                                  <motion.button
-                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
-                                    whileHover={{ x: 4 }}
-                                    onClick={() => {
-                                      handleShortlistCandidate(candidate);
-                                      closeDropdown();
-                                    }}
-                                  >
-                                    <span className="mr-3">{actionLoading[`${candidate.id}_shortlist`] ? '⏳' : '⭐'}</span>
-                                    {candidate.isShortlisted ? 'Remove from Shortlist' : 'Add to Shortlist'}
-                                  </motion.button>
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
+                          
+                          <motion.button
+                            className="p-2 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors duration-200"
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleContactCandidate(candidate)}
+                            title="Contact"
+                          >
+                            <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                          </motion.button>
+                          
+                          <motion.button
+                            className="p-2 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors duration-200 disabled:opacity-50"
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleDownloadResume(candidate)}
+                            disabled={actionLoading[`${candidate.id}_download`]}
+                            title="Download Resume"
+                          >
+                            <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                          </motion.button>
+                          
+                          <motion.button
+                            className="p-2 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-lg transition-colors duration-200"
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleShortlistCandidate(candidate)}
+                            title={candidate.isShortlisted ? 'Remove from Shortlist' : 'Add to Shortlist'}
+                          >
+                            <svg className="w-5 h-5 text-yellow-600 dark:text-yellow-400" fill={candidate.isShortlisted ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                            </svg>
+                          </motion.button>
                         </div>
                       </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </motion.div>
-      ) : (
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+        ) : (
         <motion.div
           key="cards"
           initial={{ opacity: 0, x: 20 }}

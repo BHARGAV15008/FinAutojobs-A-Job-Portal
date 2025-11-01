@@ -4,7 +4,6 @@ import { useAuth } from '../contexts/AuthContext.jsx'
 import { useToast } from '../components/ui/use-toast'
 import OAuthButtons from '../components/auth/OAuthButtons'
 import {
-  Container,
   Box,
   Typography,
   TextField,
@@ -20,17 +19,9 @@ import {
   FormControlLabel,
   Divider,
   Alert,
-  Avatar,
   styled,
   useTheme,
-  useMediaQuery,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Chip,
-  LinearProgress,
-  Autocomplete
+  useMediaQuery
 } from '@mui/material'
 import {
   Person,
@@ -40,13 +31,7 @@ import {
   Lock,
   Visibility,
   VisibilityOff,
-  AlternateEmail,
-  Business,
-  Calculate,
-  DirectionsCar,
-  TrendingUp,
-  CheckCircle,
-  Cancel
+  AlternateEmail
 } from '@mui/icons-material'
 
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -99,12 +84,7 @@ const RegisterPage = () => {
     phone: '',
     password: '',
     confirmPassword: '',
-    role: 'applicant',
-    company: '',
-    position: '',
-    skills: [],
-    qualification: '',
-    experience: ''
+    role: 'applicant'
   })
 
   const [errors, setErrors] = useState({})
@@ -113,51 +93,6 @@ const RegisterPage = () => {
   const [agreedToTerms, setAgreedToTerms] = useState(false)
   const [registrationError, setRegistrationError] = useState('')
 
-  const [emailVerified, setEmailVerified] = useState(false)
-  const [phoneVerified, setPhoneVerified] = useState(false)
-  const [emailVerificationCode, setEmailVerificationCode] = useState('')
-  const [phoneVerificationCode, setPhoneVerificationCode] = useState('')
-  const [showEmailVerification, setShowEmailVerification] = useState(false)
-  const [showPhoneVerification, setShowPhoneVerification] = useState(false)
-  const [verificationLoading, setVerificationLoading] = useState(false)
-
-  const [newSkill, setNewSkill] = useState('')
-  const [passwordStrength, setPasswordStrength] = useState({
-    hasMinLength: false,
-    hasUppercase: false,
-    hasLowercase: false,
-    hasNumber: false,
-    hasSpecialChar: false
-  })
-
-  const skillOptions = [
-    'JavaScript', 'Python', 'Java', 'React', 'Node.js', 'SQL', 'MongoDB',
-    'AWS', 'Docker', 'Kubernetes', 'Git', 'HTML/CSS', 'TypeScript',
-    'Angular', 'Vue.js', 'PHP', 'C++', 'C#', '.NET', 'Spring Boot',
-    'Express.js', 'Django', 'Flask', 'Laravel', 'Ruby on Rails',
-    'Machine Learning', 'Data Analysis', 'Project Management', 'Agile',
-    'Scrum', 'DevOps', 'CI/CD', 'Testing', 'UI/UX Design'
-  ]
-
-  const qualificationOptions = [
-    'High School',
-    'Associate Degree',
-    'Bachelor\'s Degree',
-    'Master\'s Degree',
-    'PhD',
-    'Professional Certification',
-    'Diploma',
-    'Other'
-  ]
-
-  const experienceOptions = [
-    'Entry Level (0-1 years)',
-    'Junior (1-3 years)',
-    'Mid-level (3-5 years)',
-    'Senior (5-8 years)',
-    'Lead (8-12 years)',
-    'Principal/Architect (12+ years)'
-  ]
 
   useEffect(() => {
     setFormData(prev => ({
@@ -165,20 +100,6 @@ const RegisterPage = () => {
       role: activeTab === 0 ? 'applicant' : 'recruiter'
     }))
   }, [activeTab])
-
-  useEffect(() => {
-    checkPasswordStrength(formData.password)
-  }, [formData.password])
-
-  const checkPasswordStrength = (password) => {
-    setPasswordStrength({
-      hasMinLength: password.length >= 8,
-      hasUppercase: /[A-Z]/.test(password),
-      hasLowercase: /[a-z]/.test(password),
-      hasNumber: /\d/.test(password),
-      hasSpecialChar: /[@$!%*?&]/.test(password)
-    })
-  }
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue)
@@ -239,16 +160,6 @@ const RegisterPage = () => {
       newErrors.terms = 'You must agree to the terms and conditions'
     }
 
-    // Role-specific validation
-    if (activeTab === 1) { // Recruiter
-      if (!formData.company.trim()) {
-        newErrors.company = 'Company name is required for recruiters'
-      }
-      if (!formData.position.trim()) {
-        newErrors.position = 'Position is required for recruiters'
-      }
-    }
-
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -269,16 +180,7 @@ const RegisterPage = () => {
         email: formData.email.trim(),
         phone: formData.phone.trim(),
         password: formData.password,
-        role: formData.role,
-        ...(formData.role === 'recruiter' && {
-          company: formData.company.trim(),
-          position: formData.position.trim()
-        }),
-        ...(formData.role === 'applicant' && {
-          skills: formData.skills,
-          qualification: formData.qualification,
-          experience: formData.experience
-        })
+        role: formData.role
       }
 
       const result = await register(registrationData)
@@ -359,23 +261,6 @@ const RegisterPage = () => {
     })
   }
 
-  const addSkill = () => {
-    if (newSkill.trim() && !formData.skills.includes(newSkill.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        skills: [...prev.skills, newSkill.trim()]
-      }))
-      setNewSkill('')
-    }
-  }
-
-  const removeSkill = (skillToRemove) => {
-    setFormData(prev => ({
-      ...prev,
-      skills: prev.skills.filter(skill => skill !== skillToRemove)
-    }))
-  }
-
   const generateUsername = async () => {
     try {
       if (!formData.firstName || !formData.lastName) {
@@ -414,7 +299,7 @@ const RegisterPage = () => {
   return (
     <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', minHeight: { xs: 'auto', sm: '100vh' }, alignItems: 'center', p: { xs: 1, sm: 3 } }}>
       <Box sx={{ 
-        width: { xs: 'calc(100% - 16px)', sm: '800px', md: '1000px', lg: '1200px' }, 
+        width: { xs: 'calc(100% - 16px)', sm: '400px', md: '500px', lg: '600px' }, 
         px: { xs: 1, sm: 3, md: 4 },
         maxWidth: '100vw'
       }}>
@@ -467,7 +352,7 @@ const RegisterPage = () => {
               )}
 
               {/* Name Fields */}
-              <Grid container spacing={{ xs: 2.75, sm: 3 }} sx={{ mb: { xs: 3.75, sm: 4 } }}>
+              <Grid container spacing={3} sx={{ mb: 3 }}>
                 <Grid item xs={12} sm={6}>
                   <TextField
                     fullWidth
@@ -507,7 +392,7 @@ const RegisterPage = () => {
               </Grid>
 
               {/* Username Field */}
-              <Box sx={{ mb: { xs: 3.75, sm: 4 } }}>
+              <Box sx={{ mb: 3, mt: 2 }}>
                 <TextField
                   fullWidth
                   name="username"
@@ -544,7 +429,7 @@ const RegisterPage = () => {
               </Box>
 
               {/* Email Field */}
-              <Box sx={{ mb: { xs: 4, sm: 4.5 } }}>
+              <Box sx={{ mb: 3 }}>
                 <TextField
                   fullWidth
                   name="email"
@@ -565,7 +450,7 @@ const RegisterPage = () => {
               </Box>
 
               {/* Phone Field */}
-              <Box sx={{ mb: { xs: 4, sm: 4.5 } }}>
+              <Box sx={{ mb: 3 }}>
                 <TextField
                   fullWidth
                   name="phone"
@@ -585,7 +470,7 @@ const RegisterPage = () => {
               </Box>
 
               {/* Password Fields */}
-              <Grid container spacing={{ xs: 2.75, sm: 3 }} sx={{ mb: { xs: 4, sm: 4.5 } }}>
+              <Grid container spacing={3} sx={{ mb: 3 }}>
                 <Grid item xs={12} sm={6}>
                   <TextField
                     fullWidth
@@ -645,120 +530,6 @@ const RegisterPage = () => {
                   />
                 </Grid>
               </Grid>
-
-              {/* Role-specific fields */}
-              {activeTab === 1 && (
-                <Grid container spacing={{ xs: 2.75, sm: 3 }} sx={{ mb: { xs: 3.75, sm: 4 } }}>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      name="company"
-                      label="Company Name"
-                      value={formData.company}
-                      onChange={handleChange}
-                      error={!!errors.company}
-                      helperText={errors.company}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Business color={errors.company ? "error" : "primary"} />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      name="position"
-                      label="Your Position/Title"
-                      value={formData.position}
-                      onChange={handleChange}
-                      error={!!errors.position}
-                      helperText={errors.position}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Work color={errors.position ? "error" : "primary"} />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Grid>
-                </Grid>
-              )}
-
-              {/* Applicant-specific fields */}
-              {activeTab === 0 && (
-                <Grid container spacing={{ xs: 2.75, sm: 3 }} sx={{ mb: { xs: 3.75, sm: 4 } }}>
-                  <Grid item xs={12} sm={6}>
-                    <FormControl fullWidth error={!!errors.qualification}>
-                      <InputLabel>Qualification</InputLabel>
-                      <Select
-                        name="qualification"
-                        value={formData.qualification}
-                        onChange={handleChange}
-                        label="Qualification"
-                      >
-                        {qualificationOptions.map((option) => (
-                          <MenuItem key={option} value={option}>
-                            {option}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <FormControl fullWidth error={!!errors.experience}>
-                      <InputLabel>Experience Level</InputLabel>
-                      <Select
-                        name="experience"
-                        value={formData.experience}
-                        onChange={handleChange}
-                        label="Experience Level"
-                      >
-                        {experienceOptions.map((option) => (
-                          <MenuItem key={option} value={option}>
-                            {option}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Autocomplete
-                      multiple
-                      options={skillOptions}
-                      value={formData.skills}
-                      onChange={(event, newValue) => {
-                        setFormData(prev => ({
-                          ...prev,
-                          skills: newValue
-                        }))
-                      }}
-                      renderTags={(value, getTagProps) =>
-                        value.map((option, index) => (
-                          <Chip
-                            variant="outlined"
-                            label={option}
-                            {...getTagProps({ index })}
-                            key={option}
-                          />
-                        ))
-                      }
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Skills"
-                          placeholder="Select your skills"
-                          error={!!errors.skills}
-                          helperText={errors.skills}
-                        />
-                      )}
-                    />
-                  </Grid>
-                </Grid>
-              )}
 
               {/* Terms and Conditions */}
               <FormControlLabel

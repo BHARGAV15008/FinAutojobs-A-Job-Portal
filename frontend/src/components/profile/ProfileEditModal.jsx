@@ -583,27 +583,6 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}`}
                     />
                   </div>
-                  <div>
-                    <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Resume</label>
-                    <div className="space-y-2">
-                      <input
-                        type="file"
-                        accept=".pdf,.doc,.docx"
-                        onChange={(e) => {
-                          const file = e.target.files[0];
-                          if (file) {
-                            setFormData({...formData, resumeFile: file});
-                          }
-                        }}
-                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
-                      />
-                      {formData.resume_url && (
-                        <div className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                          Current: <a href={formData.resume_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">View Resume</a>
-                        </div>
-                      )}
-                    </div>
-                  </div>
                 </div>
               )}
 

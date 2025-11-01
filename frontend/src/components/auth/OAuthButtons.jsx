@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Box, Typography, Alert, CircularProgress } from '@mui/material';
-import { Google, Microsoft, Apple, LinkedIn } from '@mui/icons-material';
+import { Google, LinkedIn } from '@mui/icons-material';
 import API_BASE_URL from '../../services/apiConfig';
 
 const OAuthButtons = ({ role = 'applicant', onSuccess, onError }) => {
@@ -50,22 +50,6 @@ const OAuthButtons = ({ role = 'applicant', onSuccess, onError }) => {
             textColor: '#757575'
         },
         {
-            name: 'microsoft',
-            label: 'Continue with Microsoft',
-            icon: <Microsoft />,
-            color: '#00a1f1',
-            bgColor: '#ffffff',
-            textColor: '#323130'
-        },
-        {
-            name: 'apple',
-            label: 'Continue with Apple',
-            icon: <Apple />,
-            color: '#000000',
-            bgColor: '#000000',
-            textColor: '#ffffff'
-        },
-        {
             name: 'linkedin',
             label: 'Continue with LinkedIn',
             icon: <LinkedIn />,
@@ -106,90 +90,42 @@ const OAuthButtons = ({ role = 'applicant', onSuccess, onError }) => {
 
             <Box sx={{ 
                 display: 'flex', 
-                flexDirection: 'column',
-                gap: 2
+                gap: 1.5,
+                flexDirection: { xs: 'column', sm: 'row' }
             }}>
-                {/* First row - Google and Microsoft */}
-                <Box sx={{ 
-                    display: 'flex', 
-                    gap: 1.5,
-                    flexDirection: { xs: 'column', sm: 'row' }
-                }}>
-                    {oauthProviders.slice(0, 2).map((provider) => (
-                        <Button
-                            key={provider.name}
-                            variant="outlined"
-                            fullWidth
-                            startIcon={loading[provider.name] ? <CircularProgress size={20} /> : provider.icon}
-                            onClick={() => handleOAuthLogin(provider.name)}
-                            disabled={loading[provider.name]}
-                            sx={{
-                                py: 1.5,
-                                borderRadius: '8px',
-                                borderColor: provider.color,
-                                color: provider.textColor,
+                {oauthProviders.map((provider) => (
+                    <Button
+                        key={provider.name}
+                        variant="outlined"
+                        fullWidth
+                        startIcon={loading[provider.name] ? <CircularProgress size={20} /> : provider.icon}
+                        onClick={() => handleOAuthLogin(provider.name)}
+                        disabled={loading[provider.name]}
+                        sx={{
+                            py: 1.5,
+                            borderRadius: '8px',
+                            borderColor: provider.color,
+                            color: provider.textColor,
+                            backgroundColor: provider.bgColor,
+                            fontWeight: 500,
+                            textTransform: 'none',
+                            fontSize: '0.9rem',
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            '&:hover': {
                                 backgroundColor: provider.bgColor,
-                                fontWeight: 500,
-                                textTransform: 'none',
-                                fontSize: '0.9rem',
-                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                '&:hover': {
-                                    backgroundColor: provider.bgColor,
-                                    opacity: 0.9,
-                                    transform: 'translateY(-1px)',
-                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                                },
-                                '&:disabled': {
-                                    opacity: 0.6,
-                                    transform: 'none',
-                                }
-                            }}
-                        >
-                            {loading[provider.name] ? 'Authenticating...' : provider.label}
-                        </Button>
-                    ))}
-                </Box>
-                
-                {/* Second row - Apple and LinkedIn */}
-                <Box sx={{ 
-                    display: 'flex', 
-                    gap: 1.5,
-                    flexDirection: { xs: 'column', sm: 'row' }
-                }}>
-                    {oauthProviders.slice(2, 4).map((provider) => (
-                        <Button
-                            key={provider.name}
-                            variant="outlined"
-                            fullWidth
-                            startIcon={loading[provider.name] ? <CircularProgress size={20} /> : provider.icon}
-                            onClick={() => handleOAuthLogin(provider.name)}
-                            disabled={loading[provider.name]}
-                            sx={{
-                                py: 1.5,
-                                borderRadius: '8px',
-                                borderColor: provider.color,
-                                color: provider.textColor,
-                                backgroundColor: provider.bgColor,
-                                fontWeight: 500,
-                                textTransform: 'none',
-                                fontSize: '0.9rem',
-                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                '&:hover': {
-                                    backgroundColor: provider.bgColor,
-                                    opacity: 0.9,
-                                    transform: 'translateY(-1px)',
-                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                                },
-                                '&:disabled': {
-                                    opacity: 0.6,
-                                    transform: 'none',
-                                }
-                            }}
-                        >
-                            {loading[provider.name] ? 'Authenticating...' : provider.label}
-                        </Button>
-                    ))}
-                </Box>
+                                opacity: 0.9,
+                                transform: 'translateY(-1px)',
+                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                            },
+                            '&:disabled': {
+                                opacity: 0.6,
+                                transform: 'none',
+                            }
+                        }}
+                    >
+                        {loading[provider.name] ? 'Authenticating...' : provider.label}
+                    </Button>
+                ))}
             </Box>
 
             {/* Development Test Buttons removed for production */}

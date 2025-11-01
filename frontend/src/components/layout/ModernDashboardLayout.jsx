@@ -148,8 +148,8 @@ const ModernDashboardLayout = ({
           initial="initial"
           animate="animate"
         >
-          <div className="py-4 sm:py-6">
-            <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+          <div className="py-4 sm:py-5 md:py-6">
+            <div className="max-w-full mx-auto px-4 sm:px-5 md:px-6 lg:px-6">
               {/* Page content */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}

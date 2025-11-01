@@ -129,7 +129,13 @@ const AdminLoginPage = () => {
         }}
       />
 
-      <Box sx={{ maxWidth: '320px', width: 'auto', mx: 'auto', px: 2, py: 6 }}>
+      <Box sx={{ 
+        width: { xs: 'calc(100% - 16px)', sm: '400px', md: '500px', lg: '600px' }, 
+        mx: 'auto', 
+        px: { xs: 1, sm: 2, md: 3 }, 
+        py: 6,
+        maxWidth: '100vw'
+      }}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

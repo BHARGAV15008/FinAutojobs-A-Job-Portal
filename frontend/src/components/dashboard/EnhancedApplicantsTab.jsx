@@ -413,7 +413,7 @@ const EnhancedApplicantsTab = () => {
 
   return (
     <motion.div
-      className="space-y-6"
+      className="space-y-3"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}

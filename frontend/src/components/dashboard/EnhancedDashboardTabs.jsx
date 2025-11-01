@@ -226,10 +226,15 @@ export const EnhancedProfileTab = ({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(user);
   const [loading, setLoading] = useState(false);
+  const [profileCompletion, setProfileCompletion] = useState(0);
   
-  // Calculate dynamic profile completion
-  const actualUser = currentUser?.data ? currentUser.data : currentUser;
-  const profileCompletion = calculateProfileCompletion(actualUser, userRole);
+  // Calculate dynamic profile completion whenever currentUser changes
+  useEffect(() => {
+    const actualUser = currentUser?.data ? currentUser.data : currentUser;
+    const completion = calculateProfileCompletion(actualUser, userRole);
+    console.log('🔍 Profile completion calculated:', completion, '% for role:', userRole);
+    setProfileCompletion(completion);
+  }, [currentUser, userRole]);
 
   // Sync local state with prop changes (optimized to prevent form resets)
   useEffect(() => {
@@ -500,27 +505,6 @@ export const EnhancedProfileTab = ({
             label: "Experience",
             value: `${user?.yearsOfExperience || user?.experience_years || user?.experience || 0} years`,
             icon: "⏱️",
-          },
-          {
-            label: "Resume",
-            value: (() => {
-              // Check multiple sources for resume URL
-              const resumeUrl = user?.resume_url || user?.documents?.resumeUrl || '';
-              // Resume processing for recruiter
-              
-              return resumeUrl ? (
-                <a 
-                  href={resumeUrl.startsWith('http') ? resumeUrl : `${API_BASE_URL}${resumeUrl}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
-                >
-                  📄 View Resume
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              ) : "Not uploaded";
-            })(),
-            icon: "📄",
           },
         ],
       };
@@ -883,38 +867,56 @@ export const EnhancedProfileTab = ({
 
   return (
     <motion.div
-      className="space-y-8"
+      className="space-y-4"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
       {/* Profile Completion Card */}
       <motion.div
-        className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-700"
+        className={`rounded-xl p-6 border ${
+          profileCompletion === 100
+            ? 'bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-700'
+            : 'bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-700'
+        }`}
         whileHover={{ scale: 1.02 }}
         transition={{ duration: 0.2 }}
       >
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             Profile Completion
+            {profileCompletion === 100 && (
+              <span className="text-2xl">✅</span>
+            )}
           </h3>
-          <span className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+          <span className={`text-3xl font-bold ${
+            profileCompletion === 100
+              ? 'text-green-600 dark:text-green-400'
+              : 'text-blue-600 dark:text-blue-400'
+          }`}>
             {profileCompletion}%
           </span>
         </div>
 
         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mb-4">
           <motion.div
-            className="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full"
+            className={`h-3 rounded-full ${
+              profileCompletion === 100
+                ? 'bg-gradient-to-r from-green-500 to-emerald-600'
+                : 'bg-gradient-to-r from-blue-500 to-indigo-600'
+            }`}
             initial={{ width: 0 }}
             animate={{ width: `${profileCompletion}%` }}
             transition={{ duration: 1, ease: "easeOut" }}
+            key={profileCompletion} // Force re-animation on change
           />
         </div>
 
         <p className="text-gray-600 dark:text-gray-400 mb-4">
-          Complete your profile to get better job recommendations and increase
-          visibility.
+          {profileCompletion === 100 
+            ? '🎉 Congratulations! Your profile is complete and optimized for better visibility.'
+            : 'Complete your profile to get better job recommendations and increase visibility.'
+          }
         </p>
 
         <div className="flex flex-wrap gap-3">
@@ -2159,30 +2161,21 @@ export const EnhancedJobsTab = ({
 
   return (
     <motion.div
-      className="space-y-6"
+      className="space-y-4"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0 mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
             {jobType === "recommended"
               ? "⭐ Recommended Jobs"
               : jobType === "favorites"
               ? "❤️ Favorite Jobs"
               : "🔍 Browse Jobs"}
           </h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            {displayedJobs.length}{" "}
-            {jobType === "favorites"
-              ? "saved"
-              : jobType === "recommended"
-              ? "recommended"
-              : ""}{" "}
-            jobs found
-          </p>
         </div>
 
         <div className="flex space-x-2">
@@ -2273,47 +2266,30 @@ export const EnhancedJobsTab = ({
                   overflowY: 'visible'
                 }}
               >
-                <table className="w-full" style={{ minWidth: '1200px' }}>
+                <table className="w-full">
                   <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ minWidth: '200px' }}>
-                        Job
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/4">
+                        Job Details
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ minWidth: '150px' }}>
-                        Company
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/6">
+                        Company & Location
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ minWidth: '120px' }}>
-                        Location
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ minWidth: '140px' }}>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/8">
                         Salary
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ minWidth: '100px' }}>
-                        Type
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/8">
+                        Type & Mode
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ minWidth: '120px' }}>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/8">
                         Experience
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ minWidth: '120px' }}>
-                        Industry
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ minWidth: '110px' }}>
-                        Work Mode
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ minWidth: '130px' }}>
-                        Urgency
-                      </th>
                       {userRole === "applicant" && (
-                        <>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ minWidth: '120px' }}>
-                            Recommended
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ minWidth: '100px' }}>
-                            Favorite
-                          </th>
-                        </>
+                        <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-20">
+                          Save
+                        </th>
                       )}
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ minWidth: '180px' }}>
+                      <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">
                         Actions
                       </th>
                     </tr>
@@ -2327,18 +2303,18 @@ export const EnhancedJobsTab = ({
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: index * 0.05 }}
                       >
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-3 py-4">
                           <div>
-                            <div className="text-sm font-medium text-gray-900 dark:text-white">
+                            <div className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
                               {job.jobTitle || job.title}
                             </div>
-                            <div className="flex flex-wrap gap-1 mt-1">
+                            <div className="flex flex-wrap gap-1 mb-1">
                               {(job.requiredSkills || job.skills || [])
                                 ?.slice(0, 2)
                                 .map((skill, skillIndex) => (
                                   <span
                                     key={skillIndex}
-                                    className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs rounded"
+                                    className="px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs rounded"
                                   >
                                     {skill}
                                   </span>
@@ -2349,45 +2325,63 @@ export const EnhancedJobsTab = ({
                                 </span>
                               )}
                             </div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400">
+                              {job.industry || 'Not specified'}
+                            </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900 dark:text-white">
+                        <td className="px-3 py-4">
+                          <div className="text-sm font-medium text-gray-900 dark:text-white mb-1">
                             {job.companyName || job.company || job.companyInfo?.companyName || 'Not specified'}
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900 dark:text-white flex items-center">
+                          <div className="text-xs text-gray-600 dark:text-gray-400 flex items-center">
                             <span className="mr-1">📍</span>
                             {job.location}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-3 py-4">
                           <div className="text-sm text-gray-900 dark:text-white flex items-center">
                             <span className="mr-1">💰</span>
-                            {job.salary || job.formattedSalary || 
-                             (job.salaryRange?.min && job.salaryRange?.max ? 
-                              `₹${(job.salaryRange.min / 100000).toFixed(1)}L - ₹${(job.salaryRange.max / 100000).toFixed(1)}L ${job.salaryRange.period || 'Yearly'}` :
-                              job.salaryRange?.min ? 
-                              `₹${(job.salaryRange.min / 100000).toFixed(1)}L+ ${job.salaryRange.period || 'Yearly'}` : 
-                              (job.salaryMin && job.salaryMax ? `₹${job.salaryMin}-${job.salaryMax} ${job.salaryPeriod || 'yearly'}` : 
-                               job.salaryMin ? `₹${job.salaryMin}+ ${job.salaryPeriod || 'yearly'}` : 'Negotiable'))}
+                            <span className="truncate">
+                              {job.salary || job.formattedSalary || 
+                               (job.salaryRange?.min && job.salaryRange?.max ? 
+                                `₹${(job.salaryRange.min / 100000).toFixed(1)}L - ₹${(job.salaryRange.max / 100000).toFixed(1)}L` :
+                                job.salaryRange?.min ? 
+                                `₹${(job.salaryRange.min / 100000).toFixed(1)}L+` : 
+                                (job.salaryMin && job.salaryMax ? `₹${job.salaryMin}-${job.salaryMax}` : 
+                                 job.salaryMin ? `₹${job.salaryMin}+` : 'Negotiable'))}
+                            </span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                            {job.jobType || job.type}
-                          </span>
+                        <td className="px-3 py-4">
+                          <div className="space-y-1">
+                            <span className="px-2 py-0.5 inline-flex text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                              {job.jobType || job.type}
+                            </span>
+                            <div>
+                              <span className={`px-2 py-0.5 inline-flex text-xs font-semibold rounded-full ${
+                                job.workArrangement === 'remote' 
+                                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' 
+                                  : job.workArrangement === 'hybrid'
+                                  ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+                                  : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                              }`}>
+                                {job.workArrangement === 'remote' ? '🏠' : 
+                                 job.workArrangement === 'hybrid' ? '🏢' : 
+                                 job.workArrangement === 'onsite' ? '🏢' : '🏢'}
+                              </span>
+                            </div>
+                          </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-3 py-4">
                           <div className="text-sm text-gray-900 dark:text-white">
                             {(() => {
                               if (!job.experience) return 'Not specified';
                               if (typeof job.experience === 'object') {
                                 if (job.experience.min !== undefined && job.experience.max !== undefined) {
-                                  return `${job.experience.min}-${job.experience.max} years`;
+                                  return `${job.experience.min}-${job.experience.max} yrs`;
                                 } else if (job.experience.min !== undefined) {
-                                  return `${job.experience.min}+ years`;
+                                  return `${job.experience.min}+ yrs`;
                                 }
                                 return 'Not specified';
                               }
@@ -2395,59 +2389,8 @@ export const EnhancedJobsTab = ({
                             })()}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900 dark:text-white">
-                            {job.industry || 'Not specified'}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            job.workArrangement === 'remote' 
-                              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' 
-                              : job.workArrangement === 'hybrid'
-                              ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-                              : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-                          }`}>
-                            {job.workArrangement === 'remote' ? '🏠 Remote' : 
-                             job.workArrangement === 'hybrid' ? '🏢 Hybrid' : 
-                             job.workArrangement === 'onsite' ? '🏢 Onsite' : 
-                             job.workArrangement || 'Onsite'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            job.jobUrgency === 'High Priority' 
-                              ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' 
-                              : job.jobUrgency === 'Urgent'
-                              ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                              : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                          }`}>
-                            {job.jobUrgency === 'High Priority' ? '🔴 High Priority' : 
-                             job.jobUrgency === 'Urgent' ? '🟡 Urgent' : 
-                             '🟢 Normal Priority'}
-                          </span>
-                        </td>
                         {userRole === "applicant" && (
-                          <>
-                            <td className="px-6 py-4 whitespace-nowrap text-center">
-                              {job.recommended ? (
-                                <div className="flex flex-col items-center">
-                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                    ⭐ Yes
-                                  </span>
-                                  {job.matchScore && (
-                                    <span className="text-xs text-gray-500 mt-1">
-                                      {job.matchScore}% match
-                                    </span>
-                                  )}
-                                </div>
-                              ) : (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
-                                  ➖ No
-                                </span>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <td className="px-3 py-4 text-center">
                               <motion.button
                                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors duration-200 ${
                                   job.saved
@@ -2466,88 +2409,75 @@ export const EnhancedJobsTab = ({
                                   : "🤍 Save"}
                               </motion.button>
                             </td>
-                          </>
                         )}
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium relative">
+                        <td className="px-3 py-4 text-sm font-medium">
                           {userRole === "recruiter" ? (
-                            <div className="relative">
+                            <div className="flex items-center gap-2">
                               <motion.button
-                                id={`action-btn-${job.id}`}
-                                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
+                                className="p-2 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors duration-200 group"
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.95 }}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setOpenDropdown(openDropdown === job.id ? null : job.id);
-                                }}
-                                title="Actions"
+                                onClick={() => handleViewApplications(job._id || job.id)}
+                                title="View Applications"
                               >
-                                <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="currentColor" viewBox="0 0 20 20">
-                                  <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                                <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                 </svg>
                               </motion.button>
-                              
-                              {/* Dropdown Menu */}
-                              <AnimatePresence>
-                                {openDropdown === job.id && (
-                                  <motion.div
-                                    initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                                    transition={{ duration: 0.15 }}
-                                    className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700"
-                                    style={{
-                                      zIndex: 9999
-                                    }}
-                                    onMouseLeave={() => setOpenDropdown(null)}
-                                  >
-                                    <div className="py-1">
-                                      <button
-                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-600 dark:hover:text-green-400 transition-colors duration-200 flex items-center gap-2"
-                                        onClick={() => {
-                                          handleViewApplications(job._id || job.id);
-                                          setOpenDropdown(null);
-                                        }}
-                                      >
-                                        <span>👥</span>
-                                        <span>View Applications</span>
-                                      </button>
-                                      <button
-                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 flex items-center gap-2"
-                                        onClick={() => {
-                                          handleEdit(job._id || job.id);
-                                          setOpenDropdown(null);
-                                        }}
-                                      >
-                                        <span>✏️</span>
-                                        <span>Edit Job</span>
-                                      </button>
-                                      <button
-                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        onClick={() => {
-                                          handleDelete(job.id);
-                                          setOpenDropdown(null);
-                                        }}
-                                        disabled={deleting[job.id]}
-                                      >
-                                        <span>{deleting[job.id] ? '⏳' : '🗑️'}</span>
-                                        <span>{deleting[job.id] ? 'Deleting...' : 'Delete Job'}</span>
-                                      </button>
-                                    </div>
-                                  </motion.div>
-                                )}
-                              </AnimatePresence>
+                              <motion.button
+                                className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-200 group"
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handleEdit(job._id || job.id)}
+                                title="Edit Job"
+                              >
+                                <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                              </motion.button>
+                              <motion.button
+                                className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handleDelete(job.id)}
+                                disabled={deleting[job.id]}
+                                title={deleting[job.id] ? 'Deleting...' : 'Delete Job'}
+                              >
+                                <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </motion.button>
                             </div>
                           ) : (
-                            <motion.button
-                              className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-200 text-xs"
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => handleApply(job.id)}
-                              disabled={applying[job.id]}
-                            >
-                              {applying[job.id] ? "⏳ Applying..." : "📝 Apply"}
-                            </motion.button>
+                            <div className="flex items-center gap-2">
+                              <motion.button
+                                className="p-2 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors duration-200 group"
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => {
+                                  setSelectedJob(job);
+                                  setIsJobDetailsModalOpen(true);
+                                }}
+                                title="View Details"
+                              >
+                                <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                              </motion.button>
+                              <motion.button
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium flex items-center gap-2"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handleApply(job.id)}
+                                disabled={applying[job.id]}
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                {applying[job.id] ? "Applying..." : "Apply"}
+                              </motion.button>
+                            </div>
                           )}
                         </td>
                       </motion.tr>
@@ -2924,6 +2854,260 @@ export const EnhancedJobsTab = ({
           }
         }}
       />
+
+      {/* Compact Job Details Modal */}
+      <AnimatePresence>
+        {isJobDetailsModalOpen && selectedJob && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsJobDetailsModalOpen(false)}
+          >
+            <motion.div
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-5 py-3 flex justify-between items-center">
+                <h3 className="text-base font-bold text-gray-900 dark:text-white">Job Details</h3>
+                <button
+                  onClick={() => setIsJobDetailsModalOpen(false)}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-5 space-y-4">
+                {/* Job Details Card */}
+                <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 space-y-3">
+                  {/* Location */}
+                  <div className="flex items-start gap-3">
+                    <span className="text-lg mt-0.5">📍</span>
+                    <div className="flex-1">
+                      <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">Location</p>
+                      <p className="text-sm text-gray-900 dark:text-white">{selectedJob.location || 'Not specified'}</p>
+                    </div>
+                  </div>
+
+                  {/* Salary */}
+                  <div className="flex items-start gap-3">
+                    <span className="text-lg mt-0.5">💰</span>
+                    <div className="flex-1">
+                      <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">Salary</p>
+                      <p className="text-sm text-gray-900 dark:text-white">
+                        {selectedJob.salary || selectedJob.formattedSalary || 
+                         (selectedJob.salaryRange?.min && selectedJob.salaryRange?.max ? 
+                          `₹${(selectedJob.salaryRange.min / 100000).toFixed(1)}L - ₹${(selectedJob.salaryRange.max / 100000).toFixed(1)}L Yearly` :
+                          selectedJob.salaryRange?.min ? 
+                          `₹${(selectedJob.salaryRange.min / 100000).toFixed(1)}L+ Yearly` : 'Negotiable')}
+                      </p>
+                      {selectedJob.salaryRange?.min && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                          INR {selectedJob.salaryRange.min.toLocaleString()} - {selectedJob.salaryRange.max?.toLocaleString() || selectedJob.salaryRange.min.toLocaleString()} Yearly
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Experience Required */}
+                  <div className="flex items-start gap-3">
+                    <span className="text-lg mt-0.5">⏱️</span>
+                    <div className="flex-1">
+                      <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">Experience Required</p>
+                      <p className="text-sm text-gray-900 dark:text-white">
+                        {(() => {
+                          if (!selectedJob.experience) return 'Not specified';
+                          if (typeof selectedJob.experience === 'object') {
+                            if (selectedJob.experience.min !== undefined && selectedJob.experience.max !== undefined) {
+                              return `${selectedJob.experience.min} - ${selectedJob.experience.max} years`;
+                            } else if (selectedJob.experience.min !== undefined) {
+                              return `${selectedJob.experience.min}+ years`;
+                            }
+                            return 'Not specified';
+                          }
+                          return selectedJob.experience;
+                        })()}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Job Type */}
+                  <div className="flex items-start gap-3">
+                    <span className="text-lg mt-0.5">💼</span>
+                    <div className="flex-1">
+                      <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">Job Type</p>
+                      <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs font-medium rounded-full">
+                        {selectedJob.jobType || selectedJob.type || 'Full Time'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Industry */}
+                  {selectedJob.industry && (
+                    <div className="flex items-start gap-3">
+                      <span className="text-lg mt-0.5">🏭</span>
+                      <div className="flex-1">
+                        <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">Industry</p>
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedJob.industry}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Job Category */}
+                  {selectedJob.category && (
+                    <div className="flex items-start gap-3">
+                      <span className="text-lg mt-0.5">📁</span>
+                      <div className="flex-1">
+                        <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">Job Category</p>
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedJob.category}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Work Arrangement */}
+                  {selectedJob.workArrangement && (
+                    <div className="flex items-start gap-3">
+                      <span className="text-lg mt-0.5">🏢</span>
+                      <div className="flex-1">
+                        <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">Work Arrangement</p>
+                        <span className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${
+                          selectedJob.workArrangement === 'remote' 
+                            ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' 
+                            : selectedJob.workArrangement === 'hybrid'
+                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                            : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                        }`}>
+                          {selectedJob.workArrangement.charAt(0).toUpperCase() + selectedJob.workArrangement.slice(1)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Posted Date */}
+                  {selectedJob.postedDate && (
+                    <div className="flex items-start gap-3">
+                      <span className="text-lg mt-0.5">📅</span>
+                      <div className="flex-1">
+                        <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">Posted Date</p>
+                        <p className="text-sm text-gray-900 dark:text-white">
+                          {new Date(selectedJob.postedDate).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Application Deadline */}
+                  {selectedJob.applicationDeadline && (
+                    <div className="flex items-start gap-3">
+                      <span className="text-lg mt-0.5">📆</span>
+                      <div className="flex-1">
+                        <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">Application Deadline</p>
+                        <p className="text-sm text-red-600 dark:text-red-400 font-medium">
+                          {new Date(selectedJob.applicationDeadline).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Job Priority */}
+                  {selectedJob.jobUrgency && (
+                    <div className="flex items-start gap-3">
+                      <span className="text-lg mt-0.5">⭐</span>
+                      <div className="flex-1">
+                        <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">Job Priority</p>
+                        <span className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${
+                          selectedJob.jobUrgency === 'High Priority' 
+                            ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' 
+                            : selectedJob.jobUrgency === 'Urgent'
+                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                            : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                        }`}>
+                          {selectedJob.jobUrgency}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Job Description */}
+                {selectedJob.description && (
+                  <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Job Description</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                      {selectedJob.description}
+                    </p>
+                  </div>
+                )}
+
+                {/* Required Skills */}
+                {(selectedJob.requiredSkills || selectedJob.skills) && (selectedJob.requiredSkills || selectedJob.skills).length > 0 && (
+                  <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Required Skills</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {(selectedJob.requiredSkills || selectedJob.skills).map((skill, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs font-medium rounded"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Requirements */}
+                {selectedJob.requirements && (
+                  <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Requirements</h4>
+                    <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1 list-disc list-inside">
+                      {Array.isArray(selectedJob.requirements) ? (
+                        selectedJob.requirements.map((req, index) => (
+                          <li key={index}>{req}</li>
+                        ))
+                      ) : (
+                        <li>{selectedJob.requirements}</li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer Actions */}
+              <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-5 py-3 flex gap-3">
+                <motion.button
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    setIsJobDetailsModalOpen(false);
+                    handleApply(selectedJob.id);
+                  }}
+                >
+                  Apply Now
+                </motion.button>
+                <motion.button
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 text-sm font-medium"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setIsJobDetailsModalOpen(false)}
+                >
+                  Close
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

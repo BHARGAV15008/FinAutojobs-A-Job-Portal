@@ -102,6 +102,9 @@ export const applicationsAPI = {
   updateApplicationStatus: (id, status) => api.put(`/applications/${id}/status`, { status }),
   bulkUpdateApplications: (applicationIds, status) => 
     api.put('/applications/bulk-update', { applicationIds, status }),
+  // Applicant Snapshot APIs
+  getApplicantSnapshot: (id) => api.get(`/applications/${id}/snapshot`),
+  updateApplicantSnapshot: (id) => api.put(`/applications/${id}/snapshot`),
 };
 
 // Candidates API

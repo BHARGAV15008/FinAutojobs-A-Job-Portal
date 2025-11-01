@@ -1,7 +1,6 @@
 import express from 'express';
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import { Strategy as MicrosoftStrategy } from 'passport-microsoft';
 import { Strategy as LinkedInStrategy } from 'passport-linkedin-oauth2';
 import jwt from 'jsonwebtoken';
 import UserModels, { createUserByRole, BaseUser } from '../models/UserModels.js';
@@ -21,19 +20,6 @@ const getOAuthConfig = () => {
       clientID: process.env.GOOGLE_CLIENT_ID || 'your-google-client-id',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'your-google-client-secret',
       callbackURL: process.env.GOOGLE_CALLBACK_URL || '/api/oauth/google/callback'  // Relative path as recommended
-    },
-    microsoft: {
-      clientID: process.env.MICROSOFT_CLIENT_ID || 'your-microsoft-client-id',
-      clientSecret: process.env.MICROSOFT_CLIENT_SECRET || 'your-microsoft-client-secret',
-      callbackURL: process.env.MICROSOFT_CALLBACK_URL || 'https://finautojobs-a-job-portal-hk5c.onrender.com/api/oauth/microsoft/callback',
-      scope: ['user.read']
-    },
-    apple: {
-      clientID: process.env.APPLE_CLIENT_ID || 'your-apple-client-id',
-      teamID: process.env.APPLE_TEAM_ID || 'your-apple-team-id',
-      keyID: process.env.APPLE_KEY_ID || 'your-apple-key-id',
-      privateKeyPath: process.env.APPLE_PRIVATE_KEY_PATH || './apple-private-key.p8',
-      callbackURL: process.env.APPLE_CALLBACK_URL || 'https://finautojobs-a-job-portal-hk5c.onrender.com/api/oauth/apple/callback'
     },
     linkedin: {
       clientID: process.env.LINKEDIN_CLIENT_ID || 'your-linkedin-client-id',
@@ -71,40 +57,6 @@ const initializeGoogleStrategy = () => {
     return done(null, userInfo);
   } catch (error) {
     console.error('Google OAuth Error:', error);
-    return done(error, null);
-  }
-}));
-};
-
-// Configure Microsoft OAuth Strategy - Lazy initialization
-const initializeMicrosoftStrategy = () => {
-  const OAUTH_CONFIG = getOAuthConfig();
-  passport.use(new MicrosoftStrategy({
-    clientID: OAUTH_CONFIG.microsoft.clientID,
-    clientSecret: OAUTH_CONFIG.microsoft.clientSecret,
-    callbackURL: OAUTH_CONFIG.microsoft.callbackURL,
-    scope: OAUTH_CONFIG.microsoft.scope
-}, async (accessToken, refreshToken, profile, done) => {
-  try {
-    console.log('🔍 Microsoft OAuth Profile:', JSON.stringify(profile, null, 2));
-    
-    // Extract user information
-    const userInfo = {
-      provider: 'microsoft',
-      providerId: profile.id,
-      email: profile.emails?.[0]?.value || profile._json?.mail || profile._json?.userPrincipalName,
-      firstName: profile.name?.givenName || profile.displayName?.split(' ')[0] || '',
-      lastName: profile.name?.familyName || profile.displayName?.split(' ').slice(1).join(' ') || '',
-      profileImage: profile.photos?.[0]?.value,
-      verified: true, // Microsoft accounts are generally verified
-      accessToken,
-      refreshToken,
-      organization: profile._json?.companyName
-    };
-    
-    return done(null, userInfo);
-  } catch (error) {
-    console.error('Microsoft OAuth Error:', error);
     return done(error, null);
   }
 }));
@@ -150,9 +102,8 @@ const initializeLinkedInStrategy = () => {
 const initializeOAuth = () => {
   console.log('🔧 Initializing OAuth strategies...');
   initializeGoogleStrategy();
-  initializeMicrosoftStrategy();
   initializeLinkedInStrategy();
-  console.log('✅ OAuth strategies initialized');
+  console.log('✅ OAuth strategies initialized (Google and LinkedIn only)');
 };
 
 // Serialize/Deserialize user for session
@@ -336,73 +287,6 @@ router.get('/google/callback',
   }
 );
 
-// Microsoft OAuth Routes
-router.get('/microsoft', (req, res, next) => {
-  const { role } = req.query;
-  
-  // Store role in session for callback
-  req.session = req.session || {};
-  req.session.oauthRole = role || 'applicant';
-  
-  passport.authenticate('microsoft', {
-    prompt: 'select_account'
-  })(req, res, next);
-});
-
-router.get('/microsoft/callback',
-  passport.authenticate('microsoft', { session: false }),
-  async (req, res) => {
-    try {
-      const userInfo = req.user;
-      const role = req.session?.oauthRole || 'applicant';
-      
-      console.log('🔍 Microsoft OAuth Callback - Role:', role);
-      
-      // Find or create user
-      const { user, isNewUser } = await findOrCreateOAuthUser(userInfo, role);
-      
-      // Generate JWT token
-      const token = jwt.sign(
-        { 
-          id: user._id,
-          userId: user._id,
-          email: user.email,
-          role: user.role,
-          provider: 'microsoft'
-        },
-        JWT_SECRET,
-        { expiresIn: '24h' }
-      );
-      
-      // Redirect to frontend with token - Fixed URL path
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-      const redirectUrl = `${frontendUrl}/auth/oauth-callback?token=${token}&provider=microsoft&role=${user.role}&isNewUser=${isNewUser}`;
-      
-      res.redirect(redirectUrl);
-    } catch (error) {
-      console.error('❌ Microsoft OAuth Callback Error:', error);
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-      
-      // Handle specific error types
-      if (error.code === 'EMAIL_ROLE_CONFLICT') {
-        res.redirect(`${frontendUrl}/auth/oauth-error?error=email_role_conflict&message=${encodeURIComponent(error.message)}&existingRole=${error.existingRole}&requestedRole=${error.requestedRole}&provider=microsoft`);
-      } else {
-        res.redirect(`${frontendUrl}/auth/oauth-error?error=oauth_failed&message=${encodeURIComponent(error.message)}&provider=microsoft`);
-      }
-    }
-  }
-);
-
-// Apple OAuth Routes (Sign in with Apple)
-// Note: Apple OAuth requires more complex setup with JWT tokens
-router.get('/apple', (req, res) => {
-  const { role } = req.query;
-  
-  // For Apple, we'll redirect to a frontend page that handles Apple's JS SDK
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-  res.redirect(`${frontendUrl}/oauth/apple?role=${role || 'applicant'}`);
-});
-
 // LinkedIn OAuth Routes
 router.get('/linkedin', (req, res, next) => {
   const { role } = req.query;
@@ -460,84 +344,16 @@ router.get('/linkedin/callback',
   }
 );
 
-// Apple OAuth callback (handled via POST from Apple's JS SDK)
-router.post('/apple/callback', async (req, res) => {
-  try {
-    const { authorization, user, role } = req.body;
-    
-    console.log('🔍 Apple OAuth Callback:', { authorization, user, role });
-    
-    // Verify Apple ID token (in production, you'd verify the JWT)
-    const appleUserInfo = {
-      provider: 'apple',
-      providerId: user?.id || authorization?.code,
-      email: user?.email,
-      firstName: user?.name?.firstName || 'Apple',
-      lastName: user?.name?.lastName || 'User',
-      verified: true
-    };
-    
-    // Find or create user
-    const { user: dbUser, isNewUser } = await findOrCreateOAuthUser(appleUserInfo, role || 'applicant');
-    
-    // Generate JWT token
-    const token = jwt.sign(
-      { 
-        id: dbUser._id,
-        userId: dbUser._id,
-        email: dbUser.email,
-        role: dbUser.role,
-        provider: 'apple'
-      },
-      JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-    
-    res.json({
-      success: true,
-      message: 'Apple OAuth successful',
-      data: {
-        token,
-        user: {
-          id: dbUser._id,
-          email: dbUser.email,
-          firstName: dbUser.firstName,
-          lastName: dbUser.lastName,
-          role: dbUser.role,
-          provider: 'apple'
-        },
-        isNewUser,
-        redirectUrl: dbUser.role === 'recruiter' ? '/recruiter-dashboard' : '/applicant-dashboard'
-      }
-    });
-  } catch (error) {
-    console.error('❌ Apple OAuth Callback Error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Apple OAuth failed',
-      error: error.message
-    });
-  }
-});
-
 // OAuth status endpoint
 router.get('/status', (req, res) => {
   const OAUTH_CONFIG = getOAuthConfig();
   res.json({
     success: true,
-    message: 'OAuth service is running',
+    message: 'OAuth service is running (Google and LinkedIn only)',
     providers: {
       google: {
         enabled: !!OAUTH_CONFIG.google.clientID && OAUTH_CONFIG.google.clientID !== 'your-google-client-id',
         authUrl: '/api/oauth/google'
-      },
-      microsoft: {
-        enabled: !!OAUTH_CONFIG.microsoft.clientID && OAUTH_CONFIG.microsoft.clientID !== 'your-microsoft-client-id',
-        authUrl: '/api/oauth/microsoft'
-      },
-      apple: {
-        enabled: !!OAUTH_CONFIG.apple.clientID && OAUTH_CONFIG.apple.clientID !== 'your-apple-client-id',
-        authUrl: '/api/oauth/apple'
       },
       linkedin: {
         enabled: !!OAUTH_CONFIG.linkedin.clientID && OAUTH_CONFIG.linkedin.clientID !== 'your-linkedin-client-id',
@@ -555,14 +371,6 @@ router.get('/config', (req, res) => {
     google: {
       enabled: !!OAUTH_CONFIG.google.clientID && OAUTH_CONFIG.google.clientID !== 'your-google-client-id',
       clientId: OAUTH_CONFIG.google.clientID !== 'your-google-client-id' ? OAUTH_CONFIG.google.clientID : null
-    },
-    microsoft: {
-      enabled: !!OAUTH_CONFIG.microsoft.clientID && OAUTH_CONFIG.microsoft.clientID !== 'your-microsoft-client-id',
-      clientId: OAUTH_CONFIG.microsoft.clientID !== 'your-microsoft-client-id' ? OAUTH_CONFIG.microsoft.clientID : null
-    },
-    apple: {
-      enabled: !!OAUTH_CONFIG.apple.clientID && OAUTH_CONFIG.apple.clientID !== 'your-apple-client-id',
-      clientId: OAUTH_CONFIG.apple.clientID !== 'your-apple-client-id' ? OAUTH_CONFIG.apple.clientID : null
     },
     linkedin: {
       enabled: !!OAUTH_CONFIG.linkedin.clientID && OAUTH_CONFIG.linkedin.clientID !== 'your-linkedin-client-id',
