@@ -93,7 +93,11 @@ const CandidateProfileModal = ({
               portfolioLinks: (candidate.portfolioLinks && candidate.portfolioLinks.length > 0) ? candidate.portfolioLinks : (detailedData.portfolioLinks || detailedData.links || []),
               resume: candidate.resumeUrl || detailedData.resume || detailedData.resumeUrl || candidate.resume,
               rating: candidate.rating || detailedData.rating || 0,
-              notes: candidate.notes || detailedData.notes || ''
+              notes: candidate.notes || detailedData.notes || '',
+              // Application specific fields
+              appliedAt: candidate.appliedAt || detailedData.appliedAt,
+              appliedDate: candidate.appliedDate || detailedData.appliedDate,
+              status: candidate.status || detailedData.status
             };
             if (isMounted) {
               setDetailedCandidate(mergedData);
@@ -167,8 +171,12 @@ const CandidateProfileModal = ({
 
   // Debug logging
   console.log('🔍 CandidateProfileModal received candidate:', candidate);
+  console.log('🔍 Candidate appliedAt:', candidate.appliedAt);
+  console.log('🔍 Candidate appliedDate:', candidate.appliedDate);
   console.log('🔍 Detailed candidate data:', detailedCandidate);
   console.log('🔍 Display candidate:', displayCandidate);
+  console.log('🔍 Display candidate appliedAt:', displayCandidate.appliedAt);
+  console.log('🔍 Display candidate appliedDate:', displayCandidate.appliedDate);
 
   const handleDownloadResume = async () => {
     console.log('📄 Download Resume clicked for candidate:', candidate.name);
@@ -412,12 +420,12 @@ const CandidateProfileModal = ({
                     <p className={`leading-relaxed ${
                       darkMode ? 'text-gray-300' : 'text-gray-600'
                     }`}>
-                      {displayCandidate.summary || displayCandidate.bio || 'Experienced professional with a strong background in software development and team leadership. Passionate about creating innovative solutions and driving business growth through technology.'}
+                      {displayCandidate.summary || displayCandidate.bio || 'No summary provided'}
                     </p>
                   </div>
 
                   {/* Key Metrics */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
                     <div className={`p-4 rounded-lg ${
                       darkMode ? 'bg-gray-700' : 'bg-gray-50'
                     }`}>
@@ -442,72 +450,6 @@ const CandidateProfileModal = ({
                         Expected Salary
                       </div>
                     </div>
-                    <div className={`p-4 rounded-lg ${
-                      darkMode ? 'bg-gray-700' : 'bg-gray-50'
-                    }`}>
-                      <div className="flex items-center space-x-1">
-                        {renderStars(displayCandidate.rating || 0)}
-                        <span className="text-2xl font-bold text-yellow-600 ml-2">
-                          {displayCandidate.rating || 'N/A'}
-                        </span>
-                      </div>
-                      <div className={`text-sm ${
-                        darkMode ? 'text-gray-300' : 'text-gray-600'
-                      }`}>
-                        Overall Rating
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Profile Information */}
-                  <div>
-                    <h3 className={`text-lg font-semibold mb-3 ${
-                      darkMode ? 'text-white' : 'text-gray-900'
-                    }`}>
-                      Profile Information
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                      <div>
-                        <span className={`text-sm font-medium ${
-                          darkMode ? 'text-gray-300' : 'text-gray-600'
-                        }`}>
-                          Qualification:
-                        </span>
-                        <p className={darkMode ? 'text-white' : 'text-gray-900'}>
-                          {displayCandidate.qualification || 'Not specified'}
-                        </p>
-                      </div>
-                      <div>
-                        <span className={`text-sm font-medium ${
-                          darkMode ? 'text-gray-300' : 'text-gray-600'
-                        }`}>
-                          Location:
-                        </span>
-                        <p className={darkMode ? 'text-white' : 'text-gray-900'}>
-                          {displayCandidate.location || 'Not specified'}
-                        </p>
-                      </div>
-                      <div>
-                        <span className={`text-sm font-medium ${
-                          darkMode ? 'text-gray-300' : 'text-gray-600'
-                        }`}>
-                          Current Role:
-                        </span>
-                        <p className={darkMode ? 'text-white' : 'text-gray-900'}>
-                          {displayCandidate.currentRole || 'Not specified'}
-                        </p>
-                      </div>
-                      <div>
-                        <span className={`text-sm font-medium ${
-                          darkMode ? 'text-gray-300' : 'text-gray-600'
-                        }`}>
-                          Phone:
-                        </span>
-                        <p className={darkMode ? 'text-white' : 'text-gray-900'}>
-                          {displayCandidate.phone || 'Not specified'}
-                        </p>
-                      </div>
-                    </div>
                   </div>
 
                   {/* Application Details */}
@@ -525,7 +467,7 @@ const CandidateProfileModal = ({
                           Applied Date:
                         </span>
                         <p className={darkMode ? 'text-white' : 'text-gray-900'}>
-                          {candidate.appliedDate || 'Unknown'}
+                          {candidate.appliedAt ? new Date(candidate.appliedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : (candidate.appliedDate || 'Unknown')}
                         </p>
                       </div>
                       <div>
@@ -535,11 +477,11 @@ const CandidateProfileModal = ({
                           Current Status:
                         </span>
                         <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ml-2 ${
-                          candidate.status === 'active' ? 'bg-green-100 text-green-800' :
-                          candidate.status === 'interested' ? 'bg-blue-100 text-blue-800' :
+                          displayCandidate.status === 'active' ? 'bg-green-100 text-green-800' :
+                          displayCandidate.status === 'interested' ? 'bg-blue-100 text-blue-800' :
                           'bg-gray-100 text-gray-800'
                         }`}>
-                          {candidate.status}
+                          {displayCandidate.status}
                         </span>
                       </div>
                     </div>
@@ -575,43 +517,58 @@ const CandidateProfileModal = ({
                     Work Experience
                   </h3>
                   
-                  {(Array.isArray(candidate.workExperience) ? candidate.workExperience : [
-                    {
-                      company: 'Tech Solutions Inc.',
-                      position: 'Senior React Developer',
-                      duration: '2022 - Present',
-                      description: 'Led development of multiple React applications, mentored junior developers, and implemented best practices for code quality and performance.'
-                    },
-                    {
-                      company: 'Digital Innovations Ltd.',
-                      position: 'Full Stack Developer',
-                      duration: '2020 - 2022',
-                      description: 'Developed and maintained web applications using React, Node.js, and MongoDB. Collaborated with cross-functional teams to deliver high-quality software solutions.'
-                    }
-                  ]).map((exp, index) => (
-                    <div key={index} className={`p-6 rounded-lg border ${
-                      darkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-200 bg-gray-50'
-                    }`}>
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <h4 className={`text-lg font-semibold ${
-                            darkMode ? 'text-white' : 'text-gray-900'
+                  {candidate.workExperience && candidate.workExperience.length > 0 ? (
+                    candidate.workExperience.map((exp, index) => (
+                      <div key={index} className={`p-6 rounded-lg border ${
+                        darkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-200 bg-gray-50'
+                      }`}>
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <h4 className={`text-lg font-semibold ${
+                              darkMode ? 'text-white' : 'text-gray-900'
+                            }`}>
+                              {exp.jobTitle || exp.position || 'Position Not Specified'}
+                            </h4>
+                            <p className="text-blue-600 font-medium">{exp.companyName || exp.company || 'Company Not Specified'}</p>
+                          </div>
+                          <span className={`text-sm ${
+                            darkMode ? 'text-gray-400' : 'text-gray-500'
                           }`}>
-                            {exp.position}
-                          </h4>
-                          <p className="text-blue-600 font-medium">{exp.company}</p>
+                            {exp.startDate && exp.endDate ? (
+                              `${new Date(exp.startDate).getFullYear()} - ${exp.isCurrentJob ? 'Present' : new Date(exp.endDate).getFullYear()}`
+                            ) : exp.duration ? (
+                              exp.duration
+                            ) : (
+                              'Duration Not Specified'
+                            )}
+                          </span>
                         </div>
-                        <span className={`text-sm ${
-                          darkMode ? 'text-gray-400' : 'text-gray-500'
-                        }`}>
-                          {exp.duration}
-                        </span>
+                        {exp.description && (
+                          <p className={`mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                            {exp.description}
+                          </p>
+                        )}
+                        {exp.achievements && exp.achievements.length > 0 && (
+                          <div className="mt-3">
+                            <p className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                              Key Achievements:
+                            </p>
+                            <ul className={`list-disc list-inside space-y-1 text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                              {exp.achievements.map((achievement, achIndex) => (
+                                <li key={achIndex}>{achievement}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                       </div>
-                      <p className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
-                        {exp.description}
-                      </p>
+                    ))
+                  ) : (
+                    <div className={`p-6 rounded-lg border text-center ${
+                      darkMode ? 'border-gray-600 bg-gray-700 text-gray-400' : 'border-gray-200 bg-gray-50 text-gray-500'
+                    }`}>
+                      No work experience information available
                     </div>
-                  ))}
+                  )}
                 </div>
               )}
 
@@ -623,33 +580,47 @@ const CandidateProfileModal = ({
                     Education & Certifications
                   </h3>
                   
-                  {(Array.isArray(candidate.education) ? candidate.education : [
-                    {
-                      degree: 'Bachelor of Technology in Computer Science',
-                      institution: 'Indian Institute of Technology',
-                      year: '2020',
-                      grade: '8.5 CGPA'
-                    }
-                  ]).map((edu, index) => (
-                    <div key={index} className={`p-6 rounded-lg border ${
-                      darkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-200 bg-gray-50'
-                    }`}>
-                      <h4 className={`text-lg font-semibold ${
-                        darkMode ? 'text-white' : 'text-gray-900'
+                  {candidate.education && candidate.education.length > 0 ? (
+                    candidate.education.map((edu, index) => (
+                      <div key={index} className={`p-6 rounded-lg border ${
+                        darkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-200 bg-gray-50'
                       }`}>
-                        {edu.degree}
-                      </h4>
-                      <p className="text-blue-600 font-medium">{edu.institution}</p>
-                      <div className="flex justify-between mt-2">
-                        <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
-                          {edu.year}
-                        </span>
-                        <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
-                          {edu.grade}
-                        </span>
+                        <h4 className={`text-lg font-semibold ${
+                          darkMode ? 'text-white' : 'text-gray-900'
+                        }`}>
+                          {edu.degree || 'Degree Not Specified'}
+                        </h4>
+                        <p className="text-blue-600 font-medium">{edu.institution || 'Institution Not Specified'}</p>
+                        {edu.fieldOfStudy && (
+                          <p className={`text-sm mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            Field: {edu.fieldOfStudy}
+                          </p>
+                        )}
+                        <div className="flex justify-between mt-2 text-sm">
+                          <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
+                            {edu.startDate && edu.endDate ? (
+                              `${new Date(edu.startDate).getFullYear()} - ${edu.isCurrentlyStudying ? 'Present' : new Date(edu.endDate).getFullYear()}`
+                            ) : edu.year ? (
+                              edu.year
+                            ) : (
+                              'Dates Not Specified'
+                            )}
+                          </span>
+                          {edu.grade && (
+                            <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
+                              Grade: {edu.grade}
+                            </span>
+                          )}
+                        </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className={`p-6 rounded-lg border text-center ${
+                      darkMode ? 'border-gray-600 bg-gray-700 text-gray-400' : 'border-gray-200 bg-gray-50 text-gray-500'
+                    }`}>
+                      No education information available
                     </div>
-                  ))}
+                  )}
                 </div>
               )}
 

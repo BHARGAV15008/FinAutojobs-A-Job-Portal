@@ -159,20 +159,22 @@ const ViewCandidateModal = ({ open, onClose, candidate }) => {
                     <ListItemText
                       primary={
                         <Typography variant="subtitle1">
-                          {exp.title} at {exp.company}
+                          {exp.jobTitle || exp.title || 'Position Not Specified'} at {exp.companyName || exp.company || 'Company Not Specified'}
                         </Typography>
                       }
                       secondary={
                         <>
                           <Typography variant="body2" color="text.secondary">
-                            {new Date(exp.startDate).toLocaleDateString()} -
-                            {exp.isCurrentRole
+                            {exp.startDate ? new Date(exp.startDate).toLocaleDateString() : 'Start date not specified'} -
+                            {exp.isCurrentJob || exp.isCurrentRole
                               ? "Present"
-                              : new Date(exp.endDate).toLocaleDateString()}
+                              : exp.endDate ? new Date(exp.endDate).toLocaleDateString() : 'End date not specified'}
                           </Typography>
-                          <Typography variant="body2">
-                            {exp.description}
-                          </Typography>
+                          {exp.description && (
+                            <Typography variant="body2">
+                              {exp.description}
+                            </Typography>
+                          )}
                         </>
                       }
                     />

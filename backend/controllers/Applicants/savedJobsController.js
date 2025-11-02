@@ -1,38 +1,18 @@
-import { db } from '../config/database.js';
-import { savedJobs, jobs, companies } from '../models/Others/schema.js';
-import { eq, and, sql } from 'drizzle-orm';
+import SavedJob from '../../models/SavedJob.js';
+import mongoose from 'mongoose';
 
 // Get current user's saved jobs
 export const getSavedJobs = async (req, res) => {
   try {
     const userId = req.user.userId;
 
-    const result = await db
-      .select({
-        id: savedJobs.id,
-        created_at: savedJobs.created_at,
-        job_id: jobs.id,
-        title: jobs.title,
-        description: jobs.description,
-        location: jobs.location,
-        salary_min: jobs.salary_min,
-        salary_max: jobs.salary_max,
-        salary_currency: jobs.salary_currency,
-        job_type: jobs.job_type,
-        work_mode: jobs.work_mode,
-        company_name: companies.name,
-        company_logo: companies.logo_url,
-        company_location: companies.location,
-      })
-      .from(savedJobs)
-      .leftJoin(jobs, eq(savedJobs.job_id, jobs.id))
-      .leftJoin(companies, eq(jobs.company_id, companies.id))
-      .where(eq(savedJobs.user_id, userId))
-      .orderBy(sql`${savedJobs.created_at} DESC`);
+    const savedJobs = await SavedJob.find({ userId })
+      .populate('jobId')
+      .sort({ savedAt: -1 });
 
-    res.json({ saved: result });
+    res.json({ saved: savedJobs });
   } catch (error) {
-    console.error('Get saved jobs error:', error);
+    console.error('❌ Get saved jobs error:', error);
     res.status(500).json({ message: 'Internal server error while fetching saved jobs' });
   }
 };
@@ -43,29 +23,38 @@ export const addSavedJob = async (req, res) => {
     const userId = req.user.userId;
     const { job_id } = req.body;
 
+    console.log('💾 Saving job:', { userId, job_id });
+
     if (!job_id) {
       return res.status(400).json({ message: 'job_id is required' });
     }
 
-    // Prevent duplicates
-    const existing = await db
-      .select()
-      .from(savedJobs)
-      .where(and(eq(savedJobs.user_id, userId), eq(savedJobs.job_id, parseInt(job_id))))
-      .limit(1);
+    // Check if job exists (use mongoose.model to avoid import issues)
+    const Job = mongoose.model('Job');
+    const jobExists = await Job.findById(job_id);
+    if (!jobExists) {
+      return res.status(404).json({ message: 'Job not found' });
+    }
 
-    if (existing.length > 0) {
+    // Check if already saved (will throw error if duplicate due to unique index)
+    const existing = await SavedJob.findOne({ userId, jobId: job_id });
+    if (existing) {
       return res.status(409).json({ message: 'Job already saved' });
     }
 
-    const inserted = await db
-      .insert(savedJobs)
-      .values({ user_id: userId, job_id: parseInt(job_id) })
-      .returning();
+    // Create saved job
+    const savedJob = await SavedJob.create({
+      userId,
+      jobId: job_id
+    });
 
-    res.status(201).json({ message: 'Job saved', saved: inserted[0] });
+    console.log('✅ Job saved successfully:', savedJob._id);
+    res.status(201).json({ message: 'Job saved successfully', saved: savedJob });
   } catch (error) {
-    console.error('Add saved job error:', error);
+    console.error('❌ Add saved job error:', error);
+    if (error.code === 11000) {
+      return res.status(409).json({ message: 'Job already saved' });
+    }
     res.status(500).json({ message: 'Internal server error while saving job' });
   }
 };
@@ -76,22 +65,44 @@ export const removeSavedJob = async (req, res) => {
     const userId = req.user.userId;
     const { id } = req.params;
 
-    // Ensure record belongs to user
-    const existing = await db
-      .select()
-      .from(savedJobs)
-      .where(and(eq(savedJobs.id, parseInt(id)), eq(savedJobs.user_id, userId)))
-      .limit(1);
+    const deleted = await SavedJob.findOneAndDelete({
+      _id: id,
+      userId: userId
+    });
 
-    if (existing.length === 0) {
+    if (!deleted) {
       return res.status(404).json({ message: 'Saved job not found' });
     }
 
-    await db.delete(savedJobs).where(eq(savedJobs.id, parseInt(id)));
-
+    console.log('✅ Saved job removed successfully');
     res.json({ message: 'Removed from saved jobs' });
   } catch (error) {
-    console.error('Remove saved job error:', error);
+    console.error('❌ Remove saved job error:', error);
+    res.status(500).json({ message: 'Internal server error while removing saved job' });
+  }
+};
+
+// Remove a saved job by job ID (for frontend convenience)
+export const removeSavedJobByJobId = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { jobId } = req.params;
+
+    console.log('🗑️ Removing saved job:', { userId, jobId });
+
+    const deleted = await SavedJob.findOneAndDelete({
+      userId: userId,
+      jobId: jobId
+    });
+
+    if (!deleted) {
+      return res.status(404).json({ message: 'Saved job not found' });
+    }
+
+    console.log('✅ Saved job removed successfully');
+    res.json({ message: 'Removed from saved jobs' });
+  } catch (error) {
+    console.error('❌ Remove saved job by job ID error:', error);
     res.status(500).json({ message: 'Internal server error while removing saved job' });
   }
 };

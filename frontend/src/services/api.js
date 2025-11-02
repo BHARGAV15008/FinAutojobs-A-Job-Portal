@@ -98,7 +98,9 @@ export const applicationsAPI = {
   createApplication: (applicationData) => api.post('/applications', applicationData),
   updateApplication: (id, data) => api.put(`/applications/${id}`, data),
   deleteApplication: (id) => api.delete(`/applications/${id}`),
-  getApplicationsByJob: (jobId) => api.get(`/applications/job/${jobId}`),
+  getApplicationsByJob: (jobId) => api.get(`/applications/job/${jobId}`, {
+    params: { _t: Date.now() } // Cache buster - force fresh data
+  }),
   updateApplicationStatus: (id, status) => api.put(`/applications/${id}/status`, { status }),
   bulkUpdateApplications: (applicationIds, status) => 
     api.put('/applications/bulk-update', { applicationIds, status }),

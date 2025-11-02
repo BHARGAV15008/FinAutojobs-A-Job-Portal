@@ -162,7 +162,7 @@ import oauthRoutes, { initializeOAuth } from './routes/oauth.js';
 import testOAuthRoutes from './routes/testOAuth.js';
 import notificationsRoutes from './routes/notifications.js';
 import usersRoutes from './routes/users.js';
-import savedJobsRoutes from './routes/savedJobs.js';
+import savedJobsRoutes from './routes/Applicants/savedJobs.js';
 import recruiterRoutes from './routes/recruiters.js';
 import adminRoutes from './routes/admin.js';
 import analyticsRoutes from './routes/analytics.js';

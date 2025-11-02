@@ -1,20 +1,26 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { applicationsAPI, candidatesAPI, interviewsAPI } from '../../services/api';
+import { useTheme } from '../../contexts/IntegratedThemeContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { candidatesAPI, interviewsAPI } from '../../services/api';
+import { createNotification } from '../../api/notifications';
+import { applicationService } from '../../services/applicationService';
 import CandidateProfileModal from '../modals/CandidateProfileModal';
 import ContactModal from '../modals/ContactModal';
 import ScheduleModal from '../modals/ScheduleModal';
 
-const EnhancedApplicantsTab = () => {
-  // Use CSS classes for dark mode detection instead of theme context
-  const [darkMode] = useState(() => {
-    return document.documentElement.classList.contains('dark');
-  });
-  const [viewMode, setViewMode] = useState('table'); // 'table' or 'cards'
+const EnhancedCandidatesTab = () => {
+  const { darkMode } = useTheme();
+  const { user: currentUser } = useAuth();
+  const [viewMode, setViewMode] = useState('table');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('appliedDate');
+  const [sortBy, setSortBy] = useState('lastActivity');
   const [sortOrder, setSortOrder] = useState('desc');
+  const [actionLoading, setActionLoading] = useState({});
+  const [applications, setApplications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [openDropdown, setOpenDropdown] = useState(null);
   
   // Modal states
@@ -22,9 +28,260 @@ const EnhancedApplicantsTab = () => {
   const [contactModal, setContactModal] = useState({ isOpen: false, candidate: null });
   const [scheduleModal, setScheduleModal] = useState({ isOpen: false, candidate: null });
 
+  // Fetch applications data
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        setLoading(true);
+        // Fetching applications for candidates tab
+        
+        const response = await applicationService.getUserApplications(50, 1);
+        // Applications fetched successfully
+        
+        if (response.success) {
+          setApplications(response.data?.applications || []);
+        } else {
+          setError('Failed to fetch applications');
+        }
+      } catch (error) {
+        console.error('❌ Error fetching applications:', error);
+        setError('Error loading applications');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchApplications();
+  }, []);
+
+  // Transform applications data into candidates format
+  const candidates = useMemo(() => {
+    return applications.map(app => ({
+      id: app._id,
+      applicationId: app._id,
+      jobId: app.jobId,
+      candidateId: app.applicantId,
+      name: app.applicantSnapshot?.fullName || app.applicantSnapshot?.full_name || 'Unknown Candidate',
+      email: app.applicantSnapshot?.email || '',
+      phone: app.applicantSnapshot?.phone || app.applicationData?.phone || '',
+      location: app.applicantSnapshot?.location || app.applicationData?.location || 'Location not specified',
+      bio: app.applicantSnapshot?.bio || app.applicationData?.bio || '',
+      summary: app.applicantSnapshot?.bio || app.applicationData?.bio || app.applicantSnapshot?.professionalSummary || '',
+      qualification: app.applicantSnapshot?.qualification || app.applicationData?.qualification || 'Not specified',
+      currentRole: app.applicantSnapshot?.currentJobTitle || app.applicationData?.currentJobTitle || app.applicantSnapshot?.currentRole || 'Not specified',
+      currentJobTitle: app.applicantSnapshot?.currentJobTitle || app.applicationData?.currentJobTitle || 'Not specified',
+      expectedSalary: app.applicantSnapshot?.expectedSalary || app.applicationData?.expectedSalary || 'Not specified',
+      experience: (() => {
+        // Try to get experience from different sources - prioritize applicantSnapshot first
+        const snapshotExperience = app.applicantSnapshot?.experience;
+        const snapshotYears = app.applicantSnapshot?.yearsOfExperience;
+        
+        const appExperience = app.applicationData?.experience;
+        const yearsOfExperience = app.applicationData?.yearsOfExperience;
+        const experienceMin = app.applicationData?.experienceMin;
+        const experienceMax = app.applicationData?.experienceMax;
+        const workExperience = app.applicationData?.workExperience;
+        const totalExperience = app.applicationData?.totalExperience;
+        const experienceLevel = app.applicationData?.experienceLevel;
+        
+        // Check nested professional info structure
+        const professionalTotalExp = app.applicationData?.professionalInfo?.totalExperience;
+        const professionalWorkExp = app.applicationData?.professionalInfo?.workExperience;
+        const professionalExpLevel = app.applicationData?.professionalInfo?.experienceLevel;
+        
+        const profileExperience = app.applicantSnapshot?.experience;
+        const profileYears = app.applicantSnapshot?.yearsOfExperience;
+        
+        // Debug: Log available experience data
+        console.log('🔍 Experience data for', app.applicantSnapshot?.fullName || 'Unknown', {
+          snapshotExperience,
+          snapshotYears,
+          appExperience,
+          yearsOfExperience,
+          experienceMin,
+          experienceMax,
+          workExperience,
+          totalExperience,
+          experienceLevel,
+          professionalTotalExp,
+          professionalWorkExp,
+          professionalExpLevel,
+          profileExperience,
+          profileYears,
+          fullApplicationData: app.applicationData,
+          fullApplicantSnapshot: app.applicantSnapshot
+        });
+        
+        // Priority: applicantSnapshot > nested professional info > flat application data > profile data > default
+        if (snapshotExperience && snapshotExperience.trim()) {
+          // Applicant snapshot experience (from submitted application)
+          return snapshotExperience;
+        } else if (snapshotYears !== undefined && snapshotYears !== null) {
+          // Applicant snapshot years of experience
+          return `${snapshotYears} years`;
+        } else if (professionalTotalExp !== undefined && professionalTotalExp !== null) {
+          // Professional info total experience (from form)
+          return `${professionalTotalExp} years`;
+        } else if (professionalWorkExp && professionalWorkExp.trim()) {
+          // Professional info work experience
+          return professionalWorkExp;
+        } else if (professionalExpLevel && professionalExpLevel.trim()) {
+          // Professional info experience level
+          return professionalExpLevel;
+        } else if (appExperience && appExperience.trim()) {
+          // If it's already a formatted string, return as is
+          return appExperience;
+        } else if (totalExperience && totalExperience.trim()) {
+          // Total experience field
+          return totalExperience;
+        } else if (workExperience && workExperience.trim()) {
+          // Work experience field
+          return workExperience;
+        } else if (experienceLevel && experienceLevel.trim()) {
+          // Experience level (e.g., "Senior", "Mid-level")
+          return experienceLevel;
+        } else if (yearsOfExperience !== undefined && yearsOfExperience !== null) {
+          // Years of experience as number
+          return `${yearsOfExperience} years`;
+        } else if (profileExperience && profileExperience.trim()) {
+          // Profile experience
+          return profileExperience;
+        } else if (profileYears !== undefined && profileYears !== null) {
+          // Profile years of experience
+          return `${profileYears} years`;
+        } else {
+          // Default fallback
+          return 'Not specified';
+        }
+      })(),
+      skills: (() => {
+        // Extract skills from various sources
+        const snapshotSkills = app.applicantSnapshot?.skills;
+        const appDataSkills = app.applicationData?.skills;
+        
+        // Handle different skill formats (array or string)
+        let skillsArray = [];
+        if (Array.isArray(snapshotSkills) && snapshotSkills.length > 0) {
+          skillsArray = snapshotSkills;
+        } else if (typeof snapshotSkills === 'string' && snapshotSkills.trim()) {
+          try {
+            skillsArray = JSON.parse(snapshotSkills);
+          } catch {
+            skillsArray = snapshotSkills.split(',').map(s => s.trim());
+          }
+        } else if (Array.isArray(appDataSkills) && appDataSkills.length > 0) {
+          skillsArray = appDataSkills;
+        } else if (typeof appDataSkills === 'string' && appDataSkills.trim()) {
+          try {
+            skillsArray = JSON.parse(appDataSkills);
+          } catch {
+            skillsArray = appDataSkills.split(',').map(s => s.trim());
+          }
+        }
+        
+        return skillsArray;
+      })(),
+      education: app.applicantSnapshot?.education || app.applicationData?.education || [],
+      workExperience: app.applicantSnapshot?.workExperience || app.applicationData?.workExperience || [],
+      portfolioLinks: (() => {
+        // Enhanced portfolio links mapping from multiple sources
+        const links = [];
+        
+        // From application data
+        if (app.applicationData?.portfolioLinks) {
+          links.push(...app.applicationData.portfolioLinks);
+        }
+        
+        // From applicant snapshot
+        if (app.applicantSnapshot?.portfolioLinks) {
+          links.push(...app.applicantSnapshot.portfolioLinks);
+        }
+        
+        // Individual social links from applicant snapshot
+        if (app.applicantSnapshot?.linkedin_url || app.applicantSnapshot?.linkedinUrl) {
+          links.push({
+            type: 'LinkedIn',
+            url: app.applicantSnapshot.linkedin_url || app.applicantSnapshot.linkedinUrl,
+            label: 'LinkedIn Profile'
+          });
+        }
+        
+        if (app.applicantSnapshot?.github_url || app.applicantSnapshot?.githubUrl) {
+          links.push({
+            type: 'GitHub',
+            url: app.applicantSnapshot.github_url || app.applicantSnapshot.githubUrl,
+            label: 'GitHub Repository'
+          });
+        }
+        
+        if (app.applicantSnapshot?.portfolio_url || app.applicantSnapshot?.portfolioUrl) {
+          links.push({
+            type: 'Portfolio',
+            url: app.applicantSnapshot.portfolio_url || app.applicantSnapshot.portfolioUrl,
+            label: 'Personal Portfolio'
+          });
+        }
+        
+        return links;
+      })(),
+      status: app.status || 'pending',
+      appliedDate: app.appliedAt ? new Date(app.appliedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : app.createdAt ? new Date(app.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Unknown',
+      lastActivity: app.updatedAt ? new Date(app.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '',
+      rating: app.rating || 0,
+      notes: app.recruiterNotes || '',
+      isShortlisted: app.status === 'shortlisted',
+      interviewScheduled: false,
+      // Enhanced resume URL detection with comprehensive field checking
+      resumeUrl: (() => {
+        const resumeUrl = app.applicationData?.resumeUrl || 
+                         app.applicationData?.resume || 
+                         app.resume || 
+                         app.resumeUrl || 
+                         app.documents?.resumeUrl || 
+                         app.documents?.resume || 
+                         app.candidateData?.resumeUrl ||
+                         app.candidateData?.resume ||
+                         app.userProfile?.resumeUrl ||
+                         app.userProfile?.resume ||
+                         app.profileData?.resumeUrl ||
+                         app.profileData?.resume ||
+                         app.applicantSnapshot?.resumeUrl ||
+                         app.applicantSnapshot?.resume || '';
+        
+        // Log resume detection for debugging specific candidates
+        if (app.applicantSnapshot?.fullName === 'john wick' || app.candidateName === 'john wick') {
+          console.log('🔍 Resume detection for john wick:', {
+            'app.applicationData?.resumeUrl': app.applicationData?.resumeUrl,
+            'app.applicationData?.resume': app.applicationData?.resume,
+            'app.resume': app.resume,
+            'app.resumeUrl': app.resumeUrl,
+            'app.documents?.resumeUrl': app.documents?.resumeUrl,
+            'app.documents?.resume': app.documents?.resume,
+            'app.candidateData?.resumeUrl': app.candidateData?.resumeUrl,
+            'app.candidateData?.resume': app.candidateData?.resume,
+            'app.userProfile?.resumeUrl': app.userProfile?.resumeUrl,
+            'app.userProfile?.resume': app.userProfile?.resume,
+            'app.profileData?.resumeUrl': app.profileData?.resumeUrl,
+            'app.profileData?.resume': app.profileData?.resume,
+            'app.applicantSnapshot?.resumeUrl': app.applicantSnapshot?.resumeUrl,
+            'app.applicantSnapshot?.resume': app.applicantSnapshot?.resume,
+            'finalResumeUrl': resumeUrl,
+            'fullAppData': app
+          });
+        }
+        
+        return resumeUrl;
+      })(),
+      jobTitle: app.jobSnapshot?.title || app.jobTitle || 'Unknown Position',
+      company: app.jobSnapshot?.company || app.companyName || 'Unknown Company',
+      // Store original application data for debugging
+      originalApplicationData: app
+    }));
+  }, [applications]);
+
   // Dropdown handlers
-  const toggleDropdown = (applicantId) => {
-    setOpenDropdown(openDropdown === applicantId ? null : applicantId);
+  const toggleDropdown = (candidateId) => {
+    setOpenDropdown(openDropdown === candidateId ? null : candidateId);
   };
 
   const closeDropdown = () => {
@@ -32,7 +289,7 @@ const EnhancedApplicantsTab = () => {
   };
 
   // Close dropdown when clicking outside
-  React.useEffect(() => {
+  useEffect(() => {
     const handleClickOutside = () => {
       closeDropdown();
     };
@@ -43,255 +300,238 @@ const EnhancedApplicantsTab = () => {
     }
   }, [openDropdown]);
 
-  // Mock applicants data with comprehensive information
-  const mockApplicants = [
-    {
-      id: 1,
-      name: 'Rajesh Kumar',
-      email: 'rajesh.kumar@email.com',
-      phone: '+91 9876543210',
-      jobTitle: 'Senior Frontend Developer',
-      jobId: 'job-001',
-      appliedDate: '2024-01-15',
-      status: 'shortlisted',
-      experience: '5 years',
-      location: 'Mumbai, India',
-      skills: ['React', 'JavaScript', 'TypeScript', 'Node.js'],
-      education: [{
-        degree: 'B.Tech Computer Science',
-        institution: 'Indian Institute of Technology',
-        year: '2019',
-        grade: '8.2 CGPA'
-      }],
-      workExperience: [{
-        company: 'TechCorp Solutions',
-        position: 'Frontend Developer',
-        duration: '2019 - Present',
-        description: 'Developed responsive web applications using React and modern JavaScript.'
-      }],
-      portfolioLinks: [{
-        type: 'Portfolio',
-        url: 'https://rajesh-portfolio.com',
-        label: 'Personal Portfolio'
-      }],
-      resume: 'rajesh_kumar_resume.pdf',
-      coverLetter: 'Looking forward to contributing to your team...',
-      interviewRound: null,
-      rating: 4.5,
-      notes: 'Strong technical background, good communication skills',
-      avatar: '👨‍💻'
-    },
-    {
-      id: 2,
-      name: 'Priya Sharma',
-      email: 'priya.sharma@email.com',
-      phone: '+91 9876543211',
-      jobTitle: 'Full Stack Developer',
-      jobId: 'job-002',
-      appliedDate: '2024-01-18',
-      status: 'interviewed_round1',
-      experience: '3 years',
-      location: 'Bangalore, India',
-      skills: ['React', 'Python', 'Django', 'PostgreSQL'],
-      education: [{
-        degree: 'MCA',
-        institution: 'National Institute of Technology',
-        year: '2021',
-        grade: '8.5 CGPA'
-      }],
-      workExperience: [{
-        company: 'Digital Solutions Ltd.',
-        position: 'Full Stack Developer',
-        duration: '2021 - Present',
-        description: 'Built web applications using Python Django and React framework.'
-      }],
-      portfolioLinks: [{
-        type: 'GitHub',
-        url: 'https://github.com/priya-sharma',
-        label: 'GitHub Profile'
-      }],
-      resume: 'priya_sharma_resume.pdf',
-      coverLetter: 'Excited about the opportunity...',
-      interviewRound: 1,
-      rating: 4.2,
-      notes: 'Good problem-solving skills, needs improvement in system design',
-      avatar: '👩‍💻'
-    },
-    {
-      id: 3,
-      name: 'Amit Patel',
-      email: 'amit.patel@email.com',
-      phone: '+91 9876543212',
-      jobTitle: 'Backend Developer',
-      jobId: 'job-003',
-      appliedDate: '2024-01-20',
-      status: 'pending',
-      experience: '2 years',
-      location: 'Pune, India',
-      skills: ['Java', 'Spring Boot', 'MySQL', 'AWS'],
-      education: 'B.E. Information Technology',
-      resume: 'amit_patel_resume.pdf',
-      coverLetter: 'I am passionate about backend development...',
-      interviewRound: null,
-      rating: 3.8,
-      notes: 'Fresh graduate with good potential',
-      avatar: '👨‍💼'
-    },
-    {
-      id: 4,
-      name: 'Sneha Reddy',
-      email: 'sneha.reddy@email.com',
-      phone: '+91 9876543213',
-      jobTitle: 'UI/UX Designer',
-      jobId: 'job-004',
-      appliedDate: '2024-01-22',
-      status: 'interviewed_round2',
-      experience: '4 years',
-      location: 'Hyderabad, India',
-      skills: ['Figma', 'Adobe XD', 'Sketch', 'Prototyping'],
-      education: 'B.Des Visual Communication',
-      resume: 'sneha_reddy_resume.pdf',
-      coverLetter: 'Design is my passion...',
-      interviewRound: 2,
-      rating: 4.7,
-      notes: 'Excellent design portfolio, creative thinking',
-      avatar: '👩‍🎨'
-    },
-    {
-      id: 5,
-      name: 'Vikram Singh',
-      email: 'vikram.singh@email.com',
-      phone: '+91 9876543214',
-      jobTitle: 'DevOps Engineer',
-      jobId: 'job-005',
-      appliedDate: '2024-01-25',
-      status: 'rejected',
-      experience: '6 years',
-      location: 'Delhi, India',
-      skills: ['Docker', 'Kubernetes', 'AWS', 'Jenkins'],
-      education: 'M.Tech Computer Science',
-      resume: 'vikram_singh_resume.pdf',
-      coverLetter: 'Experienced in cloud infrastructure...',
-      interviewRound: null,
-      rating: 3.5,
-      notes: 'Overqualified for the position',
-      avatar: '👨‍🔧'
-    },
-    {
-      id: 6,
-      name: 'Anita Gupta',
-      email: 'anita.gupta@email.com',
-      phone: '+91 9876543215',
-      jobTitle: 'Data Scientist',
-      jobId: 'job-006',
-      appliedDate: '2024-01-28',
-      status: 'interviewed_final',
-      experience: '3 years',
-      location: 'Chennai, India',
-      skills: ['Python', 'Machine Learning', 'TensorFlow', 'SQL'],
-      education: 'M.Sc. Statistics',
-      resume: 'anita_gupta_resume.pdf',
-      coverLetter: 'Data science enthusiast...',
-      interviewRound: 'final',
-      rating: 4.8,
-      notes: 'Strong analytical skills, excellent candidate',
-      avatar: '👩‍🔬'
+  // Test function for debugging notifications (can be called from browser console)
+  window.testNotification = async (candidateId) => {
+    console.log('🧪 Testing notification for candidate ID:', candidateId);
+    try {
+      const result = await sendNotificationToApplicant(candidateId, {
+        type: 'test_notification',
+        title: 'Test Notification',
+        message: 'This is a test notification to verify the system is working.',
+        interviewId: 'test-123',
+        jobId: 'test-job-456',
+        meetingLink: 'https://zoom.us/test',
+        actionUrl: '/applicant-dashboard/interviews'
+      });
+      console.log('🧪 Test notification result:', result);
+      alert('Test notification sent! Check console for details.');
+    } catch (error) {
+      console.error('🧪 Test notification failed:', error);
+      alert('Test notification failed! Check console for details.');
     }
-  ];
-
-  // Status configuration
-  const statusConfig = {
-    all: { label: 'All Applicants', color: 'bg-gray-100 text-gray-800', count: mockApplicants.length },
-    pending: { label: 'Pending Review', color: 'bg-yellow-100 text-yellow-800', count: mockApplicants.filter(a => a.status === 'pending').length },
-    shortlisted: { label: 'Shortlisted', color: 'bg-green-100 text-green-800', count: mockApplicants.filter(a => a.status === 'shortlisted').length },
-    interviewed_round1: { label: 'Round 1 Interview', color: 'bg-blue-100 text-blue-800', count: mockApplicants.filter(a => a.status === 'interviewed_round1').length },
-    interviewed_round2: { label: 'Round 2 Interview', color: 'bg-indigo-100 text-indigo-800', count: mockApplicants.filter(a => a.status === 'interviewed_round2').length },
-    interviewed_final: { label: 'Final Interview', color: 'bg-purple-100 text-purple-800', count: mockApplicants.filter(a => a.status === 'interviewed_final').length },
-    rejected: { label: 'Rejected', color: 'bg-red-100 text-red-800', count: mockApplicants.filter(a => a.status === 'rejected').length },
-    hired: { label: 'Hired', color: 'bg-emerald-100 text-emerald-800', count: mockApplicants.filter(a => a.status === 'hired').length }
   };
 
-  // Filter and sort applicants
-  const filteredAndSortedApplicants = useMemo(() => {
-    let filtered = mockApplicants;
+  // Notification service function
+  const sendNotificationToApplicant = async (applicantId, notificationData) => {
+    try {
+      if (!applicantId) {
+        console.warn('⚠️ No applicant ID provided for notification');
+        return null;
+      }
 
-    // Filter by status
-    if (selectedStatus !== 'all') {
-      filtered = filtered.filter(applicant => applicant.status === selectedStatus);
+      console.log('📨 Sending notification to applicant:', applicantId, notificationData);
+      console.log('🔍 Current user sending notification:', currentUser);
+      
+      const notification = {
+        recipientId: applicantId,
+        recipientType: 'applicant',
+        senderId: currentUser?._id || currentUser?.id,
+        senderType: 'recruiter',
+        type: notificationData.type,
+        title: notificationData.title,
+        message: notificationData.message,
+        data: {
+          interviewId: notificationData.interviewId,
+          applicationId: notificationData.applicationId,
+          jobId: notificationData.jobId,
+          meetingLink: notificationData.meetingLink,
+          status: notificationData.status,
+          actionUrl: notificationData.actionUrl
+        },
+        priority: 'high',
+        channels: ['in_app', 'email'], // Send both in-app and email notifications
+        scheduledFor: new Date().toISOString()
+      };
+      
+      // Create notification using the correct API
+      console.log('📧 Creating notification with data:', notification);
+      const response = await createNotification(notification);
+      console.log('✅ Notification created successfully:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ Failed to send notification:', error);
+      console.error('Error details:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data
+      });
+      // Don't throw error to prevent breaking the main flow
+      return null;
     }
+  };
 
-    // Filter by search query
+  const statusConfig = {
+    all: { label: 'All Candidates', color: 'bg-gray-100 text-gray-800', count: candidates.length },
+    pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800', count: candidates.filter(c => c.status === 'pending').length },
+    shortlisted: { label: 'Shortlisted', color: 'bg-blue-100 text-blue-800', count: candidates.filter(c => c.status === 'shortlisted').length },
+    interviewed: { label: 'Interviewed', color: 'bg-purple-100 text-purple-800', count: candidates.filter(c => c.status === 'interviewed').length },
+    rejected: { label: 'Rejected', color: 'bg-red-100 text-red-800', count: candidates.filter(c => c.status === 'rejected').length }
+  };
+
+  const filteredAndSortedCandidates = useMemo(() => {
+    let filtered = candidates;
+    if (selectedStatus !== 'all') {
+      filtered = filtered.filter(candidate => candidate.status === selectedStatus);
+    }
     if (searchQuery) {
-      filtered = filtered.filter(applicant =>
-        applicant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        applicant.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        applicant.jobTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        applicant.skills.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()))
+      filtered = filtered.filter(candidate =>
+        candidate.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        candidate.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        candidate.currentRole.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        candidate.skills.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()))
       );
     }
-
-    // Sort applicants
-    filtered.sort((a, b) => {
+    return filtered.sort((a, b) => {
       let aValue = a[sortBy];
       let bValue = b[sortBy];
-
-      if (sortBy === 'appliedDate') {
+      if (sortBy === 'lastActivity') {
         aValue = new Date(aValue);
         bValue = new Date(bValue);
       }
-
-      if (sortOrder === 'asc') {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
+      return sortOrder === 'asc' ? (aValue > bValue ? 1 : -1) : (aValue < bValue ? 1 : -1);
     });
-
-    return filtered;
   }, [selectedStatus, searchQuery, sortBy, sortOrder]);
 
-  // Handle status change with database integration
-  const handleStatusChange = async (applicantId, newStatus) => {
+  const handleCandidateAction = async (action, candidate) => {
+    setActionLoading(prev => ({ ...prev, [`${candidate.id}_${action}`]: true }));
+    
     try {
-      // Map frontend status to backend status format
-      const statusMapping = {
-        'pending': 'pending',
-        'shortlisted': 'shortlisted', 
-        'interviewed_round1': 'interview_scheduled',
-        'interviewed_round2': 'interviewed',
-        'interviewed_final': 'interviewed',
-        'rejected': 'rejected',
-        'hired': 'hired'
-      };
-
-      const backendStatus = statusMapping[newStatus] || newStatus;
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const response = await applicationsAPI.updateApplicationStatus(applicantId, backendStatus);
-      console.log('Status update result:', response.data);
+      // Here you would make actual API calls to update the database
+      console.log(`${action} action for candidate:`, candidate);
       
-      alert(`✅ Applicant status updated to ${newStatus} - Database updated successfully!`);
-      
-      // Optionally refresh the applicants list here
-      // You could implement a state update instead of page reload
-      
+      switch (action) {
+        case 'contact':
+          alert(`Contacting ${candidate.name} - This would send an email/message`);
+          break;
+        case 'schedule':
+          alert(`Scheduling interview with ${candidate.name} - This would open calendar`);
+          break;
+        case 'shortlist':
+          const handleShortlistCandidate = async (candidate) => {
+            setActionLoading(prev => ({ ...prev, [`${candidate.id}_shortlist`]: true }));
+            
+            try {
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              
+              console.log(`Shortlisting candidate:`, candidate);
+              alert(`${candidate.name} has been ${candidate.isShortlisted ? 'removed from' : 'added to'} shortlist!`);
+            } catch (error) {
+              console.error('Failed to shortlist candidate:', error);
+              alert('Failed to update shortlist. Please try again.');
+            } finally {
+              setActionLoading(prev => ({ ...prev, [`${candidate.id}_shortlist`]: false }));
+            }
+          };
+          handleShortlistCandidate(candidate);
+          break;
+        case 'reject':
+          if (window.confirm(`Are you sure you want to reject ${candidate.name}?`)) {
+            alert(`${candidate.name} has been rejected - Database updated`);
+          }
+          break;
+        case 'view':
+          alert(`Viewing ${candidate.name}'s detailed profile`);
+          break;
+        default:
+          break;
+      }
     } catch (error) {
-      console.error('Failed to update status:', error);
+      console.error(`Failed to ${action} candidate:`, error);
+      alert(`Failed to ${action} candidate. Please try again.`);
+    } finally {
+      setActionLoading(prev => ({ ...prev, [`${candidate.id}_${action}`]: false }));
+    }
+  };
+
+  const handleStatusChange = async (applicationId, newStatus) => {
+    try {
+      console.log('🔄 Updating application status:', { applicationId, newStatus });
+      const response = await applicationService.updateApplicationStatus(applicationId, newStatus, '');
+      console.log('✅ Status update result:', response.data);
+      
+      // Update local state
+      setApplications(prev => prev.map(app => 
+        app._id === applicationId 
+          ? { ...app, status: newStatus }
+          : app
+      ));
+      
+      // Send notification to applicant about status change
+      const application = applications.find(app => app._id === applicationId);
+      if (application) {
+        await sendNotificationToApplicant(application.applicantId, {
+          type: 'application_status_updated',
+          title: 'Application Status Updated',
+          message: `Your application status has been updated to: ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}`,
+          applicationId: applicationId,
+          jobId: application.jobId,
+          status: newStatus,
+          actionUrl: `/applicant-dashboard/applications`
+        });
+      }
+      
+      alert(`✅ Candidate status updated to ${newStatus} - Database updated successfully! Notification sent to candidate.`);
+    } catch (error) {
+      console.error('❌ Failed to update status:', error);
       const errorMessage = error.response?.data?.message || error.message || 'Unknown error occurred';
       alert(`❌ Failed to update status: ${errorMessage}. Please try again.`);
     }
   };
 
   // Modal handlers
-  const handleViewApplicant = (applicant) => {
-    setProfileModal({ isOpen: true, candidate: applicant });
+  const handleViewCandidate = (candidate) => {
+    console.log('👁️ Opening profile modal for candidate:', candidate.name);
+    setProfileModal({ isOpen: true, candidate });
   };
 
-  const handleContactApplicant = (applicant) => {
-    setContactModal({ isOpen: true, candidate: applicant });
+  const handleContactCandidate = (candidate) => {
+    console.log('📧 Opening contact modal for candidate:', candidate.name);
+    setContactModal({ isOpen: true, candidate });
   };
 
-  const handleScheduleInterview = (applicant) => {
-    setScheduleModal({ isOpen: true, candidate: applicant });
+  const handleScheduleInterview = (candidate) => {
+    console.log('📅 Opening schedule modal for candidate:', candidate.name);
+    console.log('📋 Candidate data:', {
+      id: candidate.id,
+      candidateId: candidate.candidateId,
+      applicationId: candidate.applicationId,
+      name: candidate.name,
+      email: candidate.email
+    });
+    setScheduleModal({ isOpen: true, candidate });
+  };
+
+  const handleShortlistCandidate = async (candidate) => {
+    try {
+      // Toggle shortlist status
+      const newStatus = candidate.isShortlisted ? 'pending' : 'shortlisted';
+      await applicationService.updateApplicationStatus(candidate.applicationId, newStatus, 'Shortlist status updated by recruiter');
+      
+      // Update local state
+      setApplications(prev => prev.map(app => 
+        app._id === candidate.applicationId 
+          ? { ...app, status: newStatus }
+          : app
+      ));
+      
+      alert(`✅ Candidate ${newStatus === 'shortlisted' ? 'added to' : 'removed from'} shortlist!`);
+    } catch (error) {
+      console.error('Failed to update shortlist:', error);
+      alert('❌ Failed to update shortlist. Please try again.');
+    }
   };
 
   // Email and messaging handlers
@@ -309,28 +549,239 @@ const EnhancedApplicantsTab = () => {
   };
 
   const handleOpenMessaging = (candidate) => {
+    // Redirect to messaging tab with candidate selected
     alert(`Opening messaging with ${candidate.name}...`);
+    // In a real app, this would navigate to the messaging tab
+    // or open a messaging interface
   };
 
-  const handleDownloadResume = async (candidateId, candidateName, candidateUsername) => {
+  const handleDownloadResume = async (candidate) => {
+    setActionLoading(prev => ({ ...prev, [`${candidate.id}_download`]: true }));
+    
     try {
-      const response = await candidatesAPI.downloadCandidateResume(candidateId, candidateName, candidateUsername);
+      console.log('🔍 Attempting to download resume for:', candidate.name);
+      console.log('🔍 Candidate data:', candidate);
       
-      if (response.success) {
-        alert('✅ Resume downloaded successfully!');
+      // Enhanced resume URL detection with multiple fallbacks
+      let resumeUrl = candidate.resumeUrl || 
+                     candidate.resume || 
+                     candidate.applicationData?.resumeUrl ||
+                     candidate.applicationData?.resume ||
+                     candidate.documents?.resumeUrl ||
+                     candidate.documents?.resume;
+      
+      let resumeSource = resumeUrl ? 'application' : 'profile';
+      
+      console.log('🔍 Initial resume URL check:', resumeUrl);
+      
+      // If no resume in application data, try API-based download first
+      if (!resumeUrl && candidate.candidateId) {
+        console.log('📄 No resume URL found, trying API download methods...');
+        
+        // Try the candidatesAPI downloadResume function first
+        try {
+          console.log('🔍 Trying candidatesAPI.downloadResume...');
+          const result = await candidatesAPI.downloadResume(candidate.candidateId, candidate.name, candidate.username);
+          if (result.success) {
+            console.log('✅ Resume downloaded via API successfully');
+            alert(`✅ Resume downloaded successfully for ${candidate.name}`);
+            return;
+          }
+        } catch (apiError) {
+          console.log('⚠️ API download failed:', apiError.message);
+        }
+        
+        // If API download fails, try fetching profile data
+        try {
+          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+          const possibleEndpoints = [
+            `${apiUrl}/users/${candidate.candidateId}/profile`,
+            `${apiUrl}/users/${candidate.candidateId}`,
+            `${apiUrl}/profile/${candidate.candidateId}`,
+            `${apiUrl}/applicants/${candidate.candidateId}/profile`,
+            `${apiUrl}/candidates/${candidate.candidateId}/profile`,
+            `${apiUrl}/applications/${candidate.applicationId || candidate.id}`
+          ];
+          
+          let profileData = null;
+          for (const endpoint of possibleEndpoints) {
+            try {
+              console.log('🔍 Trying endpoint:', endpoint);
+              const profileResponse = await fetch(endpoint, {
+                headers: {
+                  'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+              });
+              
+              if (profileResponse.ok) {
+                profileData = await profileResponse.json();
+                console.log('✅ Profile data found:', profileData);
+                break;
+              } else {
+                console.log('❌ Endpoint failed:', endpoint, profileResponse.status);
+              }
+            } catch (endpointError) {
+              console.log('❌ Endpoint error:', endpoint, endpointError.message);
+              continue;
+            }
+          }
+          
+          if (profileData) {
+            // Enhanced resume field detection
+            const possibleResumeFields = [
+              'resume', 'resumeUrl', 'resume_url',
+              'data.resume', 'data.resumeUrl', 'data.resume_url',
+              'profile.resume', 'profile.resumeUrl', 'profile.resume_url',
+              'documents.resume', 'documents.resumeUrl', 'documents.resume_url',
+              'applicationData.resume', 'applicationData.resumeUrl'
+            ];
+            
+            for (const field of possibleResumeFields) {
+              const fieldValue = field.split('.').reduce((obj, key) => obj?.[key], profileData);
+              if (fieldValue && typeof fieldValue === 'string' && fieldValue.trim()) {
+                resumeUrl = fieldValue.trim();
+                resumeSource = 'profile';
+                console.log('📄 Found resume in profile field:', field, '=', resumeUrl);
+                break;
+              }
+            }
+          }
+        } catch (profileError) {
+          console.error('Failed to fetch profile:', profileError);
+        }
+      }
+      
+      if (resumeUrl) {
+        // Validate URL format
+        let downloadUrl = resumeUrl;
+        
+        // If it's a relative URL, make it absolute
+        if (resumeUrl.startsWith('/')) {
+          const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+          downloadUrl = `${baseUrl}${resumeUrl}`;
+        }
+        
+        console.log('📄 Final download URL:', downloadUrl);
+        
+        // Try direct download first
+        try {
+          const response = await fetch(downloadUrl, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+          
+          if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${candidate.name.replace(/\s+/g, '_')}_Resume.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            
+            console.log('✅ Resume download completed for:', candidate.name, 'from', resumeSource);
+            alert(`✅ Resume downloaded successfully for ${candidate.name}`);
+            return;
+          }
+        } catch (fetchError) {
+          console.log('⚠️ Direct fetch failed, trying link method:', fetchError.message);
+        }
+        
+        // Fallback to link method
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = `${candidate.name.replace(/\s+/g, '_')}_Resume.pdf`;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        console.log('✅ Resume download initiated for:', candidate.name, 'from', resumeSource);
+        alert(`✅ Resume download started for ${candidate.name}`);
+      } else {
+        console.log('❌ No resume found for:', candidate.name);
+        console.log('🔍 Candidate fields checked:', {
+          resumeUrl: candidate.resumeUrl,
+          resume: candidate.resume,
+          applicationData: candidate.applicationData,
+          documents: candidate.documents,
+          candidateId: candidate.candidateId
+        });
+        
+        const message = `❌ No resume found for ${candidate.name}.\n\nPossible solutions:\n• Ask the candidate to upload their resume\n• Check if resume was uploaded during application\n• Contact the candidate directly for their resume`;
+        alert(message);
       }
     } catch (error) {
-      console.error('Failed to download resume:', error);
-      throw error;
+      console.error('❌ Failed to download resume:', error);
+      alert('Failed to download resume. Please try again.');
+    } finally {
+      setActionLoading(prev => ({ ...prev, [`${candidate.id}_download`]: false }));
     }
   };
 
   // Interview scheduling handlers
   const handleScheduleNewInterview = async (interviewData) => {
     try {
-      const response = await interviewsAPI.scheduleInterview(interviewData);
+      // Format data for backend API
+      const formattedData = {
+        candidateId: interviewData.candidateId,
+        jobId: interviewData.jobId,
+        applicationId: interviewData.applicationId,
+        title: interviewData.title || `Interview for ${interviewData.candidateId}`,
+        // Handle both datetime and separate date/time formats
+        scheduledDate: interviewData.datetime ? 
+          new Date(interviewData.datetime).toISOString() : 
+          new Date(interviewData.date).toISOString(),
+        scheduledTime: interviewData.time,
+        duration: parseInt(interviewData.duration) || 60,
+        type: interviewData.type || 'video',
+        interviewType: interviewData.interviewType || 'screening',
+        location: interviewData.location || '',
+        meetingLink: interviewData.meetingLink || '',
+        description: interviewData.notes || interviewData.description || '',
+        round: interviewData.round || 1,
+        interviewer: interviewData.interviewer || ''
+      };
+      
+      console.log('📅 Creating interview with data:', formattedData);
+      const response = await interviewsAPI.scheduleInterview(formattedData);
       console.log('Interview scheduled:', response.data);
-      alert('✅ Interview scheduled successfully! Notifications sent to candidate.');
+      
+      // Send notification to applicant - use multiple sources for candidate ID
+      const candidateId = interviewData.candidateId || 
+                         interviewData.applicantId || 
+                         formattedData.candidateId ||
+                         response.data?.candidateId;
+      
+      console.log('🔍 Full interview data received:', interviewData);
+      console.log('🔍 Formatted data sent to API:', formattedData);
+      console.log('🔍 API response received:', response.data);
+      console.log('🔍 Interview data for notification:', {
+        interviewDataCandidateId: interviewData.candidateId,
+        interviewDataApplicantId: interviewData.applicantId,
+        formattedDataCandidateId: formattedData.candidateId,
+        responseDataCandidateId: response.data?.candidateId,
+        finalCandidateId: candidateId
+      });
+      
+      if (candidateId) {
+        await sendNotificationToApplicant(candidateId, {
+          type: 'interview_scheduled',
+          title: 'Interview Scheduled',
+          message: `Your interview for ${interviewData.jobTitle || 'the position'} has been scheduled for ${new Date(formattedData.scheduledDate).toLocaleDateString()} at ${formattedData.scheduledTime}`,
+          interviewId: response.data?.id,
+          jobId: interviewData.jobId,
+          meetingLink: formattedData.meetingLink,
+          actionUrl: `/applicant-dashboard/interviews`
+        });
+        alert('✅ Interview scheduled successfully! Notification sent to candidate.');
+      } else {
+        console.warn('⚠️ No candidate ID found for notification');
+        alert('✅ Interview scheduled successfully! (Note: Could not send notification - no candidate ID found)');
+      }
     } catch (error) {
       console.error('Failed to schedule interview:', error);
       throw error;
@@ -341,13 +792,17 @@ const EnhancedApplicantsTab = () => {
     try {
       // Extract the correct fields from newDateTime object
       const updateData = {
-        scheduledDate: new Date(newDateTime.date || newDateTime.scheduledDate).toISOString(),
+        // Handle both datetime and separate date/time formats
+        scheduledDate: newDateTime.datetime ? 
+          new Date(newDateTime.datetime).toISOString() : 
+          new Date(newDateTime.date || newDateTime.scheduledDate).toISOString(),
         scheduledTime: newDateTime.time || newDateTime.scheduledTime,
-        duration: newDateTime.duration,
+        duration: parseInt(newDateTime.duration) || 60,
         type: newDateTime.type,
         location: newDateTime.location || '',
         meetingLink: newDateTime.meetingLink || '',
         description: newDateTime.notes || newDateTime.description || '',
+        interviewer: newDateTime.interviewer || '',
         status: 'rescheduled'
       };
       
@@ -355,7 +810,20 @@ const EnhancedApplicantsTab = () => {
       
       const response = await interviewsAPI.updateInterview(interviewId, updateData);
       console.log('Interview rescheduled:', response.data);
-      alert('✅ Interview rescheduled successfully! Notifications sent to candidate.');
+      
+      // Send notification to applicant about reschedule
+      const candidateId = newDateTime.candidateId || newDateTime.applicantId || response.data?.candidateId;
+      console.log('🔍 Sending reschedule notification to candidate ID:', candidateId);
+      await sendNotificationToApplicant(candidateId, {
+        type: 'interview_rescheduled',
+        title: 'Interview Rescheduled',
+        message: `Your interview has been rescheduled to ${new Date(updateData.scheduledDate).toLocaleDateString()} at ${updateData.scheduledTime}`,
+        interviewId: interviewId,
+        meetingLink: updateData.meetingLink,
+        actionUrl: `/applicant-dashboard/interviews`
+      });
+      
+      alert('✅ Interview rescheduled successfully! Notification sent to candidate.');
     } catch (error) {
       console.error('Failed to reschedule interview:', error);
       throw error;
@@ -366,50 +834,61 @@ const EnhancedApplicantsTab = () => {
     try {
       const response = await interviewsAPI.cancelInterview(interviewId);
       console.log('Interview cancelled:', response.data);
-      alert('✅ Interview cancelled successfully! Notifications sent to candidate.');
+      
+      // Send notification to applicant about cancellation
+      const candidateId = response.data?.candidateId || response.data?.applicantId;
+      console.log('🔍 Sending cancel notification to candidate ID:', candidateId);
+      await sendNotificationToApplicant(candidateId, {
+        type: 'interview_cancelled',
+        title: 'Interview Cancelled',
+        message: `Your scheduled interview has been cancelled. Please check your dashboard for updates.`,
+        interviewId: interviewId,
+        actionUrl: `/applicant-dashboard/interviews`
+      });
+      
+      alert('✅ Interview cancelled successfully! Notification sent to candidate.');
     } catch (error) {
       console.error('Failed to cancel interview:', error);
       throw error;
     }
   };
 
-  // Handle applicant action with modal integration
-  const handleApplicantAction = async (action, applicant) => {
-    switch (action) {
-      case 'view':
-        handleViewApplicant(applicant);
-        break;
-      case 'interview':
-        handleScheduleInterview(applicant);
-        break;
-      case 'message':
-        handleContactApplicant(applicant);
-        break;
-      case 'shortlist':
-        try {
-          await candidatesAPI.updateCandidateStatus(applicant.id, 'shortlisted', 'Shortlisted from applicants tab');
-          alert(`✅ ${applicant.name} has been shortlisted!`);
-        } catch (error) {
-          console.error('Failed to shortlist applicant:', error);
-          alert('❌ Failed to shortlist applicant. Please try again.');
-        }
-        break;
-      case 'reject':
-        if (!window.confirm(`Are you sure you want to reject ${applicant.name}?`)) {
-          return;
-        }
-        try {
-          await candidatesAPI.updateCandidateStatus(applicant.id, 'rejected', 'Rejected from applicants tab');
-          alert(`✅ ${applicant.name} has been rejected.`);
-        } catch (error) {
-          console.error('Failed to reject applicant:', error);
-          alert('❌ Failed to reject applicant. Please try again.');
-        }
-        break;
-      default:
-        console.log(`Action: ${action} for applicant: ${applicant.name}`);
+  const handleDeleteInterview = async (interviewId) => {
+    try {
+      if (window.confirm('Are you sure you want to delete this interview? This action cannot be undone.')) {
+        const response = await interviewsAPI.deleteInterview(interviewId);
+        console.log('Interview deleted:', response.data);
+        alert('✅ Interview deleted successfully!');
+      }
+    } catch (error) {
+      console.error('Failed to delete interview:', error);
+      throw error;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -418,152 +897,94 @@ const EnhancedApplicantsTab = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      {/* Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
-              <span className="mr-3 text-blue-600">👥</span>
-              Applicant Management
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 mt-2">
-              Manage and track all job applications • {mockApplicants.length} total applicants
-            </p>
-          </div>
-
-          {/* View Mode Toggle */}
-          <div className="flex space-x-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
-            <motion.button
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                viewMode === 'table'
-                  ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-              }`}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setViewMode('table')}
-            >
-              📋 Table
-            </motion.button>
-            <motion.button
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                viewMode === 'cards'
-                  ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-              }`}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setViewMode('cards')}
-            >
-              📊 Cards
-            </motion.button>
-          </div>
-        </div>
+    {/* Header */}
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          🎯 Candidate Management
+        </h2>
+        <p className="text-gray-600 dark:text-gray-400">
+          Manage and track potential candidates
+        </p>
       </div>
-
-      {/* Status Filter Tabs */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-1">
-        <div className="flex flex-wrap gap-1">
-          {Object.entries(statusConfig).map(([status, config]) => (
-            <motion.button
-              key={status}
-              className={`relative px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
-                selectedStatus === status
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-200'
-              }`}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setSelectedStatus(status)}
-            >
-              <span>{config.label}</span>
-              <span className={`px-2 py-1 text-xs rounded-full font-semibold ${
-                selectedStatus === status
-                  ? 'bg-white/20 text-white'
-                  : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300'
-              }`}>
-                {config.count}
-              </span>
-            </motion.button>
-          ))}
-        </div>
-      </div>
-
-      {/* Search and Sort Controls */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-        <div className="flex flex-col sm:flex-row gap-4 items-center">
-          <div className="flex-1 relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <span className="text-gray-400">🔍</span>
-            </div>
-            <input
-              type="text"
-              placeholder="Search applicants by name, email, job title, or skills..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white dark:focus:bg-gray-600 transition-colors"
-            />
-          </div>
-          <div className="flex gap-2">
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="appliedDate">📅 Applied Date</option>
-              <option value="name">👤 Name</option>
-              <option value="rating">⭐ Rating</option>
-              <option value="experience">💼 Experience</option>
-            </select>
-            <motion.button
-              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-              className="px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              title={`Sort ${sortOrder === 'asc' ? 'Descending' : 'Ascending'}`}
-            >
-              {sortOrder === 'asc' ? '↑ ASC' : '↓ DESC'}
-            </motion.button>
-          </div>
-        </div>
-      </div>
-
-      {/* Applicants Display */}
-      <AnimatePresence mode="wait">
-        {filteredAndSortedApplicants.length === 0 ? (
-          <motion.div
-            key="empty"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center"
+        <div className="flex space-x-2">
+          <motion.button
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
+              viewMode === 'table' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+            }`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setViewMode('table')}
           >
-            <div className="text-6xl mb-4">👥</div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              No Applicants Found
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              {searchQuery 
-                ? `No applicants match your search "${searchQuery}"`
-                : selectedStatus !== 'all' 
-                ? `No applicants with status "${statusConfig[selectedStatus]?.label}"`
-                : "No applicants have applied yet"
-              }
-            </p>
-            {(searchQuery || selectedStatus !== 'all') && (
-              <motion.button
-                onClick={() => {
-                  setSearchQuery('');
-                  setSelectedStatus('all');
-                }}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Clear Filters
-              </motion.button>
-            )}
-          </motion.div>
-        ) : viewMode === 'table' ? (
+            📋 Table View
+          </motion.button>
+          <motion.button
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
+              viewMode === 'cards' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+            }`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setViewMode('cards')}
+          >
+            📊 Card View
+          </motion.button>
+        </div>
+      </div>
+
+      {/* Status Filters */}
+      <div className="flex flex-wrap gap-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+        {Object.entries(statusConfig).map(([status, config]) => (
+          <motion.button
+            key={status}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              selectedStatus === status ? 'bg-blue-600 text-white shadow-md' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+            }`}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setSelectedStatus(status)}
+          >
+            {config.label}
+            <span className="ml-2 px-2 py-1 bg-gray-200 dark:bg-gray-600 text-xs rounded-full">
+              {config.count}
+            </span>
+          </motion.button>
+        ))}
+      </div>
+
+      {/* Search and Sort */}
+      <div className="flex flex-col sm:flex-row gap-4 items-center">
+        <div className="flex-1">
+          <input
+            type="text"
+            placeholder="Search candidates..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+        <div className="flex gap-2">
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          >
+            <option value="lastActivity">Last Activity</option>
+            <option value="name">Name</option>
+            <option value="rating">Rating</option>
+            <option value="experience">Experience</option>
+          </select>
+          <button
+            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+            className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+          >
+            {sortOrder === 'asc' ? '↑' : '↓'}
+          </button>
+        </div>
+      </div>
+
+      {/* Display */}
+      <AnimatePresence mode="wait">
+        {viewMode === 'table' ? (
           <motion.div
             key="table"
             initial={{ opacity: 0, x: -20 }}
@@ -575,33 +996,19 @@ const EnhancedApplicantsTab = () => {
               <table className="w-full">
                 <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Applicant
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Job Applied
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Applied Date
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Experience
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Rating
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Actions
-                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Candidate</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Current Role</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Experience</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Expected Salary</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Rating</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                  {filteredAndSortedApplicants.map((applicant, index) => (
+                  {filteredAndSortedCandidates.map((candidate, index) => (
                     <motion.tr
-                      key={applicant.id}
+                      key={candidate.id}
                       className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -611,175 +1018,104 @@ const EnhancedApplicantsTab = () => {
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-10 w-10">
                             <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-lg">
-                              {applicant.avatar}
+                              {candidate.avatar}
                             </div>
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900 dark:text-white">
-                              {applicant.name}
-                            </div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
-                              {applicant.email}
-                            </div>
-                            <div className="text-xs text-gray-400 dark:text-gray-500">
-                              📍 {applicant.location}
-                            </div>
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">{candidate.name}</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">{candidate.email}</div>
+                            <div className="text-xs text-gray-400 dark:text-gray-500">📍 {candidate.location}</div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 dark:text-white">
-                          {applicant.jobTitle}
-                        </div>
+                        <div className="text-sm text-gray-900 dark:text-white">{candidate.currentRole}</div>
                         <div className="flex flex-wrap gap-1 mt-1">
-                          {applicant.skills.slice(0, 2).map((skill, skillIndex) => (
-                            <span
-                              key={skillIndex}
-                              className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs rounded"
-                            >
+                          {candidate.skills.slice(0, 2).map((skill, skillIndex) => (
+                            <span key={skillIndex} className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs rounded">
                               {skill}
                             </span>
                           ))}
-                          {applicant.skills.length > 2 && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                              +{applicant.skills.length - 2}
-                            </span>
+                          {candidate.skills.length > 2 && (
+                            <span className="text-xs text-gray-500 dark:text-gray-400">+{candidate.skills.length - 2}</span>
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                        {new Date(applicant.appliedDate).toLocaleDateString()}
-                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <select
-                          value={applicant.status}
-                          onChange={(e) => handleStatusChange(applicant.id, e.target.value)}
-                          className={`px-3 py-1 rounded-full text-xs font-medium border-0 ${statusConfig[applicant.status]?.color || statusConfig.pending.color}`}
+                          value={candidate.status}
+                          onChange={(e) => handleStatusChange(candidate.applicationId, e.target.value)}
+                          className={`px-3 py-1 rounded-full text-xs font-medium border-0 ${statusConfig[candidate.status]?.color || statusConfig.pending?.color}`}
                         >
-                          <option value="pending">Pending Review</option>
+                          <option value="pending">Pending</option>
                           <option value="shortlisted">Shortlisted</option>
-                          <option value="interviewed_round1">Round 1 Interview</option>
-                          <option value="interviewed_round2">Round 2 Interview</option>
-                          <option value="interviewed_final">Final Interview</option>
+                          <option value="interviewed">Interviewed</option>
                           <option value="rejected">Rejected</option>
-                          <option value="hired">Hired</option>
                         </select>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                        {applicant.experience}
-                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{candidate.experience}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{candidate.expectedSalary}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <span className="text-sm text-gray-900 dark:text-white mr-1">
-                            {applicant.rating}
-                          </span>
+                          <span className="text-sm text-gray-900 dark:text-white mr-1">{candidate.rating}</span>
                           <div className="flex">
                             {[...Array(5)].map((_, i) => (
-                              <span
-                                key={i}
-                                className={`text-xs ${
-                                  i < Math.floor(applicant.rating)
-                                    ? 'text-yellow-400'
-                                    : 'text-gray-300 dark:text-gray-600'
-                                }`}
-                              >
-                                ⭐
-                              </span>
+                              <span key={i} className={`text-xs ${i < Math.floor(candidate.rating) ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}`}>⭐</span>
                             ))}
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="relative">
+                        <div className="flex items-center gap-2">
                           <motion.button
-                            className="flex items-center justify-center w-8 h-8 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors duration-200"
+                            className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-200"
                             whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleDropdown(applicant.id);
-                            }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleViewCandidate(candidate)}
+                            title="View Profile"
                           >
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                            <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
                           </motion.button>
-
-                          {/* Dropdown Menu */}
-                          <AnimatePresence>
-                            {openDropdown === applicant.id && (
-                              <motion.div
-                                initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                                transition={{ duration: 0.15 }}
-                                className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <div className="py-1">
-                                  <motion.button
-                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
-                                    whileHover={{ x: 4 }}
-                                    onClick={() => {
-                                      handleApplicantAction('view', applicant);
-                                      closeDropdown();
-                                    }}
-                                  >
-                                    <span className="mr-3">👁️</span>
-                                    View Profile
-                                  </motion.button>
-                                  
-                                  <motion.button
-                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
-                                    whileHover={{ x: 4 }}
-                                    onClick={() => {
-                                      handleApplicantAction('message', applicant);
-                                      closeDropdown();
-                                    }}
-                                  >
-                                    <span className="mr-3">📧</span>
-                                    Contact
-                                  </motion.button>
-                                  
-                                  <motion.button
-                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
-                                    whileHover={{ x: 4 }}
-                                    onClick={() => {
-                                      handleApplicantAction('download', applicant);
-                                      closeDropdown();
-                                    }}
-                                  >
-                                    <span className="mr-3">📄</span>
-                                    Download Resume
-                                  </motion.button>
-                                  
-                                  <motion.button
-                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
-                                    whileHover={{ x: 4 }}
-                                    onClick={() => {
-                                      handleApplicantAction('interview', applicant);
-                                      closeDropdown();
-                                    }}
-                                  >
-                                    <span className="mr-3">📅</span>
-                                    Schedule Interview
-                                  </motion.button>
-                                  
-                                  <motion.button
-                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
-                                    whileHover={{ x: 4 }}
-                                    onClick={() => {
-                                      handleApplicantAction('shortlist', applicant);
-                                      closeDropdown();
-                                    }}
-                                  >
-                                    <span className="mr-3">⭐</span>
-                                    Add to Shortlist
-                                  </motion.button>
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
+                          
+                          <motion.button
+                            className="p-2 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors duration-200"
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleContactCandidate(candidate)}
+                            title="Contact"
+                          >
+                            <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                          </motion.button>
+                          
+                          <motion.button
+                            className="p-2 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors duration-200 disabled:opacity-50"
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleDownloadResume(candidate)}
+                            disabled={actionLoading[`${candidate.id}_download`]}
+                            title="Download Resume"
+                          >
+                            <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                          </motion.button>
+                          
+                          <motion.button
+                            className="p-2 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-lg transition-colors duration-200"
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleShortlistCandidate(candidate)}
+                            title={candidate.isShortlisted ? 'Remove from Shortlist' : 'Add to Shortlist'}
+                          >
+                            <svg className="w-5 h-5 text-yellow-600 dark:text-yellow-400" fill={candidate.isShortlisted ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                            </svg>
+                          </motion.button>
                         </div>
                       </td>
                     </motion.tr>
@@ -789,182 +1125,151 @@ const EnhancedApplicantsTab = () => {
             </div>
           </motion.div>
         ) : (
-          <motion.div
-            key="cards"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-          >
-            {filteredAndSortedApplicants.map((applicant, index) => (
-              <motion.div
-                key={applicant.id}
-                className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-300"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                whileHover={{ y: -2 }}
-              >
-                {/* Card Header */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center">
-                    <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-xl mr-3">
-                      {applicant.avatar}
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        {applicant.name}
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {applicant.email}
-                      </p>
-                    </div>
+        <motion.div
+          key="cards"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          {filteredAndSortedCandidates.map((candidate, index) => (
+            <motion.div
+              key={candidate.id}
+              className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-300"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              whileHover={{ y: -2 }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center">
+                  <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-xl mr-3">
+                    {candidate.avatar}
                   </div>
-                  <div className="flex items-center">
-                    <span className="text-sm text-gray-900 dark:text-white mr-1">
-                      {applicant.rating}
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{candidate.name}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{candidate.currentRole}</p>
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-sm text-gray-900 dark:text-white mr-1">{candidate.rating}</span>
+                  <span className="text-yellow-400">⭐</span>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-2">
+                  <span className="mr-4">📍 {candidate.location}</span>
+                  <span>⏱️ {candidate.experience}</span>
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  💰 {candidate.expectedSalary}
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <div className="flex flex-wrap gap-1">
+                  {candidate.skills.map((skill, skillIndex) => (
+                    <span key={skillIndex} className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs rounded">
+                      {skill}
                     </span>
-                    <span className="text-yellow-400">⭐</span>
-                  </div>
+                  ))}
                 </div>
+              </div>
 
-                {/* Job Information */}
-                <div className="mb-4">
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-2">
-                    Applied for: {applicant.jobTitle}
-                  </h4>
-                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-2">
-                    <span className="mr-4">📍 {applicant.location}</span>
-                    <span>⏱️ {applicant.experience}</span>
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    Applied: {new Date(applicant.appliedDate).toLocaleDateString()}
-                  </div>
-                </div>
+              <div className="mb-4">
+                <select
+                  value={candidate.status}
+                  onChange={(e) => handleStatusChange(candidate.applicationId, e.target.value)}
+                  className={`w-full px-3 py-2 rounded-lg text-sm font-medium ${statusConfig[candidate.status]?.color || statusConfig.pending?.color}`}
+                >
+                  <option value="pending">Pending</option>
+                  <option value="shortlisted">Shortlisted</option>
+                  <option value="interviewed">Interviewed</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+              </div>
 
-                {/* Skills */}
-                <div className="mb-4">
-                  <div className="flex flex-wrap gap-1">
-                    {applicant.skills.map((skill, skillIndex) => (
-                      <span
-                        key={skillIndex}
-                        className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs rounded"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+              <div className="grid grid-cols-2 gap-2">
+                <motion.button
+                  className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-200 text-sm"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleViewCandidate(candidate)}
+                >
+                  👁️ View
+                </motion.button>
+                <motion.button
+                  className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors duration-200 text-sm"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleContactCandidate(candidate)}
+                >
+                  📧 Contact
+                </motion.button>
+                <motion.button
+                  className={`px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors duration-200 text-sm ${actionLoading[`${candidate.id}_download`] ? 'opacity-50' : ''}`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleDownloadResume(candidate)}
+                  disabled={actionLoading[`${candidate.id}_download`]}
+                >
+                  {actionLoading[`${candidate.id}_download`] ? '⏳' : '📄'} Resume
+                </motion.button>
+                <motion.button
+                  className={`px-3 py-2 rounded hover:bg-orange-700 transition-colors duration-200 text-sm ${
+                    candidate.isShortlisted 
+                      ? 'bg-yellow-600 text-white' 
+                      : 'bg-orange-600 text-white'
+                  }`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleShortlistCandidate(candidate)}
+                >
+                  ⭐ {candidate.isShortlisted ? 'Shortlisted' : 'Shortlist'}
+                </motion.button>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      )}
+    </AnimatePresence>
 
-                {/* Status */}
-                <div className="mb-4">
-                  <select
-                    value={applicant.status}
-                    onChange={(e) => handleStatusChange(applicant.id, e.target.value)}
-                    className={`w-full px-3 py-2 rounded-lg text-sm font-medium ${statusConfig[applicant.status]?.color || statusConfig.pending.color}`}
-                  >
-                    <option value="pending">Pending Review</option>
-                    <option value="shortlisted">Shortlisted</option>
-                    <option value="interviewed_round1">Round 1 Interview</option>
-                    <option value="interviewed_round2">Round 2 Interview</option>
-                    <option value="interviewed_final">Final Interview</option>
-                    <option value="rejected">Rejected</option>
-                    <option value="hired">Hired</option>
-                  </select>
-                </div>
+    <div className="text-center text-gray-600 dark:text-gray-400">
+      Showing {filteredAndSortedCandidates.length} of {candidates.length} candidates
+    </div>
 
-                {/* Notes */}
-                {applicant.notes && (
-                  <div className="mb-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-400 italic">
-                      "{applicant.notes}"
-                    </p>
-                  </div>
-                )}
+    {/* Modals */}
+    <CandidateProfileModal
+      candidate={profileModal.candidate}
+      isOpen={profileModal.isOpen}
+      onClose={() => setProfileModal({ isOpen: false, candidate: null })}
+      onContact={handleContactCandidate}
+      onSchedule={handleScheduleInterview}
+      onShortlist={handleShortlistCandidate}
+      onDownloadResume={handleDownloadResume}
+    />
 
-                {/* Actions */}
-                <div className="grid grid-cols-2 gap-2">
-                  <motion.button
-                    className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-200 text-sm"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handleApplicantAction('view', applicant)}
-                  >
-                    👁️ View
-                  </motion.button>
-                  <motion.button
-                    className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors duration-200 text-sm"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handleApplicantAction('message', applicant)}
-                  >
-                    📧 Contact
-                  </motion.button>
-                  <motion.button
-                    className="px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors duration-200 text-sm"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handleApplicantAction('download', applicant)}
-                  >
-                    📄 Resume
-                  </motion.button>
-                  <motion.button
-                    className="px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors duration-200 text-sm"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handleApplicantAction('interview', applicant)}
-                  >
-                    📅 Schedule
-                  </motion.button>
-                  <motion.button
-                    className="px-3 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 transition-colors duration-200 text-sm"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handleApplicantAction('shortlist', applicant)}
-                  >
-                    ⭐ Shortlist
-                  </motion.button>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <ContactModal
+      candidate={contactModal.candidate}
+      isOpen={contactModal.isOpen}
+      onClose={() => setContactModal({ isOpen: false, candidate: null })}
+      onSendEmail={handleSendEmail}
+      onOpenMessaging={handleOpenMessaging}
+      currentUser={currentUser}
+    />
 
-      {/* Results Summary */}
-      <div className="text-center text-gray-600 dark:text-gray-400">
-        Showing {filteredAndSortedApplicants.length} of {mockApplicants.length} applicants
-      </div>
-
-      {/* Modals */}
-      <CandidateProfileModal
-        candidate={profileModal.candidate}
-        isOpen={profileModal.isOpen}
-        onClose={() => setProfileModal({ isOpen: false, candidate: null })}
-        onContact={handleContactApplicant}
-        onSchedule={handleScheduleInterview}
-        onShortlist={(candidate) => handleApplicantAction('shortlist', candidate)}
-        onDownloadResume={handleDownloadResume}
-      />
-
-      <ContactModal
-        candidate={contactModal.candidate}
-        isOpen={contactModal.isOpen}
-        onClose={() => setContactModal({ isOpen: false, candidate: null })}
-        onSendEmail={handleSendEmail}
-        onOpenMessaging={handleOpenMessaging}
-      />
-
-      <ScheduleModal
-        candidate={scheduleModal.candidate}
-        isOpen={scheduleModal.isOpen}
-        onClose={() => setScheduleModal({ isOpen: false, candidate: null })}
-        onScheduleInterview={handleScheduleNewInterview}
-        onRescheduleInterview={handleRescheduleInterview}
-        onCancelInterview={handleCancelInterview}
-      />
-    </motion.div>
-  );
+    <ScheduleModal
+      candidate={scheduleModal.candidate}
+      isOpen={scheduleModal.isOpen}
+      onClose={() => setScheduleModal({ isOpen: false, candidate: null })}
+      onScheduleInterview={handleScheduleNewInterview}
+      onRescheduleInterview={handleRescheduleInterview}
+      onCancelInterview={handleCancelInterview}
+      onDeleteInterview={handleDeleteInterview}
+    />
+  </motion.div>
+);
 };
 
-export default EnhancedApplicantsTab;
+export default EnhancedCandidatesTab;

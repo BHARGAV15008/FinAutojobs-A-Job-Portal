@@ -184,6 +184,28 @@ router.post('/', upload.single('resume'), authenticateToken, async (req, res) =>
     console.log('🔍 User:', req.user);
     console.log('🔍 Body fields:', Object.keys(req.body));
     console.log('🔍 File:', req.file ? 'Uploaded' : 'No file');
+    
+    // Log applicantSnapshot if present
+    if (req.body.applicantSnapshot) {
+      console.log('📦 Received applicantSnapshot from frontend');
+      try {
+        const snapshot = typeof req.body.applicantSnapshot === 'string' 
+          ? JSON.parse(req.body.applicantSnapshot) 
+          : req.body.applicantSnapshot;
+        console.log('📊 Snapshot fields:', Object.keys(snapshot));
+        console.log('📚 Education entries:', snapshot.education?.length || 0);
+        console.log('💼 Work experience entries:', snapshot.workExperience?.length || 0);
+        console.log('🎯 Skills:', {
+          primary: snapshot.primarySkills?.length || 0,
+          technical: snapshot.technicalSkills?.length || 0,
+          soft: snapshot.softSkills?.length || 0
+        });
+      } catch (e) {
+        console.error('❌ Failed to parse applicantSnapshot:', e.message);
+      }
+    } else {
+      console.warn('⚠️ No applicantSnapshot received from frontend');
+    }
 
     // Validate required fields
     const { jobId, jobTitle, companyName } = req.body;
@@ -278,17 +300,22 @@ router.post('/', upload.single('resume'), authenticateToken, async (req, res) =>
         notes: 'Application submitted'
       }],
 
-      // Applicant Snapshot (required fields)
-      applicantSnapshot: {
-        fullName: `${req.body.firstName} ${req.body.lastName}`,
-        email: req.body.email,
-        phone: req.body.phone,
-        location: req.body.location,
-        currentJobTitle: req.body.currentJobTitle,
-        currentCompany: req.body.currentCompany,
-        experience: req.body.experience,
-        skills: req.body.primarySkills ? req.body.primarySkills.split(',').map(s => s.trim()) : []
-      },
+      // Applicant Snapshot - Use complete snapshot from frontend if available
+      applicantSnapshot: req.body.applicantSnapshot ? 
+        (typeof req.body.applicantSnapshot === 'string' ? JSON.parse(req.body.applicantSnapshot) : req.body.applicantSnapshot) :
+        {
+          // Fallback to individual fields if snapshot not provided
+          fullName: `${req.body.firstName} ${req.body.lastName}`,
+          email: req.body.email,
+          phone: req.body.phone,
+          location: req.body.location,
+          currentJobTitle: req.body.currentJobTitle,
+          currentCompany: req.body.currentCompany,
+          experience: req.body.experience,
+          skills: req.body.primarySkills ? req.body.primarySkills.split(',').map(s => s.trim()) : [],
+          education: [],
+          workExperience: []
+        },
 
       // Job Snapshot (required fields)
       jobSnapshot: {
@@ -325,6 +352,24 @@ router.post('/', upload.single('resume'), authenticateToken, async (req, res) =>
     await application.save();
 
     console.log('✅ Application created successfully:', application._id);
+    
+    // Verify what was actually saved to database
+    console.log('🔍 VERIFICATION - What was saved to database:');
+    console.log('📊 applicantSnapshot fields in DB:', Object.keys(application.applicantSnapshot || {}));
+    console.log('📚 Education in DB:', application.applicantSnapshot?.education?.length || 0, 'entries');
+    console.log('💼 Work experience in DB:', application.applicantSnapshot?.workExperience?.length || 0, 'entries');
+    console.log('🎯 Skills in DB:', {
+      primarySkills: application.applicantSnapshot?.primarySkills?.length || 0,
+      technicalSkills: application.applicantSnapshot?.technicalSkills?.length || 0,
+      softSkills: application.applicantSnapshot?.softSkills?.length || 0,
+      skills: Array.isArray(application.applicantSnapshot?.skills) ? application.applicantSnapshot.skills.length : 'Not array'
+    });
+    console.log('📝 Bio in DB:', application.applicantSnapshot?.bio ? 'Present' : 'Missing');
+    console.log('🔗 Social links in DB:', {
+      linkedin: application.applicantSnapshot?.linkedinUrl ? 'Present' : 'Missing',
+      github: application.applicantSnapshot?.githubUrl ? 'Present' : 'Missing',
+      portfolio: application.applicantSnapshot?.portfolioUrl ? 'Present' : 'Missing'
+    });
 
     // Create notification for recruiter
     try {
@@ -422,7 +467,18 @@ router.get('/', authenticateToken, async (req, res) => {
     console.log('🔍 Sample application:', applications[0] ? {
       id: applications[0]._id,
       status: applications[0].applicationStatus,
-      applicantId: applications[0].applicantId,
+      hasApplicantSnapshot: !!applications[0].applicantSnapshot,
+      applicantSnapshotKeys: applications[0].applicantSnapshot ? Object.keys(applications[0].applicantSnapshot) : [],
+      applicantSnapshotEducation: applications[0].applicantSnapshot?.education?.length || 0,
+      applicantSnapshotWorkExp: applications[0].applicantSnapshot?.workExperience?.length || 0,
+      applicantSnapshotBio: applications[0].applicantSnapshot?.bio ? 'Present' : 'Missing',
+      applicantId: applications[0].applicantId ? {
+        _id: applications[0].applicantId._id,
+        firstName: applications[0].applicantId.firstName,
+        hasEducation: applications[0].applicantId.education?.length || 0,
+        hasWorkExp: applications[0].applicantId.workExperience?.length || 0,
+        hasBio: applications[0].applicantId.bio ? 'Present' : 'Missing'
+      } : 'Not populated',
       jobId: applications[0].jobId,
       hasApplicationInfo: !!applications[0].applicationInfo,
       applicationInfoKeys: applications[0].applicationInfo ? Object.keys(applications[0].applicationInfo) : []
@@ -442,15 +498,21 @@ router.get('/', authenticateToken, async (req, res) => {
         type: application.jobId?.type || application.jobSnapshot?.jobType || 'Unknown Type'
       },
       
-      // Applicant snapshot - use populated data first, then snapshot as fallback
-      applicantSnapshot: application.applicantId ? {
+      // Applicant snapshot - use stored snapshot first (has complete data), then populate from applicantId as fallback
+      applicantSnapshot: application.applicantSnapshot || (application.applicantId ? {
         firstName: application.applicantId.firstName,
         lastName: application.applicantId.lastName,
         fullName: `${application.applicantId.firstName} ${application.applicantId.lastName}`,
         email: application.applicantId.email,
-        phone: application.applicantSnapshot?.phone || application.applicationData?.phone || '',
-        location: application.applicantSnapshot?.location || application.applicationData?.location || ''
-      } : (application.applicantSnapshot || null),
+        phone: application.applicantId.phone || '',
+        location: application.applicantId.location || '',
+        bio: application.applicantId.bio || '',
+        education: application.applicantId.education || [],
+        workExperience: application.applicantId.workExperience || [],
+        skills: application.applicantId.skills || {},
+        socialLinks: application.applicantId.socialLinks || {},
+        documents: application.applicantId.documents || {}
+      } : null),
       
       // Application data
       applicationData: application.applicationData || {},
@@ -470,7 +532,13 @@ router.get('/', authenticateToken, async (req, res) => {
     console.log('🔍 Transformed applications sample:', transformedApplications[0] ? {
       id: transformedApplications[0].id,
       status: transformedApplications[0].status,
-      applicantSnapshot: transformedApplications[0].applicantSnapshot,
+      applicantSnapshot: {
+        ...transformedApplications[0].applicantSnapshot,
+        educationCount: transformedApplications[0].applicantSnapshot?.education?.length || 0,
+        workExperienceCount: transformedApplications[0].applicantSnapshot?.workExperience?.length || 0,
+        hasBio: !!transformedApplications[0].applicantSnapshot?.bio,
+        hasSkills: !!transformedApplications[0].applicantSnapshot?.skills
+      },
       jobSnapshot: transformedApplications[0].jobSnapshot,
       hasApplicationInfo: !!transformedApplications[0].applicationInfo,
       applicationInfoKeys: transformedApplications[0].applicationInfo ? Object.keys(transformedApplications[0].applicationInfo) : []
@@ -1015,70 +1083,6 @@ router.put('/:id/status', authenticateToken, async (req, res) => {
   }
 });
 
-// GET /api/applications/job/:jobId - Get applications for specific job
-router.get('/job/:jobId', authenticateToken, async (req, res) => {
-  try {
-    const { jobId } = req.params;
-
-    if (!jobId.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid job ID format'
-      });
-    }
-
-    // Verify job ownership for recruiters
-    if (req.user.role === 'recruiter') {
-      const job = await Job.findById(jobId);
-      if (!job || job.postedBy.toString() !== req.user.userId) {
-        return res.status(403).json({
-          success: false,
-          message: 'Access denied'
-        });
-      }
-    }
-
-    const applications = await Application.find({ jobId })
-      .populate({
-        path: 'applicantId',
-        select: 'firstName lastName email phone resume_url',
-        model: 'BaseUser'
-      })
-      .sort({ appliedAt: -1 })
-      .lean();
-
-    const transformedApplications = applications.map(application => ({
-      id: application._id,
-      applicant: {
-        id: application.applicantId._id,
-        name: `${application.applicantId.firstName} ${application.applicantId.lastName}`,
-        email: application.applicantId.email,
-        phone: application.applicantId.phone,
-        resumeUrl: application.applicantId.resume_url
-      },
-      status: application.applicationStatus,
-      coverLetter: application.applicationData?.coverLetter,
-      appliedAt: application.appliedAt,
-      timeline: application.timeline
-    }));
-
-    res.json({
-      success: true,
-      data: {
-        applications: transformedApplications,
-        total: applications.length
-      }
-    });
-  } catch (error) {
-    console.error('❌ Error fetching job applications:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch job applications',
-      error: error.message
-    });
-  }
-});
-
 // GET /api/applications/job/:jobId - Get all applications for a specific job (recruiter only)
 router.get('/job/:jobId', authenticateToken, async (req, res) => {
   try {
@@ -1105,6 +1109,7 @@ router.get('/job/:jobId', authenticateToken, async (req, res) => {
 
     // Fetch applications for this job
     const applications = await Application.find({ jobId: jobId })
+      .select('+applicantSnapshot')  // Explicitly include applicantSnapshot
       .populate({
         path: 'applicantId',
         select: 'firstName lastName email phone profileImage'
@@ -1112,7 +1117,47 @@ router.get('/job/:jobId', authenticateToken, async (req, res) => {
       .sort({ appliedAt: -1 });
 
     console.log(`🔍 Found ${applications.length} applications for job ${jobId}`);
+    
+    // Log applicantSnapshot from first application
+    if (applications[0]) {
+      console.log('🔍 First application applicantSnapshot:', {
+        hasSnapshot: !!applications[0].applicantSnapshot,
+        snapshotKeys: applications[0].applicantSnapshot ? Object.keys(applications[0].applicantSnapshot) : [],
+        educationCount: applications[0].applicantSnapshot?.education?.length || 0,
+        workExpCount: applications[0].applicantSnapshot?.workExperience?.length || 0,
+        hasBio: !!applications[0].applicantSnapshot?.bio
+      });
+    }
 
+    // 🚨 DEBUG: Log what we're about to send
+    console.log('🚨🚨🚨 ABOUT TO SEND TO FRONTEND:');
+    console.log('🚨 First app has applicantSnapshot?', !!applications[0]?.applicantSnapshot);
+    console.log('🚨 applicantSnapshot type:', typeof applications[0]?.applicantSnapshot);
+    console.log('🚨 applicantSnapshot keys:', applications[0]?.applicantSnapshot ? Object.keys(applications[0].applicantSnapshot).slice(0, 10) : 'NONE');
+    
+    // 📝 SAVE TO FILE FOR DEBUGGING
+    if (applications[0]) {
+      const debugData = {
+        timestamp: new Date().toISOString(),
+        jobId: jobId,
+        totalApplications: applications.length,
+        firstApplication: {
+          _id: applications[0]._id,
+          applicantId: applications[0].applicantId,
+          applicationStatus: applications[0].applicationStatus,
+          appliedAt: applications[0].appliedAt,
+          hasApplicantSnapshot: !!applications[0].applicantSnapshot,
+          applicantSnapshot: applications[0].applicantSnapshot,
+          applicationData: applications[0].applicationData,
+          allFields: Object.keys(applications[0].toObject())
+        }
+      };
+      
+      const debugFilePath = path.join(process.cwd(), `application-debug-${Date.now()}.txt`);
+      fs.writeFileSync(debugFilePath, JSON.stringify(debugData, null, 2), 'utf8');
+      console.log('📝 DEBUG DATA SAVED TO:', debugFilePath);
+    }
+    
     // Transform applications for frontend
     const transformedApplications = applications.map(app => ({
       _id: app._id,

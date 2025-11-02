@@ -1331,13 +1331,17 @@ export const EnhancedJobsTab = ({
   const { dashboardData, loading, error, currentUser } = useDashboard();
   const [recruiterJobs, setRecruiterJobs] = useState([]);
   const [recommendedJobs, setRecommendedJobs] = useState([]);
+  const [savedJobIds, setSavedJobIds] = useState(new Set());
   const [jobsLoading, setJobsLoading] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [isJobDetailsModalOpen, setIsJobDetailsModalOpen] = useState(false);
 
-  // Get jobs from dashboard data with fallback
-  let jobs = dashboardData?.recentJobs || [];
-  
+  // Get jobs from dashboard data with fallback and mark saved jobs
+  let jobs = (dashboardData?.recentJobs || []).map(job => ({
+    ...job,
+    saved: savedJobIds.has(job._id?.toString() || job.id?.toString())
+  }));
+
   console.log('🔍 Dashboard jobs available:', {
     dashboardData: !!dashboardData,
     recentJobs: dashboardData?.recentJobs?.length || 0,
@@ -1353,6 +1357,35 @@ export const EnhancedJobsTab = ({
       experienceType: typeof dashboardData.recentJobs[0]?.experience
     });
   }
+
+  // Fetch saved jobs for applicants
+  useEffect(() => {
+    const fetchSavedJobs = async () => {
+      if (userRole === "applicant") {
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) return;
+
+          const response = await fetch(`${API_BASE_URL}/saved-jobs`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const savedIds = new Set(data.saved.map(saved => saved.jobId?._id?.toString() || saved.jobId?.toString()));
+            setSavedJobIds(savedIds);
+            console.log('✅ Loaded saved jobs:', savedIds.size);
+          }
+        } catch (error) {
+          console.error('❌ Error fetching saved jobs:', error);
+        }
+      }
+    };
+
+    fetchSavedJobs();
+  }, [userRole]);
 
   // For applicants, fetch recommended jobs when jobType is "recommended" or "all"
   useEffect(() => {
@@ -1819,15 +1852,75 @@ export const EnhancedJobsTab = ({
   };
 
   // Handle save/favorite job
-  const handleSaveJob = (jobId, isSaved) => {
+  const handleSaveJob = async (jobId, isSaved) => {
     console.log('🔍 Save job clicked, jobId:', jobId, 'isSaved:', isSaved);
-    const currentJob = jobs.find(job => job.id === jobId || job._id === jobId);
-    console.log('🔍 Found job for saving:', currentJob);
     
-    if (currentJob && onSave) {
-      onSave(currentJob);
-    } else {
-      console.log('🔍 No onSave callback provided or job not found');
+    try {
+      setSaving(prev => ({ ...prev, [jobId]: true }));
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Please login to save jobs');
+        return;
+      }
+
+      if (isSaved) {
+        // Remove from favorites - need to find the saved job record ID first
+        // For now, we'll use the job ID directly and let backend handle it
+        const response = await fetch(`${API_BASE_URL}/saved-jobs/by-job/${jobId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          console.log('✅ Job removed from favorites');
+          // Update local state
+          setSavedJobIds(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(jobId.toString());
+            return newSet;
+          });
+        } else {
+          const error = await response.json().catch(() => ({ message: 'Failed to remove from favorites' }));
+          console.error('❌ Failed to remove from favorites:', error);
+          alert(error.message || 'Failed to remove from favorites');
+        }
+      } else {
+        // Add to favorites - send the MongoDB ObjectId as string
+        const response = await fetch(`${API_BASE_URL}/saved-jobs`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ 
+            job_id: typeof jobId === 'object' ? jobId.toString() : jobId 
+          })
+        });
+
+        if (response.ok) {
+          console.log('✅ Job added to favorites');
+          // Update local state
+          setSavedJobIds(prev => new Set([...prev, jobId.toString()]));
+        } else {
+          const error = await response.json();
+          console.error('❌ Failed to add to favorites:', error);
+          if (response.status === 409) {
+            // Already saved - just show message
+            alert('This job is already in your favorites');
+          } else {
+            alert(error.message || 'Failed to add to favorites');
+          }
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error saving job:', error);
+      alert('An error occurred while saving the job');
+    } finally {
+      setSaving(prev => ({ ...prev, [jobId]: false }));
     }
   };
 
@@ -1885,9 +1978,21 @@ export const EnhancedJobsTab = ({
       
       const response = await applicationsAPI.getApplicationsByJob(jobId);
       console.log('🔍 API Response:', response);
+      console.log('🔍 API Response structure:', {
+        hasData: !!response.data,
+        hasDataData: !!response.data?.data,
+        hasApplications: !!response.data?.data?.applications,
+        firstApp: response.data?.data?.applications?.[0],
+        firstAppSnapshot: response.data?.data?.applications?.[0]?.applicantSnapshot
+      });
       
       const applications = response.data.data?.applications || response.data.applications || [];
       console.log('🔍 Extracted applications:', applications);
+      console.log('🔍 First application has snapshot?', !!applications[0]?.applicantSnapshot);
+      console.log('🔍 First application fields:', applications[0] ? Object.keys(applications[0]) : 'No applications');
+      console.log('🔍 First application appliedAt:', applications[0]?.appliedAt);
+      console.log('🔍 First application createdAt:', applications[0]?.createdAt);
+      console.log('🔍 First application timeline:', applications[0]?.timeline);
       
       const currentJob = jobs.find(job => job.id === jobId || job._id === jobId);
       console.log('🔍 Found job:', currentJob);
@@ -1908,7 +2013,14 @@ export const EnhancedJobsTab = ({
   // Transform application data to candidate format for CandidateProfileModal
   const transformApplicationToCandidate = (app) => {
     console.log('Transforming application:', app);
+    console.log('🔍 app.applicantSnapshot exists?', !!app.applicantSnapshot);
+    console.log('🔍 app.applicantSnapshot keys:', app.applicantSnapshot ? Object.keys(app.applicantSnapshot) : 'N/A');
+    console.log('🔍 app.applicantSnapshot.education:', app.applicantSnapshot?.education?.length || 0);
+    console.log('🔍 app.applicantSnapshot.workExperience:', app.applicantSnapshot?.workExperience?.length || 0);
+    console.log('🔍 app.applicantSnapshot.bio:', app.applicantSnapshot?.bio ? 'Present' : 'Missing');
     
+    // PRIORITY: Use applicantSnapshot if available (has complete data at application time)
+    const snapshot = app.applicantSnapshot || {};
     const applicant = app.applicant || app.applicantId || {};
     const appInfo = app.applicationInfo || app.applicationData || {};
     const firstJob = appInfo.firstJob || appInfo.job || {};
@@ -1945,22 +2057,36 @@ export const EnhancedJobsTab = ({
     console.log('🔍 Extracted skills from appInfo:', skills);
     console.log('🔍 Extracted socialLinks from appInfo:', socialLinks);
     
+    // PRIORITY 1: Use applicantSnapshot (complete data at application time)
+    // PRIORITY 2: Use applicant/applicantId (current profile)
+    // PRIORITY 3: Use appInfo (application form data)
+    
     return {
-      id: app.applicantId || app._id,
+      // ID - Try multiple sources
+      id: app.applicantId?._id || app.applicantId?.id || app.applicant?._id || app.applicant?.id || app._id,
       
-      // Basic Information
-      name: basicInfo.firstName && basicInfo.lastName 
+      // Basic Information - Prioritize snapshot
+      name: snapshot.firstName && snapshot.lastName
+        ? `${snapshot.firstName} ${snapshot.lastName}`
+        : basicInfo.firstName && basicInfo.lastName 
         ? `${basicInfo.firstName} ${basicInfo.lastName}`
         : applicant.fullName || applicant.name || `${applicant.firstName || ''} ${applicant.lastName || ''}`.trim() || 'Unknown Applicant',
-      email: basicInfo.email || applicant.email || 'No email provided',
-      phone: basicInfo.phone || applicant.phone || 'No phone provided',
-      location: applicant.location || appInfo.personalInfo?.location || 'Location not specified',
+      email: snapshot.email || basicInfo.email || applicant.email || 'No email provided',
+      phone: snapshot.phone || basicInfo.phone || applicant.phone || 'No phone provided',
+      location: snapshot.location || applicant.location || appInfo.personalInfo?.location || 'Location not specified',
       
-      // Professional Information
-      currentRole: experience.currentJob?.jobTitle || applicant.currentJobTitle || 'Not specified',
+      // Professional Information - Prioritize snapshot
+      currentRole: snapshot.currentJobTitle || experience.currentJob?.jobTitle || applicant.currentJobTitle || 'Not specified',
       
-      // Experience data - enhanced extraction
-      experience: experience.totalYears 
+      // Bio/Summary - Prioritize snapshot
+      bio: snapshot.bio || snapshot.professionalSummary || applicant.bio || applicant.professionalSummary || '',
+      
+      // Experience data - Prioritize snapshot
+      experience: snapshot.experience
+        ? (typeof snapshot.experience === 'number' ? `${snapshot.experience} years` : snapshot.experience)
+        : snapshot.yearsOfExperience
+        ? `${snapshot.yearsOfExperience} years`
+        : experience.totalYears 
         ? `${experience.totalYears} years`
         : basicInfo.experienceYears 
         ? `${basicInfo.experienceYears} years`
@@ -1970,8 +2096,10 @@ export const EnhancedJobsTab = ({
         ? `${applicant.experience_years} years`
         : app.applicationData?.experience || 'Not specified',
       
-      // Expected Salary - prioritize applicationInfo data
-      expectedSalary: expectedSalary.displayText 
+      // Expected Salary - Prioritize snapshot
+      expectedSalary: snapshot.expectedSalary
+        ? snapshot.expectedSalary
+        : expectedSalary.displayText 
         ? expectedSalary.displayText
         : expectedSalary.rawSalaryText 
         ? expectedSalary.rawSalaryText
@@ -1981,38 +2109,43 @@ export const EnhancedJobsTab = ({
         ? `₹${expectedSalary.salaryRange.min}K+ ${expectedSalary.salaryRange.period || 'yearly'}`
         : basicInfo.expectedSalary || applicant.expectedSalary || applicant.careerInfo?.expectedSalary || app.applicationData?.expectedSalary || 'Not specified',
       
-      // Skills data - combine all skill types from multiple sources
+      // Skills data - PRIORITIZE snapshot
       skills: [
-        // From ApplicationInformation (application-time snapshot)
+        // PRIORITY 1: From applicantSnapshot (complete data at application time)
+        ...(snapshot.skills?.primary?.map(s => s.skill || s) || []),
+        ...(snapshot.skills?.technical?.map(s => s.skill || s) || []),
+        ...(snapshot.skills?.soft?.map(s => s.skill || s) || []),
+        ...(Array.isArray(snapshot.skills) ? snapshot.skills : []),
+        
+        // PRIORITY 2: From ApplicationInformation
         ...(skills.primary?.map(s => s.skill || s) || []),
         ...(skills.technical?.map(s => s.skill || s) || []),
         ...(skills.soft?.map(s => s.skill || s) || []),
         
-        // From user profile (current profile data)
+        // PRIORITY 3: From user profile (current profile data)
         ...(applicant.skills?.primary?.map(s => s.skill || s) || []),
         ...(applicant.skills?.technical?.map(s => s.skill || s) || []),
         ...(applicant.skills?.soft?.map(s => s.skill || s) || []),
-        ...(applicant.skills || []), // If skills is a simple array
+        ...(Array.isArray(applicant.skills) ? applicant.skills : []),
         
-        // From applicant snapshot (fallback)
-        ...(app.applicantSnapshot?.skills || []),
-        
-        // From basicInfo skills
+        // Fallbacks
         ...(basicInfo.skills || []),
-        
-        // From application data skills
         ...(app.applicationData?.skills || []),
-        
-        // From primary_skills field
         ...(applicant.primary_skills || []),
         ...(applicant.skills_array || [])
       ].filter(Boolean),
       
-      // Education data
-      education: education.length > 0 ? education : applicant.education || [],
+      // Education data - PRIORITIZE snapshot
+      education: snapshot.education && snapshot.education.length > 0
+        ? snapshot.education
+        : education.length > 0 
+        ? education 
+        : applicant.education || [],
       
-      // Work experience data
-      workExperience: appInfo.workExperience || applicant.workExperience || [],
+      // Work experience data - PRIORITIZE snapshot
+      workExperience: snapshot.workExperience && snapshot.workExperience.length > 0
+        ? snapshot.workExperience
+        : appInfo.workExperience || applicant.workExperience || [],
       
       // Portfolio links - combine from multiple sources
       portfolioLinks: [
@@ -2047,8 +2180,12 @@ export const EnhancedJobsTab = ({
       ].filter(Boolean),
       
       // Application specific data
+      // Extract applied date from timeline if appliedAt/createdAt not available
+      appliedAt: app.appliedAt || app.createdAt || app.timeline?.find(t => t.status === 'applied')?.timestamp || app.timeline?.[0]?.timestamp,
       appliedDate: app.appliedAt ? new Date(app.appliedAt).toLocaleDateString() : 
-                   app.createdAt ? new Date(app.createdAt).toLocaleDateString() : 'Unknown',
+                   app.createdAt ? new Date(app.createdAt).toLocaleDateString() :
+                   app.timeline?.find(t => t.status === 'applied')?.timestamp ? new Date(app.timeline.find(t => t.status === 'applied').timestamp).toLocaleDateString() :
+                   app.timeline?.[0]?.timestamp ? new Date(app.timeline[0].timestamp).toLocaleDateString() : 'Unknown',
       status: app.applicationStatus || app.status || 'pending',
       summary: basicInfo.bio || app.coverLetter || applicant.bio || 'No summary provided',
       rating: 4, // Default rating
@@ -2075,8 +2212,12 @@ export const EnhancedJobsTab = ({
   // Handle view candidate profile
   const handleViewCandidate = (app) => {
     console.log('🔍 Viewing candidate profile for:', app);
+    console.log('🔍 app.appliedAt:', app.appliedAt);
+    console.log('🔍 app.createdAt:', app.createdAt);
     const candidateData = transformApplicationToCandidate(app);
     console.log('🔍 Transformed candidate data:', candidateData);
+    console.log('🔍 candidateData.appliedAt:', candidateData.appliedAt);
+    console.log('🔍 candidateData.appliedDate:', candidateData.appliedDate);
     setCandidateModal({ isOpen: true, candidate: candidateData });
   };
 
@@ -2266,30 +2407,47 @@ export const EnhancedJobsTab = ({
                   overflowY: 'visible'
                 }}
               >
-                <table className="w-full">
+                <table className="w-full table-fixed">
                   <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/4">
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider w-64">
                         Job Details
                       </th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/6">
-                        Company & Location
-                      </th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/8">
-                        Salary
-                      </th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/8">
-                        Type & Mode
-                      </th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/8">
-                        Experience
-                      </th>
                       {userRole === "applicant" && (
-                        <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-20">
-                          Save
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider w-48">
+                          Company & Location
                         </th>
                       )}
-                      <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider w-40">
+                        Salary
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider w-40">
+                        Type & Mode
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider w-32">
+                        Experience
+                      </th>
+                      {userRole === "recruiter" && (
+                        <>
+                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider w-32">
+                            Applicants
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider w-40">
+                            Deadline
+                          </th>
+                        </>
+                      )}
+                      {userRole === "applicant" && (
+                        <>
+                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider w-40">
+                            Posted
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider w-40">
+                            Deadline
+                          </th>
+                        </>
+                      )}
+                      <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider w-48">
                         Actions
                       </th>
                     </tr>
@@ -2303,12 +2461,12 @@ export const EnhancedJobsTab = ({
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: index * 0.05 }}
                       >
-                        <td className="px-3 py-4">
+                        <td className="px-6 py-5">
                           <div>
-                            <div className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                            <div className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
                               {job.jobTitle || job.title}
                             </div>
-                            <div className="flex flex-wrap gap-1 mb-1">
+                            <div className="flex flex-wrap gap-1.5 mb-2">
                               {(job.requiredSkills || job.skills || [])
                                 ?.slice(0, 2)
                                 .map((skill, skillIndex) => (
@@ -2330,17 +2488,19 @@ export const EnhancedJobsTab = ({
                             </div>
                           </div>
                         </td>
-                        <td className="px-3 py-4">
-                          <div className="text-sm font-medium text-gray-900 dark:text-white mb-1">
-                            {job.companyName || job.company || job.companyInfo?.companyName || 'Not specified'}
-                          </div>
-                          <div className="text-xs text-gray-600 dark:text-gray-400 flex items-center">
-                            <span className="mr-1">📍</span>
-                            {job.location}
-                          </div>
-                        </td>
-                        <td className="px-3 py-4">
-                          <div className="text-sm text-gray-900 dark:text-white flex items-center">
+                        {userRole === "applicant" && (
+                          <td className="px-6 py-5">
+                            <div className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+                              {job.companyName || job.company || job.companyInfo?.companyName || 'Not specified'}
+                            </div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400 flex items-center">
+                              <span className="mr-1">📍</span>
+                              {job.location}
+                            </div>
+                          </td>
+                        )}
+                        <td className="px-6 py-5">
+                          <div className="text-sm text-gray-900 dark:text-white flex items-center gap-1.5">
                             <span className="mr-1">💰</span>
                             <span className="truncate">
                               {job.salary || job.formattedSalary || 
@@ -2353,27 +2513,39 @@ export const EnhancedJobsTab = ({
                             </span>
                           </div>
                         </td>
-                        <td className="px-3 py-4">
-                          <div className="space-y-1">
-                            <span className="px-2 py-0.5 inline-flex text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                              {job.jobType || job.type}
-                            </span>
-                            <div>
-                              <span className={`px-2 py-0.5 inline-flex text-xs font-semibold rounded-full ${
+                        <td className="px-6 py-5">
+                          <div className="space-y-2.5">
+                            {/* Job Type */}
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs text-gray-500 dark:text-gray-400 font-medium w-10">Type:</span>
+                              <span className="px-2.5 py-0.5 inline-flex text-xs font-semibold rounded-md bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                {job.jobType || job.type || 'N/A'}
+                              </span>
+                            </div>
+                            {/* Work Mode */}
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs text-gray-500 dark:text-gray-400 font-medium w-10">Mode:</span>
+                              <span className={`px-2.5 py-0.5 inline-flex items-center gap-1 text-xs font-semibold rounded-md ${
                                 job.workArrangement === 'remote' 
                                   ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' 
                                   : job.workArrangement === 'hybrid'
                                   ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
                                   : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
                               }`}>
-                                {job.workArrangement === 'remote' ? '🏠' : 
-                                 job.workArrangement === 'hybrid' ? '🏢' : 
-                                 job.workArrangement === 'onsite' ? '🏢' : '🏢'}
+                                {job.workArrangement === 'remote' ? (
+                                  <>🏠 Remote</>
+                                ) : job.workArrangement === 'hybrid' ? (
+                                  <>🔄 Hybrid</>
+                                ) : job.workArrangement === 'onsite' ? (
+                                  <>🏢 Onsite</>
+                                ) : (
+                                  <>🏢 Onsite</>
+                                )}
                               </span>
                             </div>
                           </div>
                         </td>
-                        <td className="px-3 py-4">
+                        <td className="px-6 py-5">
                           <div className="text-sm text-gray-900 dark:text-white">
                             {(() => {
                               if (!job.experience) return 'Not specified';
@@ -2389,30 +2561,127 @@ export const EnhancedJobsTab = ({
                             })()}
                           </div>
                         </td>
-                        {userRole === "applicant" && (
-                            <td className="px-3 py-4 text-center">
-                              <motion.button
-                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors duration-200 ${
-                                  job.saved
-                                    ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 hover:bg-red-200"
-                                    : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200 hover:bg-gray-200"
-                                }`}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => handleSaveJob(job.id, job.saved)}
-                                disabled={saving[job.id]}
-                              >
-                                {saving[job.id]
-                                  ? "⏳ ..."
-                                  : job.saved
-                                  ? "❤️ Saved"
-                                  : "🤍 Save"}
-                              </motion.button>
+                        {userRole === "recruiter" && (
+                          <>
+                            <td className="px-6 py-5">
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900">
+                                  <span className="text-base font-bold text-blue-600 dark:text-blue-300">
+                                    {job.applicantsCount || job.applications?.length || 0}
+                                  </span>
+                                </div>
+                                <div className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                                  {job.applicantsCount === 1 ? 'Applicant' : 'Applicants'}
+                                </div>
+                              </div>
                             </td>
+                            <td className="px-6 py-5">
+                              <div className="text-sm text-gray-900 dark:text-white">
+                                {job.applicationDeadline ? (
+                                  <div className="flex flex-col gap-1.5">
+                                    <span className="font-medium text-sm">
+                                      {new Date(job.applicationDeadline).toLocaleDateString('en-US', { 
+                                        month: 'short', 
+                                        day: 'numeric',
+                                        year: 'numeric'
+                                      })}
+                                    </span>
+                                    <span className="text-xs font-medium">
+                                      {(() => {
+                                        const deadline = new Date(job.applicationDeadline);
+                                        const today = new Date();
+                                        const diffTime = deadline - today;
+                                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                        if (diffDays < 0) return <span className="text-red-600 dark:text-red-400">⚠️ Expired</span>;
+                                        if (diffDays === 0) return <span className="text-red-600 dark:text-red-400">🔴 Today</span>;
+                                        if (diffDays === 1) return <span className="text-yellow-600 dark:text-yellow-400">🟡 Tomorrow</span>;
+                                        if (diffDays <= 7) return <span className="text-yellow-600 dark:text-yellow-400">🟡 {diffDays} days left</span>;
+                                        return <span className="text-green-600 dark:text-green-400">🟢 {diffDays} days left</span>;
+                                      })()}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-500 dark:text-gray-400">No deadline</span>
+                                )}
+                              </div>
+                            </td>
+                          </>
                         )}
-                        <td className="px-3 py-4 text-sm font-medium">
+                        {userRole === "applicant" && (
+                          <>
+                            {/* Posted Date Column */}
+                            <td className="px-6 py-5">
+                              <div className="text-sm text-gray-900 dark:text-white">
+                                {job.createdAt || job.postedDate ? (
+                                  <div className="flex flex-col gap-1.5">
+                                    <span className="font-medium text-sm">
+                                      {new Date(job.createdAt || job.postedDate).toLocaleDateString('en-US', { 
+                                        month: 'short', 
+                                        day: 'numeric',
+                                        year: 'numeric'
+                                      })}
+                                    </span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                                      {(() => {
+                                        const posted = new Date(job.createdAt || job.postedDate);
+                                        const today = new Date();
+                                        
+                                        // Normalize dates to midnight for accurate day comparison
+                                        posted.setHours(0, 0, 0, 0);
+                                        today.setHours(0, 0, 0, 0);
+                                        
+                                        const diffTime = today - posted;
+                                        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                                        
+                                        if (diffDays === 0) return 'Today';
+                                        if (diffDays === 1) return 'Yesterday';
+                                        if (diffDays < 7) return `${diffDays} days ago`;
+                                        if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+                                        return `${Math.floor(diffDays / 30)} months ago`;
+                                      })()}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-500 dark:text-gray-400">Recently</span>
+                                )}
+                              </div>
+                            </td>
+                            {/* Deadline Column */}
+                            <td className="px-6 py-5">
+                              <div className="text-sm text-gray-900 dark:text-white">
+                                {job.applicationDeadline ? (
+                                  <div className="flex flex-col gap-1.5">
+                                    <span className="font-medium text-sm">
+                                      {new Date(job.applicationDeadline).toLocaleDateString('en-US', { 
+                                        month: 'short', 
+                                        day: 'numeric',
+                                        year: 'numeric'
+                                      })}
+                                    </span>
+                                    <span className="text-xs font-medium">
+                                      {(() => {
+                                        const deadline = new Date(job.applicationDeadline);
+                                        const today = new Date();
+                                        const diffTime = deadline - today;
+                                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                        if (diffDays < 0) return <span className="text-red-600 dark:text-red-400">⚠️ Expired</span>;
+                                        if (diffDays === 0) return <span className="text-red-600 dark:text-red-400">🔴 Today</span>;
+                                        if (diffDays === 1) return <span className="text-yellow-600 dark:text-yellow-400">🟡 Tomorrow</span>;
+                                        if (diffDays <= 7) return <span className="text-yellow-600 dark:text-yellow-400">🟡 {diffDays} days left</span>;
+                                        return <span className="text-green-600 dark:text-green-400">🟢 {diffDays} days left</span>;
+                                      })()}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-500 dark:text-gray-400">No deadline</span>
+                                )}
+                              </div>
+                            </td>
+                          </>
+                        )}
+                        <td className="px-6 py-5 text-sm font-medium">
                           {userRole === "recruiter" ? (
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-center gap-3">
                               <motion.button
                                 className="p-2 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors duration-200 group"
                                 whileHover={{ scale: 1.1 }}
@@ -2449,7 +2718,36 @@ export const EnhancedJobsTab = ({
                               </motion.button>
                             </div>
                           ) : (
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-center gap-3">
+                              {/* Favorite Button */}
+                              <motion.button
+                                className={`p-2 rounded-lg transition-colors duration-200 group ${
+                                  job.saved
+                                    ? "bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30"
+                                    : "hover:bg-gray-50 dark:hover:bg-gray-700"
+                                }`}
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handleSaveJob(job._id || job.id, job.saved)}
+                                disabled={saving[job._id || job.id]}
+                                title={job.saved ? "Remove from Favorites" : "Add to Favorites"}
+                              >
+                                {saving[job._id || job.id] ? (
+                                  <svg className="w-5 h-5 text-gray-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                  </svg>
+                                ) : job.saved ? (
+                                  <svg className="w-6 h-6 text-red-500 dark:text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                  </svg>
+                                ) : (
+                                  <svg className="w-6 h-6 text-gray-400 dark:text-gray-500 group-hover:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+  </svg>
+                                )}
+                              </motion.button>
+                              {/* View Details Button */}
                               <motion.button
                                 className="p-2 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors duration-200 group"
                                 whileHover={{ scale: 1.1 }}
@@ -2465,6 +2763,7 @@ export const EnhancedJobsTab = ({
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                 </svg>
                               </motion.button>
+                              {/* Apply Button */}
                               <motion.button
                                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium flex items-center gap-2"
                                 whileHover={{ scale: 1.05 }}
@@ -2866,14 +3165,14 @@ export const EnhancedJobsTab = ({
             onClick={() => setIsJobDetailsModalOpen(false)}
           >
             <motion.div
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-5 py-3 flex justify-between items-center">
+              <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex justify-between items-center">
                 <h3 className="text-base font-bold text-gray-900 dark:text-white">Job Details</h3>
                 <button
                   onClick={() => setIsJobDetailsModalOpen(false)}
@@ -2886,9 +3185,9 @@ export const EnhancedJobsTab = ({
               </div>
 
               {/* Content */}
-              <div className="p-5 space-y-4">
+              <div className="p-4 space-y-3">
                 {/* Job Details Card */}
-                <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 space-y-3">
+                <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3 space-y-2.5">
                   {/* Location */}
                   <div className="flex items-start gap-3">
                     <span className="text-lg mt-0.5">📍</span>
@@ -2951,28 +3250,6 @@ export const EnhancedJobsTab = ({
                     </div>
                   </div>
 
-                  {/* Industry */}
-                  {selectedJob.industry && (
-                    <div className="flex items-start gap-3">
-                      <span className="text-lg mt-0.5">🏭</span>
-                      <div className="flex-1">
-                        <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">Industry</p>
-                        <p className="text-sm text-gray-900 dark:text-white">{selectedJob.industry}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Job Category */}
-                  {selectedJob.category && (
-                    <div className="flex items-start gap-3">
-                      <span className="text-lg mt-0.5">📁</span>
-                      <div className="flex-1">
-                        <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">Job Category</p>
-                        <p className="text-sm text-gray-900 dark:text-white">{selectedJob.category}</p>
-                      </div>
-                    </div>
-                  )}
-
                   {/* Work Arrangement */}
                   {selectedJob.workArrangement && (
                     <div className="flex items-start gap-3">
@@ -2988,19 +3265,6 @@ export const EnhancedJobsTab = ({
                         }`}>
                           {selectedJob.workArrangement.charAt(0).toUpperCase() + selectedJob.workArrangement.slice(1)}
                         </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Posted Date */}
-                  {selectedJob.postedDate && (
-                    <div className="flex items-start gap-3">
-                      <span className="text-lg mt-0.5">📅</span>
-                      <div className="flex-1">
-                        <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">Posted Date</p>
-                        <p className="text-sm text-gray-900 dark:text-white">
-                          {new Date(selectedJob.postedDate).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                        </p>
                       </div>
                     </div>
                   )}
@@ -3040,9 +3304,9 @@ export const EnhancedJobsTab = ({
 
                 {/* Job Description */}
                 {selectedJob.description && (
-                  <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
-                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Job Description</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                  <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3">
+                    <h4 className="text-xs font-semibold text-gray-900 dark:text-white mb-1.5">Job Description</h4>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
                       {selectedJob.description}
                     </p>
                   </div>
@@ -3050,13 +3314,13 @@ export const EnhancedJobsTab = ({
 
                 {/* Required Skills */}
                 {(selectedJob.requiredSkills || selectedJob.skills) && (selectedJob.requiredSkills || selectedJob.skills).length > 0 && (
-                  <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
-                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Required Skills</h4>
-                    <div className="flex flex-wrap gap-2">
+                  <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3">
+                    <h4 className="text-xs font-semibold text-gray-900 dark:text-white mb-1.5">Required Skills</h4>
+                    <div className="flex flex-wrap gap-1.5">
                       {(selectedJob.requiredSkills || selectedJob.skills).map((skill, index) => (
                         <span
                           key={index}
-                          className="px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs font-medium rounded"
+                          className="px-2.5 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs font-medium rounded"
                         >
                           {skill}
                         </span>
@@ -3067,9 +3331,9 @@ export const EnhancedJobsTab = ({
 
                 {/* Requirements */}
                 {selectedJob.requirements && (
-                  <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
-                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Requirements</h4>
-                    <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1 list-disc list-inside">
+                  <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3">
+                    <h4 className="text-xs font-semibold text-gray-900 dark:text-white mb-1.5">Requirements</h4>
+                    <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-0.5 list-disc list-inside">
                       {Array.isArray(selectedJob.requirements) ? (
                         selectedJob.requirements.map((req, index) => (
                           <li key={index}>{req}</li>
@@ -3083,7 +3347,7 @@ export const EnhancedJobsTab = ({
               </div>
 
               {/* Footer Actions */}
-              <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-5 py-3 flex gap-3">
+              <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-2.5 flex gap-2">
                 <motion.button
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium"
                   whileHover={{ scale: 1.02 }}

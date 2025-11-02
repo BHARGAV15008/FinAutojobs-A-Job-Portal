@@ -970,7 +970,7 @@ const EnhancedCandidatesTab = () => {
           >
             <option value="lastActivity">Last Activity</option>
             <option value="name">Name</option>
-            <option value="rating">Rating</option>
+            <option value="appliedDate">Applied Date</option>
             <option value="experience">Experience</option>
           </select>
           <button
@@ -997,11 +997,11 @@ const EnhancedCandidatesTab = () => {
                 <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Candidate</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Current Role</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Skills</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Experience</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Expected Salary</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Rating</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Applied Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
@@ -1028,42 +1028,33 @@ const EnhancedCandidatesTab = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 dark:text-white">{candidate.currentRole}</div>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {candidate.skills.slice(0, 2).map((skill, skillIndex) => (
+                      <td className="px-6 py-4">
+                        <div className="flex flex-wrap gap-1">
+                          {candidate.skills.slice(0, 3).map((skill, skillIndex) => (
                             <span key={skillIndex} className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs rounded">
                               {skill}
                             </span>
                           ))}
-                          {candidate.skills.length > 2 && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400">+{candidate.skills.length - 2}</span>
+                          {candidate.skills.length > 3 && (
+                            <span className="text-xs text-gray-500 dark:text-gray-400">+{candidate.skills.length - 3}</span>
                           )}
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <select
-                          value={candidate.status}
-                          onChange={(e) => handleStatusChange(candidate.applicationId, e.target.value)}
-                          className={`px-3 py-1 rounded-full text-xs font-medium border-0 ${statusConfig[candidate.status]?.color || statusConfig.pending?.color}`}
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="shortlisted">Shortlisted</option>
-                          <option value="interviewed">Interviewed</option>
-                          <option value="rejected">Rejected</option>
-                        </select>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{candidate.experience}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{candidate.expectedSalary}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <span className="text-sm text-gray-900 dark:text-white mr-1">{candidate.rating}</span>
-                          <div className="flex">
-                            {[...Array(5)].map((_, i) => (
-                              <span key={i} className={`text-xs ${i < Math.floor(candidate.rating) ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}`}>⭐</span>
-                            ))}
-                          </div>
+                        <div className="text-sm text-gray-900 dark:text-white">
+                          {candidate.appliedDate ? new Date(candidate.appliedDate).toLocaleDateString() : 'N/A'}
                         </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusConfig[candidate.status]?.color || statusConfig.pending?.color}`}>
+                          {candidate.status === 'pending' ? 'Pending' :
+                           candidate.status === 'shortlisted' ? 'Shortlisted' :
+                           candidate.status === 'interviewed' ? 'Interviewed' :
+                           candidate.status === 'rejected' ? 'Rejected' :
+                           candidate.status}
+                        </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center gap-2">
@@ -1102,18 +1093,6 @@ const EnhancedCandidatesTab = () => {
                           >
                             <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                          </motion.button>
-                          
-                          <motion.button
-                            className="p-2 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-lg transition-colors duration-200"
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleShortlistCandidate(candidate)}
-                            title={candidate.isShortlisted ? 'Remove from Shortlist' : 'Add to Shortlist'}
-                          >
-                            <svg className="w-5 h-5 text-yellow-600 dark:text-yellow-400" fill={candidate.isShortlisted ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                             </svg>
                           </motion.button>
                         </div>

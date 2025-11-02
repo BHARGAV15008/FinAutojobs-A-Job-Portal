@@ -43,26 +43,10 @@ const applicationSchema = new mongoose.Schema({
     }]
   },
   
-  // Applicant Snapshot (for historical data)
+  // Applicant Snapshot (for historical data) - Using Mixed type to accept all fields
   applicantSnapshot: {
-    fullName: { type: String, required: true },
-    email: { type: String, required: true },
-    phone: { type: String },
-    location: { type: String },
-    currentJobTitle: { type: String },
-    currentCompany: { type: String },
-    experience: { type: String },
-    skills: [{ type: String }],
-    education: [{
-      degree: { type: String },
-      institution: { type: String },
-      fieldOfStudy: { type: String }
-    }],
-    workExperience: [{
-      jobTitle: { type: String },
-      companyName: { type: String },
-      description: { type: String }
-    }]
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
   },
   
   // Job Snapshot (for historical data)

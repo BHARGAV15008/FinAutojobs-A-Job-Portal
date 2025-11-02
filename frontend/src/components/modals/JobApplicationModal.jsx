@@ -276,6 +276,127 @@ const JobApplicationModal = ({ open, onClose, job, user, onSubmit }) => {
     setActiveStep(prev => prev - 1);
   };
 
+  // Function to generate detailed log file
+  const generateApplicationLogFile = (profileData, formData, applicantSnapshot) => {
+    const timestamp = new Date().toISOString();
+    const logContent = `
+═══════════════════════════════════════════════════════════════
+           JOB APPLICATION DATA FLOW LOG
+═══════════════════════════════════════════════════════════════
+Generated: ${new Date().toLocaleString()}
+Job: ${job.title || job.jobTitle} at ${job.company || job.companyName}
+Applicant: ${applicationData.firstName} ${applicationData.lastName}
+═══════════════════════════════════════════════════════════════
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ STEP 1: DATA FETCHED FROM PROFILE DATABASE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${Object.keys(profileData || {}).length > 0 ? Object.entries(profileData || {}).map(([key, value]) => {
+  const displayValue = typeof value === 'object' ? JSON.stringify(value, null, 2) : value;
+  const status = value ? '✓ FETCHED' : '✗ NOT AVAILABLE';
+  return `${key.padEnd(25)} : ${displayValue || '(empty)'}\n                           ${status}`;
+}).join('\n\n') : 'No profile data fetched'}
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ STEP 2: DATA AFTER FORM COMPLETION (User Input + Auto-filled)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${Object.entries(applicationData).map(([key, value]) => {
+  if (key === 'resumeFile') {
+    return `${key.padEnd(25)} : ${value ? `FILE: ${value.name} (${(value.size / 1024).toFixed(2)} KB)` : '(no file uploaded)'}\n                           ${value ? '✓ NEW FILE UPLOADED' : (hasProfileResume ? '✓ USING PROFILE RESUME' : '✗ NO RESUME')}`;
+  }
+  const displayValue = typeof value === 'object' ? JSON.stringify(value, null, 2) : value;
+  const wasAutoFilled = profileData && profileData[key] && profileData[key] === value;
+  const status = wasAutoFilled ? '✓ AUTO-FILLED FROM PROFILE' : (value ? '✓ USER ENTERED' : '✗ EMPTY');
+  return `${key.padEnd(25)} : ${displayValue || '(empty)'}\n                           ${status}`;
+}).join('\n\n')}
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ STEP 3: COMPLETE APPLICANT SNAPSHOT (Sent to Database)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+This is the COMPLETE data package that will be stored in the database
+and shown to recruiters.
+
+${Object.entries(applicantSnapshot).map(([key, value]) => {
+  const displayValue = typeof value === 'object' ? JSON.stringify(value, null, 2) : value;
+  const hasValue = value && (Array.isArray(value) ? value.length > 0 : true);
+  const status = hasValue ? '✓ INCLUDED IN DATABASE' : '✗ EMPTY/NOT INCLUDED';
+  return `${key.padEnd(25)} : ${displayValue || '(empty)'}\n                           ${status}`;
+}).join('\n\n')}
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ SUMMARY STATISTICS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Profile Fields Fetched    : ${Object.keys(profileData || {}).length}
+Profile Fields with Data  : ${Object.values(profileData || {}).filter(v => v).length}
+Form Fields Total         : ${Object.keys(applicationData).length}
+Form Fields Filled        : ${Object.values(applicationData).filter(v => v).length}
+Auto-filled Fields        : ${Object.entries(applicationData).filter(([k, v]) => profileData && profileData[k] === v).length}
+User Entered Fields       : ${Object.values(applicationData).filter(v => v).length - Object.entries(applicationData).filter(([k, v]) => profileData && profileData[k] === v).length}
+Database Fields Sent      : ${Object.keys(applicantSnapshot).length}
+Database Fields with Data : ${Object.values(applicantSnapshot).filter(v => v && (Array.isArray(v) ? v.length > 0 : true)).length}
+
+Resume Status             : ${hasProfileResume ? 'Using Profile Resume' : (applicationData.resumeFile ? 'New Resume Uploaded' : 'No Resume')}
+Resume URL                : ${profileResumeUrl || 'N/A'}
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ JOB DETAILS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Job ID                    : ${job.id || job._id}
+Job Title                 : ${job.title || job.jobTitle}
+Company                   : ${job.company || job.companyName}
+Location                  : ${job.location || 'N/A'}
+Job Type                  : ${job.jobType || 'N/A'}
+Experience Required       : ${typeof job.experience === 'object' ? JSON.stringify(job.experience) : (job.experience || 'N/A')}
+Salary Range              : ${typeof job.salary === 'object' ? JSON.stringify(job.salary) : (job.salary || 'N/A')}
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ USER CONTEXT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+User ID                   : ${user.id || user._id || user.userId}
+User Email                : ${user.email}
+User Role                 : ${user.role}
+Profile Complete          : ${Object.values(profileData || {}).filter(v => v).length > 15 ? 'Yes (Most fields filled)' : 'Partial'}
+
+
+═══════════════════════════════════════════════════════════════
+                    END OF LOG FILE
+═══════════════════════════════════════════════════════════════
+
+Note: This log file is automatically generated during application
+submission to help track data flow from profile → form → database.
+
+All data marked with ✓ will be stored in the database and visible
+to recruiters when they review your application.
+`;
+
+    // Create blob and download
+    const blob = new Blob([logContent], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const jobTitle = (job.title || job.jobTitle || 'Job-Application').replace(/\s+/g, '-');
+    const dateStr = timestamp.split('T')[0];
+    link.download = `application-log-${jobTitle}-${dateStr}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    
+    console.log('📄 Application log file downloaded successfully:', link.download);
+  };
+
   const handleSubmit = async () => {
     setLoading(true);
     try {
@@ -303,60 +424,67 @@ const JobApplicationModal = ({ open, onClose, job, user, onSubmit }) => {
       const userId = user.id || user._id || user.userId;
       
       // Create comprehensive applicant snapshot from profile data
+      // Use applicationData (which has complete profile data) instead of user (auth context)
       const applicantSnapshot = {
-        // Basic Information (from form + profile)
-        fullName: `${applicationData.firstName || user.firstName || ''} ${applicationData.lastName || user.lastName || ''}`.trim(),
-        full_name: `${applicationData.firstName || user.firstName || ''} ${applicationData.lastName || user.lastName || ''}`.trim(),
-        firstName: applicationData.firstName || user.firstName || '',
-        lastName: applicationData.lastName || user.lastName || '',
-        email: applicationData.email || user.email || '',
-        phone: applicationData.phone || user.phone || '',
-        location: applicationData.currentLocation || user.location || user.current_location || '',
+        // Basic Information (from applicationData which has complete profile)
+        fullName: `${applicationData.firstName || ''} ${applicationData.lastName || ''}`.trim(),
+        full_name: `${applicationData.firstName || ''} ${applicationData.lastName || ''}`.trim(),
+        firstName: applicationData.firstName || '',
+        lastName: applicationData.lastName || '',
+        email: applicationData.email || '',
+        phone: applicationData.phone || '',
+        location: applicationData.location || '',
         
-        // Professional Information (from form + profile)
-        currentJobTitle: applicationData.currentJobTitle || user.current_job_title || '',
-        currentCompany: applicationData.currentCompany || user.current_company || '',
-        experience: applicationData.experience || user.experience || '',
-        yearsOfExperience: applicationData.yearsOfExperience || user.experience_years || user.yearsOfExperience || 0,
-        expectedSalary: applicationData.expectedSalary || user.expected_salary || '',
+        // Professional Information (from applicationData)
+        currentJobTitle: applicationData.currentJobTitle || '',
+        currentCompany: applicationData.currentCompany || '',
+        experience: applicationData.experience || '',
+        yearsOfExperience: applicationData.yearsOfExperience || 0,
+        expectedSalary: applicationData.expectedSalary || '',
         
-        // Profile Details (from user profile)
-        bio: user.bio || '',
-        qualification: user.qualification || user.highest_qualification || '',
-        skills: user.skills ? (typeof user.skills === 'string' ? JSON.parse(user.skills) : user.skills) : [],
+        // Profile Details (from applicationData)
+        bio: applicationData.bio || '',
+        qualification: applicationData.highestEducation || '',
         
-        // Social Links (from user profile)
-        linkedin_url: user.linkedin_url || '',
-        linkedinUrl: user.linkedin_url || '',
-        github_url: user.github_url || '',
-        githubUrl: user.github_url || '',
-        portfolio_url: user.portfolio_url || '',
-        portfolioUrl: user.portfolio_url || '',
+        // Skills (from applicationData - complete skills object)
+        skills: applicationData.primarySkills || applicationData.technicalSkills || applicationData.softSkills || [],
+        primarySkills: applicationData.primarySkills || [],
+        technicalSkills: applicationData.technicalSkills || [],
+        softSkills: applicationData.softSkills || [],
+        languages: applicationData.languages || [],
+        
+        // Social Links (from applicationData)
+        linkedin_url: applicationData.linkedinUrl || '',
+        linkedinUrl: applicationData.linkedinUrl || '',
+        github_url: applicationData.githubUrl || '',
+        githubUrl: applicationData.githubUrl || '',
+        portfolio_url: applicationData.portfolioUrl || '',
+        portfolioUrl: applicationData.portfolioUrl || '',
         
         // Resume Information
-        resumeUrl: profileResumeUrl || user.resume_url || '',
-        resume: profileResumeUrl || user.resume_url || '',
+        resumeUrl: profileResumeUrl || applicationData.resumeUrl || '',
+        resume: profileResumeUrl || applicationData.resumeUrl || '',
         
-        // Additional Profile Data
-        profilePicture: user.profile_picture || '',
-        workExperience: user.workExperience || user.work_experience || [],
-        education: user.education || user.education_history || [],
+        // Additional Profile Data (from applicationData - COMPLETE DATA)
+        profilePicture: applicationData.profilePicture || '',
+        workExperience: applicationData.workExperience || [],
+        education: applicationData.education || [],
         
         // Application Specific Data
         coverLetter: applicationData.coverLetter || '',
-        linkedinProfileUrl: applicationData.linkedinProfileUrl || user.linkedin_url || '',
+        linkedinProfileUrl: applicationData.linkedinUrl || '',
         portfolioLinks: [
-          ...(user.linkedin_url ? [{ type: 'LinkedIn', url: user.linkedin_url, label: 'LinkedIn Profile' }] : []),
-          ...(user.github_url ? [{ type: 'GitHub', url: user.github_url, label: 'GitHub Repository' }] : []),
-          ...(user.portfolio_url ? [{ type: 'Portfolio', url: user.portfolio_url, label: 'Personal Portfolio' }] : [])
+          ...(applicationData.linkedinUrl ? [{ type: 'LinkedIn', url: applicationData.linkedinUrl, label: 'LinkedIn Profile' }] : []),
+          ...(applicationData.githubUrl ? [{ type: 'GitHub', url: applicationData.githubUrl, label: 'GitHub Repository' }] : []),
+          ...(applicationData.portfolioUrl ? [{ type: 'Portfolio', url: applicationData.portfolioUrl, label: 'Personal Portfolio' }] : [])
         ],
         
         // Preferences
         noticePeriod: applicationData.noticePeriod || '',
-        howDidYouHear: applicationData.howDidYouHear || '',
+        howDidYouHear: applicationData.referralSource || '',
         willingToRelocate: applicationData.willingToRelocate || false,
-        preferRemoteWork: applicationData.preferRemoteWork || false,
-        additionalInformation: applicationData.additionalInformation || ''
+        preferRemoteWork: applicationData.remoteWorkPreference || false,
+        additionalInformation: applicationData.additionalInfo || ''
       };
       
       console.log('🔍 Job application data being submitted:', {
@@ -368,6 +496,16 @@ const JobApplicationModal = ({ open, onClose, job, user, onSubmit }) => {
         jobFields: Object.keys(job),
         userFields: Object.keys(user)
       });
+      
+      // Generate and download detailed log file
+      try {
+        // Get the original profile data that was fetched
+        const profileDataForLog = await profileService.getApplicationData();
+        generateApplicationLogFile(profileDataForLog, applicationData, applicantSnapshot);
+        console.log('✅ Application log file generated and downloaded');
+      } catch (logError) {
+        console.error('⚠️ Error generating log file (continuing with submission):', logError);
+      }
       
       // Add all data to form
       formData.append('jobId', jobId);
@@ -862,7 +1000,7 @@ const JobApplicationModal = ({ open, onClose, job, user, onSubmit }) => {
           <Button
             variant="contained"
             onClick={handleNext}
-            disabled={!validateStep(activeStep) || loading}
+            disabled={loading || profileLoading}
             size="small"
             sx={{ minWidth: { xs: 'auto', sm: '64px' } }}
           >

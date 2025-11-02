@@ -18,6 +18,24 @@ import Admin from './unified/Admin.js';
 export { BaseUser, Applicant, Recruiter, Admin };
 
 /**
+ * Get the appropriate model based on user role
+ * @param {string} role - User role ('applicant', 'recruiter', or 'admin')
+ * @returns {Model} Mongoose model for the specified role
+ */
+export const getUserModel = (role) => {
+  switch (role?.toLowerCase()) {
+    case 'applicant':
+      return Applicant;
+    case 'recruiter':
+      return Recruiter;
+    case 'admin':
+      return Admin;
+    default:
+      return BaseUser;
+  }
+};
+
+/**
  * Create a new user based on role
  * @param {Object} userData - User registration data
  * @param {string} userData.role - User role ('applicant' or 'recruiter')
