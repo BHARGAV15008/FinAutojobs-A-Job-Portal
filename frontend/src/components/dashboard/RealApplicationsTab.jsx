@@ -291,11 +291,11 @@ const RealApplicationsTab = () => {
                     </td>
                     
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {application.applicationData?.experience || 'Not specified'}
+                      {application.applicantSnapshot?.experience || application.applicantSnapshot?.yearsOfExperience || application.applicationData?.experience || 'Not specified'}
                     </td>
                     
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {application.applicationData?.expectedSalary || 'Not specified'}
+                      {application.applicantSnapshot?.expectedSalary || application.applicationData?.expectedSalary || 'Not specified'}
                     </td>
                     
                     <td className="px-6 py-4 whitespace-nowrap">
