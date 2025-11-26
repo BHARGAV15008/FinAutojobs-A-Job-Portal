@@ -6,9 +6,9 @@
 // Note: Cannot import logger here due to circular dependency
 // Using console.log directly for configuration logging
 
-// Environment detection
+// Environment detection - simplified and consistent
 const getEnvironment = () => {
-    // Check for explicit environment variable
+    // Check for explicit environment variable first
     if (import.meta.env.VITE_NODE_ENV) {
         return import.meta.env.VITE_NODE_ENV;
     }
@@ -23,11 +23,6 @@ const getEnvironment = () => {
             hostname.includes('.herokuapp.com') ||
             hostname.includes('finautojobs.com')) {
             return 'production';
-        }
-
-        // Staging domains
-        if (hostname.includes('staging') || hostname.includes('dev-')) {
-            return 'staging';
         }
 
         // Local development
@@ -74,7 +69,7 @@ const detectBackendPort = () => {
     return '5000';
 };
 
-// Build API URL based on environment and deployment context
+// Build API URL based on environment and deployment context - SIMPLIFIED
 const buildApiUrl = () => {
     const environment = getEnvironment();
     const hostInfo = getHostInfo();
@@ -88,76 +83,50 @@ const buildApiUrl = () => {
         return import.meta.env.VITE_API_URL;
     }
 
-    // 2. Production/deployment environment
-    if (environment === 'production' || environment === 'staging') {
-        // For production deployments, use relative API path or environment-specific URL
-        const prodUrl = import.meta.env.VITE_PROD_API_URL || '/api';
-        console.log('✅ Using production API URL:', prodUrl);
-        return prodUrl;
-    }
-
-    // 3. Local development - using standardized environment variables
-    if (hostInfo.hostname === 'localhost' || hostInfo.hostname === '127.0.0.1') {
-        const backendPort = import.meta.env.VITE_BACKEND_PORT || 
-                           import.meta.env.VITE_API_PORT || 
-                           '5000'; // Default to 5000 to match backend
-        const localUrl = `http://localhost:${backendPort}/api`;
-        console.log('🔧 Using local backend for development:', localUrl);
-        return localUrl;
-    }
-
-    // 3. Production deployment URLs
+    // 2. Production environment
     if (environment === 'production') {
-        // Common production patterns
+        // Known production URL mappings
         const productionUrls = {
-            // Render.com
             'finautojobs-frontend.onrender.com': 'https://finautojobs-backend.onrender.com/api',
             'finautojobs.onrender.com': 'https://finautojobs-api.onrender.com/api',
-
-            // Vercel + Railway
             'finautojobs.vercel.app': 'https://finautojobs-api.railway.app/api',
-
-            // Custom domain
             'finautojobs.com': 'https://api.finautojobs.com/api',
             'www.finautojobs.com': 'https://api.finautojobs.com/api'
         };
 
-        const apiUrl = productionUrls[hostInfo.hostname];
-        if (apiUrl) {
-            console.log('✅ Using production API URL:', apiUrl);
-            return apiUrl;
+        const mappedUrl = productionUrls[hostInfo.hostname];
+        if (mappedUrl) {
+            console.log('✅ Using mapped production API URL:', mappedUrl);
+            return mappedUrl;
         }
 
-        // Fallback: same domain with /api
-        const fallbackUrl = `${hostInfo.protocol}//${hostInfo.hostname}/api`;
-        console.log('⚠️ Using production fallback:', fallbackUrl);
-        return fallbackUrl;
+        // Fallback: use env var or relative path
+        const prodUrl = import.meta.env.VITE_PROD_API_URL || '/api';
+        console.log('✅ Using production fallback:', prodUrl);
+        return prodUrl;
     }
 
-    // 4. Staging environment
-    if (environment === 'staging') {
-        const stagingUrl = `${hostInfo.protocol}//${hostInfo.hostname.replace('staging-', 'staging-api-')}/api`;
-        console.log('✅ Using staging API URL:', stagingUrl);
-        return stagingUrl;
+    // 3. Local development (localhost)
+    if (environment === 'development') {
+        const backendPort = import.meta.env.VITE_BACKEND_PORT || '5000';
+        const localUrl = `http://localhost:${backendPort}/api`;
+        console.log('🔧 Using local development URL:', localUrl);
+        return localUrl;
     }
 
-    // 4. Network development (same IP, different port)
+    // 4. Network development (local IP)
     if (environment === 'network') {
-        const backendPort = import.meta.env.VITE_BACKEND_PORT || 
-                           import.meta.env.VITE_API_PORT || 
-                           '5000';
+        const backendPort = import.meta.env.VITE_BACKEND_PORT || '5000';
         const networkUrl = `http://${hostInfo.hostname}:${backendPort}/api`;
-        console.log('✅ Using network API URL:', networkUrl);
+        console.log('🌐 Using network URL:', networkUrl);
         return networkUrl;
     }
 
-    // 5. Local development fallback
-    const backendPort = import.meta.env.VITE_BACKEND_PORT || 
-                       import.meta.env.VITE_API_PORT || 
-                       '5000';
-    const localUrl = `http://localhost:${backendPort}/api`;
-    console.log('✅ Using local API URL:', localUrl);
-    return localUrl;
+    // 5. Ultimate fallback
+    const backendPort = import.meta.env.VITE_BACKEND_PORT || '5000';
+    const fallbackUrl = `http://localhost:${backendPort}/api`;
+    console.log('⚠️ Using ultimate fallback:', fallbackUrl);
+    return fallbackUrl;
 };
 
 // Build Socket.IO URL

@@ -6,8 +6,8 @@ import mongoose from 'mongoose';
  */
 
 const databases = [
-  'mongodb://localhost:27017/finautojobs',      // Main database
-  'mongodb://localhost:27017/finautojobs_clean' // Clean database
+  'mongodb+srv://technogenius1500_db_user:ZnqBQD8wc4M6c1Fm@cluster0.slmyrux.mongodb.net/?appName=Cluster0',      // Main database
+  'mongodb+srv://technogenius1500_db_user:ZnqBQD8wc4M6c1Fm@cluster0.slmyrux.mongodb.net/?appName=Cluster0_clean' // Clean database
 ];
 
 async function clearDatabase(uri) {

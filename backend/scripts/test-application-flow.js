@@ -8,7 +8,7 @@ import ApplicationInformation from '../models/ApplicationInformation.js';
 // Load environment variables
 dotenv.config();
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/finautojobs';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://technogenius1500_db_user:ZnqBQD8wc4M6c1Fm@cluster0.slmyrux.mongodb.net/?appName=Cluster0';
 
 async function testApplicationFlow() {
   try {

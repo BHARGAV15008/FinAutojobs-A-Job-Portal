@@ -11,7 +11,7 @@ if (!process.env.MONGODB_URI && !process.env.DATABASE_URL) {
 const MONGODB_URI = process.env.MONGODB_URI || 
                    process.env.DATABASE_URL || 
                    process.env.MONGO_URL ||
-                   (process.env.NODE_ENV === 'development' ? 'mongodb://localhost:27017/finautojobs' : null);
+                   (process.env.NODE_ENV === 'development' ? 'mongodb+srv://technogenius1500_db_user:ZnqBQD8wc4M6c1Fm@cluster0.slmyrux.mongodb.net/?appName=Cluster0' : null);
 
 // Check if we should use mock data mode
 if (process.env.USE_MOCK_DATA === 'true') {

@@ -127,6 +127,13 @@ const DashboardHeader = ({
     }
   }, [searchQuery]);
 
+  // Handle Enter key press in search
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      handleSearch();
+    }
+  };
+
   const unreadNotifications = realTimeUnreadCount + (Array.isArray(notifications) ? notifications.filter((n) => !n.read).length : 0);
 
   const handleProfileAction = (action) => {

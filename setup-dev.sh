@@ -44,7 +44,7 @@ NODE_ENV=development
 FRONTEND_URL=http://localhost:3000
 
 # Database Configuration
-MONGODB_URI=mongodb://localhost:27017/finautojobs
+MONGODB_URI=mongodb+srv://technogenius1500_db_user:ZnqBQD8wc4M6c1Fm@cluster0.slmyrux.mongodb.net/?appName=Cluster0
 
 # JWT Configuration
 JWT_SECRET=dev-jwt-secret-key-change-this-in-production

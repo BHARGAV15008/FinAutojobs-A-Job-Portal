@@ -89,131 +89,61 @@ const CompaniesPage = () => {
     const companyTypes = ['MNC', 'Startup', 'Corporate', 'Government', 'Non-profit'];
     const ratingOptions = ['4.5+', '4.0+', '3.5+', '3.0+', 'All Ratings'];
 
-    // Mock companies data with focus on Finance and Automotive
-    const mockCompanies = [
-        {
-            id: 1,
-            name: 'Goldman Sachs',
-            logo: 'GS',
-            industry: 'Investment Banking',
-            location: 'Mumbai, India',
-            employees: '10,000+',
-            rating: 4.5,
-            reviews: 2847,
-            openJobs: 45,
-            description: 'Leading global investment banking, securities and investment management firm.',
-            website: 'https://goldmansachs.com',
-            founded: 1869,
-            specialties: ['Investment Banking', 'Asset Management', 'Securities'],
-            benefits: ['Health Insurance', 'Stock Options', 'Flexible Hours', 'Learning Budget'],
-            culture: 'Fast-paced, collaborative, results-driven environment with focus on excellence.',
-            salaryRange: '₹15L - ₹50L',
-            featured: true,
-        },
-        {
-            id: 2,
-            name: 'Tata Motors',
-            logo: 'TM',
-            industry: 'Automotive',
-            location: 'Pune, India',
-            employees: '50,000+',
-            rating: 4.2,
-            reviews: 1523,
-            openJobs: 78,
-            description: 'India\'s largest automobile manufacturer and part of the Tata Group.',
-            website: 'https://tatamotors.com',
-            founded: 1945,
-            specialties: ['Electric Vehicles', 'Commercial Vehicles', 'Passenger Cars'],
-            benefits: ['Medical Coverage', 'Provident Fund', 'Transport', 'Canteen'],
-            culture: 'Innovation-driven culture with strong emphasis on sustainability and quality.',
-            salaryRange: '₹8L - ₹25L',
-            featured: true,
-        },
-        {
-            id: 3,
-            name: 'ICICI Bank',
-            logo: 'IB',
-            industry: 'Banking & Finance',
-            location: 'Mumbai, India',
-            employees: '100,000+',
-            rating: 4.3,
-            reviews: 3421,
-            openJobs: 156,
-            description: 'Leading private sector bank in India offering comprehensive financial services.',
-            website: 'https://icicibank.com',
-            founded: 1994,
-            specialties: ['Retail Banking', 'Corporate Banking', 'Digital Banking'],
-            benefits: ['Health Insurance', 'Performance Bonus', 'Training Programs', 'Career Growth'],
-            culture: 'Customer-centric approach with focus on digital innovation and employee development.',
-            salaryRange: '₹6L - ₹30L',
-            featured: false,
-        },
-        {
-            id: 4,
-            name: 'Mahindra & Mahindra',
-            logo: 'MM',
-            industry: 'Automotive',
-            location: 'Mumbai, India',
-            employees: '25,000+',
-            rating: 4.1,
-            reviews: 987,
-            openJobs: 92,
-            description: 'Leading Indian multinational automotive manufacturing corporation.',
-            website: 'https://mahindra.com',
-            founded: 1945,
-            specialties: ['SUVs', 'Tractors', 'Electric Vehicles', 'Aerospace'],
-            benefits: ['Medical Insurance', 'Employee Discounts', 'Skill Development', 'Wellness Programs'],
-            culture: 'Entrepreneurial spirit with focus on innovation and sustainable mobility solutions.',
-            salaryRange: '₹7L - ₹22L',
-            featured: false,
-        },
-        {
-            id: 5,
-            name: 'HDFC Bank',
-            logo: 'HD',
-            industry: 'Banking & Finance',
-            location: 'Mumbai, India',
-            employees: '120,000+',
-            rating: 4.4,
-            reviews: 4156,
-            openJobs: 203,
-            description: 'India\'s largest private sector bank by assets and market capitalization.',
-            website: 'https://hdfcbank.com',
-            founded: 1994,
-            specialties: ['Retail Banking', 'Wholesale Banking', 'Digital Banking'],
-            benefits: ['Comprehensive Health Coverage', 'Performance Incentives', 'Learning & Development'],
-            culture: 'Performance-driven culture with strong focus on customer service and innovation.',
-            salaryRange: '₹5L - ₹35L',
-            featured: true,
-        },
-        {
-            id: 6,
-            name: 'Maruti Suzuki',
-            logo: 'MS',
-            industry: 'Automotive',
-            location: 'Gurugram, India',
-            employees: '15,000+',
-            rating: 4.0,
-            reviews: 756,
-            openJobs: 67,
-            description: 'India\'s leading passenger car manufacturer with largest market share.',
-            website: 'https://marutisuzuki.com',
-            founded: 1981,
-            specialties: ['Passenger Cars', 'Manufacturing', 'After Sales Service'],
-            benefits: ['Medical Benefits', 'Transport Facility', 'Canteen', 'Recreation Club'],
-            culture: 'Quality-focused culture with emphasis on continuous improvement and teamwork.',
-            salaryRange: '₹6L - ₹20L',
-            featured: false,
-        },
-    ];
-
+    // Fetch companies from API
     useEffect(() => {
-        // Simulate API call
-        setTimeout(() => {
-            setCompanies(mockCompanies);
-            setLoading(false);
-        }, 1000);
-    }, []);
+        const fetchCompanies = async () => {
+            try {
+                setLoading(true);
+                console.log('🔍 Fetching companies from API...');
+                
+                const response = await fetch(`${API_BASE_URL}/companies?limit=100`);
+                const data = await response.json();
+                
+                console.log('📊 Companies API Response:', data);
+                
+                if (data.success && data.data) {
+                    const companiesData = Array.isArray(data.data) ? data.data : 
+                                         Array.isArray(data.data.companies) ? data.data.companies : [];
+                    
+                    // Transform API data to match component expectations
+                    const transformedCompanies = companiesData.map(company => ({
+                        id: company._id || company.id,
+                        name: company.name || company.companyName,
+                        logo: (company.name || company.companyName)?.substring(0, 2).toUpperCase(),
+                        industry: company.industry || 'General',
+                        location: company.location || company.headquarters || 'India',
+                        employees: company.size || company.employeeCount || '100+',
+                        rating: company.rating || 4.0,
+                        reviews: company.reviewCount || company.reviews || 0,
+                        openJobs: company.activeJobs || company.openPositions || 0,
+                        description: company.description || company.about || 'Leading company in the industry.',
+                        website: company.website || '#',
+                        founded: company.foundedYear || company.founded || 2000,
+                        specialties: company.specialties || company.services || [],
+                        benefits: company.benefits || [],
+                        culture: company.culture || company.workCulture || '',
+                        salaryRange: company.salaryRange || 'Competitive',
+                        featured: company.featured || company.isPremium || false,
+                        companyType: company.companyType || 'Corporate'
+                    }));
+                    
+                    console.log(`✅ Loaded ${transformedCompanies.length} companies`);
+                    setCompanies(transformedCompanies);
+                } else {
+                    console.warn('⚠️ No companies data in response, using empty array');
+                    setCompanies([]);
+                }
+            } catch (error) {
+                console.error('❌ Error fetching companies:', error);
+                // Don't use mock data - show empty state
+                setCompanies([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchCompanies();
+    }, []); // Fetch once on mount
 
     const handleSearch = (e) => {
         e.preventDefault();

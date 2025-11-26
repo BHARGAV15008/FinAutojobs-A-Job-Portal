@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import UnifiedUser from '../models/final/UnifiedUser.js';
 import RecruiterProfile from '../models/final/RecruiterProfile.js';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/finautojobs';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://technogenius1500_db_user:ZnqBQD8wc4M6c1Fm@cluster0.slmyrux.mongodb.net/?appName=Cluster0';
 
 async function quickMigration() {
   try {

@@ -14,7 +14,7 @@ FRONTEND_URL=http://localhost:3000
 # =============================================================================
 # DATABASE CONFIGURATION (MongoDB)
 # =============================================================================
-MONGODB_URI=mongodb://localhost:27017/finautojobs
+MONGODB_URI=mongodb+srv://technogenius1500_db_user:ZnqBQD8wc4M6c1Fm@cluster0.slmyrux.mongodb.net/?appName=Cluster0
 
 # =============================================================================
 # JWT CONFIGURATION
@@ -219,7 +219,7 @@ SOCIAL_INSTAGRAM=https://instagram.com/finautojobs
 # TESTING CONFIGURATION
 # =============================================================================
 # Test database (for automated testing)
-TEST_MONGODB_URI=mongodb://localhost:27017/finautojobs_test
+TEST_MONGODB_URI=mongodb+srv://technogenius1500_db_user:ZnqBQD8wc4M6c1Fm@cluster0.slmyrux.mongodb.net/?appName=Cluster0_test
 
 # Test email (for development/testing)
 TEST_EMAIL=test@example.com

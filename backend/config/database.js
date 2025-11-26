@@ -7,12 +7,10 @@ if (!process.env.MONGODB_URI && !process.env.DATABASE_URL) {
   dotenv.config({ path: './.env' });
 }
 
-// MongoDB connection string with cloud-first fallback
+// MongoDB connection string - prioritize environment variables
 const MONGODB_URI = process.env.MONGODB_URI || 
                    process.env.DATABASE_URL || 
                    process.env.MONGO_URL ||
-                   // MongoDB Atlas connection string (Updated with new cluster)
-                   'mongodb+srv://technogenius1500_db_user:kaCi2YhDO3EqGAWr@cluster0.4vnlmzp.mongodb.net/?appName=Cluster0' ||
                    // Only use localhost as last resort for development
                    (process.env.NODE_ENV === 'development' ? 'mongodb://localhost:27017/finautojobs' : null);
 
@@ -31,23 +29,23 @@ const initializeDatabase = async () => {
     console.log('🔄 Connecting to MongoDB...');
     console.log('📍 MongoDB URI:', MONGODB_URI.replace(/\/\/.*:.*@/, '//***:***@'));
     
-    // MongoDB connection options with Stable API (matching MongoDB Atlas requirements)
+    // MongoDB connection options optimized for Node.js compatibility
     const connectionOptions = {
       serverSelectionTimeoutMS: 30000,
       socketTimeoutMS: 45000,
+      connectTimeoutMS: 30000,
       bufferCommands: false,
       maxPoolSize: 10,
+      minPoolSize: 2,
       retryWrites: true,
       w: 'majority',
-      serverApi: {
-        version: '1',
-        strict: true,
-        deprecationErrors: true
-      },
-      // SSL/TLS configuration - bypass certificate validation for system date issues
+      // TLS/SSL configuration
       tls: true,
-      tlsAllowInvalidCertificates: true,
-      tlsAllowInvalidHostnames: true
+      // For development, allow invalid certificates if needed
+      ...(process.env.NODE_ENV === 'development' && {
+        tlsAllowInvalidCertificates: true,
+        tlsAllowInvalidHostnames: true,
+      })
     };
 
     await mongoose.connect(MONGODB_URI, connectionOptions);

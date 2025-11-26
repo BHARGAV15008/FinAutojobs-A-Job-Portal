@@ -6,7 +6,7 @@ dotenv.config();
 const resetJobsCollection = async () => {
   try {
     // Connect to MongoDB
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/finautojobs');
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://technogenius1500_db_user:ZnqBQD8wc4M6c1Fm@cluster0.slmyrux.mongodb.net/?appName=Cluster0');
     console.log('Connected to MongoDB');
 
     // Drop the jobs collection if it exists
