@@ -475,7 +475,7 @@ router.post('/login', loginValidation, async (req, res) => {
     const token = jwt.sign(
       { 
         id: user._id, 
-        userId: user.userId,
+        userId: user._id, // Use _id for consistency across all user models
         role: user.role,
         email: user.email 
       }, 
@@ -487,7 +487,7 @@ router.post('/login', loginValidation, async (req, res) => {
     const refreshToken = jwt.sign(
       { 
         id: user._id, 
-        userId: user.userId,
+        userId: user._id, // Use _id for consistency
         role: user.role 
       }, 
       JWT_SECRET + '_refresh', 
