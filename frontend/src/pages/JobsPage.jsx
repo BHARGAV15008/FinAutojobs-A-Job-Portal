@@ -592,10 +592,22 @@ const JobsPage = () => {
     };
 
     const filteredJobs = (Array.isArray(jobs) ? jobs : []).filter(job => {
-        const matchesSearch = job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            job.skills.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()));
-        const matchesLocation = !selectedLocation || job.location.includes(selectedLocation);
+        // Search logic with safe property access
+        const jobTitle = (job.title || '').toLowerCase();
+        const jobCompany = (job.company || '').toLowerCase();
+        const jobSkills = Array.isArray(job.skills) ? job.skills : [];
+        const jobDescription = (job.description || '').toLowerCase();
+        const jobDepartment = (job.department || '').toLowerCase();
+        const searchLower = searchQuery.toLowerCase();
+        
+        const matchesSearch = !searchQuery || 
+            jobTitle.includes(searchLower) ||
+            jobCompany.includes(searchLower) ||
+            jobDescription.includes(searchLower) ||
+            jobDepartment.includes(searchLower) ||
+            jobSkills.some(skill => (skill || '').toLowerCase().includes(searchLower));
+            
+        const matchesLocation = !selectedLocation || job.location?.includes(selectedLocation);
         const matchesExperience = !selectedExperience || job.experience === selectedExperience;
         const matchesJobType = !selectedJobType || job.type === selectedJobType || (selectedJobType === 'Remote' && job.remote);
         const matchesWorkMode = !selectedWorkMode || job.workMode === selectedWorkMode || (selectedWorkMode === 'Remote' && job.remote);
