@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { BaseUser, getUserModel } from '../../models/UserModels.js';
+import SimpleUser from '../../models/User.js'; // Simple User model for admin accounts
 import { securityLogger } from './logger.js';
 
 // Enhanced token generation with session management
@@ -193,11 +194,30 @@ export const authenticateToken = async (req, res, next) => {
     }
     
     // Find user in database with additional checks
-    const UserModel = getUserModel(decoded.role);
-    const user = await UserModel.findById(decoded.userId);
+    let user = null;
+    
+    // For admin role, try SimpleUser model first
+    if (decoded.role === 'admin') {
+      try {
+        user = await SimpleUser.findById(decoded.userId || decoded.id);
+        if (!user && decoded.email) {
+          user = await SimpleUser.findOne({ email: decoded.email, role: 'admin' });
+        }
+        console.log('🔍 SimpleUser lookup result:', user ? 'Found admin' : 'Not found');
+      } catch (error) {
+        console.log('⚠️ SimpleUser lookup failed:', error.message);
+      }
+    }
+    
+    // Fallback to getUserModel for other roles or if admin not found
+    if (!user) {
+      const UserModel = getUserModel(decoded.role);
+      user = await UserModel.findById(decoded.userId || decoded.id);
+      console.log('🔍 getUserModel lookup result:', user ? 'Found' : 'Not found');
+    }
     
     if (!user) {
-      securityLogger.warn('USER_NOT_FOUND', { ip: req.ip, userId: decoded.userId });
+      securityLogger.warn('USER_NOT_FOUND', { ip: req.ip, userId: decoded.userId || decoded.id, role: decoded.role });
       return res.status(404).json({
         success: false,
         message: 'User not found',
@@ -618,30 +638,43 @@ export const requireApplicant = requireRole('applicant');
 export const requireAdmin = requireRole('admin');
 
 // Session management functions
-export const createUserSession = async (userId, deviceInfo, ipAddress) => {
+export const createUserSession = async (userId, deviceInfo, ipAddress, role = null) => {
   try {
     const sessionId = crypto.randomUUID();
-    // Note: We need role to get the right model, but it's not available here
-    // Using BaseUser as fallback for session management
-    const user = await BaseUser.findById(userId);
+    
+    // Try SimpleUser first for admin role
+    let user = null;
+    if (role === 'admin') {
+      user = await SimpleUser.findById(userId);
+    }
+    
+    // Fallback to BaseUser if not found
+    if (!user) {
+      user = await BaseUser.findById(userId);
+    }
     
     if (!user) {
       throw new Error('User not found');
     }
     
+    // Initialize activeSessions if it doesn't exist
+    if (!user.activeSessions) {
+      user.activeSessions = [];
+    }
+    
     // Clear existing sessions (single session enforcement)
-    user.active_sessions = [];
+    user.activeSessions = [];
     
     // Add new session
     const newSession = {
-      session_id: sessionId,
-      device_info: deviceInfo,
-      ip_address: ipAddress,
-      created_at: new Date(),
-      last_activity: new Date()
+      sessionId: sessionId,
+      deviceInfo: deviceInfo,
+      ipAddress: ipAddress,
+      createdAt: new Date(),
+      lastActivity: new Date()
     };
     
-    user.active_sessions.push(newSession);
+    user.activeSessions.push(newSession);
     await user.save();
     
     console.log(`✅ Session created for user ${userId}: ${sessionId}`);

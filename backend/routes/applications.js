@@ -8,6 +8,7 @@ import Job from '../models/Job.js';
 // Import the correct user model that other routes use
 import { BaseUser } from '../models/UserModels.js';
 import CleanUser from '../models/CleanUser.js';
+import SimpleUser from '../models/User.js'; // Simple User model for admin accounts
 import Notification from '../models/Notification.js';
 import { sendInterviewUpdate, NotificationService } from '../services/notifications.js';
 import joi from 'joi';
@@ -144,10 +145,28 @@ const authenticateToken = async (req, res, next) => {
       }
     }
     
+    // Method 6: Try SimpleUser for admin accounts
+    if (!user && decoded.role === 'admin') {
+      try {
+        // Try by _id first
+        if (decoded.id) {
+          user = await SimpleUser.findById(decoded.id);
+          console.log('🔍 SimpleUser lookup by id result:', user ? 'Found' : 'Not found');
+        }
+        // Try by email if not found
+        if (!user && decoded.email) {
+          user = await SimpleUser.findOne({ email: decoded.email, role: 'admin' });
+          console.log('🔍 SimpleUser lookup by email result:', user ? 'Found' : 'Not found');
+        }
+      } catch (error) {
+        console.log('⚠️ SimpleUser lookup failed:', error.message);
+      }
+    }
+    
     if (!user) {
       console.log('❌ Auth failed: User not found with any method');
       console.log('🔍 Available decoded fields:', Object.keys(decoded));
-      console.log('🔍 Tried user models: BaseUser, CleanUser');
+      console.log('🔍 Tried user models: BaseUser, CleanUser, SimpleUser');
       return res.status(401).json({
         success: false,
         message: 'Invalid token - user not found'

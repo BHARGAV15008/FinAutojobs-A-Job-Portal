@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema({
   email: { type: String, unique: true, sparse: true }, // Made optional for phone-only registration
@@ -17,6 +18,24 @@ const userSchema = new mongoose.Schema({
       coordinates: { type: [Number] }
     }
   },
+  // Admin-specific fields
+  permissions: {
+    canManageUsers: { type: Boolean, default: false },
+    canManageJobs: { type: Boolean, default: false },
+    canManageSettings: { type: Boolean, default: false },
+    canManageRecruiters: { type: Boolean, default: false },
+    canManageApplicants: { type: Boolean, default: false },
+    canManageCompanies: { type: Boolean, default: false },
+    canManageReports: { type: Boolean, default: false },
+    canManageAnalytics: { type: Boolean, default: false },
+    canManageModeration: { type: Boolean, default: false },
+    canManageSystem: { type: Boolean, default: false }
+  },
+  adminLevel: { 
+    type: String, 
+    enum: ['super-admin', 'admin', 'moderator'], 
+    default: 'admin' 
+  },
   verification: {
     email: { type: Boolean, default: false },
     phone: { type: Boolean, default: false },
@@ -34,6 +53,14 @@ const userSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
+
+// Password comparison method
+userSchema.methods.comparePassword = async function(candidatePassword) {
+  if (!this.password) {
+    return false;
+  }
+  return await bcrypt.compare(candidatePassword, this.password);
+};
 
 userSchema.pre('save', function(next) {
   this.updatedAt = Date.now();

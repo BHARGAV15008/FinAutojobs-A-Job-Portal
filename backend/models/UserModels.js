@@ -3,6 +3,7 @@ import BaseUser from './unified/BaseUser.js';
 import Applicant from './unified/Applicant.js';
 import Recruiter from './unified/Recruiter.js';
 import Admin from './unified/Admin.js';
+import SimpleUser from './User.js'; // Simple User model for admin accounts
 
 /**
  * Unified User Models with Role-Based Registration and Authentication
@@ -120,26 +121,51 @@ export const createUserByRole = async (userData) => {
  * Authenticate user with role validation
  * @param {string} identifier - Email, username, or phone
  * @param {string} password - User password
- * @param {string} role - Expected role ('applicant' or 'recruiter')
+ * @param {string} role - Expected role ('applicant', 'recruiter', or 'admin')
  * @returns {Promise<Object>} Authenticated user object
  */
 export const authenticateUser = async (identifier, password, role) => {
   try {
-    // Find user by email, username, or phone with specific role
-    const user = await BaseUser.findOne({
-      $and: [
-        {
-          $or: [
-            { email: identifier.toLowerCase() },
-            { username: identifier.toLowerCase() },
-            { phone: identifier }
-          ]
-        },
-        { role: role.toLowerCase() }
-      ]
-    });
+    console.log('🔍 authenticateUser called with:', { identifier, role });
+    let user;
+    
+    // For admin role, try SimpleUser model first (where admin accounts are created)
+    if (role.toLowerCase() === 'admin') {
+      console.log('🔍 Looking for admin in SimpleUser model...');
+      user = await SimpleUser.findOne({
+        $or: [
+          { email: identifier.toLowerCase() },
+          { phoneNumber: identifier }
+        ],
+        role: 'admin'
+      });
+      console.log('🔍 SimpleUser search result:', user ? 'Found admin user' : 'Not found');
+      if (user) {
+        console.log('✅ Admin found:', { email: user.email, id: user._id });
+      }
+    }
+    
+    // If not found in SimpleUser or not admin, try BaseUser
+    if (!user) {
+      console.log('🔍 Looking in BaseUser model...');
+      user = await BaseUser.findOne({
+        $and: [
+          {
+            $or: [
+              { email: identifier.toLowerCase() },
+              { username: identifier.toLowerCase() },
+              { phone: identifier },
+              { phoneNumber: identifier }
+            ]
+          },
+          { role: role.toLowerCase() }
+        ]
+      });
+      console.log('🔍 BaseUser search result:', user ? 'Found' : 'Not found');
+    }
     
     if (!user) {
+      console.log('❌ No user found with identifier:', identifier, 'and role:', role);
       throw new Error(`No ${role} account found with these credentials`);
     }
     
@@ -148,21 +174,28 @@ export const authenticateUser = async (identifier, password, role) => {
       throw new Error('Account is temporarily locked. Please try again later.');
     }
     
+    // Check if account is active
+    if (user.isActive === false) {
+      throw new Error('Account is inactive. Please contact support.');
+    }
+    
     // Verify password
     const isPasswordValid = await user.comparePassword(password);
     
     if (!isPasswordValid) {
       // Increment login attempts
       const updateData = {
-        loginAttempts: user.loginAttempts + 1
+        loginAttempts: (user.loginAttempts || 0) + 1
       };
       
       // Lock account after 5 failed attempts
-      if (user.loginAttempts >= 4) { // >= 4 because we're incrementing by 1
+      if ((user.loginAttempts || 0) >= 4) { // >= 4 because we're incrementing by 1
         updateData.lockUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
       }
       
-      await BaseUser.findByIdAndUpdate(user._id, updateData, { 
+      // Update in the appropriate model
+      const UserModel = role.toLowerCase() === 'admin' ? SimpleUser : BaseUser;
+      await UserModel.findByIdAndUpdate(user._id, updateData, { 
         validateBeforeSave: false,
         runValidators: false 
       });
@@ -170,7 +203,8 @@ export const authenticateUser = async (identifier, password, role) => {
     }
     
     // Reset login attempts and update lastLogin on successful login
-    await BaseUser.findByIdAndUpdate(user._id, {
+    const UserModel = role.toLowerCase() === 'admin' ? SimpleUser : BaseUser;
+    await UserModel.findByIdAndUpdate(user._id, {
       loginAttempts: 0,
       $unset: { lockUntil: 1 },
       lastLogin: new Date(),
