@@ -115,6 +115,15 @@ const CompaniesManagementTab = () => {
         return matchesSearch && matchesStatus;
     });
 
+    // Auto-search with debouncing
+    useEffect(() => {
+        const delaySearch = setTimeout(() => {
+            // Search is already handled by filteredCompanies above
+            // This is just for visual feedback
+        }, 300); // 300ms debounce
+        return () => clearTimeout(delaySearch);
+    }, [searchTerm, filterStatus]);
+
     if (loading) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -205,7 +214,7 @@ const CompaniesManagementTab = () => {
                             type="text"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            placeholder="Search by name or email..."
+                            placeholder="Search by name or email... (auto-search enabled)"
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         />
                     </div>

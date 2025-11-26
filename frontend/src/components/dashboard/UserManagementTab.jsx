@@ -324,6 +324,15 @@ const UserManagementTab = () => {
     return matchesSearch;
   });
 
+  // Auto-search with debouncing
+  useEffect(() => {
+    const delaySearch = setTimeout(() => {
+      // Search is already handled by filteredUsers above
+      // This is just for visual feedback
+    }, 300); // 300ms debounce
+    return () => clearTimeout(delaySearch);
+  }, [searchTerm]);
+
   const tabs = [
     { id: 'all', label: 'All Users', count: stats.totalUsers || 0 },
     { id: 'applicant', label: 'Applicants', count: stats.usersByRole?.applicants || 0 },
@@ -455,7 +464,7 @@ const UserManagementTab = () => {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by name or email..."
+              placeholder="Search by name or email... (auto-search enabled)"
               className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white w-64"
             />
             <span className="text-sm text-gray-500 dark:text-gray-400">

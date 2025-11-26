@@ -92,10 +92,10 @@ const Navigation = () => {
     };
 
     const handleSearch = (e) => {
-        e.preventDefault();
+        if (e) e.preventDefault();
         if (searchQuery.trim()) {
-            // Implement search functionality
-            // window.location.href = `/jobs?search=${encodeURIComponent(searchQuery)}`;
+            window.location.href = `/jobs?search=${encodeURIComponent(searchQuery)}`;
+            setSearchQuery('');
         }
     };
 
@@ -160,7 +160,7 @@ const Navigation = () => {
             <Box sx={{ p: 2 }}>
                 <Paper
                     component="form"
-                    onSubmit={handleSearch}
+                <Paper
                     sx={{
                         p: '2px 4px',
                         display: 'flex',
@@ -174,8 +174,18 @@ const Navigation = () => {
                         placeholder="Search jobs, companies..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                                handleSearch(e);
+                            }
+                        }}
                     />
-                    <IconButton type="submit" sx={{ p: '10px' }} aria-label="search">
+                    <IconButton
+                        type="button"
+                        sx={{ p: '10px' }}
+                        aria-label="search"
+                        onClick={handleSearch}
+                    >
                         <SearchIcon />
                     </IconButton>
                 </Paper>
@@ -450,8 +460,17 @@ const Navigation = () => {
                                 placeholder="Search jobs, companies..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
+                                onKeyPress={(e) => {
+                                    if (e.key === 'Enter') {
+                                        handleSearch(e);
+                                    }
+                                }}
                             />
-                            <IconButton type="submit" sx={{ p: '10px' }} aria-label="search">
+                            <IconButton
+                                type="submit"
+                                sx={{ p: '10px' }}
+                                aria-label="search"
+                            >
                                 <SearchIcon />
                             </IconButton>
                         </Paper>

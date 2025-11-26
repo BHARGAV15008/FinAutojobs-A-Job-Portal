@@ -94,9 +94,13 @@ const DashboardHeader = ({
     }
   };
 
-  // Handle search
+  // Handle search with auto-search functionality
   const handleSearch = async (query = searchQuery) => {
-    if (!query.trim()) return;
+    if (!query.trim()) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
     
     try {
       const results = await searchJobs(query);
@@ -109,19 +113,12 @@ const DashboardHeader = ({
     }
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-      // Navigate to jobs page with search query
-      setLocation(`/jobs?search=${encodeURIComponent(searchQuery)}`);
-    }
-  };
-
+  // Auto-search with debouncing
   useEffect(() => {
     if (searchQuery.trim()) {
       const timeoutId = setTimeout(() => {
         handleSearch();
-      }, 300); // Debounce search
+      }, 500); // 500ms debounce for smooth typing
       
       return () => clearTimeout(timeoutId);
     } else {

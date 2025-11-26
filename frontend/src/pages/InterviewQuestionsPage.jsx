@@ -215,13 +215,20 @@ const InterviewQuestionsPage = () => {
                     <Grid item xs={12}>
                         <TextField
                             fullWidth
-                            placeholder="Search questions by keyword or topic..."
+                            placeholder="Search questions by keyword or topic... (auto-search enabled)"
                             value={searchQuery}
                             onChange={handleSearch}
                             InputProps={{
                                 startAdornment: (
                                     <InputAdornment position="start">
                                         <Search />
+                                    </InputAdornment>
+                                ),
+                                endAdornment: searchQuery && (
+                                    <InputAdornment position="end">
+                                        <IconButton size="small" onClick={() => setSearchQuery('')}>
+                                            <Clear />
+                                        </IconButton>
                                     </InputAdornment>
                                 ),
                             }}

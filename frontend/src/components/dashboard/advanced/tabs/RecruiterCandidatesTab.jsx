@@ -77,6 +77,14 @@ const RecruiterCandidatesTab = ({ data, onDataUpdate, user }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [candidatesPerPage] = useState(8);
 
+  // Auto-search with debouncing
+  useEffect(() => {
+    const delaySearch = setTimeout(() => {
+      setCurrentPage(1); // Reset to first page on search
+    }, 500); // 500ms debounce
+    return () => clearTimeout(delaySearch);
+  }, [searchQuery, filterStatus, filterJob]);
+
   const sampleCandidates = [
     {
       id: 1,

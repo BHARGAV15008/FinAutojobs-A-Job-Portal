@@ -6,6 +6,7 @@ import AuthModal from '../components/modals/AuthModal';
 import JobApplicationModal from '../components/modals/JobApplicationModal';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { applicationService } from '../services/applicationService';
+import SearchInput from '../components/common/SearchInput';
 import {
     Container,
     Box,
@@ -156,6 +157,11 @@ const JobsPage = () => {
     const [selectedExperience, setSelectedExperience] = useState('');
     const [selectedJobType, setSelectedJobType] = useState('');
     const [selectedSalaryRange, setSelectedSalaryRange] = useState('');
+    const [selectedWorkMode, setSelectedWorkMode] = useState('');
+    const [selectedDatePosted, setSelectedDatePosted] = useState('');
+    const [selectedCompanyType, setSelectedCompanyType] = useState('');
+    const [selectedEducation, setSelectedEducation] = useState('');
+    const [selectedDepartment, setSelectedDepartment] = useState('');
     
     // Modal state (needed early for useEffect)
     const [applicationModalOpen, setApplicationModalOpen] = useState(false);
@@ -219,23 +225,18 @@ const JobsPage = () => {
     const [appliedJobs, setAppliedJobs] = useState(new Set());
     const [applicationLoading, setApplicationLoading] = useState(false);
 
-    // Fetch jobs from API
+    // Fetch jobs from API - once on mount, like CompaniesPage
     useEffect(() => {
         const fetchJobs = async () => {
             try {
                 setLoading(true);
-                console.log('Fetching jobs from comprehensive API...');
+                console.log('Fetching all jobs from API...');
                 
-                // Use fetch directly to call our comprehensive job API (without search query for initial load)
-                const response = await fetch(`${API_BASE_URL}/jobs?${new URLSearchParams({
-                    location: selectedLocation || '',
-                    jobType: selectedJobType || '',
-                    page: page.toString(),
-                    limit: '20'
-                })}`);
+                // Fetch ALL jobs once - no filters in URL
+                const response = await fetch(`${API_BASE_URL}/jobs?limit=100`);
                 
                 const data = await response.json();
-                console.log('Comprehensive API Response', data);
+                console.log('API Response', data);
                 
                 // Handle the new API response format
                 let jobsData = [];
@@ -355,57 +356,20 @@ const JobsPage = () => {
         };
 
         fetchJobs();
-    }, [selectedLocation, selectedJobType, page]);
+    }, []); // Only fetch once on mount - search will be handled by handleSearch
 
     // No mock data - using only real API data
 
-    const locations = ['Mumbai', 'Delhi', 'Bangalore', 'Pune', 'Chennai', 'Hyderabad', 'Gurugram'];
-    const experienceLevels = ['0-1 years', '1-3 years', '3-5 years', '5-8 years', '8+ years'];
-    const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Internship', 'Remote'];
-    const salaryRanges = [
-        '₹0-5L', '₹5-10L', '₹10-15L', '₹15-20L', '₹20-30L', '₹30L+'
-    ];
+    const locations = ['Mumbai', 'Delhi', 'Bangalore', 'Pune', 'Chennai', 'Hyderabad', 'Gurugram', 'Kolkata', 'Ahmedabad', 'Noida'];
+    const experienceLevels = ['Fresher', '0-1 years', '1-3 years', '3-5 years', '5-8 years', '8-10 years', '10+ years'];
+    const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Internship', 'Freelance', 'Temporary'];
+    const workModes = ['On-site', 'Remote', 'Hybrid', 'Work from Home'];
+    const salaryRanges = ['₹0-3L', '₹3-6L', '₹6-10L', '₹10-15L', '₹15-25L', '₹25-50L', '₹50L+'];
+    const datePostedOptions = ['Last 24 hours', 'Last 7 days', 'Last 15 days', 'Last 30 days', 'Anytime'];
+    const companyTypes = ['MNC', 'Startup', 'Corporate', 'Government', 'Non-profit'];
+    const educationLevels = ['High School', 'Diploma', 'Bachelor\'s', 'Master\'s', 'PhD'];
+    const departments = ['Engineering', 'Sales', 'Marketing', 'Finance', 'HR', 'Operations', 'IT', 'Customer Support'];
 
-
-    const handleSearch = async () => {
-        try {
-            setLoading(true);
-            console.log('🔍 Performing search with query:', searchQuery);
-            
-            const searchParams = {
-                search: searchQuery,
-                location: selectedLocation,
-                jobType: selectedJobType,
-                experience: selectedExperience,
-                salaryRange: selectedSalaryRange,
-                page: 1,
-                limit: 12
-            };
-            
-            // Filter out empty parameters
-            const filteredParams = Object.fromEntries(
-                Object.entries(searchParams).filter(([_, value]) => value && value !== '')
-            );
-            
-            const response = await fetch(`${API_BASE_URL}/jobs?${new URLSearchParams(filteredParams)}`);
-            const data = await response.json();
-            
-            if (data.success) {
-                setJobs(data.jobs || []);
-                setTotalJobs(data.total || 0);
-                setPage(1); // Reset to first page
-                console.log('✅ Search completed, found', data.jobs?.length || 0, 'jobs');
-            } else {
-                console.error('❌ Search failed:', data.message);
-                setJobs([]);
-            }
-        } catch (error) {
-            console.error('❌ Search error:', error);
-            setJobs([]);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const toggleFavorite = (jobId) => {
         console.log('🔍 Favorite button clicked for job:', jobId);
@@ -634,14 +598,45 @@ const JobsPage = () => {
         const matchesLocation = !selectedLocation || job.location.includes(selectedLocation);
         const matchesExperience = !selectedExperience || job.experience === selectedExperience;
         const matchesJobType = !selectedJobType || job.type === selectedJobType || (selectedJobType === 'Remote' && job.remote);
+        const matchesWorkMode = !selectedWorkMode || job.workMode === selectedWorkMode || (selectedWorkMode === 'Remote' && job.remote);
+        const matchesCompanyType = !selectedCompanyType || job.companyType === selectedCompanyType;
+        const matchesEducation = !selectedEducation || job.education === selectedEducation;
+        const matchesDepartment = !selectedDepartment || job.department === selectedDepartment;
+        
+        // Date Posted Filter - filter by job creation/posting date
+        let matchesDatePosted = true;
+        if (selectedDatePosted && selectedDatePosted !== 'Anytime') {
+            const jobDate = new Date(job.createdAt || job.postedDate || Date.now());
+            const now = new Date();
+            const diffTime = Math.abs(now - jobDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (selectedDatePosted === 'Last 24 hours') matchesDatePosted = diffDays <= 1;
+            else if (selectedDatePosted === 'Last 7 days') matchesDatePosted = diffDays <= 7;
+            else if (selectedDatePosted === 'Last 15 days') matchesDatePosted = diffDays <= 15;
+            else if (selectedDatePosted === 'Last 30 days') matchesDatePosted = diffDays <= 30;
+        }
 
-        if (selectedTab === 0) return matchesSearch && matchesLocation && matchesExperience && matchesJobType; // All
-        if (selectedTab === 1) return matchesSearch && matchesLocation && matchesExperience && matchesJobType && job.department === 'Finance';
-        if (selectedTab === 2) return matchesSearch && matchesLocation && matchesExperience && matchesJobType && job.department === 'Engineering';
-        if (selectedTab === 3) return matchesSearch && matchesLocation && matchesExperience && matchesJobType && job.featured;
-        if (selectedTab === 4) return matchesSearch && matchesLocation && matchesExperience && matchesJobType && job.remote;
+        // Salary Range Filter - basic implementation
+        let matchesSalaryRange = true;
+        if (selectedSalaryRange) {
+            const salary = job.salary || job.salaryRange || '';
+            matchesSalaryRange = salary.includes(selectedSalaryRange.replace('₹', '').split('-')[0]);
+        }
 
-        return matchesSearch && matchesLocation && matchesExperience && matchesJobType;
+        // Apply all filters
+        const matchesAllFilters = matchesSearch && matchesLocation && matchesExperience && 
+            matchesJobType && matchesWorkMode && matchesCompanyType && matchesEducation && 
+            matchesDepartment && matchesDatePosted && matchesSalaryRange;
+
+        // Apply category tab filter
+        if (selectedTab === 0) return matchesAllFilters; // All
+        if (selectedTab === 1) return matchesAllFilters && job.department === 'Finance';
+        if (selectedTab === 2) return matchesAllFilters && job.department === 'Engineering';
+        if (selectedTab === 3) return matchesAllFilters && job.featured;
+        if (selectedTab === 4) return matchesAllFilters && job.remote;
+
+        return matchesAllFilters;
     });
 
     const JobCardComponent = ({ job }) => (
@@ -1020,10 +1015,10 @@ const JobsPage = () => {
     }
 
     return (
-        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', py: 4 }}>
+        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', py: 4, bgcolor: '#f5f5f5' }}>
             <Box sx={{ 
                 width: { xs: 'calc(100% - 16px)', sm: '800px', md: '1000px', lg: '1200px' }, 
-                px: { xs: 1, sm: 3, md: 4 },
+                px: { xs: 1, sm: 2, md: 3 },
                 maxWidth: '100vw'
             }}>
             {/* Header */}
@@ -1039,156 +1034,293 @@ const JobsPage = () => {
             {/* Search Section */}
             <Paper sx={{ p: 3, mb: 4 }}>
                 <Grid container spacing={2} alignItems="center">
-                    <Grid item xs={12} md={6}>
-                        <TextField
-                            fullWidth
+                    <Grid item xs={12} md={9}>
+                        <SearchInput
                             placeholder="Search jobs, companies, or skills..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            onKeyPress={(e) => {
-                                if (e.key === 'Enter') {
-                                    handleSearch();
-                                }
-                            }}
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <SearchIcon />
-                                    </InputAdornment>
-                                ),
-                            }}
                         />
                     </Grid>
                     <Grid item xs={12} md={3}>
-                        <Autocomplete
-                            options={locations}
-                            value={selectedLocation}
-                            onChange={(event, newValue) => setSelectedLocation(newValue)}
-                            renderInput={(params) => (
-                                <TextField
-                                    {...params}
-                                    placeholder="Location"
-                                    InputProps={{
-                                        ...params.InputProps,
-                                        startAdornment: (
-                                            <InputAdornment position="start">
-                                                <LocationOn />
-                                            </InputAdornment>
-                                        ),
-                                    }}
-                                />
-                            )}
-                        />
-                    </Grid>
-                    <Grid item xs={12} md={2}>
                         <Button
                             fullWidth
                             variant="contained"
-                            onClick={handleSearch}
+                            size="large"
                             sx={{ height: 56 }}
                         >
-                            Search
-                        </Button>
-                    </Grid>
-                    <Grid item xs={12} md={1}>
-                        <Button
-                            fullWidth
-                            variant="outlined"
-                            onClick={() => setShowFilters(true)}
-                            sx={{ height: 56 }}
-                        >
-                            <FilterList />
+                            <SearchIcon sx={{ mr: 1 }} /> Search
                         </Button>
                     </Grid>
                 </Grid>
             </Paper>
 
-            {/* Category Tabs */}
-            <Box sx={{ mb: 4 }}>
-                <Tabs
-                    value={selectedTab}
-                    onChange={(e, newValue) => setSelectedTab(newValue)}
-                    variant={isMobile ? "scrollable" : "standard"}
-                    scrollButtons="auto"
-                    centered={!isMobile}
-                >
-                    <Tab label="All Jobs" />
-                    <Tab label="Finance" />
-                    <Tab label="Automotive" />
-                    <Tab label="Featured" />
-                    <Tab label="Remote" />
-                </Tabs>
-            </Box>
+            {/* Main Content - Sidebar + Jobs Layout */}
+            <Grid container spacing={3}>
+                {/* Left Sidebar - Filters (Always Visible on Desktop) */}
+                <Grid item xs={12} md={3}>
+                    <Paper sx={{ p: 3, position: 'sticky', top: 20 }}>
+                        <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ mb: 3 }}>
+                            <FilterList sx={{ mr: 1, verticalAlign: 'middle' }} />
+                            Filters
+                        </Typography>
 
-            {/* Results Header */}
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', mb: 3 }}>
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', width: '100%' }}>
-                    {/* View Format Toggle - Full Width */}
-                    <Box sx={{ 
-                        display: 'flex', 
-                        border: '1px solid #e0e0e0', 
-                        borderRadius: 1, 
-                        overflow: 'hidden',
-                        flex: 1
-                    }}>
+                        {/* Location Filter */}
+                        <Box sx={{ mb: 3 }}>
+                            <Typography variant="subtitle2" fontWeight="600" gutterBottom>
+                                Location
+                            </Typography>
+                            <Autocomplete
+                                options={locations}
+                                value={selectedLocation}
+                                onChange={(event, newValue) => setSelectedLocation(newValue || '')}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        size="small"
+                                        placeholder="Select location"
+                                    />
+                                )}
+                            />
+                        </Box>
+
+                        {/* Experience Filter */}
+                        <Box sx={{ mb: 3 }}>
+                            <Typography variant="subtitle2" fontWeight="600" gutterBottom>
+                                Experience
+                            </Typography>
+                            <FormControl fullWidth size="small">
+                                <Select
+                                    value={selectedExperience}
+                                    onChange={(e) => setSelectedExperience(e.target.value)}
+                                    displayEmpty
+                                >
+                                    <MenuItem value="">All Experience</MenuItem>
+                                    {experienceLevels.map((level) => (
+                                        <MenuItem key={level} value={level}>{level}</MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </Box>
+
+                        {/* Job Type Filter */}
+                        <Box sx={{ mb: 3 }}>
+                            <Typography variant="subtitle2" fontWeight="600" gutterBottom>
+                                Job Type
+                            </Typography>
+                            <FormControl fullWidth size="small">
+                                <Select
+                                    value={selectedJobType}
+                                    onChange={(e) => setSelectedJobType(e.target.value)}
+                                    displayEmpty
+                                >
+                                    <MenuItem value="">All Types</MenuItem>
+                                    {jobTypes.map((type) => (
+                                        <MenuItem key={type} value={type}>{type}</MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </Box>
+
+                        {/* Salary Range Filter */}
+                        <Box sx={{ mb: 3 }}>
+                            <Typography variant="subtitle2" fontWeight="600" gutterBottom>
+                                Salary Range
+                            </Typography>
+                            <FormControl fullWidth size="small">
+                                <Select
+                                    value={selectedSalaryRange}
+                                    onChange={(e) => setSelectedSalaryRange(e.target.value)}
+                                    displayEmpty
+                                >
+                                    <MenuItem value="">All Salaries</MenuItem>
+                                    {salaryRanges.map((range) => (
+                                        <MenuItem key={range} value={range}>{range}</MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </Box>
+
+                        {/* Work Mode Filter */}
+                        <Box sx={{ mb: 3 }}>
+                            <Typography variant="subtitle2" fontWeight="600" gutterBottom>
+                                Work Mode
+                            </Typography>
+                            <FormControl fullWidth size="small">
+                                <Select
+                                    value={selectedWorkMode}
+                                    onChange={(e) => setSelectedWorkMode(e.target.value)}
+                                    displayEmpty
+                                >
+                                    <MenuItem value="">All Work Modes</MenuItem>
+                                    {workModes.map((mode) => (
+                                        <MenuItem key={mode} value={mode}>{mode}</MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </Box>
+
+                        {/* Date Posted Filter */}
+                        <Box sx={{ mb: 3 }}>
+                            <Typography variant="subtitle2" fontWeight="600" gutterBottom>
+                                Date Posted
+                            </Typography>
+                            <FormControl fullWidth size="small">
+                                <Select
+                                    value={selectedDatePosted}
+                                    onChange={(e) => setSelectedDatePosted(e.target.value)}
+                                    displayEmpty
+                                >
+                                    <MenuItem value="">Anytime</MenuItem>
+                                    {datePostedOptions.map((option) => (
+                                        <MenuItem key={option} value={option}>{option}</MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </Box>
+
+                        {/* Company Type Filter */}
+                        <Box sx={{ mb: 3 }}>
+                            <Typography variant="subtitle2" fontWeight="600" gutterBottom>
+                                Company Type
+                            </Typography>
+                            <FormControl fullWidth size="small">
+                                <Select
+                                    value={selectedCompanyType}
+                                    onChange={(e) => setSelectedCompanyType(e.target.value)}
+                                    displayEmpty
+                                >
+                                    <MenuItem value="">All Companies</MenuItem>
+                                    {companyTypes.map((type) => (
+                                        <MenuItem key={type} value={type}>{type}</MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </Box>
+
+                        {/* Education Filter */}
+                        <Box sx={{ mb: 3 }}>
+                            <Typography variant="subtitle2" fontWeight="600" gutterBottom>
+                                Education
+                            </Typography>
+                            <FormControl fullWidth size="small">
+                                <Select
+                                    value={selectedEducation}
+                                    onChange={(e) => setSelectedEducation(e.target.value)}
+                                    displayEmpty
+                                >
+                                    <MenuItem value="">All Education</MenuItem>
+                                    {educationLevels.map((level) => (
+                                        <MenuItem key={level} value={level}>{level}</MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </Box>
+
+                        {/* Department Filter */}
+                        <Box sx={{ mb: 3 }}>
+                            <Typography variant="subtitle2" fontWeight="600" gutterBottom>
+                                Department
+                            </Typography>
+                            <FormControl fullWidth size="small">
+                                <Select
+                                    value={selectedDepartment}
+                                    onChange={(e) => setSelectedDepartment(e.target.value)}
+                                    displayEmpty
+                                >
+                                    <MenuItem value="">All Departments</MenuItem>
+                                    {departments.map((dept) => (
+                                        <MenuItem key={dept} value={dept}>{dept}</MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </Box>
+
+                        {/* Category Tabs */}
+                        <Box sx={{ mb: 3 }}>
+                            <Typography variant="subtitle2" fontWeight="600" gutterBottom>
+                                Category
+                            </Typography>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                {['All Jobs', 'Finance', 'Automotive', 'Featured', 'Remote'].map((label, index) => (
+                                    <Button
+                                        key={label}
+                                        variant={selectedTab === index ? 'contained' : 'outlined'}
+                                        onClick={() => setSelectedTab(index)}
+                                        fullWidth
+                                        sx={{ justifyContent: 'flex-start', textTransform: 'none' }}
+                                    >
+                                        {label}
+                                    </Button>
+                                ))}
+                            </Box>
+                        </Box>
+
+                        {/* Clear Filters Button */}
                         <Button
-                            size="small"
-                            variant={viewFormat === 'table' ? 'contained' : 'text'}
-                            onClick={() => setViewFormat('table')}
-                            sx={{ 
-                                flex: 1,
-                                minWidth: 'auto', 
-                                px: 2,
-                                borderRadius: 0
+                            fullWidth
+                            variant="outlined"
+                            color="error"
+                            onClick={() => {
+                                setSearchQuery('');
+                                setSelectedLocation('');
+                                setSelectedExperience('');
+                                setSelectedJobType('');
+                                setSelectedSalaryRange('');
+                                setSelectedWorkMode('');
+                                setSelectedDatePosted('');
+                                setSelectedCompanyType('');
+                                setSelectedEducation('');
+                                setSelectedDepartment('');
+                                setSelectedTab(0);
                             }}
                         >
-                            📊 Table
+                            Clear All Filters
                         </Button>
-                        <Button
-                            size="small"
-                            variant={viewFormat === 'list' ? 'contained' : 'text'}
-                            onClick={() => setViewFormat('list')}
-                            sx={{ 
-                                flex: 1,
-                                minWidth: 'auto', 
-                                px: 2,
-                                borderRadius: 0
-                            }}
-                        >
-                            📋 List
-                        </Button>
-                        <Button
-                            size="small"
-                            variant={viewFormat === 'grid' ? 'contained' : 'text'}
-                            onClick={() => setViewFormat('grid')}
-                            sx={{ 
-                                flex: 1,
-                                minWidth: 'auto', 
-                                px: 2,
-                                borderRadius: 0
-                            }}
-                        >
-                            🔲 Grid
-                        </Button>
+                    </Paper>
+                </Grid>
+
+                {/* Right Content - Job Listings */}
+                <Grid item xs={12} md={9}>
+                    {/* Results Header */}
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                        <Typography variant="h6" fontWeight="600">
+                            {filteredJobs.length} Jobs Found
+                        </Typography>
+                        {/* View Format Toggle */}
+                        <Box sx={{ 
+                            display: 'flex', 
+                            border: '1px solid #e0e0e0', 
+                            borderRadius: 1, 
+                            overflow: 'hidden'
+                        }}>
+                            <Button
+                                size="small"
+                                variant={viewFormat === 'list' ? 'contained' : 'text'}
+                                onClick={() => setViewFormat('list')}
+                                sx={{ borderRadius: 0, minWidth: 100 }}
+                            >
+                                📋 List
+                            </Button>
+                            <Button
+                                size="small"
+                                variant={viewFormat === 'grid' ? 'contained' : 'text'}
+                                onClick={() => setViewFormat('grid')}
+                                sx={{ borderRadius: 0, minWidth: 100 }}
+                            >
+                                📱 Grid
+                            </Button>
+                        </Box>
                     </Box>
-                    <FormControl size="small" sx={{ minWidth: 120 }}>
-                        <InputLabel>Sort by</InputLabel>
-                        <Select
-                            value={sortBy}
-                            onChange={(e) => setSortBy(e.target.value)}
-                            label="Sort by"
-                        >
-                            <MenuItem value="relevance">Relevance</MenuItem>
-                            <MenuItem value="date">Date Posted</MenuItem>
-                            <MenuItem value="salary">Salary</MenuItem>
-                            <MenuItem value="company">Company</MenuItem>
-                        </Select>
-                    </FormControl>
+
+            {/* Loading State */}
+            {loading && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                    <CircularProgress size={60} />
                 </Box>
-            </Box>
+            )}
 
             {/* Empty State */}
-            {filteredJobs.length === 0 && (
+            {!loading && filteredJobs.length === 0 && (
                 <Paper sx={{ p: 6, textAlign: 'center', mb: 4 }}>
                     <Box sx={{ mb: 3 }}>
                         <Work sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
@@ -1515,21 +1647,8 @@ const JobsPage = () => {
                     />
                 </Box>
             )}
-
-            {/* Filter Drawer for Mobile */}
-            <FilterDrawer
-                anchor="right"
-                open={showFilters}
-                onClose={() => setShowFilters(false)}
-            >
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Typography variant="h6">Filters</Typography>
-                    <IconButton onClick={() => setShowFilters(false)}>
-                        <Close />
-                    </IconButton>
-                </Box>
-                <FilterPanel />
-            </FilterDrawer>
+                </Grid>
+            </Grid>
 
             {/* Job Market Insights */}
             <Box sx={{ mt: 6 }}>

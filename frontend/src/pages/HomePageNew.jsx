@@ -124,7 +124,7 @@ const HomePageNew = () => {
     });
 
     const handleSearch = (e) => {
-        e.preventDefault();
+        if (e) e.preventDefault();
         const params = new URLSearchParams();
         if (searchQuery) params.append('search', searchQuery);
         if (locationQuery) params.append('location', locationQuery);
@@ -318,6 +318,7 @@ const HomePageNew = () => {
                                                     variant="outlined"
                                                     onKeyPress={(e) => {
                                                         if (e.key === 'Enter') {
+                                                            e.preventDefault();
                                                             handleSearch(e);
                                                         }
                                                     }}
@@ -346,6 +347,7 @@ const HomePageNew = () => {
                                                     variant="outlined"
                                                     onKeyPress={(e) => {
                                                         if (e.key === 'Enter') {
+                                                            e.preventDefault();
                                                             handleSearch(e);
                                                         }
                                                     }}
@@ -361,18 +363,27 @@ const HomePageNew = () => {
                                             )}
                                         />
                                     </Grid>
-                                    <Grid item xs={12}>
-                                        <Button
-                                            fullWidth
-                                            variant="contained"
-                                            size="large"
-                                            onClick={handleSearch}
-                                            startIcon={<SearchIcon />}
-                                        >
-                                            Search Jobs
-                                        </Button>
-                                    </Grid>
                                 </Grid>
+
+                                <Box sx={{ mt: 3 }}>
+                                    <Button
+                                        variant="contained"
+                                        size="large"
+                                        fullWidth
+                                        onClick={handleSearch}
+                                        sx={{
+                                            py: 2,
+                                            fontSize: '1.1rem',
+                                            fontWeight: 600,
+                                            boxShadow: 2,
+                                            '&:hover': {
+                                                boxShadow: 4,
+                                            },
+                                        }}
+                                    >
+                                        Search Jobs
+                                    </Button>
+                                </Box>
 
                                 <Box sx={{ mt: 3 }}>
                                     <Typography variant="subtitle2" sx={{ mb: 1 }}>
