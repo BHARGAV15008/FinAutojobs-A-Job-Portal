@@ -7,7 +7,7 @@ if [ ! -f "frontend/.env" ]; then
     echo "📝 Creating frontend .env file..."
     cat > frontend/.env << EOF
 # Development API Configuration
-VITE_API_URL=http://localhost:5000/api
+VITE_API_URL=http://192.168.41.134:5000/api
 VITE_APP_NAME=FinAutoJobs
 VITE_APP_VERSION=1.0.0
 
@@ -41,7 +41,7 @@ if [ ! -f "backend/.env" ]; then
 # Server Configuration
 PORT=5000
 NODE_ENV=development
-FRONTEND_URL=http://localhost:3000
+FRONTEND_URL=http://192.168.41.134:3000
 
 # Database Configuration
 MONGODB_URI=mongodb+srv://technogenius1500_db_user:ZnqBQD8wc4M6c1Fm@cluster0.slmyrux.mongodb.net/?appName=Cluster0
@@ -54,7 +54,7 @@ JWT_EXPIRES_IN=24h
 SESSION_SECRET=dev-session-secret-key-change-this-in-production
 
 # CORS Configuration
-CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+CORS_ORIGINS=http://192.168.41.134:3000,http://127.0.0.1:3000
 
 # Development Flags
 SEND_EMAILS_IN_DEV=false
@@ -99,19 +99,19 @@ echo "🚀 To start the development server:"
 echo "   npm run dev"
 echo ""
 echo "📊 Backend will run on:"
-echo "   📱 Local: http://localhost:5000"
+echo "   📱 Local: http://192.168.41.134:5000"
 if [ ! -z "$LOCAL_IP" ]; then
     echo "   🌍 Network: http://$LOCAL_IP:5000"
 fi
 echo ""
 echo "🌐 Frontend will run on:"
-echo "   📱 Local: http://localhost:3000"
+echo "   📱 Local: http://192.168.41.134:3000"
 if [ ! -z "$LOCAL_IP" ]; then
     echo "   🌍 Network: http://$LOCAL_IP:3000"
 fi
 echo ""
 echo "🔍 API Health Check:"
-echo "   📱 Local: http://localhost:5000/api/health"
+echo "   📱 Local: http://192.168.41.134:5000/api/health"
 if [ ! -z "$LOCAL_IP" ]; then
     echo "   🌍 Network: http://$LOCAL_IP:5000/api/health"
 fi

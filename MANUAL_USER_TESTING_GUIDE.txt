@@ -8,8 +8,8 @@ Purpose: Verify complete data flow with real user interactions
                         PREREQUISITES
 ================================================================================
 
-1. Backend server running on http://localhost:5000
-2. Frontend server running on http://localhost:3000
+1. Backend server running on http://192.168.41.134:5000
+2. Frontend server running on http://192.168.41.134:3000
 3. Existing accounts:
    - Recruiter: bhargavgohil2520@gmail.com
    - Applicant: hohnjohn567@gmail.com
@@ -35,7 +35,7 @@ Wait for both servers to start successfully.
 STEP 2: CREATE A JOB (AS RECRUITER)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-1. Open browser: http://localhost:3000
+1. Open browser: http://192.168.41.134:3000
 2. Login as recruiter: bhargavgohil2520@gmail.com
 3. Go to Dashboard → Jobs → Post Job
 4. Fill in job details:

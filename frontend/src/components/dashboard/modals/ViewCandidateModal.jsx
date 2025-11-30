@@ -34,7 +34,7 @@ const ViewCandidateModal = ({ open, onClose, candidate }) => {
   if (!candidate) return null;
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" PaperProps={{ sx: { maxWidth: { xs: '95vw', sm: '460px', md: '510px' }, borderRadius: '6px' } }}>
       <DialogTitle>
         <Box
           sx={{

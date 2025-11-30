@@ -209,7 +209,7 @@ const ContactCandidateModal = ({ open, onClose, candidate, relatedJobId, related
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" PaperProps={{ sx: { maxWidth: { xs: '95vw', sm: '460px', md: '510px' }, borderRadius: '6px' } }}>
       <DialogTitle>Contact {candidate?.fullName}</DialogTitle>
 
       <DialogContent>

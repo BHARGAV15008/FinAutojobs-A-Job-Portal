@@ -3,9 +3,10 @@
 
 // Base card styles
 .dashboard-card {
-  @apply relative bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700;
+  @apply relative bg-white dark:bg-gray-800 rounded shadow-sm border border-gray-200 dark:border-gray-700;
   @apply transition-all duration-300 ease-in-out;
   @apply hover:shadow-xl hover:-translate-y-1;
+  border-radius: 6px !important;
   
   // Floating effect
   &:hover {
@@ -16,7 +17,8 @@
   // Gradient overlays
   &::before {
     content: '';
-    @apply absolute inset-0 rounded-xl opacity-0 transition-opacity duration-300;
+    @apply absolute inset-0 opacity-0 transition-opacity duration-300;
+    border-radius: 6px;
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
   }
   
@@ -102,7 +104,8 @@
     }
     
     .card-icon {
-      @apply p-3 rounded-lg text-white shadow-lg;
+      @apply p-3 text-white shadow-lg;
+      border-radius: 6px;
       @apply transform transition-transform duration-200;
       
       &:hover {
@@ -163,7 +166,8 @@
     @apply border-r border-gray-200 dark:border-gray-700;
     
     &.floating {
-      @apply rounded-r-2xl shadow-2xl;
+      border-radius: 0 6px 6px 0;
+      @apply shadow-2xl;
       margin: 8px 0 8px 8px;
     }
   }
@@ -179,10 +183,12 @@
 
 // Tab navigation styles
 .dashboard-tabs {
-  @apply flex space-x-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg;
+  @apply flex space-x-1 bg-gray-100 dark:bg-gray-800 p-1;
+  border-radius: 6px;
   
   .tab-button {
-    @apply px-4 py-2 text-sm font-medium rounded-md;
+    @apply px-4 py-2 text-sm font-medium;
+    border-radius: 5px;
     @apply transition-all duration-200;
     @apply text-gray-600 dark:text-gray-400;
     @apply hover:text-gray-900 dark:hover:text-white;
@@ -196,7 +202,8 @@
 
 // Welcome section enhancements
 .welcome-section {
-  @apply rounded-xl p-8 text-white mb-8;
+  border-radius: 6px;
+  @apply p-8 text-white mb-8;
   @apply relative overflow-hidden;
   
   &::before {

@@ -465,11 +465,11 @@ const DynamicApplicationForm = ({
     <Dialog
       open={isOpen}
       onClose={onClose}
-      maxWidth="md"
-      fullWidth
+      maxWidth="sm"
       PaperProps={{
         sx: {
-          minHeight: '80vh',
+          maxWidth: { xs: '95vw', sm: '460px', md: '510px' },
+          borderRadius: '6px',
           backgroundColor: darkMode ? 'grey.900' : 'background.paper'
         }
       }}

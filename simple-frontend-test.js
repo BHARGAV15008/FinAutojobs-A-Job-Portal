@@ -6,7 +6,7 @@
 
 import fetch from 'node-fetch';
 
-const BASE_URL = 'http://localhost:3001';
+const BASE_URL = 'http://192.168.41.134:3001';
 
 async function testFrontendPages() {
   console.log('🌐 Testing Frontend Page Accessibility...\n');

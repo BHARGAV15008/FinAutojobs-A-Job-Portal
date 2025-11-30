@@ -15,7 +15,7 @@ import { BaseUser } from '../models/UserModels.js';
 // Connect to MongoDB
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/finauto_jobs', {
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://192.168.41.134:27017/finauto_jobs', {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });

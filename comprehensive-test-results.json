@@ -315,7 +315,7 @@
           "googleClientId": "your-google-client-id",
           "googleCallbackUrl": "/api/auth/google/callback",
           "environment": "development",
-          "serverUrl": "http://localhost:5000",
+          "serverUrl": "http://192.168.41.134:5000",
           "expectedRedirectUri": "/api/auth/google/callback"
         },
         "instructions": {

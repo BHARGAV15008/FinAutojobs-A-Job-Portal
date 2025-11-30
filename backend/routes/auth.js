@@ -740,7 +740,7 @@ router.get('/test-reset-link/:email', async (req, res) => {
       expiresAt: new Date(Date.now() + 3600000) // 1 hour
     });
 
-    const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+    const resetLink = `${process.env.FRONTEND_URL || 'http://192.168.41.134:3000'}/reset-password?token=${resetToken}`;
     
     res.json({
       success: true,

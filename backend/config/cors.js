@@ -28,12 +28,12 @@ const getAllowedOrigins = () => {
         'https://dev-finautojobs.vercel.app',
 
         // Development origins
-        'http://localhost:3000',
-        'http://localhost:3000',
-        'http://localhost:3000',
-        'http://localhost:5173',
-        'http://localhost:4173',
-        'http://localhost:8080',
+        'http://192.168.41.134:3000',
+        'http://192.168.41.134:3000',
+        'http://192.168.41.134:3000',
+        'http://192.168.41.134:5173',
+        'http://192.168.41.134:4173',
+        'http://192.168.41.134:8080',
         'http://127.0.0.1:3000',
         'http://127.0.0.1:3000',
         'http://127.0.0.1:3000',

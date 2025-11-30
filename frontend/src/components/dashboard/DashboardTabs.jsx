@@ -88,7 +88,9 @@ import {
   Palette,
   Security,
   Notifications,
-  Settings
+  Settings,
+  Home,
+  ChevronRight
 } from '@mui/icons-material';
 import { format, parseISO } from 'date-fns';
 import { motion } from 'framer-motion';
@@ -565,79 +567,149 @@ export const ResumeTab = ({ data }) => {
   );
 };
 
-// Job Card Component
+// Job Card Component - Clean compact design
 const JobCard = ({ job, onToggleSave, isSaved = false }) => {
   const formatSalary = (min, max) => {
     if (!min && !max) return 'Not specified';
     const formatAmount = (amount) => {
-      if (amount >= 10000000) return `${(amount / 10000000).toFixed(1)}Cr`;
-      if (amount >= 100000) return `${(amount / 100000).toFixed(1)}L`;
-      if (amount >= 1000) return `${(amount / 1000).toFixed(1)}K`;
-      return amount.toString();
+      if (amount >= 100000) return `₹${(amount / 1000).toLocaleString('en-IN')}`;
+      return `₹${amount.toLocaleString('en-IN')}`;
     };
     
     if (min && max) {
-      return `₹${formatAmount(min)} - ₹${formatAmount(max)}`;
+      return `${formatAmount(min)} - ${formatAmount(max)}`;
     }
-    return `₹${formatAmount(min || max)}`;
+    return formatAmount(min || max);
+  };
+
+  const getWorkModeText = () => {
+    const mode = job.workMode || 'On-site';
+    if (mode === 'Remote') return 'Work from home';
+    return mode;
   };
 
   return (
-    <motion.div
-      whileHover={{ y: -4 }}
-      transition={{ duration: 0.2 }}
+    <Card 
+      sx={{ 
+        display: 'flex',
+        alignItems: 'center',
+        p: 2,
+        borderRadius: '6px',
+        border: '1px solid',
+        borderColor: 'divider',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+        cursor: 'pointer',
+        '&:hover': {
+          boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+          borderColor: 'primary.main',
+        },
+      }}
     >
-      <Card sx={{ borderRadius: 3, height: '100%' }}>
-        <CardContent>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-            <Typography variant="h6" fontWeight="bold">
-              {job.title}
-            </Typography>
-            <IconButton
-              onClick={() => onToggleSave(job.id, isSaved)}
-              color={isSaved ? 'primary' : 'default'}
-            >
-              {isSaved ? <Star /> : <StarBorder />}
-            </IconButton>
-          </Box>
+      {/* Company Logo */}
+      <Avatar
+        sx={{
+          bgcolor: 'primary.main',
+          color: 'white',
+          width: 48,
+          height: 48,
+          fontSize: '1rem',
+          fontWeight: 'bold',
+          mr: 2,
+          flexShrink: 0,
+        }}
+      >
+        {job.companyName?.[0] || 'C'}
+      </Avatar>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <Business fontSize="small" color="action" />
+      {/* Main Content */}
+      <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+        {/* Title and Company */}
+        <Typography 
+          variant="subtitle1" 
+          fontWeight="600" 
+          sx={{ 
+            color: 'text.primary',
+            mb: 0.25,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          {job.title}
+        </Typography>
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            color: 'text.secondary',
+            mb: 1,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          {job.companyName}
+        </Typography>
+
+        {/* Work Mode & Salary Row */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1.5, flexWrap: 'wrap' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            {job.workMode === 'Remote' ? (
+              <Home sx={{ fontSize: 16, color: 'text.secondary', mr: 0.5 }} />
+            ) : (
+              <LocationOn sx={{ fontSize: 16, color: 'text.secondary', mr: 0.5 }} />
+            )}
             <Typography variant="body2" color="text.secondary">
-              {job.companyName}
+              {getWorkModeText()}
             </Typography>
           </Box>
-
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <LocationOn fontSize="small" color="action" />
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <AttachMoney sx={{ fontSize: 16, color: 'text.secondary', mr: 0.25 }} />
             <Typography variant="body2" color="text.secondary">
-              {job.location}
+              {formatSalary(job.salaryMin, job.salaryMax)} monthly
             </Typography>
           </Box>
+        </Box>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-            <AttachMoney fontSize="small" color="action" />
-            <Typography variant="body2" color="text.secondary">
-              {formatSalary(job.salaryMin, job.salaryMax)}
-            </Typography>
-          </Box>
+        {/* Tags Row */}
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          <Chip
+            icon={<Work sx={{ fontSize: '14px !important' }} />}
+            label={job.jobType || 'Full Time'}
+            size="small"
+            sx={{
+              height: 24,
+              fontSize: '0.75rem',
+              bgcolor: 'action.hover',
+              color: 'text.secondary',
+              '& .MuiChip-icon': { color: 'text.secondary' }
+            }}
+          />
+          <Chip
+            icon={<Schedule sx={{ fontSize: '14px !important' }} />}
+            label={job.experience || 'Min. 1 year'}
+            size="small"
+            sx={{
+              height: 24,
+              fontSize: '0.75rem',
+              bgcolor: 'action.hover',
+              color: 'text.secondary',
+              '& .MuiChip-icon': { color: 'text.secondary' }
+            }}
+          />
+        </Box>
+      </Box>
 
-          <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-            <Chip label={job.jobType} size="small" variant="outlined" />
-            <Chip label={job.workMode} size="small" variant="outlined" />
-          </Box>
-        </CardContent>
-
-        <CardActions>
-          <Button size="small" variant="contained">
-            Apply Now
-          </Button>
-          <Button size="small">
-            View Details
-          </Button>
-        </CardActions>
-      </Card>
-    </motion.div>
+      {/* Right Arrow */}
+      <IconButton
+        sx={{
+          color: 'primary.main',
+          ml: 1,
+          flexShrink: 0,
+        }}
+      >
+        <ChevronRight />
+      </IconButton>
+    </Card>
   );
 };
 
@@ -704,7 +776,7 @@ export const SettingsDialog = ({ open, onClose, preferences, onUpdatePreferences
   ];
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" PaperProps={{ sx: { maxWidth: { xs: '95vw', sm: '460px', md: '510px' }, borderRadius: '6px' } }}>
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Settings />
@@ -792,7 +864,7 @@ export const ProfileEditDialog = ({ open, onClose, profileForm, setProfileForm, 
   ];
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" PaperProps={{ sx: { maxWidth: { xs: '95vw', sm: '460px', md: '510px' }, borderRadius: '6px' } }}>
       <DialogTitle>Edit Profile</DialogTitle>
       
       <DialogContent>

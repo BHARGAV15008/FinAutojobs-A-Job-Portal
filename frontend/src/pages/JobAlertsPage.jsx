@@ -348,7 +348,7 @@ const JobAlertsPage = () => {
     );
 
     const CreateEditDialog = () => (
-        <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="md" fullWidth>
+        <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" PaperProps={{ sx: { maxWidth: { xs: '95vw', sm: '460px', md: '510px' }, borderRadius: '6px' } }}>
             <DialogTitle>
                 {editingAlert ? 'Edit Job Alert' : 'Create New Job Alert'}
             </DialogTitle>

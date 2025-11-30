@@ -593,7 +593,7 @@ const EnhancedCandidatesTab = () => {
         
         // If API download fails, try fetching profile data
         try {
-          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+          const apiUrl = import.meta.env.VITE_API_URL || 'http://192.168.41.134:5000/api';
           const possibleEndpoints = [
             `${apiUrl}/users/${candidate.candidateId}/profile`,
             `${apiUrl}/users/${candidate.candidateId}`,
@@ -657,7 +657,7 @@ const EnhancedCandidatesTab = () => {
         
         // If it's a relative URL, make it absolute
         if (resumeUrl.startsWith('/')) {
-          const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+          const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://192.168.41.134:5000';
           downloadUrl = `${baseUrl}${resumeUrl}`;
         }
         

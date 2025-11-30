@@ -12,7 +12,8 @@ import {
   Search, FilterList, ViewList, ViewModule, LocationOn, AttachMoney,
   Schedule, Business, Work, Star, StarBorder, Bookmark, BookmarkBorder,
   ArrowForward, MoreVert, Refresh, Clear, Sort, ArrowUpward, ArrowDownward,
-  Description, Public, Timer, CheckCircle, HourglassEmpty
+  Description, Public, Timer, CheckCircle, HourglassEmpty, Home, ChevronRight,
+  CurrencyRupee
 } from '@mui/icons-material';
 
 const ApplicantJobsTab = ({ user }) => {
@@ -202,123 +203,138 @@ const ApplicantJobsTab = ({ user }) => {
   const currentJobs = sortedJobs.slice(indexOfFirstJob, indexOfLastJob);
   const totalPages = Math.ceil(sortedJobs.length / jobsPerPage);
 
-  const JobCard = ({ job }) => (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-    >
-      <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <CardContent sx={{ flexGrow: 1 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-            <Box sx={{ flexGrow: 1 }}>
-              <Typography variant="h6" fontWeight="bold" gutterBottom>
-                {job.title}
-              </Typography>
-              <Typography variant="subtitle1" color="primary" gutterBottom>
-                {job.company}
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Chip 
-                label={`${job.matchScore}% match`} 
-                color="success" 
-                size="small"
-                sx={{ fontWeight: 'bold' }}
-              />
-              <IconButton
-                onClick={() => handleBookmark(job.id)}
-                color={job.isBookmarked ? 'primary' : 'default'}
-              >
-                {job.isBookmarked ? <Bookmark /> : <BookmarkBorder />}
-              </IconButton>
-            </Box>
-          </Box>
+  const JobCard = ({ job }) => {
+    const getWorkModeText = () => {
+      const mode = job.workMode || 'On-site';
+      if (mode === 'Remote') return 'Work from home';
+      return mode;
+    };
 
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-            <Chip
-              icon={<LocationOn fontSize="small" />}
-              label={job.location}
-              size="small"
-              variant="outlined"
-            />
-            <Chip
-              icon={<AttachMoney fontSize="small" />}
-              label={job.salary}
-              size="small"
-              variant="outlined"
-            />
-            <Chip
-              icon={<Schedule fontSize="small" />}
-              label={job.jobType}
-              size="small"
-              variant="outlined"
-            />
-            <Chip
-              icon={<Public fontSize="small" />}
-              label={job.workMode}
-              size="small"
-              variant="outlined"
-            />
-          </Box>
+    return (
+      <Card 
+        sx={{ 
+          display: 'flex',
+          alignItems: 'center',
+          p: 2,
+          borderRadius: '6px',
+          border: '1px solid',
+          borderColor: 'divider',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+          cursor: 'pointer',
+          '&:hover': {
+            boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+            borderColor: 'primary.main',
+          },
+        }}
+        onClick={() => handleViewDetails(job)}
+      >
+        {/* Company Logo */}
+        <Avatar
+          sx={{
+            bgcolor: 'primary.main',
+            color: 'white',
+            width: 48,
+            height: 48,
+            fontSize: '1rem',
+            fontWeight: 'bold',
+            mr: 2,
+            flexShrink: 0,
+          }}
+        >
+          {job.company?.[0] || 'C'}
+        </Avatar>
 
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {job.description.substring(0, 120)}...
+        {/* Main Content */}
+        <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+          {/* Title and Company */}
+          <Typography 
+            variant="subtitle1" 
+            fontWeight="600" 
+            sx={{ 
+              color: 'text.primary',
+              mb: 0.25,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            {job.title}
+          </Typography>
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              color: 'text.secondary',
+              mb: 1,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            {job.company}
           </Typography>
 
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
-            {job.skills.slice(0, 4).map((skill, index) => (
-              <Chip
-                key={index}
-                label={skill}
-                size="small"
-                variant="outlined"
-                sx={{ fontSize: '0.75rem' }}
-              />
-            ))}
-            {job.skills.length > 4 && (
-              <Chip
-                label={`+${job.skills.length - 4} more`}
-                size="small"
-                variant="outlined"
-                sx={{ fontSize: '0.75rem' }}
-              />
-            )}
-          </Box>
-
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 'auto' }}>
-            <Typography variant="caption" color="text.secondary">
-              Posted {job.posted} • {job.applicants} applicants
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <Button
-                size="small"
-                variant="outlined"
-                onClick={() => handleViewDetails(job)}
-              >
-                View Details
-              </Button>
-              {!job.isApplied ? (
-                <Button
-                  size="small"
-                  variant="contained"
-                  onClick={() => handleApply(job.id)}
-                >
-                  Apply
-                </Button>
+          {/* Work Mode & Salary Row */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1.5, flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              {job.workMode === 'Remote' ? (
+                <Home sx={{ fontSize: 16, color: 'text.secondary', mr: 0.5 }} />
               ) : (
-                <Chip
-                  icon={<CheckCircle />}
-                  label="Applied"
-                  color="success"
-                  size="small"
-                />
+                <LocationOn sx={{ fontSize: 16, color: 'text.secondary', mr: 0.5 }} />
               )}
+              <Typography variant="body2" color="text.secondary">
+                {getWorkModeText()}
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <CurrencyRupee sx={{ fontSize: 16, color: 'text.secondary', mr: 0.25 }} />
+              <Typography variant="body2" color="text.secondary">
+                {job.salary} monthly
+              </Typography>
             </Box>
           </Box>
-        </CardContent>
+
+          {/* Tags Row */}
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            <Chip
+              icon={<Work sx={{ fontSize: '14px !important' }} />}
+              label={job.jobType || 'Full Time'}
+              size="small"
+              sx={{
+                height: 24,
+                fontSize: '0.75rem',
+                bgcolor: 'action.hover',
+                color: 'text.secondary',
+                '& .MuiChip-icon': { color: 'text.secondary' }
+              }}
+            />
+            <Chip
+              icon={<Schedule sx={{ fontSize: '14px !important' }} />}
+              label={job.experience || 'Min. 1 year'}
+              size="small"
+              sx={{
+                height: 24,
+                fontSize: '0.75rem',
+                bgcolor: 'action.hover',
+                color: 'text.secondary',
+                '& .MuiChip-icon': { color: 'text.secondary' }
+              }}
+            />
+          </Box>
+        </Box>
+
+        {/* Right Arrow */}
+        <IconButton
+          sx={{
+            color: 'primary.main',
+            ml: 1,
+            flexShrink: 0,
+          }}
+        >
+          <ChevronRight />
+        </IconButton>
       </Card>
-    </motion.div>
-  );
+    );
+  };
 
   const JobListItem = ({ job }) => (
     <TableRow hover>

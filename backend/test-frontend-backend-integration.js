@@ -17,7 +17,7 @@ const __dirname = path.dirname(__filename);
 
 dotenv.config({ path: path.join(__dirname, '.env.development') });
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = 'http://192.168.41.134:5000/api';
 let recruiterToken = '';
 let applicantToken = '';
 let jobId = '';
@@ -451,7 +451,7 @@ const main = async () => {
   console.log(`${'='.repeat(80)}\n`);
   
   console.log(`⚠️  Prerequisites:`);
-  console.log(`   1. Backend server must be running on http://localhost:5000`);
+  console.log(`   1. Backend server must be running on http://192.168.41.134:5000`);
   console.log(`   2. Recruiter account must exist: ${RECRUITER_EMAIL}`);
   console.log(`   3. Applicant account must exist: ${APPLICANT_EMAIL}`);
   console.log(`   4. MongoDB must be accessible\n`);

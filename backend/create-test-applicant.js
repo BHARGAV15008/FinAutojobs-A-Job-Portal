@@ -156,7 +156,7 @@ async function createTestApplicant() {
     console.log('👤 Role: applicant');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('');
-    console.log('🌐 Login URL: http://localhost:3000/login');
+    console.log('🌐 Login URL: http://192.168.41.134:3000/login');
     
     await mongoose.disconnect();
     console.log('✅ Disconnected from MongoDB');

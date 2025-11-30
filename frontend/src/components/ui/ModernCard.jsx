@@ -67,16 +67,16 @@ const ModernCard = ({
     xl: 'p-10'
   };
 
-  // Border radius classes
+  // Border radius classes - Standardized to 6px
   const radiusClasses = {
     none: 'rounded-none',
     sm: 'rounded-sm',
     base: 'rounded',
     md: 'rounded-md',
-    lg: 'rounded-lg',
-    xl: 'rounded-xl',
-    '2xl': 'rounded-2xl',
-    '3xl': 'rounded-3xl',
+    lg: 'rounded',
+    xl: 'rounded',
+    '2xl': 'rounded',
+    '3xl': 'rounded',
     full: 'rounded-full'
   };
 

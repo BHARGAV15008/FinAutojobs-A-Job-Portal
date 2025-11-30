@@ -148,7 +148,7 @@ app.use(
     saveUninitialized: false,
     store: MongoStore.create({
       mongoUrl:
-        process.env.MONGODB_URI || "mongodb://localhost:27017/finauto_jobs",
+        process.env.MONGODB_URI || "mongodb://192.168.41.134:27017/finauto_jobs",
       touchAfter: 24 * 3600, // lazy session update
     }),
     cookie: {
@@ -472,7 +472,7 @@ server
       `🚀 FinAutoJobs API Server - Email Fixed - running on port ${PORT}`
     );
     console.log(`🌐 Network Access:`);
-    console.log(`   📱 Local: http://localhost:${PORT}`);
+    console.log(`   📱 Local: http://192.168.41.134:${PORT}`);
     console.log(`   🌍 Network: http://${localIP}:${PORT}`);
     console.log(`   📊 Health check: http://${localIP}:${PORT}/api/health`);
     console.log(`🛡️ Enhanced error handling enabled`);

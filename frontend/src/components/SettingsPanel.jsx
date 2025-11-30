@@ -795,7 +795,7 @@ const SettingsPanel = ({ userRole = 'applicant', onSettingsChange }) => {
       </motion.div>
 
       {/* Dialogs */}
-      <Dialog open={showResetDialog} onClose={() => setShowResetDialog(false)}>
+      <Dialog open={showResetDialog} onClose={() => setShowResetDialog(false)} PaperProps={{ sx: { maxWidth: { xs: '95vw', sm: '460px' }, borderRadius: '6px' } }}>
         <DialogTitle>Reset Settings</DialogTitle>
         <DialogContent>
           <Typography>
@@ -810,7 +810,7 @@ const SettingsPanel = ({ userRole = 'applicant', onSettingsChange }) => {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={showExportDialog} onClose={() => setShowExportDialog(false)}>
+      <Dialog open={showExportDialog} onClose={() => setShowExportDialog(false)} PaperProps={{ sx: { maxWidth: { xs: '95vw', sm: '460px' }, borderRadius: '6px' } }}>
         <DialogTitle>Export Settings</DialogTitle>
         <DialogContent>
           <Typography>

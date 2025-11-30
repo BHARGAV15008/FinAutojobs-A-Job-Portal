@@ -231,7 +231,7 @@ router.get('/google/callback',
       
       console.log('🔍 Google OAuth Callback - Role:', role, 'Action:', action);
       
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const frontendUrl = process.env.FRONTEND_URL || 'http://192.168.41.134:3000';
       
       if (action === 'link') {
         // Handle account linking
@@ -275,7 +275,7 @@ router.get('/google/callback',
       res.redirect(redirectUrl);
     } catch (error) {
       console.error('❌ Google OAuth Callback Error:', error);
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const frontendUrl = process.env.FRONTEND_URL || 'http://192.168.41.134:3000';
       
       // Handle specific error types
       if (error.code === 'EMAIL_ROLE_CONFLICT') {
@@ -326,13 +326,13 @@ router.get('/linkedin/callback',
       );
       
       // Redirect to frontend with token - Fixed URL path
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const frontendUrl = process.env.FRONTEND_URL || 'http://192.168.41.134:3000';
       const redirectUrl = `${frontendUrl}/auth/oauth-callback?token=${token}&provider=linkedin&role=${user.role}&isNewUser=${isNewUser}`;
       
       res.redirect(redirectUrl);
     } catch (error) {
       console.error('❌ LinkedIn OAuth Callback Error:', error);
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const frontendUrl = process.env.FRONTEND_URL || 'http://192.168.41.134:3000';
       
       // Handle specific error types
       if (error.code === 'EMAIL_ROLE_CONFLICT') {
@@ -388,7 +388,7 @@ router.get('/debug', (req, res) => {
       googleClientId: OAUTH_CONFIG.google.clientID,
       googleCallbackUrl: OAUTH_CONFIG.google.callbackURL,
       environment: process.env.NODE_ENV,
-      serverUrl: `http://localhost:${process.env.PORT || 5000}`,
+      serverUrl: `http://192.168.41.134:${process.env.PORT || 5000}`,
       expectedRedirectUri: OAUTH_CONFIG.google.callbackURL
     },
     instructions: {

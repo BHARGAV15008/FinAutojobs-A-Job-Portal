@@ -555,6 +555,21 @@ body:not(.dark) th,
   border: 1px solid #4b5563 !important; /* Visible borders */
 }
 
+/* STANDARDIZED BORDER-RADIUS (6px) */
+.light .rounded-xl,
+.light .rounded-2xl,
+.light .rounded-3xl,
+.dark .rounded-xl,
+.dark .rounded-2xl,
+.dark .rounded-3xl {
+  border-radius: 6px !important;
+}
+
+.light .rounded-lg,
+.dark .rounded-lg {
+  border-radius: 6px !important;
+}
+
 /* FORCE ALL DASHBOARD ELEMENTS TO MAXIMUM CONTRAST */
 .light .dashboard-container *,
 .light [class*="dashboard"] *,

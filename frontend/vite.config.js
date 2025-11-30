@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => {
   
   const defaultEnvVars = {
     VITE_API_URL: isDevelopment 
-      ? 'http://localhost:5000/api' 
+      ? 'http://192.168.41.134:5000/api' 
       : 'https://finautojobs-backend.onrender.com/api',
     VITE_APP_NAME: isDevelopment ? 'FinAutoJobs (Dev)' : 'FinAutoJobs',
     VITE_APP_VERSION: '1.0.0',
@@ -69,7 +69,7 @@ export default defineConfig(({ mode }) => {
       },
       proxy: {
         '/api': {
-          target: process.env.VITE_API_URL || 'http://localhost:5000',
+          target: process.env.VITE_API_URL || 'http://192.168.41.134:5000',
           changeOrigin: true,
           secure: false,
           configure: (proxy, options) => {
@@ -80,7 +80,7 @@ export default defineConfig(({ mode }) => {
           }
         },
         '/socket.io': {
-          target: process.env.VITE_API_URL || 'http://localhost:5000',
+          target: process.env.VITE_API_URL || 'http://192.168.41.134:5000',
           ws: true,
           changeOrigin: true,
         },

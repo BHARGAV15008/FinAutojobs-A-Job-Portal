@@ -85,7 +85,7 @@ console.log('═'.repeat(80));
 console.log('🔗 LOGIN');
 console.log('═'.repeat(80));
 console.log('');
-console.log('URL: http://localhost:3000/admin/login');
+console.log('URL: http://192.168.41.134:3000/admin/login');
 console.log('');
 
 console.log('═'.repeat(80) + '\n');

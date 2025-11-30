@@ -5,7 +5,7 @@ import { twMerge } from 'tailwind-merge';
 const cn = (...inputs) => twMerge(clsx(inputs));
 
 const base =
-  'inline-flex items-center justify-center select-none whitespace-nowrap rounded-xl font-medium ds-transition ds-focus-ring focus-visible:outline-none disabled:opacity-50 disabled:pointer-events-none';
+  'inline-flex items-center justify-center select-none whitespace-nowrap rounded font-medium ds-transition ds-focus-ring focus-visible:outline-none disabled:opacity-50 disabled:pointer-events-none';
 
 const variants = {
   primary:

@@ -382,7 +382,7 @@ const ApplicantDashboard = () => {
               p: 2,
               display: 'flex',
               justifyContent: 'space-around',
-              borderRadius: '16px 16px 0 0',
+              borderRadius: '6px 6px 0 0',
               boxShadow: '0 -4px 20px rgba(0,0,0,0.1)'
             }}
           >

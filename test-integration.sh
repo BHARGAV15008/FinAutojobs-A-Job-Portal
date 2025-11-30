@@ -10,7 +10,7 @@ NC='\033[0m' # No Color
 
 # Test backend health endpoint
 echo "🔍 Testing backend health endpoint..."
-BACKEND_RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/api/health)
+BACKEND_RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://192.168.41.134:5000/api/health)
 
 if [ "$BACKEND_RESPONSE" = "200" ]; then
     echo -e "${GREEN}✅ Backend health check: PASSED${NC}"
@@ -21,7 +21,7 @@ fi
 
 # Test frontend accessibility
 echo "🔍 Testing frontend accessibility..."
-FRONTEND_RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000)
+FRONTEND_RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://192.168.41.134:3000)
 
 if [ "$FRONTEND_RESPONSE" = "200" ]; then
     echo -e "${GREEN}✅ Frontend accessibility: PASSED${NC}"
@@ -33,7 +33,7 @@ fi
 # Test API proxy (if frontend is running)
 if [ "$FRONTEND_RESPONSE" = "200" ]; then
     echo "🔍 Testing API proxy through frontend..."
-    PROXY_RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/health)
+    PROXY_RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://192.168.41.134:3000/api/health)
     
     if [ "$PROXY_RESPONSE" = "200" ]; then
         echo -e "${GREEN}✅ API proxy: PASSED${NC}"
@@ -45,7 +45,7 @@ fi
 
 # Test database connection (indirect through API)
 echo "🔍 Testing database connection..."
-DB_TEST=$(curl -s http://localhost:5000/api/health | grep -o '"database":"connected"')
+DB_TEST=$(curl -s http://192.168.41.134:5000/api/health | grep -o '"database":"connected"')
 
 if [ "$DB_TEST" = '"database":"connected"' ]; then
     echo -e "${GREEN}✅ Database connection: PASSED${NC}"
@@ -56,9 +56,9 @@ fi
 
 echo ""
 echo "📊 Integration Test Summary:"
-echo "   Backend: http://localhost:5000"
-echo "   Frontend: http://localhost:3000"
-echo "   API Health: http://localhost:5000/api/health"
+echo "   Backend: http://192.168.41.134:5000"
+echo "   Frontend: http://192.168.41.134:3000"
+echo "   API Health: http://192.168.41.134:5000/api/health"
 echo ""
 
 if [ "$BACKEND_RESPONSE" = "200" ] && [ "$FRONTEND_RESPONSE" = "200" ]; then

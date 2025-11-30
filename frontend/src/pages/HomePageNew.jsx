@@ -74,13 +74,18 @@ const StatsCard = styled(Card)(({ theme }) => ({
 }));
 
 const JobCard = styled(Card)(({ theme }) => ({
-    height: '100%',
     display: 'flex',
-    flexDirection: 'column',
-    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+    alignItems: 'flex-start',
+    padding: '14px 16px',
+    borderRadius: '6px',
+    border: `1px solid ${theme.palette.divider}`,
+    boxShadow: 'none',
+    transition: 'all 0.2s ease',
+    cursor: 'pointer',
+    backgroundColor: theme.palette.background.paper,
     '&:hover': {
-        transform: 'translateY(-8px)',
-        boxShadow: theme.shadows[8],
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        borderColor: theme.palette.primary.light,
     },
 }));
 
@@ -516,75 +521,133 @@ const HomePageNew = () => {
                     </Tabs>
                 </Box>
 
-                <Grid container spacing={3}>
+                <Grid container spacing={2}>
                     {jobsData?.jobs?.slice(0, 6).map((job) => (
-                        <Grid item xs={12} md={6} lg={4} key={job.id}>
-                            <JobCard>
-                                <CardContent>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                                        <Box sx={{ display: 'flex', gap: 2 }}>
-                                            <Avatar
-                                                src={job.logo}
-                                                variant="rounded"
-                                                sx={{ width: 56, height: 56 }}
-                                            >
-                                                {job?.company?.[0] || '?'}
-                                            </Avatar>
-                                            <Box>
-                                                <Typography variant="h6" gutterBottom>
-                                                    {job.title}
-                                                </Typography>
-                                                <Typography variant="subtitle2" color="text.secondary">
-                                                    {job.company}
-                                                </Typography>
-                                            </Box>
-                                        </Box>
-                                        <IconButton>
-                                            <Favorite />
-                                        </IconButton>
-                                    </Box>
+                        <Grid item xs={12} md={6} key={job.id}>
+                            <Link href={`/job/${job.id}`} style={{ textDecoration: 'none' }}>
+                                <JobCard>
+                                    {/* Company Logo */}
+                                    <Avatar
+                                        src={job.logo}
+                                        variant="rounded"
+                                        sx={{
+                                            bgcolor: 'primary.main',
+                                            color: 'white',
+                                            width: 44,
+                                            height: 44,
+                                            fontSize: '0.85rem',
+                                            fontWeight: 'bold',
+                                            mr: 2,
+                                            flexShrink: 0,
+                                            borderRadius: '6px',
+                                        }}
+                                    >
+                                        {job?.company?.substring(0, 2).toUpperCase() || 'CO'}
+                                    </Avatar>
 
-                                    <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                                        <Chip
-                                            icon={<LocationOn />}
-                                            label={job.location}
-                                            variant="outlined"
-                                            size="small"
-                                        />
-                                        <Chip
-                                            icon={<Schedule />}
-                                            label={job.type}
-                                            variant="outlined"
-                                            size="small"
-                                        />
-                                    </Box>
-
-                                    <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                                        {job.skills?.slice(0, 3).map((skill) => (
-                                            <Chip
-                                                key={skill}
-                                                label={skill}
-                                                size="small"
-                                                sx={{ bgcolor: 'primary.50' }}
-                                            />
-                                        ))}
-                                    </Box>
-
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <Typography variant="subtitle1" color="primary" fontWeight="bold">
-                                            ₹{job.salary}/month
-                                        </Typography>
-                                        <Button
-                                            component={Link}
-                                            href={`/job/${job.id}`}
-                                            variant="contained"
-                                            endIcon={<ChevronRight />}
+                                    {/* Main Content */}
+                                    <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                                        {/* Title */}
+                                        <Typography 
+                                            variant="subtitle1" 
+                                            fontWeight="600" 
+                                            sx={{ 
+                                                color: 'text.primary',
+                                                mb: 0.25,
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap',
+                                                fontSize: '0.95rem'
+                                            }}
                                         >
-                                            Apply Now
-                                        </Button>
+                                            {job.title}
+                                        </Typography>
+                                        
+                                        {/* Company Name */}
+                                        <Typography 
+                                            variant="body2" 
+                                            sx={{ 
+                                                color: 'text.secondary',
+                                                mb: 1,
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap',
+                                                fontSize: '0.8rem'
+                                            }}
+                                        >
+                                            {job.company}
+                                        </Typography>
+
+                                        {/* Location Row */}
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.75 }}>
+                                            <LocationOn sx={{ fontSize: 15, color: 'text.secondary', mr: 0.5 }} />
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                                                {job.location || 'Location not specified'}
+                                            </Typography>
+                                        </Box>
+
+                                        {/* Salary Row */}
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.25 }}>
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                                                ₹{job.salary || 'Not disclosed'}
+                                            </Typography>
+                                        </Box>
+
+                                        {/* Tags Row */}
+                                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                            <Chip
+                                                icon={<Business sx={{ fontSize: '13px !important' }} />}
+                                                label={job.workMode === 'Remote' ? 'Work from home' : 'Work from Office'}
+                                                size="small"
+                                                sx={{
+                                                    height: 22,
+                                                    fontSize: '0.7rem',
+                                                    bgcolor: 'action.hover',
+                                                    color: 'text.secondary',
+                                                    '& .MuiChip-icon': { color: 'text.secondary', ml: 0.5 },
+                                                    '& .MuiChip-label': { px: 1 }
+                                                }}
+                                            />
+                                            <Chip
+                                                icon={<Work sx={{ fontSize: '13px !important' }} />}
+                                                label={job.type || 'Full Time'}
+                                                size="small"
+                                                sx={{
+                                                    height: 22,
+                                                    fontSize: '0.7rem',
+                                                    bgcolor: 'action.hover',
+                                                    color: 'text.secondary',
+                                                    '& .MuiChip-icon': { color: 'text.secondary', ml: 0.5 },
+                                                    '& .MuiChip-label': { px: 1 }
+                                                }}
+                                            />
+                                            <Chip
+                                                icon={<Schedule sx={{ fontSize: '13px !important' }} />}
+                                                label={job.experience || 'Min. 1 year'}
+                                                size="small"
+                                                sx={{
+                                                    height: 22,
+                                                    fontSize: '0.7rem',
+                                                    bgcolor: 'action.hover',
+                                                    color: 'text.secondary',
+                                                    '& .MuiChip-icon': { color: 'text.secondary', ml: 0.5 },
+                                                    '& .MuiChip-label': { px: 1 }
+                                                }}
+                                            />
+                                        </Box>
                                     </Box>
-                                </CardContent>
-                            </JobCard>
+
+                                    {/* Right Arrow */}
+                                    <ChevronRight 
+                                        sx={{ 
+                                            color: 'text.secondary',
+                                            ml: 1,
+                                            flexShrink: 0,
+                                            fontSize: 24
+                                        }} 
+                                    />
+                                </JobCard>
+                            </Link>
                         </Grid>
                     ))}
                 </Grid>

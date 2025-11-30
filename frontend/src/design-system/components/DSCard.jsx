@@ -8,11 +8,12 @@ export default function DSCard({ as: As = 'div', className, hover = true, childr
   return (
     <As
       className={cn(
-        'relative rounded-2xl bg-card text-card-foreground border border-border shadow-sm',
+        'relative rounded bg-card text-card-foreground border border-border shadow-sm',
         hover && 'ds-hover-raise',
         'p-6',
         className
       )}
+      style={{ borderRadius: '6px' }}
       {...props}
     >
       {children}

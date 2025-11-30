@@ -507,8 +507,8 @@ const ApplicationTrackingDashboard = ({ userRole = 'applicant' }) => {
     <Dialog
       open={detailsOpen}
       onClose={() => setDetailsOpen(false)}
-      maxWidth="md"
-      fullWidth
+      maxWidth="sm"
+      PaperProps={{ sx: { maxWidth: { xs: '95vw', sm: '460px', md: '510px' }, borderRadius: '6px' } }}
     >
       <DialogTitle>
         <Box display="flex" alignItems="center" justifyContent="space-between">

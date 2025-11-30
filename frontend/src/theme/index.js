@@ -81,13 +81,13 @@ const baseTheme = {
     },
   },
   shape: {
-    borderRadius: 12,
+    borderRadius: 6,
   },
   components: {
     MuiButton: {
       styleOverrides: {
         root: ({ theme }) => ({
-          borderRadius: '12px',
+          borderRadius: '6px',
           padding: '10px 24px',
           fontSize: '0.875rem',
           fontWeight: 600,
@@ -136,14 +136,14 @@ const baseTheme = {
     MuiCard: {
       styleOverrides: {
         root: ({ theme }) => ({
-          borderRadius: '16px',
+          borderRadius: '6px',
           boxShadow: '0px 4px 12px rgba(0,0,0,0.05)',
           '&:hover': {
             boxShadow: '0px 8px 24px rgba(0,0,0,0.1)',
           },
           // Responsive margins and padding
           [theme.breakpoints.down('sm')]: {
-            borderRadius: '12px',
+            borderRadius: '6px',
             margin: '8px',
           },
         }),
@@ -153,7 +153,7 @@ const baseTheme = {
       styleOverrides: {
         root: ({ theme }) => ({
           '& .MuiOutlinedInput-root': {
-            borderRadius: '12px',
+            borderRadius: '6px',
             minHeight: '48px', // Touch-friendly
             '&:hover .MuiOutlinedInput-notchedOutline': {
               borderColor: '#8B5CF6',
@@ -173,7 +173,7 @@ const baseTheme = {
     MuiChip: {
       styleOverrides: {
         root: {
-          borderRadius: '8px',
+          borderRadius: '6px',
           fontWeight: 500,
         },
       },
@@ -181,7 +181,7 @@ const baseTheme = {
     MuiPaper: {
       styleOverrides: {
         root: {
-          borderRadius: '16px',
+          borderRadius: '6px',
         },
       },
     },
@@ -205,12 +205,12 @@ const baseTheme = {
     MuiDialog: {
       styleOverrides: {
         paper: ({ theme }) => ({
-          borderRadius: '20px',
+          borderRadius: '6px',
           margin: '16px',
           width: 'calc(100% - 32px)',
           maxWidth: 'calc(100% - 32px)',
           [theme.breakpoints.down('sm')]: {
-            borderRadius: '16px',
+            borderRadius: '6px',
             margin: '8px',
             width: 'calc(100% - 16px)',
             maxWidth: 'calc(100% - 16px)',

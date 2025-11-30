@@ -109,7 +109,7 @@ const buildApiUrl = () => {
     // 3. Local development (localhost)
     if (environment === 'development') {
         const backendPort = import.meta.env.VITE_BACKEND_PORT || '5000';
-        const localUrl = `http://localhost:${backendPort}/api`;
+        const localUrl = `http://192.168.41.134:${backendPort}/api`;
         console.log('🔧 Using local development URL:', localUrl);
         return localUrl;
     }
@@ -124,7 +124,7 @@ const buildApiUrl = () => {
 
     // 5. Ultimate fallback
     const backendPort = import.meta.env.VITE_BACKEND_PORT || '5000';
-    const fallbackUrl = `http://localhost:${backendPort}/api`;
+    const fallbackUrl = `http://192.168.41.134:${backendPort}/api`;
     console.log('⚠️ Using ultimate fallback:', fallbackUrl);
     return fallbackUrl;
 };

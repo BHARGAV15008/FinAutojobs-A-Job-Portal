@@ -200,7 +200,7 @@ const FloatingActions = () => {
             background: '#ffffff',
             color: '#333333',
             padding: '8px 12px',
-            borderRadius: '20px',
+            borderRadius: '6px',
             fontSize: '0.75rem',
             border: '1px solid rgba(33, 150, 243, 0.2)',
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',

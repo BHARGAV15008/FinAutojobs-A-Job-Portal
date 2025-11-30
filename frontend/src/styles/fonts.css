@@ -209,7 +209,8 @@ body {
 
 /* Improved button styling */
 .btn-primary {
-  @apply bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200;
+  @apply bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 transition-colors duration-200;
+  border-radius: 6px;
 }
 
 .dark .btn-primary {
@@ -218,7 +219,8 @@ body {
 
 /* Card styling improvements */
 .card {
-  @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700;
+  @apply bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700;
+  border-radius: 6px;
 }
 
 /* Consistent spacing */

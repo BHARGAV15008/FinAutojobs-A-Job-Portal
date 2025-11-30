@@ -506,11 +506,12 @@ const SkillsAssessmentPage = () => {
         return (
             <Dialog
                 open={dialogOpen && isAssessmentActive}
-                maxWidth="md"
-                fullWidth
+                maxWidth="sm"
                 disableEscapeKeyDown
                 PaperProps={{
                     sx: {
+                        maxWidth: { xs: '95vw', sm: '460px', md: '510px' },
+                        borderRadius: '6px',
                         position: 'fixed',
                         top: '50%',
                         left: '50%',
@@ -606,10 +607,11 @@ const SkillsAssessmentPage = () => {
             <Dialog
                 open={showResults}
                 maxWidth="sm"
-                fullWidth
                 onClose={() => setShowResults(false)}
                 PaperProps={{
                     sx: {
+                        maxWidth: { xs: '95vw', sm: '400px', md: '460px' },
+                        borderRadius: '6px',
                         position: 'fixed',
                         top: '50%',
                         left: '50%',

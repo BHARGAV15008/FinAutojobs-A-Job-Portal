@@ -593,7 +593,7 @@ const ApplicantProfileTab = ({ user }) => {
       </Card>
 
       {/* Resume Upload Dialog */}
-      <Dialog open={resumeDialogOpen} onClose={() => setResumeDialogOpen(false)}>
+      <Dialog open={resumeDialogOpen} onClose={() => setResumeDialogOpen(false)} PaperProps={{ sx: { maxWidth: { xs: '95vw', sm: '460px' }, borderRadius: '6px' } }}>
         <DialogTitle>Upload Resume</DialogTitle>
         <DialogContent>
           <Box sx={{ mt: 2 }}>
@@ -624,7 +624,7 @@ const ApplicantProfileTab = ({ user }) => {
       </Dialog>
 
       {/* Profile Image Upload Dialog */}
-      <Dialog open={profileImageDialogOpen} onClose={() => setProfileImageDialogOpen(false)}>
+      <Dialog open={profileImageDialogOpen} onClose={() => setProfileImageDialogOpen(false)} PaperProps={{ sx: { maxWidth: { xs: '95vw', sm: '460px' }, borderRadius: '6px' } }}>
         <DialogTitle>Upload Profile Picture</DialogTitle>
         <DialogContent>
           <Box sx={{ mt: 2 }}>

@@ -66,7 +66,7 @@ app.use(helmet({
 
 // CORS configuration for Vercel
 app.use(cors({
-  origin: process.env.FRONTEND_URL || ['http://localhost:3000', 'https://localhost:3000'],
+  origin: process.env.FRONTEND_URL || ['http://192.168.41.134:3000', 'https://192.168.41.134:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],

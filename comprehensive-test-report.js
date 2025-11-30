@@ -7,8 +7,8 @@
 
 import fetch from 'node-fetch';
 
-const BASE_URL = 'http://localhost:5000/api';
-const FRONTEND_URL = 'http://localhost:3002';
+const BASE_URL = 'http://192.168.41.134:5000/api';
+const FRONTEND_URL = 'http://192.168.41.134:3002';
 
 // Test results tracking
 let testResults = {

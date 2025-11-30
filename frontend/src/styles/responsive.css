@@ -249,7 +249,7 @@ div[class*="MuiContainer"] {
 @media (max-width: 599px) {
   .MuiCard-root {
     margin: 8px 0 !important;
-    border-radius: 12px !important;
+    border-radius: 6px !important;
   }
 }
 
@@ -302,7 +302,7 @@ div[class*="MuiContainer"] {
     margin: 8px !important;
     width: calc(100% - 16px) !important;
     max-width: calc(100% - 16px) !important;
-    border-radius: 16px !important;
+    border-radius: 6px !important;
   }
 }
 

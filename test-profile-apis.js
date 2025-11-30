@@ -6,7 +6,7 @@
 
 import fetch from 'node-fetch';
 
-const BASE_URL = 'http://localhost:5000/api';
+const BASE_URL = 'http://192.168.41.134:5000/api';
 
 async function testProfileAPIs() {
   console.log('👤 Testing Profile Management APIs...\n');

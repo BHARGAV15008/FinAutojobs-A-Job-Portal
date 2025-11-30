@@ -7,7 +7,7 @@
 
 import fetch from 'node-fetch';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = 'http://192.168.41.134:5000/api';
 const TEST_EMAIL = 'hiddenshadow032025@gmail.com';
 
 console.log('🧪 Testing FinAutoJobs OTP System...\n');

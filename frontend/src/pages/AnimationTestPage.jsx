@@ -245,7 +245,7 @@ const AnimationTestPage = () => {
                   onMouseLeave={() => setActiveCard(null)}
                   sx={{
                     height: '100%',
-                    borderRadius: '16px',
+                    borderRadius: '6px',
                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     cursor: 'pointer',
                     border: '1px solid rgba(255, 255, 255, 0.2)',

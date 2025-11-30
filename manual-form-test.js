@@ -9,7 +9,7 @@ import puppeteer from 'puppeteer';
 import readline from 'readline';
 
 const CONFIG = {
-    BASE_URL: 'http://localhost:3000',
+    BASE_URL: 'http://192.168.41.134:3000',
     TIMEOUT: 30000
 };
 

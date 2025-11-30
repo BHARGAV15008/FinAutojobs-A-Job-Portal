@@ -70,14 +70,14 @@ const JobDetailsModal = ({ open, onClose, job, onApply }) => {
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="sm"
-      fullWidth
+      maxWidth={false}
       PaperProps={{
         sx: {
-          maxWidth: { xs: '95vw', sm: '400px', md: '420px' },
+          width: { xs: '95vw', sm: '460px', md: '500px' },
+          maxWidth: '500px',
           maxHeight: '90vh',
           m: 1.5,
-          borderRadius: 2,
+          borderRadius: '6px',
         },
       }}
     >

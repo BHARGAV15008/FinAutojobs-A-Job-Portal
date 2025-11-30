@@ -9,7 +9,7 @@
 # =============================================================================
 PORT=5000
 NODE_ENV=development
-FRONTEND_URL=http://localhost:3000
+FRONTEND_URL=http://192.168.41.134:3000
 
 # =============================================================================
 # DATABASE CONFIGURATION (MongoDB)
@@ -26,7 +26,7 @@ JWT_EXPIRES_IN=24h
 # SESSION CONFIGURATION
 
 # CORS Origins (for development)
-CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+CORS_ORIGINS=http://192.168.41.134:3000,http://127.0.0.1:3000
 
 # Firebase Configuration (for Phone Authentication)
 FIREBASE_API_KEY=your-firebase-api-key
@@ -89,7 +89,7 @@ LOG_FILE_PATH=logs/app.log
 # =============================================================================
 # CACHE CONFIGURATION (Redis - Optional)
 # =============================================================================
-# REDIS_URL=redis://localhost:6379
+# REDIS_URL=redis://192.168.41.134:6379
 # REDIS_PASSWORD=your-redis-password
 
 # =============================================================================
@@ -122,7 +122,7 @@ CSP_FONT_SRC="'self' data: https:"
 CSP_CONNECT_SRC="'self' ws: wss:"
 
 # CORS Configuration
-CORS_ORIGIN=http://localhost:3000
+CORS_ORIGIN=http://192.168.41.134:3000
 CORS_CREDENTIALS=true
 
 # =============================================================================

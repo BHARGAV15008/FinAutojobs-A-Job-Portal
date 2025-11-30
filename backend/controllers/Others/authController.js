@@ -502,7 +502,7 @@ export const forgotPassword = async (req, res) => {
       .where(eq(users.id, user.id));
 
     // Send reset email
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://192.168.41.134:3000'}/reset-password?token=${resetToken}`;
     await sendEmail(
       email,
       'FinAutoJobs - Password Reset Request',

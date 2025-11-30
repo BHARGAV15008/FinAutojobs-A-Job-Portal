@@ -79,7 +79,7 @@ const OTPVerification = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" PaperProps={{ sx: { maxWidth: { xs: '95vw', sm: '400px', md: '460px' }, borderRadius: '6px' } }}>
       <DialogTitle sx={{ textAlign: 'center', pb: 1 }}>
         <Verified sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
         <Typography component="span" variant="h5" fontWeight="bold">

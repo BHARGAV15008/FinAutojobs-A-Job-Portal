@@ -999,7 +999,7 @@ const ApplicantProfilePage = () => {
             </Grid>
 
             {/* OTP Verification Dialog */}
-            <Dialog open={showOtpDialog} onClose={() => setShowOtpDialog(false)}>
+            <Dialog open={showOtpDialog} onClose={() => setShowOtpDialog(false)} PaperProps={{ sx: { maxWidth: { xs: '95vw', sm: '400px', md: '460px' }, borderRadius: '6px' } }}>
                 <DialogTitle>
                     Verify {otpType === 'email' ? 'Email' : 'Phone'}
                 </DialogTitle>

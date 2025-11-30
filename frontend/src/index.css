@@ -178,7 +178,8 @@
   --border: 214.3 31.8% 91.4%;
   --input: 214.3 31.8% 91.4%;
   --ring: 221.2 83.2% 53.3%;
-  --radius: 0.5rem;
+  --radius: 6px;
+  --border-radius: 6px;
 }
 
 .dark {
@@ -210,7 +211,7 @@
 
 :root {
   --max-width: 1400px;
-  --border-radius: 0.5rem;
+  --border-radius: 6px;
   --font-mono: ui-monospace, Menlo, Monaco, "Cascadia Mono", "Segoe UI Mono",
     "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro",
     "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
@@ -725,24 +726,29 @@ img {
 
   /* Button components with proper typography */
   .btn-primary {
-    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 text-sm;
+    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 transition-colors duration-200 text-sm;
+    border-radius: 6px;
   }
 
   .btn-secondary {
-    @apply bg-white hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg border border-gray-300 transition-colors duration-200 text-sm;
+    @apply bg-white hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 border border-gray-300 transition-colors duration-200 text-sm;
+    border-radius: 6px;
   }
 
   .btn-small {
-    @apply py-1 px-3 text-xs font-medium rounded;
+    @apply py-1 px-3 text-xs font-medium;
+    border-radius: 5px;
   }
 
   .btn-large {
-    @apply py-3 px-6 text-base font-medium rounded-lg;
+    @apply py-3 px-6 text-base font-medium;
+    border-radius: 6px;
   }
 
   /* Card components */
   .card {
-    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+    @apply bg-white shadow-sm border border-gray-200 p-6;
+    border-radius: 6px;
   }
 
   .card-header {
@@ -763,7 +769,8 @@ img {
 
   /* Form components */
   .input-field {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm;
+    @apply w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm;
+    border-radius: 6px;
   }
 
   .label-text {
@@ -859,9 +866,10 @@ img {
 
 /* Enhanced Dashboard Styles */
 .dashboard-card {
-  @apply relative bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700;
+  @apply relative bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700;
   @apply transition-all duration-300 ease-in-out;
   @apply hover:shadow-xl hover:-translate-y-1;
+  border-radius: 6px;
 }
 
 .dashboard-card:hover {
@@ -1516,3 +1524,174 @@ textarea {
   height: 100vh;
   height: -webkit-fill-available;
 }
+
+/* ===== GLOBAL BORDER-RADIUS STANDARDIZATION (5-6px) ===== */
+/* Override all high border-radius values to maintain consistency */
+
+/* Reset Tailwind rounded classes to 6px max */
+.rounded-xl,
+.rounded-2xl,
+.rounded-3xl {
+  border-radius: 6px !important;
+}
+
+.rounded-lg {
+  border-radius: 6px !important;
+}
+
+.rounded-md {
+  border-radius: 5px !important;
+}
+
+.rounded {
+  border-radius: 6px !important;
+}
+
+.rounded-sm {
+  border-radius: 4px !important;
+}
+
+/* Keep rounded-full for circular elements like avatars */
+/* .rounded-full stays as border-radius: 9999px */
+
+/* MUI Component overrides */
+.MuiCard-root,
+.MuiPaper-root,
+.MuiButton-root,
+.MuiDialog-paper,
+.MuiTextField-root .MuiOutlinedInput-root,
+.MuiChip-root,
+.MuiAlert-root,
+.MuiMenu-paper,
+.MuiPopover-paper,
+.MuiAutocomplete-paper,
+.MuiSelect-select,
+.MuiInputBase-root {
+  border-radius: 6px !important;
+}
+
+/* Dashboard and card components */
+.dashboard-card,
+.card,
+.auth-card {
+  border-radius: 6px !important;
+}
+
+/* Button elements */
+button:not(.rounded-full),
+.btn:not(.rounded-full),
+.button:not(.rounded-full) {
+  border-radius: 6px !important;
+}
+
+/* Input fields */
+input:not([type="checkbox"]):not([type="radio"]),
+textarea,
+select {
+  border-radius: 6px !important;
+}
+
+/* Modal and dialog containers */
+.modal,
+.dialog,
+.modal-content,
+.dialog-content {
+  border-radius: 6px !important;
+}
+
+/* Tab containers */
+.tab-container,
+.tabs,
+.dashboard-tabs {
+  border-radius: 6px !important;
+}
+
+/* Badge and chip elements (slightly smaller) */
+.badge,
+.chip,
+.tag {
+  border-radius: 5px !important;
+}
+
+/* Form containers and sections */
+.form-section,
+.form-group,
+.input-group {
+  border-radius: 6px !important;
+}
+
+/* Dropdown and menu elements */
+.dropdown,
+.dropdown-menu,
+.menu,
+.popover {
+  border-radius: 6px !important;
+}
+
+/* Tooltip override */
+.tooltip,
+.MuiTooltip-tooltip {
+  border-radius: 5px !important;
+}
+
+/* ===== LIGHTER COLORS - Replace dark colors with lighter alternatives ===== */
+
+/* Light theme - Make dark backgrounds lighter */
+.light .bg-gray-900,
+body:not(.dark) .bg-gray-900 {
+  background-color: #f3f4f6 !important; /* gray-100 instead of gray-900 */
+}
+
+.light .bg-gray-800,
+body:not(.dark) .bg-gray-800 {
+  background-color: #f9fafb !important; /* gray-50 instead of gray-800 */
+}
+
+.light .bg-gray-700,
+body:not(.dark) .bg-gray-700 {
+  background-color: #ffffff !important; /* white instead of gray-700 */
+}
+
+/* Lighten card backgrounds in light mode */
+.light .bg-slate-900,
+body:not(.dark) .bg-slate-900 {
+  background-color: #f8fafc !important; /* slate-50 */
+}
+
+.light .bg-slate-800,
+body:not(.dark) .bg-slate-800 {
+  background-color: #f1f5f9 !important; /* slate-100 */
+}
+
+/* Lighten text colors that are too dark */
+.light .text-gray-900,
+body:not(.dark) .text-gray-900 {
+  color: #374151 !important; /* gray-700 - softer than pure black */
+}
+
+/* Dark theme adjustments - Make very dark backgrounds slightly lighter */
+.dark .bg-gray-950 {
+  background-color: #111827 !important; /* gray-900 instead of gray-950 */
+}
+
+.dark .bg-black {
+  background-color: #1f2937 !important; /* gray-800 instead of pure black */
+}
+
+/* Dashboard specific lighter backgrounds for light mode */
+.light .dashboard-container,
+body:not(.dark) .dashboard-container {
+  background-color: #f9fafb !important; /* Lighter dashboard background */
+}
+
+.light .sidebar,
+body:not(.dark) .sidebar {
+  background-color: #ffffff !important; /* White sidebar */
+}
+
+/* Soften dark gradients in light mode */
+.light .gradient-dark,
+body:not(.dark) .gradient-dark {
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%) !important;
+}
+

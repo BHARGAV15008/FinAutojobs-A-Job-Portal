@@ -694,7 +694,7 @@ const RecruiterSettingsTab = ({ data, onDataUpdate, user }) => {
       </Grid>
 
       {/* Password Change Dialog */}
-      <Dialog open={showPasswordDialog} onClose={() => setShowPasswordDialog(false)} maxWidth="sm" fullWidth>
+      <Dialog open={showPasswordDialog} onClose={() => setShowPasswordDialog(false)} maxWidth="sm" PaperProps={{ sx: { maxWidth: { xs: '95vw', sm: '460px', md: '510px' }, borderRadius: '6px' } }}>
         <DialogTitle>Change Password</DialogTitle>
         <DialogContent>
           <TextField
@@ -759,7 +759,7 @@ const RecruiterSettingsTab = ({ data, onDataUpdate, user }) => {
       </Dialog>
 
       {/* Delete Account Dialog */}
-      <Dialog open={showDeleteDialog} onClose={() => setShowDeleteDialog(false)} maxWidth="sm" fullWidth>
+      <Dialog open={showDeleteDialog} onClose={() => setShowDeleteDialog(false)} maxWidth="sm" PaperProps={{ sx: { maxWidth: { xs: '95vw', sm: '460px', md: '510px' }, borderRadius: '6px' } }}>
         <DialogTitle color="error.main">Delete Account</DialogTitle>
         <DialogContent>
           <Alert severity="error" sx={{ mb: 2 }}>

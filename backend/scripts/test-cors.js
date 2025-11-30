@@ -11,7 +11,7 @@ import corsOptions from '../config/cors.js';
 const testDomains = [
   'https://finautojobs-a-job-portal-pivn.onrender.com',
   'https://finautojobs-backend.onrender.com',
-  'http://localhost:3000',
+  'http://192.168.41.134:3000',
   'https://finautojobs.vercel.app'
 ];
 

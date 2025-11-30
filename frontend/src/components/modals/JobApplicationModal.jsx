@@ -900,11 +900,11 @@ to recruiters when they review your application.
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="sm"
+      maxWidth="xs"
       fullWidth
       PaperProps={{
         sx: { 
-          maxWidth: { xs: '100%', sm: '500px', md: '600px', lg: '650px' },
+          maxWidth: { xs: '100%', sm: '460px', md: '490px', lg: '510px' },
           maxHeight: { xs: '100vh', sm: '90vh' },
           m: { xs: 0, sm: 2 },
           borderRadius: { xs: 0, sm: 2 }

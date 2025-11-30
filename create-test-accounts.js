@@ -8,8 +8,8 @@
 import fetch from 'node-fetch';
 
 const CONFIG = {
-    API_BASE_URL: 'http://localhost:5000/api',
-    FRONTEND_URL: 'http://localhost:3000'
+    API_BASE_URL: 'http://192.168.41.134:5000/api',
+    FRONTEND_URL: 'http://192.168.41.134:3000'
 };
 
 const TEST_ACCOUNTS = [

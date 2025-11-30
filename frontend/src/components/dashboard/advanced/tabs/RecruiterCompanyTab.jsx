@@ -579,7 +579,7 @@ const RecruiterCompanyTab = ({ data, onDataUpdate, user }) => {
       </Grid>
 
       {/* Add Benefit Dialog */}
-      <Dialog open={showBenefitDialog} onClose={() => setShowBenefitDialog(false)}>
+      <Dialog open={showBenefitDialog} onClose={() => setShowBenefitDialog(false)} PaperProps={{ sx: { maxWidth: { xs: '95vw', sm: '460px' }, borderRadius: '6px' } }}>
         <DialogTitle>Add Employee Benefit</DialogTitle>
         <DialogContent>
           <TextField
@@ -599,7 +599,7 @@ const RecruiterCompanyTab = ({ data, onDataUpdate, user }) => {
       </Dialog>
 
       {/* Add Culture Dialog */}
-      <Dialog open={showCultureDialog} onClose={() => setShowCultureDialog(false)}>
+      <Dialog open={showCultureDialog} onClose={() => setShowCultureDialog(false)} PaperProps={{ sx: { maxWidth: { xs: '95vw', sm: '460px' }, borderRadius: '6px' } }}>
         <DialogTitle>Add Culture Value</DialogTitle>
         <DialogContent>
           <TextField

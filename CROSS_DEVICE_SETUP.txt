@@ -39,11 +39,11 @@ STEP 2: UPDATE BACKEND CONFIGURATION
 
 2. Update these lines:
    FRONTEND_URL=http://YOUR_LOCAL_IP:3000
-   CORS_ORIGIN=http://YOUR_LOCAL_IP:3000,http://localhost:3000
+   CORS_ORIGIN=http://YOUR_LOCAL_IP:3000,http://192.168.41.134:3000
 
    Example:
    FRONTEND_URL=http://192.168.1.100:3000
-   CORS_ORIGIN=http://192.168.1.100:3000,http://localhost:3000
+   CORS_ORIGIN=http://192.168.1.100:3000,http://192.168.41.134:3000
 
 3. Save the file
 
@@ -131,11 +131,11 @@ Your setup is correct if you see:
 
 Backend Console:
 ✅ Server running on http://0.0.0.0:5000
-✅ Local: http://localhost:5000
+✅ Local: http://192.168.41.134:5000
 ✅ Network: http://192.168.1.100:5000
 
 Frontend Console:
-✅ Local: http://localhost:3000
+✅ Local: http://192.168.41.134:3000
 ✅ Network: http://192.168.1.100:3000
 
 ===============================================

@@ -78,10 +78,10 @@ else
     echo -e "${YELLOW}⚠${NC} Frontend .env not found"
     echo "  Creating default frontend/.env..."
     cat > frontend/.env << EOF
-VITE_API_URL=http://localhost:5000/api
+VITE_API_URL=http://192.168.41.134:5000/api
 VITE_BACKEND_PORT=5000
 VITE_NODE_ENV=development
-VITE_SOCKET_URL=http://localhost:5000
+VITE_SOCKET_URL=http://192.168.41.134:5000
 VITE_ENABLE_OAUTH=true
 VITE_ENABLE_PHONE_AUTH=true
 VITE_ENABLE_OTP=true
@@ -152,7 +152,7 @@ echo ""
 
 # Check if backend is running
 BACKEND_RUNNING=0
-if curl -s http://localhost:5000/api/health > /dev/null 2>&1; then
+if curl -s http://192.168.41.134:5000/api/health > /dev/null 2>&1; then
     echo -e "${GREEN}✓${NC} Backend is running and healthy"
     BACKEND_RUNNING=1
 else
@@ -182,7 +182,7 @@ echo -e "${GREEN}✓${NC} File permissions fixed"
 # Fix 3: Database connectivity test
 if [ $BACKEND_RUNNING -eq 1 ]; then
     echo "3. Testing database connection..."
-    HEALTH_RESPONSE=$(curl -s http://localhost:5000/api/health)
+    HEALTH_RESPONSE=$(curl -s http://192.168.41.134:5000/api/health)
     if echo "$HEALTH_RESPONSE" | grep -q "database"; then
         echo -e "${GREEN}✓${NC} Database connection healthy"
     else
@@ -202,8 +202,8 @@ if [ $BACKEND_RUNNING -eq 1 ]; then
     echo ""
     echo "🚀 Quick Start:"
     echo "   Frontend: cd frontend && npm run dev"
-    echo "   Frontend URL: http://localhost:3000"
-    echo "   Backend: Already running on http://localhost:5000"
+    echo "   Frontend URL: http://192.168.41.134:3000"
+    echo "   Backend: Already running on http://192.168.41.134:5000"
     echo ""
     echo "📝 Run API tests: node test-api-connection.js"
 else
@@ -219,7 +219,7 @@ else
     echo "   $ cd frontend"
     echo "   $ npm run dev"
     echo ""
-    echo "   Access: http://localhost:3000"
+    echo "   Access: http://192.168.41.134:3000"
 fi
 
 echo ""

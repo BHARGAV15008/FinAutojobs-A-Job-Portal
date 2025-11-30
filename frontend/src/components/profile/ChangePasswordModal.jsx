@@ -174,10 +174,13 @@ const ChangePasswordModal = ({ open, onClose }) => {
         <Dialog 
             open={open} 
             onClose={handleClose}
-            maxWidth="sm"
+            maxWidth="xs"
             fullWidth
             PaperProps={{
-                sx: { borderRadius: 2 }
+                sx: { 
+                    borderRadius: 2,
+                    maxWidth: { xs: '95vw', sm: '460px', md: '490px', lg: '510px' }
+                }
             }}
         >
             <DialogTitle sx={{ pb: 1 }}>

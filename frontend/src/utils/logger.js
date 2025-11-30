@@ -6,7 +6,7 @@ const isDev = import.meta.env.DEV;
 
 // Get API base URL without circular dependency
 const getApiBaseUrl = () => {
-  return import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  return import.meta.env.VITE_API_URL || 'http://192.168.41.134:5000/api';
 };
 
 // Send logs to terminal via server endpoint

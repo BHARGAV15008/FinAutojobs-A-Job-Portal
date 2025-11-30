@@ -45,7 +45,7 @@ class EmailService {
 
     this.fromEmail = process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER || 'noreply@finautojobs.com';
     this.fromName = process.env.EMAIL_FROM_NAME || 'FinAutoJobs Team';
-    this.baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    this.baseUrl = process.env.FRONTEND_URL || 'http://192.168.41.134:3000';
     
     // Initialize email templates
     this.templates = this.loadEmailTemplates();
@@ -904,7 +904,7 @@ class EmailService {
    */
   async sendPasswordResetEmail(userEmail, userName, resetToken) {
     try {
-      const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+      const resetLink = `${process.env.FRONTEND_URL || 'http://192.168.41.134:3000'}/reset-password?token=${resetToken}`;
       const subject = 'Reset Your Password - FinAutoJobs';
       const html = this.getPasswordResetTemplate(userName, resetLink);
 
@@ -1052,7 +1052,7 @@ class EmailService {
             <p>Dear ${userName},</p>
             <p>Thank you for joining FinAutoJobs! We're excited to have you as part of our community.</p>
             <p>${roleMessages[role]}</p>
-            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/login" class="button">Login to Your Account</a>
+            <a href="${process.env.FRONTEND_URL || 'http://192.168.41.134:3000'}/login" class="button">Login to Your Account</a>
             <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
             <p>Best regards,<br>The FinAutoJobs Team</p>
           </div>
@@ -1136,7 +1136,7 @@ class EmailService {
               <p><strong>Applicant:</strong> ${applicantName}</p>
             </div>
             <p>Please log in to your dashboard to review the application and take appropriate action.</p>
-            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/recruiter/applications" class="button">Review Applications</a>
+            <a href="${process.env.FRONTEND_URL || 'http://192.168.41.134:3000'}/recruiter/applications" class="button">Review Applications</a>
             <p>Best regards,<br>The FinAutoJobs Team</p>
           </div>
           <div class="footer">
@@ -1187,7 +1187,7 @@ class EmailService {
               <p><strong>New Status:</strong> <span style="text-transform: capitalize; color: #667eea;">${newStatus}</span></p>
             </div>
             <p>${statusMessages[newStatus]}</p>
-            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/applicant/applications" class="button">View Application</a>
+            <a href="${process.env.FRONTEND_URL || 'http://192.168.41.134:3000'}/applicant/applications" class="button">View Application</a>
             <p>Best regards,<br>The FinAutoJobs Team</p>
           </div>
           <div class="footer">
@@ -1229,7 +1229,7 @@ class EmailService {
               <p><strong>Registered by:</strong> ${recruiterName}</p>
             </div>
             <p>Please review the company information and verify the company if it meets our guidelines.</p>
-            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/admin/companies" class="button">Review Companies</a>
+            <a href="${process.env.FRONTEND_URL || 'http://192.168.41.134:3000'}/admin/companies" class="button">Review Companies</a>
             <p>Best regards,<br>The FinAutoJobs Team</p>
           </div>
           <div class="footer">
@@ -1271,7 +1271,7 @@ class EmailService {
               <p><strong>Status:</strong> <span style="color: #28a745;">Verified</span></p>
             </div>
             <p>You can now post job openings and start receiving applications from qualified candidates.</p>
-            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/recruiter/dashboard" class="button">Go to Dashboard</a>
+            <a href="${process.env.FRONTEND_URL || 'http://192.168.41.134:3000'}/recruiter/dashboard" class="button">Go to Dashboard</a>
             <p>Best regards,<br>The FinAutoJobs Team</p>
           </div>
           <div class="footer">

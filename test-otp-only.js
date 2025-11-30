@@ -11,7 +11,7 @@ import readline from 'readline';
 
 // Configuration
 const CONFIG = {
-    BASE_URL: 'http://localhost:5000/api',
+    BASE_URL: 'http://192.168.41.134:5000/api',
     TEST_EMAIL: 'technogenius1500@gmail.com',
     TIMEOUT: 30000
 };
@@ -250,7 +250,7 @@ async function checkServerHealth() {
         }
     } catch (error) {
         logError(`Cannot connect to server: ${error.message}`);
-        logInfo('Please make sure the server is running on http://localhost:5000');
+        logInfo('Please make sure the server is running on http://192.168.41.134:5000');
         return false;
     }
 }

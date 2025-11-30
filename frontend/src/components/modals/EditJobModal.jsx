@@ -332,15 +332,16 @@ const EditJobModal = ({ open, onClose, job, onUpdate }) => {
     <Dialog 
       open={open} 
       onClose={handleClose}
-      maxWidth="lg"
+      maxWidth="sm"
       fullWidth
-      fullScreen={typeof window !== 'undefined' && window.innerWidth < 900}
+      fullScreen={typeof window !== 'undefined' && window.innerWidth < 600}
       PaperProps={{
         sx: { 
-          minHeight: { xs: '100vh', md: '90vh' },
-          maxHeight: { xs: '100vh', md: '95vh' },
-          m: { xs: 0, md: 2 },
-          borderRadius: { xs: 0, md: 2 }
+          maxWidth: { xs: '100%', sm: '480px', md: '500px', lg: '510px' },
+          minHeight: { xs: '100vh', sm: '80vh' },
+          maxHeight: { xs: '100vh', sm: '95vh' },
+          m: { xs: 0, sm: 2 },
+          borderRadius: { xs: 0, sm: 2 }
         }
       }}
     >

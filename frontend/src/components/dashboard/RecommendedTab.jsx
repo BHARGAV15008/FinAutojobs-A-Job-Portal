@@ -518,7 +518,7 @@ const RecommendedTab = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white dark:bg-gray-800 rounded-xl max-w-3xl w-full max-h-96 overflow-y-auto"
+            className="bg-white dark:bg-gray-800 rounded-lg max-w-[95vw] sm:max-w-[460px] md:max-w-[490px] lg:max-w-[510px] w-full max-h-96 overflow-y-auto"
           >
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">

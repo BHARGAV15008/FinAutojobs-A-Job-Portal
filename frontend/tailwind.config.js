@@ -65,9 +65,14 @@ module.exports = {
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        lg: "6px",
+        md: "5px",
+        sm: "4px",
+        DEFAULT: "6px",
+        xl: "6px",
+        '2xl': "6px",
+        '3xl': "6px",
+        full: "9999px",
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],

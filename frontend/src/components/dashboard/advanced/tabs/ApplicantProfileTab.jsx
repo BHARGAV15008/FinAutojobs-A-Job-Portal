@@ -581,7 +581,7 @@ const ApplicantProfileTab = ({ data, onDataUpdate, user }) => {
       </Grid>
 
       {/* Skills Dialog */}
-      <Dialog open={skillsDialog} onClose={() => setSkillsDialog(false)} maxWidth="sm" fullWidth>
+      <Dialog open={skillsDialog} onClose={() => setSkillsDialog(false)} maxWidth="sm" PaperProps={{ sx: { maxWidth: { xs: '95vw', sm: '460px', md: '510px' }, borderRadius: '6px' } }}>
         <DialogTitle>Add Skills</DialogTitle>
         <DialogContent>
           <Autocomplete

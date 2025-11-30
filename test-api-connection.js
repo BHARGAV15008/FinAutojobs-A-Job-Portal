@@ -14,7 +14,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Configuration
-const API_BASE_URL = process.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.VITE_API_URL || 'http://192.168.41.134:5000/api';
 const TEST_RESULTS_FILE = path.join(__dirname, 'api-test-results.json');
 
 // ANSI color codes

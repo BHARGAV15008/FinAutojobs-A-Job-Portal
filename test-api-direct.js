@@ -1,7 +1,7 @@
 // Direct API test to check if backend is sending applicantSnapshot
 import fetch from 'node-fetch';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'http://192.168.41.134:5000/api';
 const JOB_ID = '690605d784d1a8bd3d4c2843';
 
 // Get token from your browser console: localStorage.getItem('token')

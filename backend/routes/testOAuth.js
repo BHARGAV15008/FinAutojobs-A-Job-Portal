@@ -13,7 +13,7 @@ router.get('/simulate/:provider', async (req, res) => {
     
     console.log(`🧪 Simulating ${provider} OAuth - Role: ${role}, Scenario: ${scenario}`);
     
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+    const frontendUrl = process.env.FRONTEND_URL || 'http://192.168.41.134:3001';
     
     // Simulate different test scenarios
     const testScenarios = {
@@ -147,7 +147,7 @@ router.get('/simulate/:provider', async (req, res) => {
     
   } catch (error) {
     console.error('❌ Test OAuth simulation error:', error);
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+    const frontendUrl = process.env.FRONTEND_URL || 'http://192.168.41.134:3001';
     res.redirect(`${frontendUrl}/auth/oauth-error?error=simulation_failed&message=${encodeURIComponent(error.message)}&provider=${req.params.provider}`);
   }
 });

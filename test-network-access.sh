@@ -135,11 +135,11 @@ echo "=========================="
 
 # Test local endpoints
 if [ $BACKEND_RUNNING -eq 1 ]; then
-    test_http "http://localhost:5000/api/health" "Backend Health Check (localhost)"
+    test_http "http://192.168.41.134:5000/api/health" "Backend Health Check (localhost)"
 fi
 
 if [ $FRONTEND_RUNNING -eq 1 ]; then
-    test_http "http://localhost:3000" "Frontend (localhost)"
+    test_http "http://192.168.41.134:3000" "Frontend (localhost)"
 fi
 
 echo ""
@@ -185,13 +185,13 @@ echo "========================"
 
 if [ $FRONTEND_RUNNING -eq 1 ]; then
     echo -e "${BLUE}🌐 Frontend:${NC}"
-    echo "   📱 Local:   http://localhost:3000"
+    echo "   📱 Local:   http://192.168.41.134:3000"
     echo "   🌍 Network: http://$LOCAL_IP:3000"
 fi
 
 if [ $BACKEND_RUNNING -eq 1 ]; then
     echo -e "${BLUE}🔧 Backend:${NC}"
-    echo "   📱 Local:   http://localhost:5000"
+    echo "   📱 Local:   http://192.168.41.134:5000"
     echo "   🌍 Network: http://$LOCAL_IP:5000"
     echo "   🔍 Health:  http://$LOCAL_IP:5000/api/health"
 fi

@@ -413,7 +413,7 @@ const dummyJobs = [
 async function createDummyJobs() {
   try {
     console.log('🔄 Connecting to MongoDB...');
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/finauto-jobs');
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://192.168.41.134:27017/finauto-jobs');
     console.log('✅ Connected to MongoDB');
     
     // Find a recruiter user to assign jobs to

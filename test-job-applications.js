@@ -15,8 +15,8 @@ const __dirname = path.dirname(__filename);
 
 // Configuration
 const CONFIG = {
-    BASE_URL: 'http://localhost:3000',
-    API_URL: 'http://localhost:5000/api',
+    BASE_URL: 'http://192.168.41.134:3000',
+    API_URL: 'http://192.168.41.134:5000/api',
     TIMEOUT: 30000,
     SCREENSHOT_DIR: path.join(__dirname, 'job-application-screenshots'),
     RESULTS_FILE: path.join(__dirname, 'job-application-test-results.json')
