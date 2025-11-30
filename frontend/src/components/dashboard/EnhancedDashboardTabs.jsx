@@ -232,7 +232,6 @@ export const EnhancedProfileTab = ({
   useEffect(() => {
     const actualUser = currentUser?.data ? currentUser.data : currentUser;
     const completion = calculateProfileCompletion(actualUser, userRole);
-    console.log('🔍 Profile completion calculated:', completion, '% for role:', userRole);
     setProfileCompletion(completion);
   }, [currentUser, userRole]);
 
@@ -914,7 +913,7 @@ export const EnhancedProfileTab = ({
 
         <p className="text-gray-600 dark:text-gray-400 mb-4">
           {profileCompletion === 100 
-            ? '🎉 Congratulations! Your profile is complete and optimized for better visibility.'
+            ? '🎉 Congratulations! Your profile is complete and optimized for better visibility. Adding social links can further enhance your profile.'
             : 'Complete your profile to get better job recommendations and increase visibility.'
           }
         </p>
@@ -927,7 +926,7 @@ export const EnhancedProfileTab = ({
             onClick={() => setIsEditModalOpen(true)}
             disabled={loading}
           >
-            <Edit3 className="w-4 h-4" />
+            <Edit3 className="w-5 h-5" />
             <span>{loading ? "Saving..." : "Edit Profile"}</span>
           </motion.button>
           
@@ -991,20 +990,26 @@ export const EnhancedProfileTab = ({
                     className="border-l-4 border-blue-200 dark:border-blue-700 pl-4 overflow-hidden min-w-0"
                   >
                     <div className="flex items-center space-x-2 mb-1">
-                      <span>{field.icon}</span>
+                      <span style={{ fontSize: 20 }}>{field.icon}</span>
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         {field.label}
                       </span>
                     </div>
                     <div
                       className={`text-sm ${
-                        field.value
+                        field.value && field.value !== "Not specified" && field.value !== "Not provided"
                           ? "text-gray-900 dark:text-white"
                           : "text-gray-400 dark:text-gray-500 italic"
                       } ${field.multiline ? "whitespace-pre-wrap" : "break-words overflow-wrap-anywhere"} leading-relaxed max-w-full`}
                       style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
                     >
-                      {typeof field.value === 'string' ? (field.value || "Not provided") : (field.value || "Not provided")}
+                      {(() => {
+                        const val = field.value;
+                        if (!val || val === "Not specified" || val === "null" || val === "undefined") {
+                          return "Not provided";
+                        }
+                        return val;
+                      })()}
                     </div>
                   </div>
                 ))

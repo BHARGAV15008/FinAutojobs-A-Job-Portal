@@ -61,15 +61,7 @@ export const calculateProfileCompletion = (user, role) => {
 
   const percentage = Math.round((completedFields / totalFields) * 100);
   
-  // Debug logging
-  console.log('📊 Profile Completion Debug:', {
-    role,
-    totalFields,
-    completedFields,
-    percentage,
-    missingFields,
-    userFields: Object.keys(user || {})
-  });
+  // No debug logging in production utility
 
   return percentage;
 };
@@ -98,7 +90,6 @@ const checkAlternativeFields = (user, fieldPath) => {
   for (const altField of alternativeFields) {
     const value = getNestedValue(user, altField);
     if (value !== undefined && value !== null) {
-      console.log(`✅ Found alternative field for ${fieldPath}: ${altField} =`, value);
       return value;
     }
   }

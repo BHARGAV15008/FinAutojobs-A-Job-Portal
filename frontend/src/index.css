@@ -62,7 +62,10 @@
   color: #ffffff !important;
 }
 
-.dark *:not([class*="text-blue"]):not([class*="text-green"]):not([class*="text-yellow"]):not([class*="text-red"]):not([class*="text-purple"]) {
+.dark
+  *:not([class*="text-blue"]):not([class*="text-green"]):not(
+    [class*="text-yellow"]
+  ):not([class*="text-red"]):not([class*="text-purple"]) {
   color: #ffffff !important;
 }
 
@@ -180,6 +183,46 @@
   --ring: 221.2 83.2% 53.3%;
   --radius: 6px;
   --border-radius: 6px;
+}
+
+/* Global icon sizing: adjust this to increase/decrease icon size everywhere */
+:root {
+  --icon-size: 28px; /* default icon size used across the app */
+}
+
+/* Apply sizing to common icon targets: SVGs, icon fonts, MUI svg icons and inline images used as icons */
+svg,
+.icon,
+.iconify,
+.iconify-icon,
+[class*="icon-"],
+.material-icons,
+.MuiSvgIcon-root,
+.MuiIcon-root,
+.iconify__svg,
+img.icon {
+  width: var(--icon-size) !important;
+  height: var(--icon-size) !important;
+  font-size: var(--icon-size) !important;
+  line-height: 1 !important;
+  vertical-align: middle !important;
+}
+
+/* Normalize some common Tailwind utility icon sizes to the global size */
+.w-4.h-4,
+.w-5.h-5,
+.w-6.h-6,
+.w-8.h-8 {
+  width: var(--icon-size) !important;
+  height: var(--icon-size) !important;
+}
+
+/* Provide a larger helper class when you want icons slightly bigger */
+.icon-large,
+.icon--large {
+  width: calc(var(--icon-size) * 1.4) !important;
+  height: calc(var(--icon-size) * 1.4) !important;
+  font-size: calc(var(--icon-size) * 1.4) !important;
 }
 
 .dark {
@@ -1694,4 +1737,3 @@ body:not(.dark) .sidebar {
 body:not(.dark) .gradient-dark {
   background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%) !important;
 }
-

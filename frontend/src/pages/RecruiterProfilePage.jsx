@@ -31,6 +31,33 @@ import ChangePasswordModal from '../components/profile/ChangePasswordModal';
 
 const RecruiterProfilePage = () => {
     const { user, updateProfile } = useAuth();
+    // Helpers for consistent display
+    const toTitleCase = (text = '') => {
+        if (!text) return '';
+        return text.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    };
+
+    const formatName = (first = '', last = '') => {
+        const f = first ? toTitleCase(first.trim()) : '';
+        const l = last ? toTitleCase(last.trim()) : '';
+        return `${f} ${l}`.trim();
+    };
+
+    const formatFallback = (value) => {
+        if (value === null || value === undefined) return 'Not provided';
+        if (typeof value === 'string' && value.trim().length === 0) return 'Not provided';
+        if (Array.isArray(value) && value.length === 0) return 'Not provided';
+        if (typeof value === 'number' && value === 0) return 'Not provided';
+        return value;
+    };
+
+    const formatBio = (text = '') => {
+        if (!text) return 'Not provided';
+        const trimmed = text.trim();
+        const first = trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+        if (/[.!?]$/.test(trimmed)) return first;
+        return `${first}.`;
+    };
     
     // Simple toast function
     const showToast = (message, type = 'info') => {
@@ -128,30 +155,30 @@ const RecruiterProfilePage = () => {
                                 src={user?.avatar}
                                 sx={{ width: 120, height: 120, bgcolor: 'primary.main' }}
                             >
-                                {user?.firstName?.charAt(0) || user?.username?.charAt(0) || 'R'}
+                                {formatName(user?.firstName, user?.lastName).charAt(0) || user?.username?.charAt(0) || 'R'}
                             </Avatar>
                             <Box sx={{ flex: 1 }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                     <Box>
                                         <Typography variant="h4" gutterBottom fontWeight="bold">
-                                            {user?.firstName} {user?.lastName}
+                                            {formatName(user?.firstName, user?.lastName) || formatFallback(user?.username)}
                                         </Typography>
                                         <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                                            <Chip icon={<Business />} label={user?.companyInfo?.companyName || 'Company'} />
-                                            <Chip icon={<Work />} label={user?.companyInfo?.designation || 'Role'} />
+                                                <Chip icon={<Business sx={{ fontSize: 20 }} />} label={formatFallback(user?.companyInfo?.companyName)} />
+                                                <Chip icon={<Work sx={{ fontSize: 20 }} />} label={toTitleCase(user?.companyInfo?.designation) || 'Not provided'} />
                                         </Box>
                                     </Box>
                                     <Box sx={{ display: 'flex', gap: 1 }}>
                                         <Button
                                             variant="contained"
-                                            startIcon={<EditIcon />}
+                                            startIcon={<EditIcon sx={{ fontSize: 20 }} />}
                                             onClick={() => setIsEditing(!isEditing)}
                                         >
                                             {isEditing ? 'Cancel Edit' : 'Edit Profile'}
                                         </Button>
                                         <Button
                                             variant="outlined"
-                                            startIcon={<SecurityIcon />}
+                                            startIcon={<SecurityIcon sx={{ fontSize: 20 }} />}
                                             onClick={() => setShowChangePasswordModal(true)}
                                             color="secondary"
                                         >
@@ -365,14 +392,14 @@ const RecruiterProfilePage = () => {
                                                 <Button
                                                     variant="outlined"
                                                     color="error"
-                                                    startIcon={<Cancel />}
+                                                    startIcon={<Cancel sx={{ fontSize: 20 }} />}
                                                     onClick={() => setIsEditing(false)}
                                                 >
                                                     Cancel
                                                 </Button>
                                                 <Button
                                                     variant="contained"
-                                                    startIcon={<Save />}
+                                                    startIcon={<Save sx={{ fontSize: 20 }} />}
                                                     onClick={handleSave}
                                                 >
                                                     Save Changes
@@ -404,7 +431,7 @@ const RecruiterProfilePage = () => {
                                                 Company
                                             </Typography>
                                             <Typography variant="body1" gutterBottom>
-                                                {user?.companyInfo?.companyName || 'Not specified'}
+                                                {formatFallback(user?.companyInfo?.companyName)}
                                             </Typography>
                                         </Grid>
                                         <Grid item xs={12} sm={6}>
@@ -412,7 +439,7 @@ const RecruiterProfilePage = () => {
                                                 Department
                                             </Typography>
                                             <Typography variant="body1" gutterBottom>
-                                                {user?.companyInfo?.department || 'Not specified'}
+                                                {formatFallback(user?.companyInfo?.department)}
                                             </Typography>
                                         </Grid>
                                         <Grid item xs={12} sm={6}>
@@ -420,7 +447,7 @@ const RecruiterProfilePage = () => {
                                                 Designation
                                             </Typography>
                                             <Typography variant="body1" gutterBottom>
-                                                {user?.companyInfo?.designation || 'Not specified'}
+                                                {toTitleCase(user?.companyInfo?.designation) || 'Not provided'}
                                             </Typography>
                                         </Grid>
                                         <Grid item xs={12} sm={6}>
@@ -428,7 +455,7 @@ const RecruiterProfilePage = () => {
                                                 Years of Experience
                                             </Typography>
                                             <Typography variant="body1" gutterBottom>
-                                                {user?.yearsOfExperience || 0} years
+                                                {typeof user?.yearsOfExperience === 'number' && user.yearsOfExperience > 0 ? `${user.yearsOfExperience} years` : 'Not provided'}
                                             </Typography>
                                         </Grid>
                                         <Grid item xs={12}>
@@ -443,7 +470,7 @@ const RecruiterProfilePage = () => {
                                                         color="primary"
                                                         variant="outlined"
                                                     />
-                                                )) : <Typography variant="body2" color="text.secondary">Not specified</Typography>}
+                                                )) : <Typography variant="body2" color="text.secondary">Not provided</Typography>}
                                             </Box>
                                         </Grid>
                                         <Grid item xs={12}>
@@ -458,7 +485,7 @@ const RecruiterProfilePage = () => {
                                                         color="secondary"
                                                         variant="outlined"
                                                     />
-                                                )) : <Typography variant="body2" color="text.secondary">Not specified</Typography>}
+                                                )) : <Typography variant="body2" color="text.secondary">Not provided</Typography>}
                                             </Box>
                                         </Grid>
                                         <Grid item xs={12} sm={6}>
@@ -466,7 +493,7 @@ const RecruiterProfilePage = () => {
                                                 LinkedIn Profile
                                             </Typography>
                                             <Typography variant="body1" gutterBottom>
-                                                {user?.professionalLinks?.linkedin || 'Not specified'}
+                                                {formatFallback(user?.professionalLinks?.linkedin)}
                                             </Typography>
                                         </Grid>
                                         <Grid item xs={12} sm={6}>
@@ -475,7 +502,7 @@ const RecruiterProfilePage = () => {
                                             </Typography>
                                             <Typography variant="body1" gutterBottom>
                                                 {[user?.officeLocation?.city, user?.officeLocation?.state, user?.officeLocation?.country]
-                                                    .filter(Boolean).join(', ') || 'Not specified'}
+                                                    .filter(Boolean).join(', ') || 'Not provided'}
                                             </Typography>
                                         </Grid>
                                     </>
