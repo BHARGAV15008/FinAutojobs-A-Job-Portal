@@ -8,6 +8,9 @@
 /* Import modern theme styles */
 @import "./styles/modern-theme.scss";
 
+/* Import Naukri theme styles - for exact Naukri.com look */
+@import "./styles/naukri-theme.css";
+
 /* Import typography fixes */
 
 /* Import theme settings */

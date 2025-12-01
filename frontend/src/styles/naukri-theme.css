@@ -1,0 +1,531 @@
+/* Naukri-inspired Theme CSS */
+/* Primary Colors from Naukri */
+:root {
+  --naukri-blue: #457eff;
+  --naukri-blue-dark: #2557d6;
+  --naukri-blue-light: #ebf3ff;
+  --naukri-teal: #00c8aa;
+  --naukri-orange: #ff6b35;
+  --naukri-purple: #7b61ff;
+  --naukri-green: #00c853;
+  --naukri-yellow: #ffb800;
+  --naukri-red: #ff4757;
+  --naukri-dark: #1a202c;
+  --naukri-gray-900: #1f2937;
+  --naukri-gray-800: #374151;
+  --naukri-gray-700: #4b5563;
+  --naukri-gray-600: #6b7280;
+  --naukri-gray-500: #9ca3af;
+  --naukri-gray-400: #d1d5db;
+  --naukri-gray-300: #e5e7eb;
+  --naukri-gray-200: #f3f4f6;
+  --naukri-gray-100: #f9fafb;
+  --naukri-white: #ffffff;
+}
+
+/* Floating Animations */
+@keyframes naukri-float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+@keyframes naukri-float-slow {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes naukri-pulse-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(69, 126, 255, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(69, 126, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(69, 126, 255, 0);
+  }
+}
+
+@keyframes naukri-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes naukri-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes naukri-slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes naukri-slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes naukri-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes naukri-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes naukri-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes naukri-wave {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(20deg);
+  }
+  75% {
+    transform: rotate(-20deg);
+  }
+}
+
+/* Naukri Card Styles */
+.naukri-card {
+  background: var(--naukri-white);
+  border-radius: 16px;
+  border: 1px solid var(--naukri-gray-200);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.naukri-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--naukri-blue), var(--naukri-teal));
+  transform: scaleX(0);
+  transition: transform 0.4s ease;
+}
+
+.naukri-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 50px rgba(69, 126, 255, 0.15);
+  border-color: var(--naukri-blue);
+}
+
+.naukri-card:hover::before {
+  transform: scaleX(1);
+}
+
+/* Floating Card Animation */
+.naukri-floating {
+  animation: naukri-float 4s ease-in-out infinite;
+}
+
+.naukri-floating-slow {
+  animation: naukri-float-slow 6s ease-in-out infinite;
+}
+
+/* Gradient Buttons */
+.naukri-btn-primary {
+  background: linear-gradient(135deg, var(--naukri-blue) 0%, #2557d6 100%);
+  color: white;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(69, 126, 255, 0.3);
+}
+
+.naukri-btn-primary:hover {
+  background: linear-gradient(135deg, #2557d6 0%, var(--naukri-blue) 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(69, 126, 255, 0.4);
+}
+
+.naukri-btn-secondary {
+  background: transparent;
+  color: var(--naukri-blue);
+  border: 2px solid var(--naukri-blue);
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.naukri-btn-secondary:hover {
+  background: var(--naukri-blue);
+  color: white;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(69, 126, 255, 0.3);
+}
+
+/* Search Box Styles */
+.naukri-search-box {
+  background: var(--naukri-white);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+  transition: all 0.4s ease;
+}
+
+.naukri-search-box:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.15);
+}
+
+.naukri-search-input {
+  border: 2px solid var(--naukri-gray-200);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.naukri-search-input:focus {
+  border-color: var(--naukri-blue);
+  box-shadow: 0 0 0 4px rgba(69, 126, 255, 0.1);
+  outline: none;
+}
+
+/* Job Card Styles */
+.naukri-job-card {
+  background: var(--naukri-white);
+  border: 1px solid var(--naukri-gray-200);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.naukri-job-card:hover {
+  border-color: var(--naukri-blue);
+  box-shadow: 0 15px 40px rgba(69, 126, 255, 0.12);
+  transform: translateY(-6px);
+}
+
+.naukri-job-card.featured {
+  border: 2px solid var(--naukri-blue);
+  background: linear-gradient(
+    to bottom,
+    var(--naukri-blue-light),
+    var(--naukri-white)
+  );
+}
+
+/* Company Card Styles */
+.naukri-company-card {
+  background: var(--naukri-white);
+  border: 1px solid var(--naukri-gray-200);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.naukri-company-card:hover {
+  border-color: var(--naukri-blue);
+  box-shadow: 0 20px 50px rgba(69, 126, 255, 0.15);
+  transform: translateY(-10px);
+}
+
+.naukri-company-card:hover .company-logo {
+  transform: scale(1.1) rotate(5deg);
+}
+
+/* Badge Styles */
+.naukri-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.naukri-badge-blue {
+  background: var(--naukri-blue-light);
+  color: var(--naukri-blue);
+}
+
+.naukri-badge-green {
+  background: #e8f5e9;
+  color: var(--naukri-green);
+}
+
+.naukri-badge-orange {
+  background: #fff3e0;
+  color: var(--naukri-orange);
+}
+
+.naukri-badge-hot {
+  background: linear-gradient(135deg, #ff6b35, #ff4757);
+  color: white;
+  animation: naukri-pulse-glow 2s infinite;
+}
+
+/* Chip Styles */
+.naukri-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 25px;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--naukri-gray-100);
+  color: var(--naukri-gray-700);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.naukri-chip:hover {
+  background: var(--naukri-blue);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(69, 126, 255, 0.3);
+}
+
+.naukri-chip-active {
+  background: var(--naukri-blue);
+  color: white;
+}
+
+/* Hero Section Gradient */
+.naukri-hero-gradient {
+  background: linear-gradient(
+    135deg,
+    #1a237e 0%,
+    #283593 25%,
+    #3949ab 50%,
+    #5c6bc0 75%,
+    #7986cb 100%
+  );
+  position: relative;
+  overflow: hidden;
+}
+
+.naukri-hero-gradient::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  opacity: 0.5;
+}
+
+/* Filter Section */
+.naukri-filter-section {
+  background: var(--naukri-white);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 80px;
+}
+
+/* Skeleton Loading */
+.naukri-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--naukri-gray-200) 25%,
+    var(--naukri-gray-100) 50%,
+    var(--naukri-gray-200) 75%
+  );
+  background-size: 200% 100%;
+  animation: naukri-shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* Tooltip */
+.naukri-tooltip {
+  position: relative;
+}
+
+.naukri-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--naukri-dark);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.naukri-tooltip:hover::after {
+  opacity: 1;
+  visibility: visible;
+  bottom: calc(100% + 8px);
+}
+
+/* Scroll Animation Classes */
+.naukri-fade-up {
+  animation: naukri-slide-up 0.6s ease-out forwards;
+}
+
+.naukri-fade-left {
+  animation: naukri-slide-in-left 0.6s ease-out forwards;
+}
+
+.naukri-fade-right {
+  animation: naukri-slide-in-right 0.6s ease-out forwards;
+}
+
+.naukri-scale {
+  animation: naukri-scale-in 0.5s ease-out forwards;
+}
+
+/* Staggered Animation Delays */
+.naukri-delay-1 {
+  animation-delay: 0.1s;
+}
+.naukri-delay-2 {
+  animation-delay: 0.2s;
+}
+.naukri-delay-3 {
+  animation-delay: 0.3s;
+}
+.naukri-delay-4 {
+  animation-delay: 0.4s;
+}
+.naukri-delay-5 {
+  animation-delay: 0.5s;
+}
+.naukri-delay-6 {
+  animation-delay: 0.6s;
+}
+
+/* Glassmorphism Effect */
+.naukri-glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Gradient Text */
+.naukri-gradient-text {
+  background: linear-gradient(135deg, var(--naukri-blue), var(--naukri-teal));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Animated Underline */
+.naukri-underline {
+  position: relative;
+}
+
+.naukri-underline::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--naukri-blue), var(--naukri-teal));
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.naukri-underline:hover::after {
+  width: 100%;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .naukri-card:hover {
+    transform: translateY(-4px);
+  }
+
+  .naukri-job-card:hover {
+    transform: translateY(-4px);
+  }
+
+  .naukri-company-card:hover {
+    transform: translateY(-6px);
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .naukri-card {
+    background: var(--naukri-gray-800);
+    border-color: var(--naukri-gray-700);
+  }
+
+  .naukri-job-card,
+  .naukri-company-card {
+    background: var(--naukri-gray-800);
+    border-color: var(--naukri-gray-700);
+  }
+}
