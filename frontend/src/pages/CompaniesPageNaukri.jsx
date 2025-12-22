@@ -76,6 +76,7 @@ import {
 } from "@mui/icons-material";
 import { styled, keyframes } from "@mui/material/styles";
 import API_BASE_URL from "../services/apiConfig";
+import colors, { fonts, fontSizes } from "../styles/uiColors";
 
 // Animations
 const fadeIn = keyframes`
@@ -134,7 +135,7 @@ const CompanyCard = styled(Card)(() => ({
   "&:hover": {
     transform: "translateY(-8px)",
     boxShadow: "0 20px 50px rgba(99, 102, 241, 0.15)",
-    borderColor: "#6366f1",
+    borderColor: colors.primary,
     "& .company-logo": { transform: "scale(1.1)" },
   },
 }));
@@ -175,10 +176,10 @@ const QuickFilterChip = styled(Chip)(({ selected }) => ({
   borderRadius: "10px",
   transition: "all 0.2s",
   cursor: "pointer",
-  backgroundColor: selected ? "#6366f1" : "#f3f4f6",
+  backgroundColor: selected ? colors.primary : "#f3f4f6",
   color: selected ? "#fff" : "#374151",
   "&:hover": {
-    backgroundColor: selected ? "#4f46e5" : "#e5e7eb",
+    backgroundColor: selected ? colors.primaryDark : "#e5e7eb",
     transform: "translateY(-2px)",
   },
 }));
@@ -655,7 +656,7 @@ const CompaniesPageNaukri = () => {
                     }
                     sx={{
                       color: "#d1d5db",
-                      "&.Mui-checked": { color: "#6366f1" },
+                      "&.Mui-checked": { color: colors.primary },
                     }}
                   />
                 }
@@ -714,7 +715,7 @@ const CompaniesPageNaukri = () => {
                     onChange={() => handleFilterChange("industry", ind.label)}
                     sx={{
                       color: "#d1d5db",
-                      "&.Mui-checked": { color: "#6366f1" },
+                      "&.Mui-checked": { color: colors.primary },
                     }}
                   />
                 }
@@ -775,7 +776,7 @@ const CompaniesPageNaukri = () => {
                     onChange={() => handleFilterChange("location", loc)}
                     sx={{
                       color: "#d1d5db",
-                      "&.Mui-checked": { color: "#6366f1" },
+                      "&.Mui-checked": { color: colors.primary },
                     }}
                   />
                 }
@@ -820,7 +821,7 @@ const CompaniesPageNaukri = () => {
                     onChange={() => handleFilterChange("companySize", size)}
                     sx={{
                       color: "#d1d5db",
-                      "&.Mui-checked": { color: "#6366f1" },
+                      "&.Mui-checked": { color: colors.primary },
                     }}
                   />
                 }
@@ -930,7 +931,7 @@ const CompaniesPageNaukri = () => {
                 size="small"
               >
                 {savedCompanies.includes(company.id) ? (
-                  <Bookmark sx={{ color: "#6366f1" }} />
+                  <Bookmark sx={{ color: colors.primary }} />
                 ) : (
                   <BookmarkBorder sx={{ color: "#9ca3af" }} />
                 )}
@@ -990,7 +991,7 @@ const CompaniesPageNaukri = () => {
                 size="small"
                 sx={{
                   bgcolor: "#ede9fe",
-                  color: "#6366f1",
+                  color: colors.primary,
                   fontWeight: 600,
                   fontSize: "11px",
                 }}
@@ -1026,7 +1027,7 @@ const CompaniesPageNaukri = () => {
               <Box>
                 <Typography
                   variant="h6"
-                  sx={{ fontWeight: 700, color: "#6366f1" }}
+                  sx={{ fontWeight: 700, color: colors.primary }}
                 >
                   {company.openings}
                 </Typography>
@@ -1042,11 +1043,9 @@ const CompaniesPageNaukri = () => {
                   textTransform: "none",
                   fontWeight: 600,
                   borderRadius: "10px",
-                  background:
-                    "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                  background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
                   "&:hover": {
-                    background:
-                      "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
+                    background: `linear-gradient(135deg, ${colors.primaryDark} 0%, ${colors.secondary} 100%)`,
                   },
                 }}
               >
@@ -1063,16 +1062,31 @@ const CompaniesPageNaukri = () => {
     <Box sx={{ backgroundColor: "#f8fafc", minHeight: "100vh" }}>
       {/* Header */}
       <PageHeader>
-        <Container maxWidth="xl" sx={{ position: "relative", zIndex: 1 }}>
+        <Container
+          maxWidth="lg"
+          sx={{ position: "relative", zIndex: 1, px: { xs: 2, sm: 4, md: 6 } }}
+        >
           <Typography
             variant="h4"
-            sx={{ fontWeight: 800, color: "#fff", mb: 1 }}
+            sx={{
+              fontWeight: 800,
+              color: "#fff",
+              mb: 1,
+              fontFamily: fonts.heading,
+              fontSize: { xs: "1.75rem", md: "2.5rem" },
+              letterSpacing: "-0.02em",
+            }}
           >
             Companies Hiring in India
           </Typography>
           <Typography
             variant="body1"
-            sx={{ color: "rgba(255,255,255,0.8)", mb: 3 }}
+            sx={{
+              color: "rgba(255,255,255,0.9)",
+              mb: 3,
+              fontFamily: fonts.body,
+              fontSize: "1.1rem",
+            }}
           >
             Discover{" "}
             {companies.length > 0 ? companies.length.toLocaleString() : "6,500"}
@@ -1096,8 +1110,14 @@ const CompaniesPageNaukri = () => {
 
       {/* Featured Companies */}
       <Container
-        maxWidth="xl"
-        sx={{ mt: -6, position: "relative", zIndex: 10, mb: 6 }}
+        maxWidth="lg"
+        sx={{
+          mt: -6,
+          position: "relative",
+          zIndex: 10,
+          mb: 6,
+          px: { xs: 2, sm: 4, md: 6 },
+        }}
       >
         <Grid container spacing={3}>
           {featuredCompanies.map((company, index) => (
@@ -1155,7 +1175,7 @@ const CompaniesPageNaukri = () => {
                       <StatBox>
                         <Typography
                           variant="h6"
-                          sx={{ fontWeight: 700, color: "#6366f1" }}
+                          sx={{ fontWeight: 700, color: colors.primary }}
                         >
                           {company.rating}
                         </Typography>
@@ -1168,7 +1188,7 @@ const CompaniesPageNaukri = () => {
                       <StatBox>
                         <Typography
                           variant="h6"
-                          sx={{ fontWeight: 700, color: "#6366f1" }}
+                          sx={{ fontWeight: 700, color: colors.primary }}
                         >
                           {company.openings}
                         </Typography>
@@ -1181,7 +1201,7 @@ const CompaniesPageNaukri = () => {
                       <StatBox>
                         <Typography
                           variant="h6"
-                          sx={{ fontWeight: 700, color: "#6366f1" }}
+                          sx={{ fontWeight: 700, color: colors.primary }}
                         >
                           {company.reviews}
                         </Typography>
@@ -1230,7 +1250,7 @@ const CompaniesPageNaukri = () => {
       </Container>
 
       {/* Main Content */}
-      <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Container maxWidth="lg" sx={{ py: 4, px: { xs: 2, sm: 4, md: 6 } }}>
         <Grid container spacing={3}>
           {/* Filters - Desktop */}
           {!isMobile && (
@@ -1261,9 +1281,9 @@ const CompaniesPageNaukri = () => {
                     fontWeight: 600,
                     minHeight: 56,
                   },
-                  "& .Mui-selected": { color: "#6366f1" },
+                  "& .Mui-selected": { color: colors.primary },
                   "& .MuiTabs-indicator": {
-                    bgcolor: "#6366f1",
+                    bgcolor: colors.primary,
                     height: 3,
                     borderRadius: "3px 3px 0 0",
                   },
@@ -1400,8 +1420,7 @@ const CompaniesPageNaukri = () => {
                         fontWeight: 600,
                         borderRadius: "10px",
                         "&.Mui-selected": {
-                          background:
-                            "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                          background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
                         },
                       },
                     }}
@@ -1449,7 +1468,7 @@ const CompaniesPageNaukri = () => {
               fontWeight: 600,
               py: 1.5,
               borderRadius: "12px",
-              background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+              background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
             }}
           >
             Apply Filters

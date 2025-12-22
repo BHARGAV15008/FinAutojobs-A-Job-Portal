@@ -53,6 +53,7 @@ import {
 } from "@mui/icons-material";
 import { styled, keyframes } from "@mui/material/styles";
 import API_BASE_URL from "../services/apiConfig";
+import colors, { fonts, fontSizes } from "../styles/uiColors";
 
 // Animations
 const float = keyframes`
@@ -81,8 +82,7 @@ const gradientMove = keyframes`
 const HeroSection = styled(Box)(() => ({
   position: "relative",
   minHeight: "85vh",
-  background:
-    "linear-gradient(135deg, #1e1b4b 0%, #312e81 30%, #4338ca 60%, #6366f1 100%)",
+  background: `linear-gradient(135deg, ${colors.dark} 0%, #312e81 30%, #4338ca 60%, ${colors.primary} 100%)`,
   backgroundSize: "300% 300%",
   animation: `${gradientMove} 15s ease infinite`,
   overflow: "hidden",
@@ -160,7 +160,7 @@ const JobCard = styled(Card)(() => ({
   "&:hover": {
     transform: "translateY(-6px)",
     boxShadow: "0 20px 50px rgba(99, 102, 241, 0.15)",
-    borderColor: "#6366f1",
+    borderColor: colors.primary,
     "& .company-logo": {
       transform: "scale(1.1)",
     },
@@ -181,7 +181,7 @@ const CompanyCard = styled(Card)(() => ({
 }));
 
 const GradientButton = styled(Button)(() => ({
-  background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+  background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
   color: "#fff",
   textTransform: "none",
   fontWeight: 600,
@@ -190,7 +190,7 @@ const GradientButton = styled(Button)(() => ({
   boxShadow: "0 4px 20px rgba(99, 102, 241, 0.4)",
   transition: "all 0.3s ease",
   "&:hover": {
-    background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
+    background: `linear-gradient(135deg, ${colors.primaryDark} 0%, ${colors.secondary} 100%)`,
     transform: "translateY(-2px)",
     boxShadow: "0 8px 30px rgba(99, 102, 241, 0.5)",
   },
@@ -239,7 +239,7 @@ const HomePageNaukri = () => {
       icon: <Work sx={{ fontSize: 32 }} />,
       value: "2M+",
       label: "Active Jobs",
-      color: "#6366f1",
+      color: colors.primary,
       bgGradient: "linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%)",
     },
     {
@@ -312,7 +312,7 @@ const HomePageNaukri = () => {
       icon: <SupportAgent />,
       title: "Customer Support",
       count: "20,000+",
-      gradient: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
+      gradient: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryDark} 100%)`,
     },
   ];
 
@@ -395,17 +395,18 @@ const HomePageNaukri = () => {
       {/* Hero Section */}
       <HeroSection>
         <Container
-          maxWidth="xl"
+          maxWidth="lg"
           sx={{
             position: "relative",
             zIndex: 1,
             pt: { xs: 8, md: 12 },
             pb: { xs: 10, md: 16 },
+            px: { xs: 2, sm: 4, md: 6 },
           }}
         >
           <Grid container spacing={6} alignItems="center">
             <Grid item xs={12} md={7}>
-              <Box sx={{ color: "#fff", maxWidth: 680 }}>
+              <Box sx={{ color: "#fff", maxWidth: 560 }}>
                 <Chip
                   icon={
                     <LocalFireDepartment sx={{ color: "#fbbf24 !important" }} />
@@ -428,10 +429,13 @@ const HomePageNaukri = () => {
                 <Typography
                   variant="h1"
                   sx={{
-                    fontSize: { xs: "2.5rem", sm: "3.5rem", md: "4rem" },
+                    fontSize: fontSizes.heroTitle,
+                    fontFamily: fonts.display,
                     fontWeight: 800,
-                    lineHeight: 1.1,
+                    lineHeight: 1.05,
                     mb: 3,
+                    color: "#fff",
+                    letterSpacing: "-0.02em",
                     textShadow: "0 4px 30px rgba(0,0,0,0.3)",
                   }}
                 >
@@ -443,6 +447,7 @@ const HomePageNaukri = () => {
                         "linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)",
                       WebkitBackgroundClip: "text",
                       WebkitTextFillColor: "transparent",
+                      fontWeight: 900,
                     }}
                   >
                     Dream Job
@@ -455,11 +460,13 @@ const HomePageNaukri = () => {
                   variant="h6"
                   sx={{
                     mb: 5,
-                    opacity: 0.9,
+                    color: "rgba(255,255,255,0.95)",
+                    fontFamily: fonts.body,
                     fontWeight: 400,
-                    lineHeight: 1.8,
-                    maxWidth: 540,
-                    fontSize: { xs: "1rem", md: "1.15rem" },
+                    lineHeight: 1.9,
+                    maxWidth: 580,
+                    fontSize: fontSizes.heroSubtitle,
+                    letterSpacing: "0.01em",
                   }}
                 >
                   Connect with top employers and discover opportunities that
@@ -475,10 +482,10 @@ const HomePageNaukri = () => {
                     endIcon={<ArrowForward />}
                     sx={{
                       background: "#fff",
-                      color: "#6366f1",
+                      color: colors.primary,
                       "&:hover": {
                         background: "#f3f4f6",
-                        color: "#4f46e5",
+                        color: colors.primaryDark,
                       },
                     }}
                   >
@@ -579,7 +586,7 @@ const HomePageNaukri = () => {
                   sx={{ top: 140, right: 120, p: 2, animationDelay: "0.5s" }}
                 >
                   <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                    <Avatar sx={{ bgcolor: "#6366f1" }}>
+                    <Avatar sx={{ bgcolor: colors.primary }}>
                       <Groups />
                     </Avatar>
                     <Box>
@@ -649,8 +656,13 @@ const HomePageNaukri = () => {
 
       {/* Stats Section */}
       <Container
-        maxWidth="xl"
-        sx={{ mt: -6, position: "relative", zIndex: 10 }}
+        maxWidth="lg"
+        sx={{
+          mt: -6,
+          position: "relative",
+          zIndex: 10,
+          px: { xs: 2, sm: 4, md: 6 },
+        }}
       >
         <Grid container spacing={3}>
           {stats.map((stat, index) => (
@@ -698,7 +710,7 @@ const HomePageNaukri = () => {
       </Container>
 
       {/* Categories Section */}
-      <Container maxWidth="xl" sx={{ py: 10 }}>
+      <Container maxWidth="lg" sx={{ py: 10, px: { xs: 2, sm: 4, md: 6 } }}>
         <SectionTitle>
           <Chip
             label="EXPLORE"
@@ -706,11 +718,23 @@ const HomePageNaukri = () => {
             sx={{
               mb: 2,
               bgcolor: "#ede9fe",
-              color: "#6366f1",
-              fontWeight: 600,
+              color: colors.primary,
+              fontWeight: 700,
+              fontFamily: fonts.body,
+              letterSpacing: "0.1em",
             }}
           />
-          <Typography variant="h3" sx={{ fontWeight: 800, mb: 2 }}>
+          <Typography
+            variant="h3"
+            sx={{
+              fontWeight: 800,
+              mb: 2,
+              fontFamily: fonts.heading,
+              fontSize: fontSizes.sectionTitle,
+              color: "#1f2937",
+              letterSpacing: "-0.02em",
+            }}
+          >
             Popular Job Categories
           </Typography>
           <Typography
@@ -718,8 +742,11 @@ const HomePageNaukri = () => {
             sx={{
               color: "#6b7280",
               fontWeight: 400,
+              fontFamily: fonts.body,
               maxWidth: 600,
               mx: "auto",
+              fontSize: "1.1rem",
+              lineHeight: 1.7,
             }}
           >
             Browse through thousands of job openings across different industries
@@ -792,7 +819,7 @@ const HomePageNaukri = () => {
 
       {/* Featured Jobs Section */}
       <Box sx={{ bgcolor: "#fff", py: 10 }}>
-        <Container maxWidth="xl">
+        <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 4, md: 6 } }}>
           <SectionTitle>
             <Box
               sx={{
@@ -810,10 +837,28 @@ const HomePageNaukri = () => {
                 sx={{ bgcolor: "#fee2e2", color: "#ef4444", fontWeight: 600 }}
               />
             </Box>
-            <Typography variant="h3" sx={{ fontWeight: 800, mb: 2 }}>
+            <Typography
+              variant="h3"
+              sx={{
+                fontWeight: 800,
+                mb: 2,
+                fontFamily: fonts.heading,
+                fontSize: fontSizes.sectionTitle,
+                color: "#1f2937",
+                letterSpacing: "-0.02em",
+              }}
+            >
               Featured Jobs
             </Typography>
-            <Typography variant="h6" sx={{ color: "#6b7280", fontWeight: 400 }}>
+            <Typography
+              variant="h6"
+              sx={{
+                color: "#6b7280",
+                fontWeight: 400,
+                fontFamily: fonts.body,
+                fontSize: "1.1rem",
+              }}
+            >
               Hand-picked opportunities from top companies
             </Typography>
           </SectionTitle>
@@ -904,7 +949,7 @@ const HomePageNaukri = () => {
                             sx={{
                               width: 52,
                               height: 52,
-                              bgcolor: "#6366f1",
+                              bgcolor: colors.primary,
                               fontWeight: 700,
                               fontSize: "18px",
                               transition: "transform 0.3s",
@@ -917,7 +962,7 @@ const HomePageNaukri = () => {
                             size="small"
                           >
                             {savedJobs.includes(job._id) ? (
-                              <Bookmark sx={{ color: "#6366f1" }} />
+                              <Bookmark sx={{ color: colors.primary }} />
                             ) : (
                               <BookmarkBorder sx={{ color: "#9ca3af" }} />
                             )}
@@ -1006,7 +1051,7 @@ const HomePageNaukri = () => {
                             sx={{
                               textTransform: "none",
                               fontWeight: 600,
-                              color: "#6366f1",
+                              color: colors.primary,
                               "&:hover": { bgcolor: "rgba(99,102,241,0.08)" },
                             }}
                           >
@@ -1034,7 +1079,7 @@ const HomePageNaukri = () => {
       </Box>
 
       {/* Top Companies Section */}
-      <Container maxWidth="xl" sx={{ py: 10 }}>
+      <Container maxWidth="lg" sx={{ py: 10, px: { xs: 2, sm: 4, md: 6 } }}>
         <SectionTitle>
           <Chip
             label="TOP EMPLOYERS"
@@ -1043,13 +1088,33 @@ const HomePageNaukri = () => {
               mb: 2,
               bgcolor: "#dbeafe",
               color: "#2563eb",
-              fontWeight: 600,
+              fontWeight: 700,
+              fontFamily: fonts.body,
+              letterSpacing: "0.1em",
             }}
           />
-          <Typography variant="h3" sx={{ fontWeight: 800, mb: 2 }}>
+          <Typography
+            variant="h3"
+            sx={{
+              fontWeight: 800,
+              mb: 2,
+              fontFamily: fonts.heading,
+              fontSize: fontSizes.sectionTitle,
+              color: "#1f2937",
+              letterSpacing: "-0.02em",
+            }}
+          >
             Dream Companies Hiring
           </Typography>
-          <Typography variant="h6" sx={{ color: "#6b7280", fontWeight: 400 }}>
+          <Typography
+            variant="h6"
+            sx={{
+              color: "#6b7280",
+              fontWeight: 400,
+              fontFamily: fonts.body,
+              fontSize: "1.1rem",
+            }}
+          >
             Get noticed by world's top employers
           </Typography>
         </SectionTitle>
@@ -1114,13 +1179,13 @@ const HomePageNaukri = () => {
             sx={{
               textTransform: "none",
               fontWeight: 600,
-              borderColor: "#6366f1",
-              color: "#6366f1",
+              borderColor: colors.primary,
+              color: colors.primary,
               px: 4,
               py: 1.5,
               borderRadius: "12px",
               "&:hover": {
-                borderColor: "#4f46e5",
+                borderColor: colors.primaryDark,
                 bgcolor: "rgba(99,102,241,0.08)",
               },
             }}
@@ -1138,17 +1203,29 @@ const HomePageNaukri = () => {
           py: 10,
         }}
       >
-        <Container maxWidth="xl">
+        <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 4, md: 6 } }}>
           <SectionTitle>
             <Typography
               variant="h3"
-              sx={{ fontWeight: 800, mb: 2, color: "#fff" }}
+              sx={{
+                fontWeight: 800,
+                mb: 2,
+                color: "#fff",
+                fontFamily: fonts.heading,
+                fontSize: fontSizes.sectionTitle,
+                letterSpacing: "-0.02em",
+              }}
             >
               Why Choose FinAutoJobs?
             </Typography>
             <Typography
               variant="h6"
-              sx={{ color: "rgba(255,255,255,0.8)", fontWeight: 400 }}
+              sx={{
+                color: "rgba(255,255,255,0.9)",
+                fontWeight: 400,
+                fontFamily: fonts.body,
+                fontSize: "1.1rem",
+              }}
             >
               We make job hunting simple and effective
             </Typography>
@@ -1215,7 +1292,7 @@ const HomePageNaukri = () => {
             sx={{
               p: { xs: 4, md: 6 },
               borderRadius: "24px",
-              background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+              background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
               textAlign: "center",
               position: "relative",
               overflow: "hidden",
@@ -1238,6 +1315,9 @@ const HomePageNaukri = () => {
                 color: "#fff",
                 mb: 2,
                 position: "relative",
+                fontFamily: fonts.heading,
+                fontSize: fontSizes.sectionTitle,
+                letterSpacing: "-0.02em",
               }}
             >
               Ready to Start Your Journey?
@@ -1245,11 +1325,14 @@ const HomePageNaukri = () => {
             <Typography
               variant="h6"
               sx={{
-                color: "rgba(255,255,255,0.9)",
+                color: "rgba(255,255,255,0.95)",
                 mb: 4,
                 maxWidth: 500,
                 mx: "auto",
                 position: "relative",
+                fontFamily: fonts.body,
+                fontSize: "1.15rem",
+                lineHeight: 1.7,
               }}
             >
               Create your profile and let recruiters find you
@@ -1270,7 +1353,7 @@ const HomePageNaukri = () => {
                 size="large"
                 sx={{
                   bgcolor: "#fff",
-                  color: "#6366f1",
+                  color: colors.primary,
                   textTransform: "none",
                   fontWeight: 700,
                   px: 4,

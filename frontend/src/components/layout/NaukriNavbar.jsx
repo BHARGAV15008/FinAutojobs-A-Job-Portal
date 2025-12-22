@@ -56,6 +56,7 @@ import {
   FlashOn,
 } from "@mui/icons-material";
 import { styled, keyframes } from "@mui/material/styles";
+import colors from "../../styles/uiColors";
 
 // Animations
 const pulse = keyframes`
@@ -83,7 +84,7 @@ const NavbarWrapper = styled(Box)(({ scrolled }) => ({
 }));
 
 const TopBar = styled(Box)(() => ({
-  background: "linear-gradient(135deg, #4a3f9f 0%, #6366f1 50%, #8b5cf6 100%)",
+  background: `linear-gradient(135deg, ${colors.dark} 0%, ${colors.primary} 50%, ${colors.secondary} 100%)`,
   padding: "8px 0",
   position: "relative",
   overflow: "hidden",
@@ -108,13 +109,13 @@ const SearchWrapper = styled(Paper)(({ focused }) => ({
   display: "flex",
   alignItems: "center",
   borderRadius: "12px",
-  border: focused ? "2px solid #6366f1" : "1px solid #e0e0e0",
-  boxShadow: focused ? "0 4px 20px rgba(99, 102, 241, 0.2)" : "none",
+  border: focused ? `2px solid ${colors.primary}` : "1px solid #e0e0e0",
+  boxShadow: focused ? `0 4px 20px ${colors.primary}33` : "none",
   transition: "all 0.3s ease",
   backgroundColor: focused ? "#fafafe" : "#fff",
   "&:hover": {
-    borderColor: "#6366f1",
-    boxShadow: "0 2px 12px rgba(99, 102, 241, 0.15)",
+    borderColor: colors.primary,
+    boxShadow: `0 2px 12px ${colors.primary}26`,
   },
 }));
 
@@ -146,14 +147,14 @@ const NavLink = styled(Button)(({ active }) => ({
   textTransform: "none",
   fontWeight: active ? 600 : 500,
   fontSize: "14px",
-  color: active ? "#6366f1" : "#374151",
+  color: active ? colors.primary : colors.neutralText,
   padding: "10px 18px",
   borderRadius: "8px",
   position: "relative",
   transition: "all 0.2s ease",
   "&:hover": {
-    backgroundColor: "rgba(99, 102, 241, 0.08)",
-    color: "#6366f1",
+    backgroundColor: `rgba(79,70,229,0.08)`,
+    color: colors.primaryDark,
     transform: "translateY(-1px)",
   },
   "&::after": active
@@ -165,7 +166,7 @@ const NavLink = styled(Button)(({ active }) => ({
         transform: "translateX(-50%)",
         width: "80%",
         height: "3px",
-        backgroundColor: "#6366f1",
+        backgroundColor: colors.primary,
         borderRadius: "2px 2px 0 0",
       }
     : {},

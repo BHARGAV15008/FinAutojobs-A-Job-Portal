@@ -65,6 +65,7 @@ import {
 } from "@mui/icons-material";
 import { styled, keyframes } from "@mui/material/styles";
 import API_BASE_URL from "../services/apiConfig";
+import colors, { fonts, fontSizes } from "../styles/uiColors";
 
 // Animations
 const fadeIn = keyframes`
@@ -79,7 +80,7 @@ const pulse = keyframes`
 
 // Styled Components
 const PageHeader = styled(Box)(() => ({
-  background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%)",
+  background: `linear-gradient(135deg, ${colors.dark} 0%, ${colors.primary} 50%, ${colors.secondary} 100%)`,
   padding: "48px 0 80px",
   position: "relative",
   overflow: "hidden",
@@ -122,7 +123,7 @@ const JobCard = styled(Card)(({ viewMode }) => ({
   "&:hover": {
     transform: "translateY(-4px)",
     boxShadow: "0 12px 40px rgba(99, 102, 241, 0.15)",
-    borderColor: "#6366f1",
+    borderColor: colors.primary,
     "& .company-logo": { transform: "scale(1.1)" },
   },
 }));
@@ -132,18 +133,18 @@ const QuickFilterChip = styled(Chip)(({ selected }) => ({
   borderRadius: "10px",
   transition: "all 0.2s",
   cursor: "pointer",
-  backgroundColor: selected ? "#6366f1" : "#f3f4f6",
+  backgroundColor: selected ? colors.primary : "#f3f4f6",
   color: selected ? "#fff" : "#374151",
   border: selected ? "none" : "1px solid transparent",
   "&:hover": {
-    backgroundColor: selected ? "#4f46e5" : "#e5e7eb",
+    backgroundColor: selected ? colors.primaryDark : "#e5e7eb",
     transform: "translateY(-2px)",
   },
 }));
 
 const ActiveFilterBadge = styled(Badge)(() => ({
   "& .MuiBadge-badge": {
-    backgroundColor: "#ef4444",
+    backgroundColor: colors.danger,
     color: "#fff",
     fontWeight: 700,
     fontSize: 10,
@@ -413,7 +414,7 @@ const JobsPageNaukri = () => {
                     onChange={() => handleFilterChange("experience", exp)}
                     sx={{
                       color: "#d1d5db",
-                      "&.Mui-checked": { color: "#6366f1" },
+                      "&.Mui-checked": { color: colors.primary },
                     }}
                   />
                 }
@@ -458,9 +459,9 @@ const JobsPageNaukri = () => {
               max={100}
               valueLabelFormat={(value) => `₹${value}L`}
               sx={{
-                color: "#6366f1",
+                color: colors.primary,
                 "& .MuiSlider-thumb": { width: 20, height: 20 },
-                "& .MuiSlider-valueLabel": { bgcolor: "#6366f1" },
+                "& .MuiSlider-valueLabel": { bgcolor: colors.primary },
               }}
             />
             <Box sx={{ display: "flex", justifyContent: "space-between" }}>
@@ -508,7 +509,7 @@ const JobsPageNaukri = () => {
                     onChange={() => handleFilterChange("location", loc)}
                     sx={{
                       color: "#d1d5db",
-                      "&.Mui-checked": { color: "#6366f1" },
+                      "&.Mui-checked": { color: colors.primary },
                     }}
                   />
                 }
@@ -553,7 +554,7 @@ const JobsPageNaukri = () => {
                     onChange={() => handleFilterChange("workMode", mode)}
                     sx={{
                       color: "#d1d5db",
-                      "&.Mui-checked": { color: "#6366f1" },
+                      "&.Mui-checked": { color: colors.primary },
                     }}
                   />
                 }
@@ -598,7 +599,7 @@ const JobsPageNaukri = () => {
                     onChange={() => handleFilterChange("jobType", type)}
                     sx={{
                       color: "#d1d5db",
-                      "&.Mui-checked": { color: "#6366f1" },
+                      "&.Mui-checked": { color: colors.primary },
                     }}
                   />
                 }
@@ -673,7 +674,7 @@ const JobsPageNaukri = () => {
                 position: "absolute",
                 top: 12,
                 right: 12,
-                bgcolor: "#ef4444",
+                bgcolor: colors.danger,
                 color: "#fff",
                 fontWeight: 600,
                 fontSize: "11px",
@@ -688,7 +689,7 @@ const JobsPageNaukri = () => {
                 sx={{
                   width: 60,
                   height: 60,
-                  bgcolor: "#6366f1",
+                  bgcolor: colors.primary,
                   fontSize: "22px",
                   fontWeight: 700,
                   transition: "transform 0.3s",
@@ -738,7 +739,7 @@ const JobsPageNaukri = () => {
                     size="small"
                   >
                     {savedJobs.includes(job._id) ? (
-                      <Bookmark sx={{ color: "#6366f1" }} />
+                      <Bookmark sx={{ color: colors.primary }} />
                     ) : (
                       <BookmarkBorder sx={{ color: "#9ca3af" }} />
                     )}
@@ -854,12 +855,10 @@ const JobsPageNaukri = () => {
                       textTransform: "none",
                       fontWeight: 600,
                       borderRadius: "8px",
-                      background:
-                        "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                      background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
                       px: 3,
                       "&:hover": {
-                        background:
-                          "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
+                        background: `linear-gradient(135deg, ${colors.primaryDark} 0%, ${colors.secondary} 100%)`,
                       },
                     }}
                   >
@@ -879,7 +878,7 @@ const JobsPageNaukri = () => {
                   sx={{
                     width: 52,
                     height: 52,
-                    bgcolor: "#6366f1",
+                    bgcolor: colors.primary,
                     fontSize: "20px",
                     fontWeight: 700,
                     transition: "transform 0.3s",
@@ -892,7 +891,7 @@ const JobsPageNaukri = () => {
                   size="small"
                 >
                   {savedJobs.includes(job._id) ? (
-                    <Bookmark sx={{ color: "#6366f1" }} />
+                    <Bookmark sx={{ color: colors.primary }} />
                   ) : (
                     <BookmarkBorder sx={{ color: "#9ca3af" }} />
                   )}
@@ -1019,17 +1018,32 @@ const JobsPageNaukri = () => {
     <Box sx={{ backgroundColor: "#f8fafc", minHeight: "100vh" }}>
       {/* Header */}
       <PageHeader>
-        <Container maxWidth="xl" sx={{ position: "relative", zIndex: 1 }}>
+        <Container
+          maxWidth="lg"
+          sx={{ position: "relative", zIndex: 1, px: { xs: 2, sm: 4, md: 6 } }}
+        >
           <Typography
             variant="h4"
-            sx={{ fontWeight: 800, color: "#fff", mb: 1 }}
+            sx={{
+              fontWeight: 800,
+              color: "#fff",
+              mb: 1,
+              fontFamily: fonts.heading,
+              fontSize: { xs: "1.75rem", md: "2.5rem" },
+              letterSpacing: "-0.02em",
+            }}
           >
             {searchQuery ? `${searchQuery} Jobs` : "All Jobs"}
             {locationQuery && ` in ${locationQuery}`}
           </Typography>
           <Typography
             variant="body1"
-            sx={{ color: "rgba(255,255,255,0.8)", mb: 3 }}
+            sx={{
+              color: "rgba(255,255,255,0.9)",
+              mb: 3,
+              fontFamily: fonts.body,
+              fontSize: "1.1rem",
+            }}
           >
             {displayJobs.length.toLocaleString()}+ jobs found
           </Typography>
@@ -1053,7 +1067,10 @@ const JobsPageNaukri = () => {
       </PageHeader>
 
       {/* Main Content */}
-      <Container maxWidth="xl" sx={{ py: 4, mt: -6 }}>
+      <Container
+        maxWidth="lg"
+        sx={{ py: 4, mt: -6, px: { xs: 2, sm: 4, md: 6 } }}
+      >
         <Grid container spacing={3}>
           {/* Filters - Desktop */}
           {!isMobile && (
@@ -1173,8 +1190,7 @@ const JobsPageNaukri = () => {
                         fontWeight: 600,
                         borderRadius: "10px",
                         "&.Mui-selected": {
-                          background:
-                            "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                          background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
                         },
                       },
                     }}
@@ -1222,7 +1238,7 @@ const JobsPageNaukri = () => {
               fontWeight: 600,
               py: 1.5,
               borderRadius: "12px",
-              background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+              background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
             }}
           >
             Apply Filters
