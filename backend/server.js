@@ -36,6 +36,7 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import os from "os";
+import networkConfig from "./utils/networkConfig.js";
 
 // Import configurations
 import corsOptions from "./config/cors.js";
@@ -148,7 +149,7 @@ app.use(
     saveUninitialized: false,
     store: MongoStore.create({
       mongoUrl:
-        process.env.MONGODB_URI || "mongodb://192.168.41.134:27017/finauto_jobs",
+        process.env.MONGODB_URI || "mongodb://localhost:27017/finauto_jobs",
       touchAfter: 24 * 3600, // lazy session update
     }),
     cookie: {
@@ -261,6 +262,11 @@ if (process.env.NODE_ENV !== "production") {
 import socialAccountsRoutes from "./routes/socialAccounts.js";
 apiRouter.use("/auth", socialAccountsRoutes);
 console.log("✅ /api/auth social accounts routes registered successfully");
+
+// Firebase Auth routes (for client-side tokens)
+import firebaseAuthRoutes from "./routes/firebaseAuth.js";
+apiRouter.use("/firebase-auth", firebaseAuthRoutes);
+console.log("✅ /api/firebase-auth routes registered successfully");
 
 // Initialize OAuth strategies after environment variables are loaded
 console.log("🔧 Initializing OAuth strategies after env load...");
@@ -453,30 +459,29 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 // Start server with proper error handling - bind to 0.0.0.0 for network access
+const host = networkConfig.getHost("0.0.0.0");
+
 server
-  .listen(PORT, "0.0.0.0", () => {
-    const networkInterfaces = os.networkInterfaces();
-    let localIP = "localhost";
+  .listen(PORT, host, () => {
+    console.log(`🚀 FinAutoJobs API Server running on port ${PORT}`);
 
-    // Find the local IP address
-    Object.keys(networkInterfaces).forEach((interfaceName) => {
-      const interfaces = networkInterfaces[interfaceName];
-      interfaces.forEach((interfaceInfo) => {
-        if (interfaceInfo.family === "IPv4" && !interfaceInfo.internal) {
-          localIP = interfaceInfo.address;
-        }
-      });
-    });
+    // Display dynamic network information
+    networkConfig.displayNetworkInfo(PORT, "Backend API");
 
-    console.log(
-      `🚀 FinAutoJobs API Server - Email Fixed - running on port ${PORT}`
-    );
-    console.log(`🌐 Network Access:`);
-    console.log(`   📱 Local: http://192.168.41.134:${PORT}`);
-    console.log(`   🌍 Network: http://${localIP}:${PORT}`);
-    console.log(`   📊 Health check: http://${localIP}:${PORT}/api/health`);
-    console.log(`🛡️ Enhanced error handling enabled`);
-    console.log(`📡 Server accessible from any device on the network`);
+    // Validate network configuration and show warnings
+    const { info, warnings } = networkConfig.validateNetworkConfig();
+
+    if (warnings.length > 0) {
+      console.log("\n⚠️  Network Configuration Warnings:");
+      warnings.forEach((warning) => console.log(warning));
+    }
+
+    console.log("\n✅ Configuration:");
+    console.log("   • Environment:", process.env.NODE_ENV || "development");
+    console.log("   • Frontend URL:", networkConfig.getFrontendURL());
+    console.log("   • CORS Origins:", info.corsOrigins.length, "configured");
+    console.log("   • Error Handling: Enhanced");
+    console.log("   • Network Access: Enabled");
   })
   .on("error", (error) => {
     if (error.code === "EADDRINUSE") {

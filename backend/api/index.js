@@ -37,6 +37,8 @@ import recommendationsRoutes from '../routes/recommendations.js';
 import contactRoutes from '../routes/contact.js';
 import healthRoutes from '../routes/health.js';
 import devRoutes from '../routes/devRoutes.js';
+import interviewRoutes from '../routes/interviews.js';
+import firebaseAuthRoutes from '../routes/firebaseAuth.js';
 
 const app = express();
 
@@ -151,6 +153,15 @@ app.use('/api/applications', async (req, res, next) => {
   }
 }, applicationRoutes);
 
+app.use('/api/interviews', async (req, res, next) => {
+  try {
+    await initDB();
+    next();
+  } catch (error) {
+    res.status(500).json({ error: 'Database connection failed', details: error.message });
+  }
+}, interviewRoutes);
+
 app.use('/api/users', async (req, res, next) => {
   try {
     await initDB();
@@ -195,6 +206,15 @@ app.use('/api/contact', async (req, res, next) => {
     res.status(500).json({ error: 'Database connection failed', details: error.message });
   }
 }, contactRoutes);
+
+app.use('/api/firebase-auth', async (req, res, next) => {
+  try {
+    await initDB();
+    next();
+  } catch (error) {
+    res.status(500).json({ error: 'Database connection failed', details: error.message });
+  }
+}, firebaseAuthRoutes);
 
 // Development routes (no DB required)
 console.log('🔧 Registering /api/dev routes...');

@@ -250,10 +250,64 @@ export const getCompanyJobs = async (req, res) => {
   }
 };
 
+import { Company, Job } from '../models/index.js';
+import Application from '../models/unified/Application.js';
+import Interview from '../models/Interview.js';
+
+// ... (existing imports)
+
 // Get company statistics
 export const getCompanyStats = async (req, res) => {
-  // TODO: Refactor to Mongoose
-  res.status(501).json({ message: 'Not Implemented' });
+  try {
+    const userId = req.user.id; // Recruiter ID
+
+    // 1. Get companies managed by this recruiter
+    const companies = await Company.find({ recruiter: userId });
+    const companyIds = companies.map(c => c._id);
+
+    // 2. Get jobs for these companies (or posted by this recruiter directly)
+    // Checking both company linkage and direct posting for robustness
+    const jobs = await Job.find({ 
+      $or: [
+        { 'recruiterInfo.recruiterId': userId },
+        { postedBy: userId }
+      ]
+    });
+    const jobIds = jobs.map(j => j._id);
+
+    // 3. Aggregate Job Stats
+    const totalJobs = jobs.length;
+    const activeJobs = jobs.filter(j => j.status === 'active').length;
+
+    // 4. Aggregate Application Stats
+    // Applications linked to these jobs
+    const applications = await Application.find({ jobId: { $in: jobIds } });
+    
+    const totalApplications = applications.length;
+    const hiredCandidates = applications.filter(a => a.applicationStatus === 'hired' || a.status === 'hired').length;
+
+    // 5. Aggregate Interview Stats
+    // Interviews linked to this recruiter
+    const interviewsScheduled = await Interview.countDocuments({ 
+      recruiterId: userId,
+      status: { $in: ['scheduled', 'confirmed'] } 
+    });
+
+    res.json({
+      totalCompanies: companies.length,
+      totalJobs,
+      activeJobs,
+      totalApplications,
+      interviewsScheduled,
+      hiredCandidates
+    });
+
+  } catch (error) {
+    console.error('Get company stats error:', error);
+    res.status(500).json({ 
+      message: 'Internal server error while fetching company stats' 
+    });
+  }
 };
 
 // Export aliases for route compatibility
