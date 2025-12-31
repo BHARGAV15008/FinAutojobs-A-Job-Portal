@@ -877,11 +877,11 @@ const ApplicantProfilePage = () => {
                                             <Typography variant="subtitle2" color="text.secondary">
                                                 GitHub Profile
                                             </Typography>
-                                            {user?.github_url ? (
+                                            {user?.github_url || user?.socialLinks?.githubUrl ? (
                                                 <Button
                                                     variant="outlined"
                                                     size="small"
-                                                    href={user.github_url}
+                                                    href={user.github_url || user.socialLinks.githubUrl}
                                                     target="_blank"
                                                     sx={{ mt: 0.5 }}
                                                 >
