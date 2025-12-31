@@ -266,7 +266,7 @@ const AdminDashboardContent = () => {
 
   return (
     <ModernDashboardLayout
-      title="Admin Dashboard"
+      title="Administrator Dashboard"
       userRole="admin"
       user={user}
       showBreadcrumbs={activeTab !== "dashboard"}

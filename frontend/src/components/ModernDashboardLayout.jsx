@@ -57,7 +57,7 @@ const ModernDashboardLayout = ({ children, title, headerContent, userRole }) => 
 
   const NavItem = ({ item, isCollapsed = false }) => (
     <NavLink href={item.path}>
-      <a className={`flex items-center p-3 my-1 text-sm font-medium rounded-xl transition-all duration-200 hover:scale-[1.02] ${
+      <a className={`flex items-center p-3 my-1 text-sm font-medium rounded-md transition-all duration-200 hover:scale-[1.02] ${
         location === item.path 
           ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg' 
           : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
@@ -129,7 +129,7 @@ const ModernDashboardLayout = ({ children, title, headerContent, userRole }) => 
       {/* Logo Section */}
       <div className="flex items-center justify-between p-6 border-b border-gray-200">
         <div className="flex items-center">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center mr-3 shadow-lg">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-md flex items-center justify-center mr-3 shadow-lg">
             <Work sx={{ color: 'white', fontSize: 24 }} />
           </div>
           <div>

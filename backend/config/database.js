@@ -12,7 +12,7 @@ const MONGODB_URI = process.env.MONGODB_URI ||
                    process.env.DATABASE_URL || 
                    process.env.MONGO_URL ||
                    // Only use localhost as last resort for development
-                   (process.env.NODE_ENV === 'development' ? 'mongodb://192.168.41.134:27017/finautojobs' : null);
+                   (process.env.NODE_ENV === 'development' ? 'mongodb://localhost:27017/finautojobs' : null);
 
 // Validate MongoDB URI exists
 if (!MONGODB_URI) {

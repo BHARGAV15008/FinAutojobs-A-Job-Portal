@@ -48,7 +48,9 @@ export const deleteApplication = async (id) => {
 
 export const applyToJob = async (jobId, applicationData = {}) => {
   try {
-    const response = await apiClient.post(`/applications/apply/${jobId}`, applicationData);
+    // Add jobId to the application data
+    const data = { ...applicationData, jobId };
+    const response = await apiClient.post('/applications', data);
     return response.data;
   } catch (error) {
     throw error.response?.data || error.message;
@@ -84,7 +86,7 @@ export const getApplicationsByJob = async (jobId) => {
 
 export const getApplicationsByUser = async (userId) => {
   try {
-    const response = await apiClient.get(`/applications/user/${userId}`);
+    const response = await apiClient.get('/applications', { params: { userId } });
     return response.data;
   } catch (error) {
     throw error.response?.data || error.message;

@@ -120,7 +120,7 @@ const Header = ({ sidebarOpen, setSidebarOpen }) => {
             <div className="relative">
               <button
                 onClick={() => setNotificationMenuOpen(!notificationMenuOpen)}
-                className="relative p-2 rounded-full text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="relative p-2 rounded-full text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
                 <Bell className="h-6 w-6" />
                 {unreadCount > 0 && (
@@ -202,7 +202,7 @@ const Header = ({ sidebarOpen, setSidebarOpen }) => {
             <div className="relative">
               <button
                 onClick={() => setSettingsMenuOpen(!settingsMenuOpen)}
-                className="p-2 rounded-full text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="p-2 rounded-full text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
                 <Settings className="h-6 w-6" />
               </button>

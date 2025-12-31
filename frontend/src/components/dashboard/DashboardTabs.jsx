@@ -165,7 +165,7 @@ export const ProfileTab = ({ data, onEdit }) => {
       <Grid container spacing={3}>
         {profileSections.map((section, index) => (
           <Grid item xs={12} md={6} key={index}>
-            <Card sx={{ borderRadius: 3, height: '100%' }}>
+            <Card sx={{ borderRadius: '6px', height: '100%' }}>
               <CardContent>
                 <Typography variant="h6" fontWeight="bold" gutterBottom>
                   {section.title}

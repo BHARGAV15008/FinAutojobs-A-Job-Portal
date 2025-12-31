@@ -75,8 +75,7 @@ import {
     CurrencyRupee,
     Language,
 } from '@mui/icons-material';
-import { styled } from '@mui/material/styles';
-import { jobsAPI } from '../services/api';
+import { mapBackendJobToFrontend } from '../utils/jobMapper';
 
 const JobCard = styled(Card)(({ theme }) => ({
     display: 'flex',
@@ -237,116 +236,16 @@ const JobsPage = () => {
                 // Fetch ALL jobs once - no filters in URL
                 const response = await fetch(`${API_BASE_URL}/jobs?limit=100`);
                 
-                const data = await response.json();
-                console.log('API Response', data);
+                const result = await response.json();
+                console.log('API Response', result);
                 
                 // Handle the new API response format
-                let jobsData = [];
-                if (data.success && Array.isArray(data.data?.jobs)) {
-                    jobsData = data.data.jobs;
-                    console.log(`Found ${jobsData.length} jobs from comprehensive API`);
-                } else {
-                    console.log('No jobs found, using empty array');
-                    jobsData = [];
-                }
+                const jobsData = result.data?.jobs || [];
                 
                 // Transform comprehensive API data to match component expectations
-                const transformedJobs = jobsData.map(job => ({
-                    // Basic job info
-                    id: job.id || job._id,
-                    title: job.jobTitle || job.title,
-                    company: job.companyName || job.company,
-                    companyLogo: (job.companyName || job.company)?.substring(0, 2).toUpperCase(),
-                    location: job.location,
-                    
-                    // Job details from comprehensive schema
-                    department: job.jobCategory || job.category || job.industry || 'General',
-                    type: job.jobType || job.type,
-                    workMode: job.workArrangement || 'On-site',
-                    workArrangement: job.workArrangement || 'On-site',
-                    
-                    // Salary information - Fixed to properly format salary display
-                    salary: job.formattedSalary || 
-                           (job.salaryRange?.min && job.salaryRange?.max ? 
-                            `₹${(job.salaryRange.min / 100000).toFixed(1)}L - ₹${(job.salaryRange.max / 100000).toFixed(1)}L ${job.salaryRange.period || 'Yearly'}` :
-                            job.salaryRange?.min ? 
-                            `₹${(job.salaryRange.min / 100000).toFixed(1)}L+ ${job.salaryRange.period || 'Yearly'}` : 
-                            'Negotiable'),
-                    formattedSalary: job.formattedSalary || 
-                                   (job.salaryRange?.min && job.salaryRange?.max ? 
-                                    `₹${(job.salaryRange.min / 100000).toFixed(1)}L - ₹${(job.salaryRange.max / 100000).toFixed(1)}L` :
-                                    job.salaryRange?.min ? 
-                                    `₹${(job.salaryRange.min / 100000).toFixed(1)}L+` : 
-                                    'Negotiable'),
-                    salaryRange: job.salaryRange,
-                    
-                    // Dates and timing
-                    posted: job.createdAt ? new Date(job.createdAt).toLocaleDateString() : 'Recently',
-                    postedDate: job.createdAt,
-                    createdAt: job.createdAt,
-                    applicationDeadline: job.applicationDeadline,
-                    daysSincePosted: job.daysSincePosted,
-                    daysUntilDeadline: job.daysUntilDeadline,
-                    
-                    // Experience and skills
-                    experience: job.experience && (job.experience.minimum !== undefined || job.experience.maximum !== undefined) ? 
-                        `${job.experience.minimum || 0}-${job.experience.maximum || 0} years` : 
-                        job.experience && (job.experience.min !== undefined || job.experience.max !== undefined) ?
-                        `${job.experience.min || 0}-${job.experience.max || 0} years` :
-                        typeof job.experience === 'string' ? job.experience :
-                        'Not specified',
-                    experienceMin: job.experience?.minimum || job.experience?.min,
-                    experienceMax: job.experience?.maximum || job.experience?.max,
-                    
-                    // Job content
-                    description: job.jobDescription || job.description,
-                    jobDescription: job.jobDescription,
-                    skills: job.requiredSkills || job.skills || [],
-                    requiredSkills: job.requiredSkills,
-                    requirements: job.requirements || [],
-                    responsibilities: job.keyResponsibilities || job.responsibilities || [],
-                    keyResponsibilities: job.keyResponsibilities,
-                    
-                    // Company and recruiter info
-                    industry: job.industry,
-                    jobCategory: job.jobCategory,
-                    category: job.jobCategory || job.category,
-                    recruiterInfo: job.recruiterInfo,
-                    postedBy: job.postedBy,
-                    
-                    // Job status and priority
-                    status: job.status,
-                    urgency: job.jobUrgency || job.urgency || 'Normal Priority',
-                    jobUrgency: job.jobUrgency,
-                    
-                    // AI and metadata
-                    aiKeywords: job.aiKeywords,
-                    isAiEnhanced: job.isAiEnhanced,
-                    tags: job.tags,
-                    slug: job.slug,
-                    
-                    // Analytics
-                    views: job.views || 0,
-                    applicationsCount: job.applicationsCount || 0,
-                    applicants: job.applicationsCount || 0,
-                    
-                    // Contact
-                    contactEmail: job.contactEmail,
-                    
-                    // Legacy compatibility
-                    currency: job.salaryRange?.currency || 'INR',
-                    salaryPeriod: job.salaryRange?.period || 'Yearly',
-                    featured: job.status === 'Active' && job.jobUrgency === 'High Priority',
-                    urgentHiring: job.jobUrgency === 'Urgent' || job.jobUrgency === 'High Priority',
-                    verified: true,
-                    rating: 4.5,
-                    remote: job.workArrangement === 'Remote',
-                    companySize: '1000+'
-                }));
+                const transformedJobs = jobsData.map(mapBackendJobToFrontend);
                 
-                console.log('Transformed jobs sample', transformedJobs[0]);
                 console.log('Total transformed jobs', transformedJobs.length);
-                console.log('Sample job fields', Object.keys(transformedJobs[0] || {}));
                 setJobs(transformedJobs);
             } catch (error) {
                 console.error('Error fetching jobs from comprehensive API', error);
@@ -1223,57 +1122,12 @@ const JobsPage = () => {
                                     setSelectedExperience('');
                                     setSelectedJobType('');
                                     setSelectedSalaryRange('');
-                                    handleSearch();
+                                    // handleSearch(); // Removed as handleSearch is not defined in this scope or fetchJobs is used directly
+                                    // Instead, we just refresh the component or re-trigger fetchJobs if needed
+                                    window.location.reload(); 
                                 }}
                             >
                                 Clear All Filters
-                            </Button>
-                            <Button 
-                                variant="outlined" 
-                                onClick={async () => {
-                                    try {
-                                        const sampleJobs = [
-                                            {
-                                                title: "Software Engineer",
-                                                company: "TechCorp",
-                                                location: "Mumbai, India",
-                                                type: "Full-time",
-                                                salary: "₹15-25 LPA",
-                                                experience: "3-5 years",
-                                                description: "We are looking for a skilled software engineer to join our team.",
-                                                skills: ["React", "Node.js", "MongoDB"],
-                                                requirements: ["Bachelor's degree in CS", "3+ years experience"],
-                                                responsibilities: ["Develop web applications", "Code review"],
-                                                category: "Technology"
-                                            },
-                                            {
-                                                title: "Financial Analyst",
-                                                company: "FinanceHub",
-                                                location: "Delhi, India",
-                                                type: "Full-time",
-                                                salary: "₹8-12 LPA",
-                                                experience: "2-4 years",
-                                                description: "Join our finance team as a financial analyst.",
-                                                skills: ["Excel", "Financial Modeling", "SQL"],
-                                                requirements: ["MBA in Finance", "2+ years experience"],
-                                                responsibilities: ["Financial analysis", "Report generation"],
-                                                category: "Finance"
-                                            }
-                                        ];
-                                        
-                                        for (const job of sampleJobs) {
-                                            await jobsAPI.createJob(job);
-                                        }
-                                        
-                                        // Refresh jobs list
-                                        handleSearch();
-                                        console.log('Sample jobs created successfully');
-                                    } catch (error) {
-                                        console.error('Error creating sample jobs:', error);
-                                    }
-                                }}
-                            >
-                                Add Sample Jobs (Dev)
                             </Button>
                         </Box>
                     </Box>

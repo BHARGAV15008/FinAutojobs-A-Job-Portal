@@ -41,11 +41,11 @@ const JobChart = ({ userRole }) => {
 
   return (
     <div 
-      className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
+      className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 p-6"
       style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
     >
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6 font-inter dashboard-text">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white font-inter">
           {chartData.title}
         </h3>
         <div className="flex items-center space-x-4 text-sm">
@@ -90,7 +90,7 @@ const JobChart = ({ userRole }) => {
                     transition={{ duration: 0.8, delay: index * 0.1 + 0.2 }}
                   />
                 </div>
-                <span className="text-xs text-gray-500 dark:text-gray-300 font-inter dashboard-muted">
+                <span className="text-xs text-gray-600 dark:text-gray-300 font-inter dashboard-muted">
                   {item.month}
                 </span>
               </div>

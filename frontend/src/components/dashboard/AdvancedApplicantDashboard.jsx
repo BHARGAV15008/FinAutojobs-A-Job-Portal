@@ -58,23 +58,7 @@ const AdvancedApplicantDashboard = () => {
   const [resumeDialogOpen, setResumeDialogOpen] = useState(false);
   const [alertDialogOpen, setAlertDialogOpen] = useState(false);
 
-  // Mock data for demonstration
-  const mockUser = {
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@example.com',
-    phone: '+1 234 567 8900',
-    location: 'San Francisco, CA',
-    githubUrl: 'https://github.com/johndoe',
-    linkedinUrl: 'https://linkedin.com/in/johndoe',
-    bio: 'Passionate software developer with 5 years of experience',
-    profilePicture: null,
-    highestQualification: 'Master\'s Degree',
-    isExperienced: true,
-    experienceYears: 5,
-    skills: ['React', 'Node.js', 'Python', 'AWS', 'Docker'],
-    profileCompletionPercentage: 85
-  };
+  // Removed mockUser. Will fetch from API.
 
   // Mock data for tabs
   const dashboardData = {
@@ -140,11 +124,18 @@ const AdvancedApplicantDashboard = () => {
   ];
 
   useEffect(() => {
-    // Simulate data loading
-    setTimeout(() => {
-      setUser(mockUser);
-      setLoading(false);
-    }, 1000);
+    const fetchProfile = async () => {
+      try {
+        const { authAPI } = await import('../../services/api');
+        const response = await authAPI.getProfile();
+        setUser(response.data);
+      } catch (error) {
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
   }, []);
 
   const StatCard = ({ title, value, icon: Icon, color, trend, onClick }) => (

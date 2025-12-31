@@ -13,7 +13,7 @@ const EmptyState = ({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm border border-gray-200 dark:border-gray-700 text-center"
+      className="bg-white dark:bg-gray-800 rounded-md p-8 shadow-sm border border-gray-200 dark:border-gray-700 text-center"
     >
       <div className="text-6xl mb-4">{icon}</div>
       <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">

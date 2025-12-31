@@ -152,7 +152,7 @@ const JobRecommendations = ({ limit = 10, showTitle = true }) => {
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
+      <div className="bg-white dark:bg-gray-800 rounded-md p-6 shadow-lg">
         <div className="flex items-center space-x-3 mb-6">
           <Sparkles className="w-6 h-6 text-purple-600" />
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -173,7 +173,7 @@ const JobRecommendations = ({ limit = 10, showTitle = true }) => {
 
   if (error) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
+      <div className="bg-white dark:bg-gray-800 rounded-md p-6 shadow-lg">
         <div className="flex items-center space-x-3 mb-4">
           <AlertCircle className="w-6 h-6 text-red-600" />
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -186,7 +186,7 @@ const JobRecommendations = ({ limit = 10, showTitle = true }) => {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+    <div className="bg-white dark:bg-gray-800 rounded-md shadow-lg overflow-hidden">
       {showTitle && (
         <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 text-white">
           <div className="flex items-center justify-between">

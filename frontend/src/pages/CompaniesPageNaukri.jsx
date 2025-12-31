@@ -108,7 +108,7 @@ const PageHeader = styled(Box)(() => ({
 }));
 
 const FilterCard = styled(Card)(() => ({
-  borderRadius: "16px",
+  borderRadius: "6px",
   boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
   position: "sticky",
   top: 100,
@@ -124,7 +124,7 @@ const FilterSection = styled(Box)(() => ({
 }));
 
 const CompanyCard = styled(Card)(() => ({
-  borderRadius: "20px",
+  borderRadius: "6px",
   boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
   transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
   border: "1px solid transparent",
@@ -141,7 +141,7 @@ const CompanyCard = styled(Card)(() => ({
 }));
 
 const FeaturedCompanyCard = styled(Card)(() => ({
-  borderRadius: "24px",
+  borderRadius: "6px",
   background: "linear-gradient(135deg, #fff 0%, #fafafe 100%)",
   boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
   overflow: "hidden",
@@ -156,7 +156,7 @@ const FeaturedCompanyCard = styled(Card)(() => ({
 const StatBox = styled(Box)(() => ({
   textAlign: "center",
   padding: "16px",
-  borderRadius: "12px",
+  borderRadius: "6px",
   background: "rgba(99, 102, 241, 0.08)",
   transition: "all 0.2s",
   "&:hover": {
@@ -165,19 +165,36 @@ const StatBox = styled(Box)(() => ({
 }));
 
 const BenefitChip = styled(Chip)(() => ({
-  borderRadius: "10px",
+  borderRadius: "6px",
   fontWeight: 500,
   fontSize: "12px",
-  "& .MuiChip-icon": { fontSize: 16 },
+  "& .MuiChip-icon": {
+    fontSize: 16,
+    marginLeft: "5px",
+    paddingTop: "4px",
+    paddingBottom: "4px",
+  },
+  paddingTop: "4px",
+  paddingBottom: "4px",
+  height: "auto",
 }));
 
 const QuickFilterChip = styled(Chip)(({ selected }) => ({
   fontWeight: 500,
-  borderRadius: "10px",
+  borderRadius: "6px",
   transition: "all 0.2s",
   cursor: "pointer",
   backgroundColor: selected ? colors.primary : "#f3f4f6",
   color: selected ? "#fff" : "#374151",
+  paddingTop: "4px",
+  paddingBottom: "4px",
+  height: "auto",
+  "& .MuiChip-icon": {
+    fontSize: 16,
+    marginLeft: "5px",
+    paddingTop: "4px",
+    paddingBottom: "4px",
+  },
   "&:hover": {
     backgroundColor: selected ? colors.primaryDark : "#e5e7eb",
     transform: "translateY(-2px)",
@@ -222,12 +239,17 @@ const CompaniesPageNaukri = () => {
   const fetchCompanies = async () => {
     try {
       setLoading(true);
-      // Simulate API call - replace with actual endpoint
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      // Mock data since there's no companies endpoint
-      setCompanies(mockCompanies);
+      const response = await fetch(`${API_BASE_URL}/companies?limit=100`);
+      if (response.ok) {
+        const data = await response.json();
+        setCompanies(data.companies || data.data?.companies || []);
+        setTotalPages(data.totalPages || 1);
+      } else {
+        setCompanies([]);
+      }
     } catch (error) {
       console.error("Error fetching companies:", error);
+      setCompanies([]);
     } finally {
       setLoading(false);
     }
@@ -249,12 +271,25 @@ const CompaniesPageNaukri = () => {
 
   const handleFilterChange = (filterType, value) => {
     setFilters((prev) => {
+      // Handle the 'postedDate' special case (single value, not array)
+      if (filterType === "postedDate") {
+        return { ...prev, [filterType]: value };
+      }
+
+      // Handle salary (array of 2 numbers)
+      if (filterType === "salary") {
+        return { ...prev, [filterType]: value };
+      }
+
+      // Handle standard array-based filters
       if (Array.isArray(prev[filterType])) {
         const newArray = prev[filterType].includes(value)
           ? prev[filterType].filter((v) => v !== value)
           : [...prev[filterType], value];
         return { ...prev, [filterType]: newArray };
       }
+
+      // Fallback for any other single-value filters
       return { ...prev, [filterType]: value };
     });
     setPage(1);
@@ -345,220 +380,9 @@ const CompaniesPageNaukri = () => {
     { label: "Newly Listed", count: "180+" },
   ];
 
-  // Featured Companies
-  const featuredCompanies = [
-    {
-      id: "f1",
-      name: "Google",
-      logo: "G",
-      color: "#4285f4",
-      tagline: "Organizing the world's information",
-      rating: 4.5,
-      reviews: "12.5K",
-      openings: 234,
-      industry: "Internet",
-      size: "150,000+",
-      founded: 1998,
-    },
-    {
-      id: "f2",
-      name: "Microsoft",
-      logo: "M",
-      color: "#00a4ef",
-      tagline: "Empower every person and organization",
-      rating: 4.4,
-      reviews: "15.8K",
-      openings: 345,
-      industry: "Software",
-      size: "180,000+",
-      founded: 1975,
-    },
-    {
-      id: "f3",
-      name: "Amazon",
-      logo: "A",
-      color: "#ff9900",
-      tagline: "Work hard. Have fun. Make history",
-      rating: 4.2,
-      reviews: "18.2K",
-      openings: 567,
-      industry: "E-commerce",
-      size: "1,500,000+",
-      founded: 1994,
-    },
-  ];
 
-  // Mock Companies Data
-  const mockCompanies = [
-    {
-      id: 1,
-      name: "Infosys",
-      logo: "I",
-      color: "#0066b3",
-      rating: 4.0,
-      reviews: "45.2K",
-      openings: 1234,
-      industry: "IT Services",
-      size: "300,000+",
-      location: "Bangalore",
-      type: "MNC",
-      isHiring: true,
-    },
-    {
-      id: 2,
-      name: "TCS",
-      logo: "T",
-      color: "#0033a0",
-      rating: 3.9,
-      reviews: "52.1K",
-      openings: 2345,
-      industry: "IT Services",
-      size: "550,000+",
-      location: "Mumbai",
-      type: "MNC",
-      isHiring: true,
-    },
-    {
-      id: 3,
-      name: "Wipro",
-      logo: "W",
-      color: "#5e1ea8",
-      rating: 3.8,
-      reviews: "38.5K",
-      openings: 987,
-      industry: "IT Services",
-      size: "240,000+",
-      location: "Bangalore",
-      type: "MNC",
-      isHiring: true,
-    },
-    {
-      id: 4,
-      name: "Accenture",
-      logo: "A",
-      color: "#a100ff",
-      rating: 4.1,
-      reviews: "28.9K",
-      openings: 1567,
-      industry: "Consulting",
-      size: "700,000+",
-      location: "Mumbai",
-      type: "MNC",
-      isHiring: true,
-    },
-    {
-      id: 5,
-      name: "Flipkart",
-      logo: "F",
-      color: "#f7d716",
-      rating: 4.2,
-      reviews: "8.5K",
-      openings: 345,
-      industry: "E-commerce",
-      size: "35,000+",
-      location: "Bangalore",
-      type: "Unicorn",
-      isHiring: true,
-    },
-    {
-      id: 6,
-      name: "Swiggy",
-      logo: "S",
-      color: "#fc8019",
-      rating: 4.0,
-      reviews: "4.2K",
-      openings: 234,
-      industry: "Food Tech",
-      size: "5,000+",
-      location: "Bangalore",
-      type: "Unicorn",
-      isHiring: true,
-    },
-    {
-      id: 7,
-      name: "Razorpay",
-      logo: "R",
-      color: "#0066ff",
-      rating: 4.3,
-      reviews: "2.1K",
-      openings: 156,
-      industry: "Fintech",
-      size: "3,000+",
-      location: "Bangalore",
-      type: "Unicorn",
-      isHiring: true,
-    },
-    {
-      id: 8,
-      name: "CRED",
-      logo: "C",
-      color: "#000",
-      rating: 4.4,
-      reviews: "1.8K",
-      openings: 89,
-      industry: "Fintech",
-      size: "1,500+",
-      location: "Bangalore",
-      type: "Startup",
-      isHiring: true,
-    },
-    {
-      id: 9,
-      name: "Zomato",
-      logo: "Z",
-      color: "#e23744",
-      rating: 4.0,
-      reviews: "5.6K",
-      openings: 278,
-      industry: "Food Tech",
-      size: "6,000+",
-      location: "Gurugram",
-      type: "Unicorn",
-      isHiring: true,
-    },
-    {
-      id: 10,
-      name: "PhonePe",
-      logo: "P",
-      color: "#5f259f",
-      rating: 4.1,
-      reviews: "3.4K",
-      openings: 189,
-      industry: "Fintech",
-      size: "4,000+",
-      location: "Bangalore",
-      type: "Unicorn",
-      isHiring: true,
-    },
-    {
-      id: 11,
-      name: "Zerodha",
-      logo: "Z",
-      color: "#387ed1",
-      rating: 4.5,
-      reviews: "1.2K",
-      openings: 45,
-      industry: "Fintech",
-      size: "1,200+",
-      location: "Bangalore",
-      type: "Startup",
-      isHiring: false,
-    },
-    {
-      id: 12,
-      name: "Meesho",
-      logo: "M",
-      color: "#f43397",
-      rating: 4.2,
-      reviews: "2.8K",
-      openings: 123,
-      industry: "E-commerce",
-      size: "2,500+",
-      location: "Bangalore",
-      type: "Unicorn",
-      isHiring: true,
-    },
-  ];
+
+
 
   const benefits = [
     { icon: <Pool />, label: "Gym & Pool" },
@@ -616,7 +440,7 @@ const CompaniesPageNaukri = () => {
                 </IconButton>
               </InputAdornment>
             ),
-            sx: { borderRadius: "10px", fontSize: "14px" },
+            sx: { borderRadius: "6px", fontSize: "14px" },
           }}
         />
       </Box>
@@ -1042,7 +866,7 @@ const CompaniesPageNaukri = () => {
                 sx={{
                   textTransform: "none",
                   fontWeight: 600,
-                  borderRadius: "10px",
+                  borderRadius: "6px",
                   background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
                   "&:hover": {
                     background: `linear-gradient(135deg, ${colors.primaryDark} 0%, ${colors.secondary} 100%)`,
@@ -1088,9 +912,7 @@ const CompaniesPageNaukri = () => {
               fontSize: "1.1rem",
             }}
           >
-            Discover{" "}
-            {companies.length > 0 ? companies.length.toLocaleString() : "6,500"}
-            + companies actively hiring
+            Discover top companies actively hiring
           </Typography>
 
           {/* Quick Filters */}
@@ -1109,145 +931,147 @@ const CompaniesPageNaukri = () => {
       </PageHeader>
 
       {/* Featured Companies */}
-      <Container
-        maxWidth="lg"
-        sx={{
-          mt: -6,
-          position: "relative",
-          zIndex: 10,
-          mb: 6,
-          px: { xs: 2, sm: 4, md: 6 },
-        }}
-      >
-        <Grid container spacing={3}>
-          {featuredCompanies.map((company, index) => (
-            <Grid item xs={12} md={4} key={company.id}>
-              <FeaturedCompanyCard sx={{ animationDelay: `${index * 0.2}s` }}>
-                <Box
-                  sx={{
-                    p: 3,
-                    background: `linear-gradient(135deg, ${company.color}15 0%, ${company.color}05 100%)`,
-                  }}
-                >
+      {featuredCompanies.length > 0 && (
+        <Container
+          maxWidth="lg"
+          sx={{
+            mt: -6,
+            position: "relative",
+            zIndex: 10,
+            mb: 6,
+            px: { xs: 2, sm: 4, md: 6 },
+          }}
+        >
+          <Grid container spacing={3}>
+            {featuredCompanies.map((company, index) => (
+              <Grid item xs={12} md={4} key={company.id}>
+                <FeaturedCompanyCard sx={{ animationDelay: `${index * 0.2}s` }}>
                   <Box
                     sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "flex-start",
-                      mb: 2,
+                      p: 3,
+                      background: `linear-gradient(135deg, ${company.color}15 0%, ${company.color}05 100%)`,
                     }}
                   >
-                    <Avatar
+                    <Box
                       sx={{
-                        width: 72,
-                        height: 72,
-                        bgcolor: company.color,
-                        fontSize: "28px",
-                        fontWeight: 700,
-                        boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                        mb: 2,
                       }}
                     >
-                      {company.logo}
-                    </Avatar>
-                    <Chip
-                      icon={<Verified sx={{ color: "#22c55e !important" }} />}
-                      label="Verified"
-                      size="small"
-                      sx={{
-                        bgcolor: "#dcfce7",
-                        color: "#16a34a",
-                        fontWeight: 600,
-                      }}
-                    />
-                  </Box>
-                  <Typography variant="h5" sx={{ fontWeight: 800, mb: 0.5 }}>
-                    {company.name}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "#6b7280", mb: 2, fontStyle: "italic" }}
-                  >
-                    "{company.tagline}"
-                  </Typography>
-
-                  <Grid container spacing={2} sx={{ mb: 2 }}>
-                    <Grid item xs={4}>
-                      <StatBox>
-                        <Typography
-                          variant="h6"
-                          sx={{ fontWeight: 700, color: colors.primary }}
-                        >
-                          {company.rating}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Rating
-                        </Typography>
-                      </StatBox>
-                    </Grid>
-                    <Grid item xs={4}>
-                      <StatBox>
-                        <Typography
-                          variant="h6"
-                          sx={{ fontWeight: 700, color: colors.primary }}
-                        >
-                          {company.openings}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Jobs
-                        </Typography>
-                      </StatBox>
-                    </Grid>
-                    <Grid item xs={4}>
-                      <StatBox>
-                        <Typography
-                          variant="h6"
-                          sx={{ fontWeight: 700, color: colors.primary }}
-                        >
-                          {company.reviews}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Reviews
-                        </Typography>
-                      </StatBox>
-                    </Grid>
-                  </Grid>
-
-                  <Box
-                    sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2 }}
-                  >
-                    {benefits.slice(0, 4).map((benefit, i) => (
-                      <BenefitChip
-                        key={i}
-                        icon={benefit.icon}
-                        label={benefit.label}
+                      <Avatar
+                        sx={{
+                          width: 72,
+                          height: 72,
+                          bgcolor: company.color,
+                          fontSize: "28px",
+                          fontWeight: 700,
+                          boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+                        }}
+                      >
+                        {company.logo}
+                      </Avatar>
+                      <Chip
+                        icon={<Verified sx={{ color: "#22c55e !important" }} />}
+                        label="Verified"
                         size="small"
-                        variant="outlined"
+                        sx={{
+                          bgcolor: "#dcfce7",
+                          color: "#16a34a",
+                          fontWeight: 600,
+                        }}
                       />
-                    ))}
-                  </Box>
+                    </Box>
+                    <Typography variant="h5" sx={{ fontWeight: 800, mb: 0.5 }}>
+                      {company.name}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "#6b7280", mb: 2, fontStyle: "italic" }}
+                    >
+                      "{company.tagline}"
+                    </Typography>
 
-                  <Button
-                    component={Link}
-                    href={`/companies/${company.id}`}
-                    fullWidth
-                    variant="contained"
-                    endIcon={<ArrowForward />}
-                    sx={{
-                      textTransform: "none",
-                      fontWeight: 600,
-                      py: 1.5,
-                      borderRadius: "12px",
-                      background: `linear-gradient(135deg, ${company.color} 0%, ${company.color}cc 100%)`,
-                    }}
-                  >
-                    View All {company.openings} Jobs
-                  </Button>
-                </Box>
-              </FeaturedCompanyCard>
-            </Grid>
-          ))}
-        </Grid>
-      </Container>
+                    <Grid container spacing={2} sx={{ mb: 2 }}>
+                      <Grid item xs={4}>
+                        <StatBox>
+                          <Typography
+                            variant="h6"
+                            sx={{ fontWeight: 700, color: colors.primary }}
+                          >
+                            {company.rating}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Rating
+                          </Typography>
+                        </StatBox>
+                      </Grid>
+                      <Grid item xs={4}>
+                        <StatBox>
+                          <Typography
+                            variant="h6"
+                            sx={{ fontWeight: 700, color: colors.primary }}
+                          >
+                            {company.openings}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Jobs
+                          </Typography>
+                        </StatBox>
+                      </Grid>
+                      <Grid item xs={4}>
+                        <StatBox>
+                          <Typography
+                            variant="h6"
+                            sx={{ fontWeight: 700, color: colors.primary }}
+                          >
+                            {company.reviews}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Reviews
+                          </Typography>
+                        </StatBox>
+                      </Grid>
+                    </Grid>
+
+                    <Box
+                      sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2 }}
+                    >
+                      {benefits.slice(0, 4).map((benefit, i) => (
+                        <BenefitChip
+                          key={i}
+                          icon={benefit.icon}
+                          label={benefit.label}
+                          size="small"
+                          variant="outlined"
+                        />
+                      ))}
+                    </Box>
+
+                    <Button
+                      component={Link}
+                      href={`/companies/${company.id}`}
+                      fullWidth
+                      variant="contained"
+                      endIcon={<ArrowForward />}
+                      sx={{
+                        textTransform: "none",
+                        fontWeight: 600,
+                        py: 1.5,
+                        borderRadius: "6px",
+                        background: `linear-gradient(135deg, ${company.color} 0%, ${company.color}cc 100%)`,
+                      }}
+                    >
+                      View All {company.openings} Jobs
+                    </Button>
+                  </Box>
+                </FeaturedCompanyCard>
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+      )}
 
       {/* Main Content */}
       <Container maxWidth="lg" sx={{ py: 4, px: { xs: 2, sm: 4, md: 6 } }}>
@@ -1265,7 +1089,7 @@ const CompaniesPageNaukri = () => {
             <Box
               sx={{
                 bgcolor: "#fff",
-                borderRadius: "16px",
+                borderRadius: "6px",
                 mb: 3,
                 boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
               }}
@@ -1338,7 +1162,7 @@ const CompaniesPageNaukri = () => {
                     sx={{
                       textTransform: "none",
                       fontWeight: 600,
-                      borderRadius: "10px",
+                      borderRadius: "6px",
                     }}
                   >
                     Filters
@@ -1348,7 +1172,7 @@ const CompaniesPageNaukri = () => {
                   <Select
                     defaultValue="popularity"
                     sx={{
-                      borderRadius: "10px",
+                      borderRadius: "6px",
                       fontSize: "14px",
                       bgcolor: "#fff",
                     }}
@@ -1365,7 +1189,41 @@ const CompaniesPageNaukri = () => {
                 exclusive
                 onChange={(e, newMode) => newMode && setViewMode(newMode)}
                 size="small"
-                sx={{ bgcolor: "#fff", borderRadius: "10px" }}
+                sx={{
+                  bgcolor: "#fff",
+                  borderRadius: "6px",
+                  border: "1px solid #e5e7eb",
+                  "& .MuiToggleButton-root": {
+                    border: "none",
+                    borderRadius: "6px",
+                    mx: 0.5,
+                    my: 0.5,
+                    color: "#6b7280",
+                    transition: "all 0.2s ease",
+                    "& .MuiSvgIcon-root": {
+                      fontSize: "26px !important",
+                      width: "26px !important",
+                      height: "26px !important",
+                      color: "#6b7280 !important",
+                    },
+                    "&.Mui-selected": {
+                      bgcolor: `${colors.primary} !important`,
+                      color: "#fff !important",
+                      "& .MuiSvgIcon-root": {
+                        color: "#fff !important",
+                      },
+                      "&:hover": {
+                        bgcolor: `${colors.primaryDark} !important`,
+                      },
+                    },
+                    "&:hover": {
+                      bgcolor: "#f3f4f6",
+                      "& .MuiSvgIcon-root": {
+                        color: `${colors.primary} !important`,
+                      },
+                    },
+                  },
+                }}
               >
                 <ToggleButton value="grid" sx={{ px: 2 }}>
                   <ViewModule />
@@ -1381,7 +1239,7 @@ const CompaniesPageNaukri = () => {
               <Grid container spacing={3}>
                 {Array.from({ length: 6 }).map((_, i) => (
                   <Grid item xs={12} sm={6} lg={4} key={i}>
-                    <Card sx={{ p: 3, borderRadius: "20px" }}>
+                    <Card sx={{ p: 3, borderRadius: "6px" }}>
                       <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
                         <Skeleton variant="circular" width={64} height={64} />
                         <Box sx={{ flex: 1 }}>
@@ -1402,7 +1260,7 @@ const CompaniesPageNaukri = () => {
             ) : (
               <>
                 <Grid container spacing={3}>
-                  {(companies.length > 0 ? companies : mockCompanies).map(
+                  {companies.map(
                     (company) => renderCompanyCard(company)
                   )}
                 </Grid>
@@ -1418,7 +1276,7 @@ const CompaniesPageNaukri = () => {
                     sx={{
                       "& .MuiPaginationItem-root": {
                         fontWeight: 600,
-                        borderRadius: "10px",
+                        borderRadius: "6px",
                         "&.Mui-selected": {
                           background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
                         },
@@ -1467,7 +1325,7 @@ const CompaniesPageNaukri = () => {
               textTransform: "none",
               fontWeight: 600,
               py: 1.5,
-              borderRadius: "12px",
+              borderRadius: "6px",
               background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
             }}
           >

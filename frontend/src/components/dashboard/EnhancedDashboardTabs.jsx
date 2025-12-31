@@ -1,19 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import API_BASE_URL from '../../services/apiConfig';
-import JobDetailsModal from '../modals/JobDetailsModal';
-import CandidateProfileModal from '../modals/CandidateProfileModal';
-import ContactModal from '../modals/ContactModal';
-import ScheduleModal from '../modals/ScheduleModal';
-import { communicationsAPI } from '../../api/communications';
-import { toast } from '../ui/use-toast';
-import { 
-  User, 
-  MapPin, 
-  Phone, 
-  Mail, 
-  Edit3, 
-  Save, 
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import API_BASE_URL from "../../services/apiConfig";
+import JobDetailsModal from "../modals/JobDetailsModal";
+import CandidateProfileModal from "../modals/CandidateProfileModal";
+import ContactModal from "../modals/ContactModal";
+import ScheduleModal from "../modals/ScheduleModal";
+import { communicationsAPI } from "../../api/communications";
+import { toast } from "../ui/use-toast";
+import {
+  User,
+  MapPin,
+  Phone,
+  Mail,
+  Edit3,
+  Save,
   X,
   Briefcase,
   Calendar,
@@ -124,12 +124,12 @@ import {
   Calculator,
   Wallet as PiggyBank,
   TrendingDown,
-  Sparkles
-} from 'lucide-react';
-import ProfileEditModal from '../profile/ProfileEditModal';
-import JobRecommendations from '../recommendations/JobRecommendations';
-import { useAuth } from '../../contexts/AuthContext.jsx';
-import { calculateProfileCompletion } from '../../utils/profileCompletion';
+  Sparkles,
+} from "lucide-react";
+import ProfileEditModal from "../profile/ProfileEditModal";
+import JobRecommendations from "../recommendations/JobRecommendations";
+import { useAuth } from "../../contexts/AuthContext.jsx";
+import { calculateProfileCompletion } from "../../utils/profileCompletion";
 import { useTheme } from "../../contexts/IntegratedThemeContext";
 import { useDashboard } from "../../contexts/RealDashboardContext";
 import {
@@ -137,6 +137,11 @@ import {
   ApplicationsFilter,
   AnalyticsFilter,
 } from "./DashboardFilters";
+import {
+  getDisplayName,
+  capitalizeWords,
+  capitalize,
+} from "../../utils/textHelpers";
 
 // Enhanced Tab Navigation Component
 export const DashboardTabNavigation = ({
@@ -169,49 +174,62 @@ export const DashboardTabNavigation = ({
   };
 
   return (
-    <div className="flex flex-wrap gap-2 mb-8 p-2 bg-gray-100 dark:bg-gray-800 rounded-xl">
-      {tabs.map((tab) => (
-        <motion.button
-          key={tab.id}
-          className={`
-            relative px-6 py-3 rounded-lg font-medium text-sm transition-all duration-200
-            ${
-              activeTab === tab.id
-                ? "text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-700 shadow-md"
-                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-            }
-          `}
-          variants={tabVariants}
-          initial="inactive"
-          animate={activeTab === tab.id ? "active" : "inactive"}
-          whileHover="hover"
-          whileTap={{ scale: 0.98 }}
-          onClick={() => onTabChange(tab.id)}
-        >
-          <div className="flex items-center space-x-2">
-            <span className="text-lg">{tab.icon}</span>
-            <span>{tab.label}</span>
-            {tab.badge && (
-              <motion.span
-                className="ml-2 px-2 py-1 text-xs bg-red-500 text-white rounded-full"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 500, damping: 30 }}
-              >
-                {tab.badge}
-              </motion.span>
-            )}
-          </div>
+    <div className="flex flex-wrap gap-2 mb-8 p-2 bg-gray-100 dark:bg-gray-800 rounded-md">
+      {tabs.map((tab) => {
+        const isActive = activeTab === tab.id;
+        const iconColor = darkMode
+          ? isActive
+            ? "#60a5fa"
+            : "#9ca3af" // blue-400 and gray-400
+          : isActive
+          ? "#2563eb"
+          : "#4f46e5"; // blue-600 and indigo-600
 
-          {activeTab === tab.id && (
-            <motion.div
-              className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400 rounded-full"
-              layoutId="activeTab"
-              transition={{ type: "spring", stiffness: 500, damping: 30 }}
-            />
-          )}
-        </motion.button>
-      ))}
+        return (
+          <motion.button
+            key={tab.id}
+            className={`
+              relative px-6 py-3 rounded-lg font-medium text-sm transition-all duration-200
+              ${
+                isActive
+                  ? "text-blue-500 dark:text-blue-300 bg-white dark:bg-gray-700 shadow-md"
+                  : "text-indigo-500 dark:text-indigo-300 hover:text-indigo-700 dark:hover:text-indigo-100"
+              }
+            `}
+            variants={tabVariants}
+            initial="inactive"
+            animate={isActive ? "active" : "inactive"}
+            whileHover="hover"
+            whileTap={{ scale: 0.98 }}
+            onClick={() => onTabChange(tab.id)}
+          >
+            <div className="flex items-center space-x-2">
+              <span className="text-lg" style={{ color: iconColor }}>
+                {tab.icon}
+              </span>
+              <span>{tab.label}</span>
+              {tab.badge && (
+                <motion.span
+                  className="ml-2 px-2 py-1 text-xs bg-red-500 text-white rounded-full"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                >
+                  {tab.badge}
+                </motion.span>
+              )}
+            </div>
+
+            {isActive && (
+              <motion.div
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400 rounded-full"
+                layoutId="activeTab"
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+              />
+            )}
+          </motion.button>
+        );
+      })}
     </div>
   );
 };
@@ -227,314 +245,147 @@ export const EnhancedProfileTab = ({
   const [currentUser, setCurrentUser] = useState(user);
   const [loading, setLoading] = useState(false);
   const [profileCompletion, setProfileCompletion] = useState(0);
-  
-  // Calculate dynamic profile completion whenever currentUser changes
+
   useEffect(() => {
     const actualUser = currentUser?.data ? currentUser.data : currentUser;
     const completion = calculateProfileCompletion(actualUser, userRole);
     setProfileCompletion(completion);
   }, [currentUser, userRole]);
 
-  // Sync local state with prop changes (optimized to prevent form resets)
   useEffect(() => {
     if (user && user._id !== currentUser?._id) {
-      console.log('🔍 EnhancedProfileTab user prop changed:', user);
       setCurrentUser(user);
     }
-  }, [user?._id]); // Only update when user ID changes, not on every user object change
+  }, [user?._id]);
 
-  // Helper function to safely convert values to strings
-  const safeStringValue = (value) => {
-    if (value === null || value === undefined) return null;
-    if (typeof value === "string") return value;
-    if (typeof value === "object") {
-      // Handle location object
-      if (value.city && value.state && value.country) {
-        return `${value.city}, ${value.state}, ${value.country}`;
-      }
-      if (value.city && value.country) {
-        return `${value.city}, ${value.country}`;
-      }
-      if (value.city) {
-        return value.city;
-      }
-      if (value.country) {
-        return value.country;
-      }
-      // Handle other objects by converting to JSON
-      return JSON.stringify(value);
-    }
-    return String(value);
-  };
-
-  // Create role-specific profile sections
   const getProfileSections = () => {
-    // Reduced debug logging for better performance
     const personalInfo = {
       title: "Personal Information",
-      icon: "👤",
+      color: "blue",
+      icon: <User size={20} />,
       fields: [
-        { 
-          label: "Full Name", 
-          value: safeStringValue(
-            user?.name || `${user?.firstName || ''} ${user?.lastName || ''}`.trim()
-          ), 
-          icon: "👤" 
-        },
-        { label: "Email", value: safeStringValue(user?.email), icon: "📧" },
-        { label: "Phone", value: safeStringValue(user?.phone), icon: "📱" },
         {
-          label: "Location",
-          value: (() => {
-            if (userRole === 'recruiter') {
-              return safeStringValue(
-                user?.officeLocation?.city || 
-                user?.officeLocation || 
-                user?.location || 
-                "Not specified"
-              );
-            } else {
-              return safeStringValue(
-                user?.currentLocation?.city || 
-                user?.currentLocation || 
-                user?.location || 
-                "Not specified"
-              );
-            }
-          })(),
-          icon: "📍",
+          label: "Full Name",
+          value:
+            user?.name ||
+            `${capitalize(user?.firstName)} ${capitalize(
+              user?.lastName
+            )}`.trim(),
+          icon: <User size={14} />,
+        },
+        {
+          label: "Email Address",
+          value: user?.email,
+          icon: <Mail size={14} />,
+        },
+        {
+          label: "Phone Number",
+          value: user?.phone,
+          icon: <Phone size={14} />,
+        },
+        {
+          label: "Current Location",
+          value:
+            userRole === "recruiter"
+              ? user?.officeLocation?.city || user?.location
+              : user?.currentLocation?.city || user?.location,
+          icon: <MapPin size={14} />,
         },
       ],
     };
 
     const linksSection = {
       title: "Links & Social",
-      icon: "🔗",
+      color: "rose",
+      icon: <Globe size={20} />,
       fields: [
         {
-          label: "LinkedIn",
-          value: (() => {
-            const linkedinValue = userRole === 'recruiter' 
-              ? user?.professionalLinks?.linkedin || user?.linkedin_url
-              : user?.linkedin_url;
-            // LinkedIn URL processing
-            return safeStringValue(linkedinValue);
-          })(),
-          icon: "💼",
+          label: "LinkedIn URL",
+          value:
+            userRole === "recruiter"
+              ? user?.professionalLinks?.linkedin
+              : user?.linkedin_url,
+          icon: <Linkedin size={14} />,
         },
         {
-          label: "GitHub",
-          value: (() => {
-            const githubValue = userRole === 'recruiter' 
-              ? user?.professionalLinks?.github || user?.github_url
-              : user?.github_url;
-            // GitHub URL processing
-            return safeStringValue(githubValue);
-          })(),
-          icon: "💻",
+          label: "GitHub URL",
+          value:
+            userRole === "recruiter"
+              ? user?.professionalLinks?.github
+              : user?.github_url,
+          icon: <Github size={14} />,
         },
         {
-          label: "Portfolio",
-          value: safeStringValue(
-            userRole === 'recruiter' 
-              ? user?.professionalLinks?.personalWebsite || user?.portfolio_url || user?.documents?.portfolioUrl
-              : user?.portfolio_url || user?.documents?.portfolioUrl
-          ),
-          icon: "🌐",
+          label: "Portfolio URL",
+          value:
+            userRole === "recruiter"
+              ? user?.professionalLinks?.personalWebsite
+              : user?.portfolio_url,
+          icon: <LinkIcon size={14} />,
         },
       ],
     };
 
-    // Role-specific professional details
-    let professionalDetails = {};
+    let professionalDetails = {
+      title: "Professional Details",
+      color: "purple",
+      icon: <Briefcase size={20} />,
+      fields: [],
+    };
 
     if (userRole === "applicant") {
-      professionalDetails = {
-        title: "Professional Details",
-        icon: "💼",
-        fields: [
-          {
-            label: "Bio",
-            value: safeStringValue(user?.bio),
-            multiline: true,
-            icon: "📄",
-          },
-          {
-            label: "Skills",
-            value: (() => {
-              // Skills processing
-              
-              // Try multiple sources for skills display
-              if (Array.isArray(user?.skills_array) && user.skills_array.length > 0) {
-                return user.skills_array.join(", ");
-              } else if (Array.isArray(user?.primary_skills) && user.primary_skills.length > 0) {
-                return user.primary_skills.join(", ");
-              } else if (Array.isArray(user?.skills)) {
-                return user.skills.join(", ");
-              } else if (user?.skills?.primary && Array.isArray(user.skills.primary) && user.skills.primary.length > 0) {
-                return user.skills.primary.join(", ");
-              } else if (user?.skills?.technical && Array.isArray(user.skills.technical) && user.skills.technical.length > 0) {
-                return user.skills.technical.join(", ");
-              } else if (user?.skills?.soft && Array.isArray(user.skills.soft) && user.skills.soft.length > 0) {
-                return user.skills.soft.join(", ");
-              } else if (typeof user?.skills === 'string' && user.skills.trim()) {
-                return user.skills;
-              }
-              return "Not provided";
-            })(),
-            icon: "🛠️",
-          },
-          {
-            label: "Experience",
-            value: `${user?.experience_years || user?.experience || 0} years`,
-            icon: "⏱️",
-          },
-          {
-            label: "Qualification",
-            value: safeStringValue(user?.qualification),
-            icon: "🎓",
-          },
-          {
-            label: "Resume",
-            value: (() => {
-              // Check multiple sources for resume URL
-              const resumeUrl = user?.resume_url || user?.documents?.resumeUrl || '';
-              // Resume URL processing
-              return resumeUrl ? (
-                <a 
-                  href={resumeUrl.startsWith('http') ? resumeUrl : `${API_BASE_URL}${resumeUrl}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
-                >
-                  📄 View Resume
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              ) : "Not uploaded";
-            })(),
-            icon: "📄",
-          },
-        ],
-      };
-
-      // Helper function to format date
-      const formatDate = (dateString) => {
-        if (!dateString) return null;
-        try {
-          const date = new Date(dateString);
-          // Format as: Month Year (e.g., "June 2019")
-          return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-        } catch (e) {
-          return dateString;
-        }
-      };
-
-      // Education Section - only include if there's data
-      const educationSection = user?.education && user.education.length > 0 ? {
-        title: "Education",
-        icon: "🎓",
-        isArray: true,
-        items: user.education.map((edu, index) => ({
-          id: index,
-          title: `${edu.degree}${edu.fieldOfStudy ? ` in ${edu.fieldOfStudy}` : ''}`,
-          subtitle: edu.institution,
-          details: [
-            edu.startDate && `${formatDate(edu.startDate)} - ${edu.isCurrentlyStudying ? 'Present' : formatDate(edu.endDate) || 'N/A'}`,
-            edu.grade && `Grade: ${edu.grade}`
-          ].filter(Boolean)
-        }))
-      } : null;
-
-      // Work Experience Section - only include if there's data
-      const workExperienceSection = user?.workExperience && user.workExperience.length > 0 ? {
-        title: "Work Experience",
-        icon: "💼",
-        isArray: true,
-        items: user.workExperience.map((exp, index) => ({
-          id: index,
-          title: exp.jobTitle || exp.position || 'Position',
-          subtitle: `${exp.companyName || exp.company || 'Company'}${exp.location ? ` • ${exp.location}` : ''}`,
-          details: [
-            exp.startDate && `${formatDate(exp.startDate)} - ${exp.isCurrentJob || exp.isCurrentlyWorking ? 'Present' : formatDate(exp.endDate) || 'N/A'}`,
-            exp.description
-          ].filter(Boolean)
-        }))
-      } : null;
-
-      // Only return sections that have data
-      return [
-        personalInfo, 
-        professionalDetails, 
-        educationSection, 
-        workExperienceSection, 
-        linksSection
-      ].filter(Boolean);
-    } else if (userRole === "recruiter") {
-      // Recruiter profile processing
-      
-      professionalDetails = {
-        title: "Professional Details",
-        icon: "💼",
-        fields: [
-          {
-            label: "Bio",
-            value: safeStringValue(user?.bio),
-            multiline: true,
-            icon: "📄",
-          },
-          {
-            label: "Company",
-            value: safeStringValue(user?.companyInfo?.companyName || user?.companyName || user?.company || "Not specified"),
-            icon: "🏢",
-          },
-          {
-            label: "Department",
-            value: (() => {
-              // Department processing
-              return safeStringValue(user?.companyInfo?.department || user?.department || "Not provided");
-            })(),
-            icon: "🏛️",
-          },
-          {
-            label: "Job Title",
-            value: safeStringValue(user?.companyInfo?.designation || user?.position || user?.job_title || "Not specified"),
-            icon: "💼",
-          },
-          {
-            label: "Experience",
-            value: `${user?.yearsOfExperience || user?.experience_years || user?.experience || 0} years`,
-            icon: "⏱️",
-          },
-        ],
-      };
-    } else if (userRole === "admin") {
-      professionalDetails = {
-        title: "Administrative Details",
-        icon: "⚙️",
-        fields: [
-          {
-            label: "Bio",
-            value: safeStringValue(user?.bio),
-            multiline: true,
-            icon: "📄",
-          },
-          {
-            label: "Department",
-            value: safeStringValue(user?.department) || "System Administration",
-            icon: "🏛️",
-          },
-          {
-            label: "Access Level",
-            value: safeStringValue(user?.access_level) || "Full Access",
-            icon: "🔐",
-          },
-          {
-            label: "Experience",
-            value: `${user?.experience_years || user?.yearsOfExperience || 0} years`,
-            icon: "⏱️",
-          },
-        ],
-      };
+      professionalDetails.fields = [
+        {
+          label: "Professional Bio",
+          value: user?.bio,
+          multiline: true,
+          icon: <FileText size={14} />,
+        },
+        {
+          label: "Core Skills",
+          value: Array.isArray(user?.skills_array)
+            ? user.skills_array.join(", ")
+            : typeof user?.skills === "object" && user?.skills !== null
+            ? [
+                ...(user.skills.primary?.map((s) => s.skill || s) || []),
+                ...(user.skills.technical?.map((s) => s.skill || s) || []),
+                ...(user.skills.soft?.map((s) => s.skill || s) || []),
+                ...(user.skills.languages?.map((s) => s.skill || s) || []),
+              ]
+                .filter(Boolean)
+                .join(", ") || "Not specified"
+            : user?.skills || "Not specified",
+          icon: <Zap size={14} />,
+        },
+        {
+          label: "Years of Experience",
+          value: `${user?.yearsOfExperience || 0} Years`,
+          icon: <Clock size={14} />,
+        },
+        {
+          label: "Highest Education",
+          value: user?.qualification,
+          icon: <GraduationCap size={14} />,
+        },
+      ];
+    } else {
+      professionalDetails.fields = [
+        {
+          label: "Company Name",
+          value: user?.companyInfo?.companyName || user?.company,
+          icon: <Building size={14} />,
+        },
+        {
+          label: "Business Department",
+          value: user?.companyInfo?.department,
+          icon: <Building2 size={14} />,
+        },
+        {
+          label: "Current Designation",
+          value: user?.companyInfo?.designation || user?.position,
+          icon: <Briefcase size={14} />,
+        },
+      ];
     }
 
     return [personalInfo, professionalDetails, linksSection];
@@ -542,484 +393,177 @@ export const EnhancedProfileTab = ({
 
   const profileSections = getProfileSections();
 
-  // Handle profile save
   const handleProfileSave = async (formData, isFileUpload = false) => {
     setLoading(true);
     try {
-      // Profile save initiated
-      
-      // Handle file upload differently
+      let response;
       if (isFileUpload) {
-        // For file uploads, send FormData directly to backend
-        const response = await updateProfileWithFile(formData);
-        console.log('✅ Profile with file update response:', response);
-        
-        if (response.success) {
-          // Update local state immediately for UI responsiveness
-          setCurrentUser(response.data);
-          console.log('🔄 Profile update completed, contexts should be synced');
-        } else {
-          throw new Error(response.error || 'Failed to update profile');
-        }
-        return;
-      }
-      
-      // Transform form data to match backend expectations (for regular updates)
-      const transformedData = { ...formData };
-      
-      // Processing form data
-      
-      // Handle name field - split into firstName and lastName
-      if (formData.name) {
-        const nameParts = formData.name.split(' ');
-        transformedData.firstName = nameParts[0] || '';
-        transformedData.lastName = nameParts.slice(1).join(' ') || '';
-        delete transformedData.name; // Remove the name field
-      }
-      
-      // Handle recruiter-specific fields
-      if (userRole === 'recruiter') {
-        // Processing recruiter fields
-        
-        // Map company info to nested structure - ALWAYS create companyInfo if any field exists
-        if (formData.company !== undefined || formData.department !== undefined || formData.job_title !== undefined) {
-          transformedData.companyInfo = {
-            companyName: formData.company || '',
-            department: formData.department || '',
-            designation: formData.job_title || ''
-          };
-          console.log('🔍 Created companyInfo:', transformedData.companyInfo);
-          
-          // Remove flat fields after transformation
-          delete transformedData.company;
-          delete transformedData.department;
-          delete transformedData.job_title;
-        }
-        
-        // Handle years of experience
-        if (formData.experience_years !== undefined) {
-          transformedData.yearsOfExperience = parseInt(formData.experience_years) || 0;
-          delete transformedData.experience_years;
-        }
-        
-        // Handle location field
-        if (formData.location !== undefined) {
-          // Parse location string if it contains comma-separated values
-          const locationParts = formData.location.split(',').map(part => part.trim());
-          
-          transformedData.officeLocation = {
-            city: locationParts[0] || formData.location || '',
-            state: locationParts[1] || '', // Don't default to Maharashtra
-            country: locationParts[2] || 'India' // Default to India only
-          };
-          console.log('🔍 Created officeLocation:', transformedData.officeLocation);
-          delete transformedData.location; // Remove the location field
-        }
-        // Handle professional links for recruiters - store in both places
-        console.log('🔍 Processing professional links - linkedin:', formData.linkedin_url, 'github:', formData.github_url, 'portfolio:', formData.portfolio_url);
-        
-        const professionalLinks = {};
-        if (formData.linkedin_url !== undefined) {
-          professionalLinks.linkedin = formData.linkedin_url || '';
-          // Keep linkedin_url in BaseUser for backward compatibility - don't delete
-        }
-        if (formData.github_url !== undefined) {
-          professionalLinks.github = formData.github_url || '';
-          // Keep github_url in BaseUser for backward compatibility - don't delete
-        }
-        if (formData.portfolio_url !== undefined) {
-          professionalLinks.personalWebsite = formData.portfolio_url || '';
-          // Keep portfolio_url in BaseUser for backward compatibility - don't delete
-        }
-        
-        // Always set professionalLinks if any field was provided (even if empty)
-        if (Object.keys(professionalLinks).length > 0) {
-          transformedData.professionalLinks = professionalLinks;
-          console.log('🔍 Created professionalLinks:', transformedData.professionalLinks);
-        }
-        
-        // Ensure bio is preserved (it's a BaseUser field)
-        // Bio should already be in transformedData, no special handling needed
-      }
-      
-      // Handle applicant-specific fields
-      if (userRole === 'applicant') {
-        // Handle skills array for applicants
-        if (formData.skills) {
-          if (Array.isArray(formData.skills)) {
-            transformedData.skills = {
-              primary: formData.skills,
-              technical: formData.technical_skills || [],
-              soft: formData.soft_skills || []
-            };
-          } else if (typeof formData.skills === 'string') {
-            transformedData.skills = {
-              primary: formData.skills.split(',').map(skill => skill.trim()).filter(skill => skill),
-              technical: [],
-              soft: []
-            };
-          }
-        }
-        
-        // Handle location for applicants
-        if (formData.location) {
-          // Parse location string if it contains comma-separated values
-          const locationParts = formData.location.split(',').map(part => part.trim());
-          
-          transformedData.currentLocation = {
-            city: locationParts[0] || formData.location || '',
-            state: locationParts[1] || '', // Don't default to Maharashtra
-            country: locationParts[2] || 'India' // Default to India only
-          };
-          delete transformedData.location;
-        }
-        
-        // Handle career information for applicants
-        if (formData.current_job_title || formData.current_company || formData.expected_salary || formData.experience_level) {
-          transformedData.careerInfo = {
-            ...(formData.current_job_title && { currentJobTitle: formData.current_job_title }),
-            ...(formData.current_company && { currentCompany: formData.current_company }),
-            ...(formData.expected_salary && { expectedSalary: parseInt(formData.expected_salary) || 0 }),
-            ...(formData.experience_level && { experienceLevel: formData.experience_level })
-          };
-          // Clean up flat fields
-          delete transformedData.current_job_title;
-          delete transformedData.current_company;
-          delete transformedData.expected_salary;
-          delete transformedData.experience_level;
-        }
-        
-        // Handle education for applicants
-        if (formData.education) {
-          transformedData.education = Array.isArray(formData.education) ? formData.education : [];
-          console.log('🔍 Using existing education array:', transformedData.education);
-        } else if (formData.qualification) {
-          // Convert simple qualification string to education array
-          console.log('🔍 Converting qualification to education:', formData.qualification);
-          transformedData.education = [{
-            institution: 'Not specified',
-            degree: formData.qualification,
-            fieldOfStudy: 'Not specified',
-            startDate: null,
-            endDate: null,
-            grade: '',
-            isCurrentlyStudying: false
-          }];
-          console.log('🔍 Created education array:', transformedData.education);
-          delete transformedData.qualification;
-        }
-        
-        // Handle work experience for applicants
-        if (formData.workExperience) {
-          transformedData.workExperience = Array.isArray(formData.workExperience) ? formData.workExperience : [];
-        } else if (formData.experience_years) {
-          // Convert experience years to basic work experience structure
-          transformedData.workExperience = [{
-            companyName: formData.current_company || 'Not specified',
-            jobTitle: formData.current_job_title || 'Not specified',
-            startDate: null,
-            endDate: null,
-            isCurrentJob: true,
-            description: `${formData.experience_years} years of experience`,
-            achievements: []
-          }];
-        }
-        
-        // Handle documents for applicants
-        if (formData.resume_url !== undefined || formData.cover_letter_url !== undefined || formData.portfolio_url !== undefined) {
-          transformedData.documents = {
-            resumeUrl: formData.resume_url || '',
-            coverLetterUrl: formData.cover_letter_url || '',
-            portfolioUrl: formData.portfolio_url || '',
-            certificates: []
-          };
-          console.log('🔍 Created documents object:', transformedData.documents);
-          
-          // Also preserve flat fields for backward compatibility
-          if (formData.resume_url !== undefined) transformedData.resume_url = formData.resume_url;
-          if (formData.cover_letter_url !== undefined) transformedData.cover_letter_url = formData.cover_letter_url;
-          if (formData.portfolio_url !== undefined) transformedData.portfolio_url = formData.portfolio_url;
-        }
-        
-        // Handle job preferences for applicants
-        if (formData.willing_to_relocate !== undefined || formData.remote_work_preference !== undefined || formData.preferred_job_types || formData.preferred_locations) {
-          transformedData.jobPreferences = {
-            ...(formData.willing_to_relocate !== undefined && { willingToRelocate: formData.willing_to_relocate }),
-            ...(formData.remote_work_preference !== undefined && { remoteWorkPreference: formData.remote_work_preference }),
-            ...(formData.preferred_job_types && { preferredJobTypes: Array.isArray(formData.preferred_job_types) ? formData.preferred_job_types : [formData.preferred_job_types] }),
-            ...(formData.preferred_locations && { preferredLocations: Array.isArray(formData.preferred_locations) ? formData.preferred_locations : [formData.preferred_locations] })
-          };
-          // Clean up flat fields
-          delete transformedData.willing_to_relocate;
-          delete transformedData.remote_work_preference;
-          delete transformedData.preferred_job_types;
-          delete transformedData.preferred_locations;
-        }
-        
-        // Handle years of experience for applicants
-        if (formData.experience_years !== undefined) {
-          console.log('🔍 Converting experience_years to yearsOfExperience:', formData.experience_years);
-          transformedData.yearsOfExperience = parseInt(formData.experience_years) || 0;
-          console.log('🔍 Set yearsOfExperience to:', transformedData.yearsOfExperience);
-          delete transformedData.experience_years;
-        }
-      }
-      
-      // Handle common social links for all user types (if not handled above)
-      if (userRole !== 'recruiter') {
-        // For applicants and admins, keep social links as direct fields
-        // These are already in the correct format, no transformation needed
-        // Just ensure they're included: linkedin_url, github_url, portfolio_url
-      }
-      
-      // Validate and sanitize data before sending
-      if (transformedData.bio && (
-        transformedData.bio.includes('chunk-') || 
-        transformedData.bio.includes('console.log') || 
-        transformedData.bio.includes('Download the React DevTools')
-      )) {
-        console.log('🚫 Detected corrupted bio data, clearing it');
-        transformedData.bio = '';
-      }
-      
-      const sanitizedData = { ...transformedData };
-
-      const isCorruptedUrl = (url) => {
-        if (!url || url.trim() === '') return false;
-        // Check if URL contains localhost with current page path (indicates corruption)
-        return url.includes('192.168.41.134:3000') && (
-          url.includes('/dashboard/profile') || 
-          url.includes('/recruiter-dashboard/profile') ||
-          url.includes('/applicant-dashboard/profile') ||
-          url === window.location.href
-        );
-      };
-
-      // Clean corrupted URLs (temporarily disabled for debugging)
-      // ['linkedin_url', 'github_url', 'portfolio_url'].forEach(field => {
-      //   if (sanitizedData[field] && isCorruptedUrl(sanitizedData[field])) {
-      //     console.log(`🚫 Detected corrupted ${field}, clearing it`);
-      //     sanitizedData[field] = '';
-      //   }
-      // });
-      
-      // Validate bio for repeated content
-      if (sanitizedData.bio && sanitizedData.bio.length > 100) {
-        const words = sanitizedData.bio.split(' ');
-        const uniqueWords = [...new Set(words)];
-        // If more than 80% of words are repeated, likely corrupted
-        if (uniqueWords.length / words.length < 0.2) {
-          console.log('🚫 Detected corrupted bio with repeated content, clearing it');
-          transformedData.bio = '';
-        }
-      }
-      
-      console.log('🔍 Sanitized data for backend:', transformedData);
-      console.log('🔍 Sanitized data keys:', Object.keys(transformedData));
-      console.log('🔍 Sanitized data companyInfo:', transformedData.companyInfo);
-      console.log('🔍 Sanitized data officeLocation:', transformedData.officeLocation);
-      console.log('🔍 Sanitized data professionalLinks:', transformedData.professionalLinks);
-      
-      console.log('🔍 About to call updateProfile with transformed data');
-      console.log('🔍 Final transformed data being sent:', JSON.stringify(transformedData, null, 2));
-      
-      const response = await updateProfile(transformedData);
-      console.log('✅ Profile update response:', response);
-      console.log('✅ Profile update response.success:', response.success);
-      console.log('✅ Profile update response.data:', response.data);
-      console.log('✅ Profile update response.error:', response.error);
-      console.log('✅ Profile update response.message:', response.message);
-      
-      if (response.success) {
-        console.log('✅ Profile update was successful');
-        // Update local state immediately for UI responsiveness
-        setCurrentUser(response.data);
-        
-        // Call parent onEdit to trigger dashboard refresh
-        if (onEdit) {
-          onEdit(response.data);
-        }
-        
-        // Force a small delay to ensure all contexts sync
-        setTimeout(() => {
-          console.log('🔄 Profile update completed, contexts should be synced');
-        }, 100);
-        
-        return response;
+        response = await updateProfileWithFile(formData);
       } else {
-        console.error('❌ Profile update failed:', response.error);
-        throw new Error(response.error || 'Profile update failed');
+        const transformed = { ...formData };
+        if (formData.name) {
+          const [first, ...last] = formData.name.split(" ");
+          transformed.firstName = first;
+          transformed.lastName = last.join(" ");
+        }
+        response = await updateProfile(transformed);
+      }
+      if (response.success) {
+        // Always re-fetch the latest profile after update
+        try {
+          const { profileApi } = await import("../../services/profileApi.js");
+          const latestProfile = await profileApi.getProfile();
+          setCurrentUser(latestProfile.data || latestProfile);
+          if (onEdit) onEdit(latestProfile.data || latestProfile);
+        } catch (fetchErr) {
+          // fallback to response data if fetch fails
+          setCurrentUser(response.data);
+          if (onEdit) onEdit(response.data);
+        }
+        return response;
       }
     } catch (error) {
-      console.error("❌ Failed to update profile:", error);
-      console.error("❌ Error type:", typeof error);
-      console.error("❌ Error message:", error.message);
-      console.error("❌ Error stack:", error.stack);
-      
-      // Re-throw with more descriptive error message
-      const errorMessage = error.response?.data?.message || error.message || 'Profile update failed';
-      throw new Error(errorMessage);
+      console.error("Profile update failed", error);
+      throw error;
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <motion.div
-      className="space-y-4"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      {/* Profile Completion Card */}
+    <div className="space-y-8 pb-10">
+      {/* Profile Header Widget */}
       <motion.div
-        className={`rounded-xl p-6 border ${
-          profileCompletion === 100
-            ? 'bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-700'
-            : 'bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-700'
-        }`}
-        whileHover={{ scale: 1.02 }}
-        transition={{ duration: 0.2 }}
+        className="bg-white dark:bg-gray-800/50 backdrop-blur-md rounded-[2.5rem] p-1 shadow-2xl shadow-blue-500/5 overflow-hidden border border-gray-100 dark:border-gray-700/50"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
       >
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            Profile Completion
-            {profileCompletion === 100 && (
-              <span className="text-2xl">✅</span>
-            )}
-          </h3>
-          <span className={`text-3xl font-bold ${
-            profileCompletion === 100
-              ? 'text-green-600 dark:text-green-400'
-              : 'text-blue-600 dark:text-blue-400'
-          }`}>
-            {profileCompletion}%
-          </span>
-        </div>
+        <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-[2.3rem] p-8 text-white relative">
+          {/* Decorative shapes */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
+          <div className="absolute bottom-0 left-0 w-40 h-40 bg-blue-400/10 rounded-full blur-2xl -ml-10 -mb-10"></div>
 
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mb-4">
-          <motion.div
-            className={`h-3 rounded-full ${
-              profileCompletion === 100
-                ? 'bg-gradient-to-r from-green-500 to-emerald-600'
-                : 'bg-gradient-to-r from-blue-500 to-indigo-600'
-            }`}
-            initial={{ width: 0 }}
-            animate={{ width: `${profileCompletion}%` }}
-            transition={{ duration: 1, ease: "easeOut" }}
-            key={profileCompletion} // Force re-animation on change
-          />
-        </div>
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative z-10">
+            <div className="flex items-center gap-6">
+              <div className="relative group">
+                <div className="w-24 h-24 rounded-md bg-white/20 backdrop-blur-md border-2 border-white/30 flex items-center justify-center overflow-hidden shadow-2xl transition-transform group-hover:scale-105">
+                  {user?.profileImage ? (
+                    <img
+                      src={user.profileImage}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User size={40} className="text-white" />
+                  )}
+                </div>
+                <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-md bg-green-500 border-4 border-indigo-600 flex items-center justify-center shadow-lg">
+                  <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>
+                </div>
+              </div>
+              <div>
+                <h2 className="text-3xl font-extrabold tracking-tight mb-1 text-white">
+                  {getDisplayName(user)}
+                </h2>
+                <div className="flex items-center gap-2 text-white font-bold text-sm">
+                  {/* <span className="bg-white text-blue-600 px-3 py-0.5 rounded-full text-[10px] uppercase font-black tracking-widest shadow-md">
+                    {userRole}
+                  </span> */}
+                  {/* <span className="opacity-40">|</span> */}
+                  <span className="text-blue-50">{user?.email}</span>
+                </div>
+              </div>
+            </div>
 
-        <p className="text-gray-600 dark:text-gray-400 mb-4">
-          {profileCompletion === 100 
-            ? '🎉 Congratulations! Your profile is complete and optimized for better visibility. Adding social links can further enhance your profile.'
-            : 'Complete your profile to get better job recommendations and increase visibility.'
-          }
-        </p>
-
-        <div className="flex flex-wrap gap-3">
-          <motion.button
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setIsEditModalOpen(true)}
-            disabled={loading}
-          >
-            <Edit3 className="w-5 h-5" />
-            <span>{loading ? "Saving..." : "Edit Profile"}</span>
-          </motion.button>
-          
+            <div className="bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-md min-w-[300px] shadow-2xl">
+              <div className="flex justify-between items-end mb-3">
+                <span className="text-xs font-black text-white">
+                  Profile Strength
+                </span>
+                <span className="text-2xl font-black text-white">
+                  {profileCompletion}%
+                </span>
+              </div>
+              <div className="w-full bg-white/20 rounded-full h-2 mb-5 overflow-hidden">
+                <motion.div
+                  className="h-full bg-white rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${profileCompletion}%` }}
+                  transition={{ duration: 1.5, ease: "easeOut" }}
+                />
+              </div>
+              <button
+                onClick={() => setIsEditModalOpen(true)}
+                className="w-full py-3.5 bg-white dark:bg-gray-800 rounded-md text-gray-800 dark:text-white shadow-xl hover:bg-blue-50 dark:hover:bg-gray-700 transition-all active:scale-95 flex items-center justify-center gap-2 border border-transparent"
+              >
+                <Edit3 size={16} className="text-gray-800 dark:text-white" />
+                Edit Profile Details
+              </button>
+            </div>
+          </div>
         </div>
       </motion.div>
 
-      {/* Profile Sections */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full max-w-full items-start">
-        {profileSections.map((section, index) => (
+      {/* Main Info Cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {profileSections.map((section, idx) => (
           <motion.div
             key={section.title}
-            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow duration-300 overflow-hidden min-w-0 h-fit max-h-96 flex flex-col"
+            className="bg-white dark:bg-gray-800/80 backdrop-blur-sm rounded-[2.5rem] border border-gray-100 dark:border-gray-700 shadow-xl shadow-blue-500/5 transition-all duration-500 p-8 flex flex-col"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-            whileHover={{ y: -4 }}
+            transition={{ delay: idx * 0.1 }}
           >
-            <div className="flex items-center space-x-3 mb-6">
-              <span className="text-2xl">{section.icon}</span>
-              <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <div className="flex items-center gap-4 mb-10">
+              <div
+                className={`w-14 h-14 rounded-[1.2rem] flex items-center justify-center shadow-lg border-2 border-white dark:border-gray-700 ${
+                  section.color === "blue"
+                    ? "bg-blue-500 text-white shadow-blue-200"
+                    : section.color === "purple"
+                    ? "bg-purple-500 text-white shadow-purple-200"
+                    : "bg-rose-500 text-white shadow-rose-200"
+                }`}
+              >
+                {React.cloneElement(section.icon, { size: 24 })}
+              </div>
+              <h3 className="text-md font-black text-slate-800 dark:text-white tracking-tight uppercase tracking-wider">
                 {section.title}
-              </h4>
+              </h3>
             </div>
 
-            <div className="space-y-4 flex-1 overflow-y-auto">
-              {section.isArray ? (
-                // Render array items (education, work experience)
-                section.items && section.items.length > 0 ? (
-                  section.items.map((item) => (
+            <div className="space-y-8 flex-1">
+              {section.fields.map((field, fIdx) => (
+                <div key={fIdx} className="group">
+                  <div className="flex items-center gap-3 mb-2.5 transition-all">
                     <div
-                      key={item.id}
-                      className="border-l-4 border-blue-200 dark:border-blue-700 pl-4 pb-4 mb-4 border-b border-gray-200 dark:border-gray-700 last:border-b-0"
+                      className={`w-8 h-8 rounded-md bg-blue-50/50 dark:bg-blue-900/20 flex items-center justify-center border border-blue-100/50 dark:border-blue-800/50 shadow-sm group-hover:scale-110 transition-transform 
+                        ${section.color === "blue" ? "text-blue-600" : ""}
+                        ${section.color === "purple" ? "text-purple-600" : ""}
+                        ${section.color === "rose" ? "text-rose-600" : ""}
+                        dark:text-blue-400
+                    `}
                     >
-                      <h5 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
-                        {item.title}
-                      </h5>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                        {item.subtitle}
-                      </p>
-                      {item.details && item.details.length > 0 && (
-                        <div className="space-y-1">
-                          {item.details.map((detail, idx) => (
-                            <p key={idx} className="text-xs text-gray-500 dark:text-gray-500">
-                              {detail}
-                            </p>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-400 dark:text-gray-500 italic">
-                    No {section.title.toLowerCase()} added yet
-                  </p>
-                )
-              ) : (
-                // Render regular fields
-                section.fields && section.fields.map((field, fieldIndex) => (
-                  <div
-                    key={fieldIndex}
-                    className="border-l-4 border-blue-200 dark:border-blue-700 pl-4 overflow-hidden min-w-0"
-                  >
-                    <div className="flex items-center space-x-2 mb-1">
-                      <span style={{ fontSize: 20 }}>{field.icon}</span>
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {field.label}
-                      </span>
-                    </div>
-                    <div
-                      className={`text-sm ${
-                        field.value && field.value !== "Not specified" && field.value !== "Not provided"
-                          ? "text-gray-900 dark:text-white"
-                          : "text-gray-400 dark:text-gray-500 italic"
-                      } ${field.multiline ? "whitespace-pre-wrap" : "break-words overflow-wrap-anywhere"} leading-relaxed max-w-full`}
-                      style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
-                    >
-                      {(() => {
-                        const val = field.value;
-                        if (!val || val === "Not specified" || val === "null" || val === "undefined") {
-                          return "Not provided";
-                        }
-                        return val;
-                      })()}
-                    </div>
+                      {field.icon}
+                    </div>{" "}
+                    <span className="text-[11px] font-extrabold text-slate-500 dark:text-slate-400">
+                      {field.label}
+                    </span>
                   </div>
-                ))
-              )}
+                  <div
+                    className={`text-sm font-bold pl-11 transition-all ${
+                      field.value && field.value !== "Not provided yet"
+                        ? "text-slate-800 dark:text-slate-100"
+                        : "text-slate-400 dark:text-slate-500 italic font-medium"
+                    }`}
+                  >
+                    {field.value || "Not provided yet"}
+                  </div>
+                </div>
+              ))}
             </div>
           </motion.div>
         ))}
       </div>
 
-      {/* Profile Edit Modal */}
       <ProfileEditModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
@@ -1027,8 +571,7 @@ export const EnhancedProfileTab = ({
         userRole={userRole}
         onSave={handleProfileSave}
       />
-
-    </motion.div>
+    </div>
   );
 };
 
@@ -1136,7 +679,7 @@ export const EnhancedSettingsTab = () => {
     setThemeMode(mode);
     // Show feedback
     if (window.showToast) {
-      window.showToast(`Theme changed to ${mode}`, 'success');
+      window.showToast(`Theme changed to ${mode}`, "success");
     }
   };
 
@@ -1144,7 +687,7 @@ export const EnhancedSettingsTab = () => {
     setFontSize(size);
     // Show feedback
     if (window.showToast) {
-      window.showToast(`Font size changed to ${size}`, 'success');
+      window.showToast(`Font size changed to ${size}`, "success");
     }
   };
 
@@ -1152,7 +695,7 @@ export const EnhancedSettingsTab = () => {
     setFontFamily(family);
     // Show feedback
     if (window.showToast) {
-      window.showToast(`Font family changed to ${family}`, 'success');
+      window.showToast(`Font family changed to ${family}`, "success");
     }
   };
 
@@ -1160,7 +703,10 @@ export const EnhancedSettingsTab = () => {
     setLanguage(lang);
     // Show feedback
     if (window.showToast) {
-      window.showToast(`Language changed to ${languageOptions[lang]}`, 'success');
+      window.showToast(
+        `Language changed to ${languageOptions[lang]}`,
+        "success"
+      );
     }
   };
 
@@ -1171,7 +717,10 @@ export const EnhancedSettingsTab = () => {
     }));
     // Show feedback
     if (window.showToast) {
-      window.showToast(`${key} notifications ${notifications[key] ? 'disabled' : 'enabled'}`, 'success');
+      window.showToast(
+        `${key} notifications ${notifications[key] ? "disabled" : "enabled"}`,
+        "success"
+      );
     }
   };
 
@@ -1192,14 +741,14 @@ export const EnhancedSettingsTab = () => {
       {settingSections.map((section, sectionIndex) => (
         <motion.div
           key={section.title}
-          className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+          className="bg-white dark:bg-gray-800 rounded-md p-6 shadow-sm border border-gray-200 dark:border-gray-700"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: sectionIndex * 0.1 }}
         >
           <div className="flex items-center space-x-3 mb-6">
             <span className="text-2xl">{section.icon}</span>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white">
               {section.title}
             </h3>
           </div>
@@ -1208,16 +757,16 @@ export const EnhancedSettingsTab = () => {
             {section.settings.map((setting, settingIndex) => (
               <div
                 key={settingIndex}
-                className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
                 <div className="flex items-center space-x-3">
                   <span className="text-xl">{setting.icon}</span>
                   <div>
-                    <h4 className="font-medium text-gray-900 dark:text-white">
+                    <h4 className="font-semibold text-gray-900 dark:text-white">
                       {setting.label}
                     </h4>
                     {setting.description && (
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
                         {setting.description}
                       </p>
                     )}
@@ -1230,7 +779,7 @@ export const EnhancedSettingsTab = () => {
                       {setting.options.map((option) => (
                         <motion.button
                           key={option.value}
-                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
                             (systemTheme && option.value === "system") ||
                             (!systemTheme &&
                               darkMode &&
@@ -1238,8 +787,8 @@ export const EnhancedSettingsTab = () => {
                             (!systemTheme &&
                               !darkMode &&
                               option.value === "light")
-                              ? "bg-blue-600 text-white"
-                              : "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500"
+                              ? "bg-blue-600 text-white shadow-md hover:bg-blue-700"
+                              : "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500"
                           }`}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
@@ -1254,13 +803,14 @@ export const EnhancedSettingsTab = () => {
 
                   {setting.type === "fontSize" && (
                     <select
-                      className="px-3 py-2 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg text-gray-900 dark:text-white transition-all duration-200 hover:border-blue-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      className="px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white font-medium transition-all duration-200 hover:border-blue-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-500"
                       value={fontSize}
                       onChange={(e) => handleFontSizeChange(e.target.value)}
                     >
                       {Object.entries(fontSizeOptions).map(([key, value]) => (
                         <option key={key} value={key}>
-                          {key.charAt(0).toUpperCase() + key.slice(1)} ({Math.round(value * 16)}px)
+                          {key.charAt(0).toUpperCase() + key.slice(1)} (
+                          {Math.round(value * 16)}px)
                         </option>
                       ))}
                     </select>
@@ -1268,12 +818,16 @@ export const EnhancedSettingsTab = () => {
 
                   {setting.type === "fontFamily" && (
                     <select
-                      className="px-3 py-2 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg text-gray-900 dark:text-white transition-all duration-200 hover:border-blue-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      className="px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white font-medium transition-all duration-200 hover:border-blue-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-500"
                       value={fontFamily}
                       onChange={(e) => handleFontFamilyChange(e.target.value)}
                     >
                       {Object.keys(fontFamilyOptions).map((font) => (
-                        <option key={font} value={font} style={{ fontFamily: fontFamilyOptions[font] }}>
+                        <option
+                          key={font}
+                          value={font}
+                          style={{ fontFamily: fontFamilyOptions[font] }}
+                        >
                           {font}
                         </option>
                       ))}
@@ -1282,7 +836,7 @@ export const EnhancedSettingsTab = () => {
 
                   {setting.type === "language" && (
                     <select
-                      className="px-3 py-2 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg text-gray-900 dark:text-white transition-all duration-200 hover:border-blue-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      className="px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white font-medium transition-all duration-200 hover:border-blue-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-500"
                       value={language}
                       onChange={(e) => handleLanguageChange(e.target.value)}
                     >
@@ -1296,16 +850,17 @@ export const EnhancedSettingsTab = () => {
 
                   {setting.type === "toggle" && (
                     <motion.button
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
+                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 ${
                         notifications[setting.key]
-                          ? "bg-blue-600"
-                          : "bg-gray-300 dark:bg-gray-600"
+                          ? "bg-blue-600 hover:bg-blue-700"
+                          : "bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500"
                       }`}
                       onClick={() => handleNotificationToggle(setting.key)}
                       whileTap={{ scale: 0.95 }}
+                      whileHover={{ scale: 1.02 }}
                     >
                       <motion.span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
+                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-200 ${
                           notifications[setting.key]
                             ? "translate-x-6"
                             : "translate-x-1"
@@ -1324,7 +879,6 @@ export const EnhancedSettingsTab = () => {
   );
 };
 
-
 // Enhanced Jobs Tab Component
 export const EnhancedJobsTab = ({
   userRole = "applicant",
@@ -1342,24 +896,24 @@ export const EnhancedJobsTab = ({
   const [isJobDetailsModalOpen, setIsJobDetailsModalOpen] = useState(false);
 
   // Get jobs from dashboard data with fallback and mark saved jobs
-  let jobs = (dashboardData?.recentJobs || []).map(job => ({
+  let jobs = (dashboardData?.recentJobs || []).map((job) => ({
     ...job,
-    saved: savedJobIds.has(job._id?.toString() || job.id?.toString())
+    saved: savedJobIds.has(job._id?.toString() || job.id?.toString()),
   }));
 
-  console.log('🔍 Dashboard jobs available:', {
+  console.log("🔍 Dashboard jobs available:", {
     dashboardData: !!dashboardData,
     recentJobs: dashboardData?.recentJobs?.length || 0,
     jobType: jobType,
-    userRole: userRole
+    userRole: userRole,
   });
 
   // Debug experience field in regular jobs
   if (dashboardData?.recentJobs?.length > 0) {
-    console.log('🔍 First regular job experience field:', {
+    console.log("🔍 First regular job experience field:", {
       job: dashboardData.recentJobs[0]?.jobTitle,
       experience: dashboardData.recentJobs[0]?.experience,
-      experienceType: typeof dashboardData.recentJobs[0]?.experience
+      experienceType: typeof dashboardData.recentJobs[0]?.experience,
     });
   }
 
@@ -1368,23 +922,28 @@ export const EnhancedJobsTab = ({
     const fetchSavedJobs = async () => {
       if (userRole === "applicant") {
         try {
-          const token = localStorage.getItem('token');
+          const token = localStorage.getItem("token");
           if (!token) return;
 
           const response = await fetch(`${API_BASE_URL}/saved-jobs`, {
             headers: {
-              'Authorization': `Bearer ${token}`
-            }
+              Authorization: `Bearer ${token}`,
+            },
           });
 
           if (response.ok) {
             const data = await response.json();
-            const savedIds = new Set(data.saved.map(saved => saved.jobId?._id?.toString() || saved.jobId?.toString()));
+            const savedIds = new Set(
+              data.saved.map(
+                (saved) =>
+                  saved.jobId?._id?.toString() || saved.jobId?.toString()
+              )
+            );
             setSavedJobIds(savedIds);
-            console.log('✅ Loaded saved jobs:', savedIds.size);
+            console.log("✅ Loaded saved jobs:", savedIds.size);
           }
         } catch (error) {
-          console.error('❌ Error fetching saved jobs:', error);
+          console.error("❌ Error fetching saved jobs:", error);
         }
       }
     };
@@ -1395,46 +954,65 @@ export const EnhancedJobsTab = ({
   // For applicants, fetch recommended jobs when jobType is "recommended" or "all"
   useEffect(() => {
     const fetchRecommendedJobs = async () => {
-      if (userRole === "applicant" && (jobType === "recommended" || jobType === "all") && currentUser?._id) {
+      if (
+        userRole === "applicant" &&
+        (jobType === "recommended" || jobType === "all") &&
+        currentUser?._id
+      ) {
         try {
           setJobsLoading(true);
-          console.log('🔍 Fetching recommended jobs for applicant:', currentUser._id);
-          
+          console.log(
+            "🔍 Fetching recommended jobs for applicant:",
+            currentUser._id
+          );
+
           // Import recommendations API
-          const { getRecommendedJobs } = await import("../../api/recommendations");
-          const response = await getRecommendedJobs({ 
-            limit: 20, 
-            minMatchPercentage: 20 // Minimum 20% overall match (but skill match is mandatory)
+          const { getRecommendedJobs } = await import(
+            "../../api/recommendations"
+          );
+          const response = await getRecommendedJobs({
+            limit: 20,
+            minMatchPercentage: 20, // Minimum 20% overall match (but skill match is mandatory)
           });
-          
-          console.log('🔍 Recommendation API response:', response);
-          
+
+          console.log("🔍 Recommendation API response:", response);
+
           if (response.success) {
             // Transform the data to match the component's expected format
-            const transformedJobs = response.data.jobs.map(job => {
+            const transformedJobs = response.data.jobs.map((job) => {
               // Format salary properly
               const formatSalary = (salaryObj) => {
-                if (!salaryObj) return 'Negotiable';
-                if (typeof salaryObj === 'string') return salaryObj;
-                
+                if (!salaryObj) return "Negotiable";
+                if (typeof salaryObj === "string") return salaryObj;
+
                 const { minimum, maximum, type, period, currency } = salaryObj;
-                const currencySymbol = currency === 'INR' ? '₹' : '$';
-                
+                const currencySymbol = currency === "INR" ? "₹" : "$";
+
                 if (minimum && maximum) {
                   if (minimum >= 100000) {
-                    return `${currencySymbol}${(minimum / 100000).toFixed(1)}L - ${currencySymbol}${(maximum / 100000).toFixed(1)}L ${period || 'Yearly'}`;
+                    return `${currencySymbol}${(minimum / 100000).toFixed(
+                      1
+                    )}L - ${currencySymbol}${(maximum / 100000).toFixed(1)}L ${
+                      period || "Yearly"
+                    }`;
                   } else {
-                    return `${currencySymbol}${minimum.toLocaleString()} - ${currencySymbol}${maximum.toLocaleString()} ${period || 'Yearly'}`;
+                    return `${currencySymbol}${minimum.toLocaleString()} - ${currencySymbol}${maximum.toLocaleString()} ${
+                      period || "Yearly"
+                    }`;
                   }
                 } else if (minimum) {
                   if (minimum >= 100000) {
-                    return `${currencySymbol}${(minimum / 100000).toFixed(1)}L+ ${period || 'Yearly'}`;
+                    return `${currencySymbol}${(minimum / 100000).toFixed(
+                      1
+                    )}L+ ${period || "Yearly"}`;
                   } else {
-                    return `${currencySymbol}${minimum.toLocaleString()}+ ${period || 'Yearly'}`;
+                    return `${currencySymbol}${minimum.toLocaleString()}+ ${
+                      period || "Yearly"
+                    }`;
                   }
                 }
-                
-                return 'Negotiable';
+
+                return "Negotiable";
               };
 
               return {
@@ -1449,14 +1027,16 @@ export const EnhancedJobsTab = ({
                 salaryRange: job.salary, // Keep original object for other uses
                 formattedSalary: formatSalary(job.salary), // Explicit formatted version
                 workArrangement: job.workArrangement,
-                type: job.workArrangement || 'Full-time',
-                experience: job.experience ? 
-                  (typeof job.experience === 'object' ? 
-                    `${job.experience.min || 0}-${job.experience.max || job.experience.min || 0} years` : 
-                    job.experience) : 
-                  'Not specified', // Map experience field
-                industry: job.industry || 'Not specified', // Map industry field
-                jobCategory: job.jobCategory || 'Not specified', // Map job category
+                type: job.workArrangement || "Full-time",
+                experience: job.experience
+                  ? typeof job.experience === "object"
+                    ? `${job.experience.min || 0}-${
+                        job.experience.max || job.experience.min || 0
+                      } years`
+                    : job.experience
+                  : "Not specified", // Map experience field
+                industry: job.industry || "Not specified", // Map industry field
+                jobCategory: job.jobCategory || "Not specified", // Map job category
                 requiredSkills: job.requiredSkills,
                 skills: job.requiredSkills,
                 description: job.description,
@@ -1468,18 +1048,24 @@ export const EnhancedJobsTab = ({
                 matchReasons: job.recommendationReasons || [],
                 recommended: true,
                 saved: false, // Default to not saved
-                status: 'Active'
+                status: "Active",
               };
             });
-            
-            console.log('✅ Transformed recommended jobs:', transformedJobs.length);
+
+            console.log(
+              "✅ Transformed recommended jobs:",
+              transformedJobs.length
+            );
             setRecommendedJobs(transformedJobs);
           } else {
-            console.log('❌ Failed to fetch recommendations:', response.message);
+            console.log(
+              "❌ Failed to fetch recommendations:",
+              response.message
+            );
             setRecommendedJobs([]);
           }
         } catch (error) {
-          console.error('❌ Error fetching recommended jobs:', error);
+          console.error("❌ Error fetching recommended jobs:", error);
           setRecommendedJobs([]);
         } finally {
           setJobsLoading(false);
@@ -1496,49 +1082,86 @@ export const EnhancedJobsTab = ({
       if (userRole === "recruiter" && currentUser?._id) {
         try {
           setJobsLoading(true);
-          
+
           // Get company name from current user
-          const companyName = currentUser.companyInfo?.companyName || 
-                             currentUser.companyName || 
-                             currentUser.company;
-          
-          console.log('🔍 Fetching jobs for recruiter and company:', {
+          const companyName =
+            currentUser.companyInfo?.companyName ||
+            currentUser.companyName ||
+            currentUser.company;
+
+          console.log("🔍 Fetching jobs for recruiter and company:", {
             recruiterId: currentUser._id,
-            companyName: companyName
+            companyName: companyName,
           });
-          
+
           // Import jobsAPI dynamically to avoid circular imports
           const { jobsAPI } = await import("../../services/api");
-          
+
           // Use combined filtering: recruiter's own jobs + company jobs
-          const queryParams = companyName ? 
-            { 
-              recruiterAndCompany: `${currentUser._id}|${companyName}`,
-              limit: 100 
-            } : 
-            { 
-              recruiterId: currentUser._id, 
-              limit: 100 
-            };
-          
-          console.log('🔍 Query parameters:', queryParams);
-          
+          const queryParams = companyName
+            ? {
+                recruiterAndCompany: `${currentUser._id}|${companyName}`,
+                limit: 100,
+              }
+            : {
+                postedBy: currentUser._id,
+                limit: 100,
+              };
+
+          console.log("🔍 Query parameters:", queryParams);
+
           const response = await jobsAPI.getJobs(queryParams);
-          
-          const fetchedJobs = response.data.data?.jobs || response.data.jobs || [];
-          console.log(`✅ Fetched company jobs: ${fetchedJobs.length} for jobType: ${jobType}`);
-          console.log('🔍 Sample job data:', fetchedJobs[0]);
+
+          const fetchedJobs =
+            response.data.data?.jobs || response.data.jobs || [];
+          console.log(
+            `✅ Fetched company jobs: ${fetchedJobs.length} for jobType: ${jobType}`
+          );
+          console.log("🔍 Sample job data:", fetchedJobs[0]);
           if (fetchedJobs[0]) {
-            console.log('🔍 Job fields:', Object.keys(fetchedJobs[0]));
-            console.log('🔍 Experience field value:', fetchedJobs[0].experience);
-            console.log('🔍 Job title field:', fetchedJobs[0].jobTitle || fetchedJobs[0].title);
-            console.log('🔍 Company field:', fetchedJobs[0].companyName || fetchedJobs[0].company);
-            console.log('🔍 Skills field:', fetchedJobs[0].requiredSkills || fetchedJobs[0].skills);
-            console.log('🔍 Salary field:', fetchedJobs[0].salaryRange);
+            console.log("🔍 Job fields:", Object.keys(fetchedJobs[0]));
+            console.log(
+              "🔍 Experience field value:",
+              fetchedJobs[0].experience
+            );
+            console.log(
+              "🔍 Job title field:",
+              fetchedJobs[0].jobTitle || fetchedJobs[0].title
+            );
+            console.log(
+              "🔍 Company field:",
+              fetchedJobs[0].companyName || fetchedJobs[0].company
+            );
+            console.log(
+              "🔍 Skills field:",
+              fetchedJobs[0].requiredSkills || fetchedJobs[0].skills
+            );
+            console.log("🔍 Salary field:", fetchedJobs[0].salaryRange);
           }
-          setRecruiterJobs(fetchedJobs);
+          // Map backend jobs to UI-expected structure
+          const mapJob = (job) => {
+            const mappedJob = {
+              ...job,
+              id: job.id || job._id,
+              // Use separate fields for display to avoid overwriting original data needed for forms
+              displayTitle: job.jobTitle || job.title || "",
+              displayCompany: job.companyName || job.company || "",
+              status: (job.status || job.jobStatus || "active").toLowerCase(),
+              // Ensure we keep original values if they exist
+              jobTitle: job.jobTitle || job.title || "",
+              companyName: job.companyName || job.company || "",
+              description: job.jobDescription || job.description || "",
+              postedDate: job.postedDate || job.createdAt || "",
+              applicationDeadline: job.applicationDeadline || "",
+              jobType: job.jobType || job.type || "Full Time",
+              workArrangement: job.workArrangement || "On-site",
+            };
+            return mappedJob;
+          };
+          const mappedJobs = fetchedJobs.map(mapJob);
+          setRecruiterJobs(mappedJobs);
         } catch (error) {
-          console.error('Error fetching company jobs:', error);
+          console.error("Error fetching company jobs:", error);
           setRecruiterJobs([]);
         } finally {
           setJobsLoading(false);
@@ -1547,11 +1170,17 @@ export const EnhancedJobsTab = ({
     };
 
     fetchRecruiterJobs();
-  }, [userRole, currentUser?._id, currentUser?.companyInfo?.companyName, currentUser?.companyName, currentUser?.company]);
+  }, [
+    userRole,
+    currentUser?._id,
+    currentUser?.companyInfo?.companyName,
+    currentUser?.companyName,
+    currentUser?.company,
+  ]);
 
   // Handle view job details
   const handleViewJobDetails = (job) => {
-    console.log('Opening job details for:', job.jobTitle);
+    console.log("Opening job details for:", job.jobTitle);
     setSelectedJob(job);
     setIsJobDetailsModalOpen(true);
   };
@@ -1567,7 +1196,7 @@ export const EnhancedJobsTab = ({
     jobs = recruiterJobs;
   } else if (userRole === "applicant" && jobType === "recommended") {
     jobs = recommendedJobs;
-    console.log('🔍 Using recommended jobs:', jobs.length);
+    console.log("🔍 Using recommended jobs:", jobs.length);
   }
 
   // Placeholder functions for job actions (will be implemented later)
@@ -1598,23 +1227,38 @@ export const EnhancedJobsTab = ({
   const [saving, setSaving] = useState({});
   const [deleting, setDeleting] = useState({});
   const [updating, setUpdating] = useState({});
-  const [applicationsModal, setApplicationsModal] = useState({ isOpen: false, job: null, applications: [] });
-  const [candidateModal, setCandidateModal] = useState({ isOpen: false, candidate: null });
-  const [contactModal, setContactModal] = useState({ isOpen: false, candidate: null });
-  const [scheduleInterviewModal, setScheduleInterviewModal] = useState({ isOpen: false, candidate: null, job: null, application: null });
+  const [applicationsModal, setApplicationsModal] = useState({
+    isOpen: false,
+    job: null,
+    applications: [],
+  });
+  const [candidateModal, setCandidateModal] = useState({
+    isOpen: false,
+    candidate: null,
+  });
+  const [contactModal, setContactModal] = useState({
+    isOpen: false,
+    candidate: null,
+  });
+  const [scheduleInterviewModal, setScheduleInterviewModal] = useState({
+    isOpen: false,
+    candidate: null,
+    job: null,
+    application: null,
+  });
   const [openDropdown, setOpenDropdown] = useState(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (openDropdown && !event.target.closest('.relative')) {
+      if (openDropdown && !event.target.closest(".relative")) {
         setOpenDropdown(null);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [openDropdown]);
 
@@ -1627,20 +1271,23 @@ export const EnhancedJobsTab = ({
     switch (jobType) {
       case "active":
         // Filter active jobs - Fixed case sensitivity
-        filteredJobs = safeJobs.filter((job) => 
-          job.status?.toLowerCase() === "active" || job.status === "Active"
+        filteredJobs = safeJobs.filter(
+          (job) =>
+            job.status?.toLowerCase() === "active" || job.status === "Active"
         );
         break;
       case "draft":
         // Filter draft jobs - Fixed case sensitivity
-        filteredJobs = safeJobs.filter((job) => 
-          job.status?.toLowerCase() === "draft" || job.status === "Draft"
+        filteredJobs = safeJobs.filter(
+          (job) =>
+            job.status?.toLowerCase() === "draft" || job.status === "Draft"
         );
         break;
       case "closed":
         // Filter closed jobs - Fixed case sensitivity
-        filteredJobs = safeJobs.filter((job) => 
-          job.status?.toLowerCase() === "closed" || job.status === "Closed"
+        filteredJobs = safeJobs.filter(
+          (job) =>
+            job.status?.toLowerCase() === "closed" || job.status === "Closed"
         );
         break;
       case "recommended":
@@ -1661,18 +1308,18 @@ export const EnhancedJobsTab = ({
       default:
         // Combine regular jobs, recommended jobs, and favorites using object instead of Map
         const jobsById = {};
-        
+
         // Add regular jobs
-        safeJobs.forEach(job => {
+        safeJobs.forEach((job) => {
           const jobId = job.id || job._id;
           if (jobId) {
             jobsById[jobId] = job;
           }
         });
-        
+
         // Add recommended jobs if available
         if (userRole === "applicant" && recommendedJobs.length > 0) {
-          recommendedJobs.forEach(job => {
+          recommendedJobs.forEach((job) => {
             const jobId = job.id || job._id;
             if (jobId) {
               const existingJob = jobsById[jobId];
@@ -1682,7 +1329,7 @@ export const EnhancedJobsTab = ({
                   ...existingJob,
                   recommended: true,
                   matchScore: job.matchScore,
-                  matchReasons: job.matchReasons
+                  matchReasons: job.matchReasons,
                 };
               } else {
                 // Add new recommended job
@@ -1691,14 +1338,14 @@ export const EnhancedJobsTab = ({
             }
           });
         }
-        
+
         filteredJobs = Object.values(jobsById);
-        console.log('🔍 All jobs combined:', {
+        console.log("🔍 All jobs combined:", {
           regular: safeJobs.length,
           recommended: recommendedJobs.length,
           total: filteredJobs.length,
           jobType: jobType,
-          userRole: userRole
+          userRole: userRole,
         });
         break;
     }
@@ -1755,33 +1402,36 @@ export const EnhancedJobsTab = ({
 
   // Handle job deletion
   const handleDelete = async (jobId) => {
-    if (!window.confirm('Are you sure you want to delete this job posting? This action cannot be undone.')) {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this job posting? This action cannot be undone."
+      )
+    ) {
       return;
     }
-    
+
     setDeleting((prev) => ({ ...prev, [jobId]: true }));
     try {
       // Import jobsAPI dynamically to avoid circular imports
       const { jobsAPI } = await import("../../services/api");
       const response = await jobsAPI.deleteJob(jobId);
-      
+
       if (response.data.success) {
-        console.log('✅ Job deleted successfully:', jobId);
-        
+        console.log("✅ Job deleted successfully:", jobId);
+
         // Update local jobs list by removing the deleted job
-        setRecruiterJobs(prevJobs => prevJobs.filter(job => 
-          job.id !== jobId && job._id !== jobId
-        ));
-        
+        setRecruiterJobs((prevJobs) =>
+          prevJobs.filter((job) => job.id !== jobId && job._id !== jobId)
+        );
+
         // Show success message
         alert(`Job has been deleted successfully!`);
       } else {
-        throw new Error(response.data.message || 'Failed to delete job');
+        throw new Error(response.data.message || "Failed to delete job");
       }
-      
     } catch (error) {
-      console.error('Error deleting job:', error);
-      alert('Failed to delete job. Please try again.');
+      console.error("Error deleting job:", error);
+      alert("Failed to delete job. Please try again.");
     } finally {
       setDeleting((prev) => ({ ...prev, [jobId]: false }));
     }
@@ -1792,29 +1442,30 @@ export const EnhancedJobsTab = ({
     setUpdating((prev) => ({ ...prev, [jobId]: true }));
     try {
       // Get current job to toggle its status
-      const currentJob = jobs.find(job => job.id === jobId || job._id === jobId);
+      const currentJob = jobs.find(
+        (job) => job.id === jobId || job._id === jobId
+      );
       if (!currentJob) {
-        throw new Error('Job not found');
+        throw new Error("Job not found");
       }
-      
+
       // Toggle between active and draft status
-      const newStatus = currentJob.status === 'active' ? 'draft' : 'active';
-      
+      const newStatus = currentJob.status === "active" ? "draft" : "active";
+
       // Import jobsAPI dynamically to avoid circular imports
       const { jobsAPI } = await import("../../services/api");
       const response = await jobsAPI.updateJob(jobId, { status: newStatus });
-      
+
       if (response.data.success) {
         alert(`Job status updated to ${newStatus} successfully!`);
         // Refresh the jobs list
         window.location.reload();
       } else {
-        throw new Error(response.data.message || 'Failed to update job');
+        throw new Error(response.data.message || "Failed to update job");
       }
-      
     } catch (error) {
-      console.error('Error updating job:', error);
-      alert('Failed to update job. Please try again.');
+      console.error("Error updating job:", error);
+      alert("Failed to update job. Please try again.");
     } finally {
       setUpdating((prev) => ({ ...prev, [jobId]: false }));
     }
@@ -1822,227 +1473,269 @@ export const EnhancedJobsTab = ({
 
   // Handle edit job (redirect to post tab with data)
   const handleEdit = (jobId) => {
-    console.log('🔍 Edit job clicked, jobId:', jobId);
-    console.log('🔍 Available jobs:', jobs);
-    console.log('🔍 Jobs length:', jobs?.length);
-    
-    const currentJob = jobs.find(job => job.id === jobId || job._id === jobId);
-    console.log('🔍 Found job for editing:', currentJob);
-    
+    console.log("🔍 Edit job clicked, jobId:", jobId);
+    console.log("🔍 Available jobs:", jobs);
+    console.log("🔍 Jobs length:", jobs?.length);
+
+    const currentJob = jobs.find(
+      (job) => job.id === jobId || job._id === jobId
+    );
+    console.log("🔍 Found job for editing:", currentJob);
+
     if (currentJob) {
       // Dispatch custom event to trigger edit in parent dashboard
-      const editEvent = new CustomEvent('editJob', {
-        detail: { job: currentJob }
+      const editEvent = new CustomEvent("editJob", {
+        detail: { job: currentJob },
       });
       window.dispatchEvent(editEvent);
-      console.log('✅ Edit event dispatched for job:', currentJob.jobTitle || currentJob.title);
-      console.log('✅ Event dispatched successfully');
+      console.log(
+        "✅ Edit event dispatched for job:",
+        currentJob.jobTitle || currentJob.title
+      );
+      console.log("✅ Event dispatched successfully");
     } else {
-      console.log('❌ Job not found for editing');
-      console.log('❌ Searched for jobId:', jobId);
-      console.log('❌ Available job IDs:', jobs?.map(j => ({ id: j.id, _id: j._id })));
-      alert('Job not found. Please refresh the page and try again.');
+      console.log("❌ Job not found for editing");
+      console.log("❌ Searched for jobId:", jobId);
+      console.log(
+        "❌ Available job IDs:",
+        jobs?.map((j) => ({ id: j.id, _id: j._id }))
+      );
+      alert("Job not found. Please refresh the page and try again.");
     }
   };
 
   // Handle apply to job
   const handleApply = (jobId) => {
-    const currentJob = jobs.find(job => job.id === jobId || job._id === jobId);
-    
+    const currentJob = jobs.find(
+      (job) => job.id === jobId || job._id === jobId
+    );
+
     if (currentJob && onApply) {
       onApply(currentJob);
     } else {
-      console.log('❌ No onApply callback provided or job not found');
+      console.log("❌ No onApply callback provided or job not found");
     }
   };
 
   // Handle save/favorite job
   const handleSaveJob = async (jobId, isSaved) => {
-    console.log('🔍 Save job clicked, jobId:', jobId, 'isSaved:', isSaved);
-    
+    console.log("🔍 Save job clicked, jobId:", jobId, "isSaved:", isSaved);
+
     try {
-      setSaving(prev => ({ ...prev, [jobId]: true }));
-      
-      const token = localStorage.getItem('token');
+      setSaving((prev) => ({ ...prev, [jobId]: true }));
+
+      const token = localStorage.getItem("token");
       if (!token) {
-        alert('Please login to save jobs');
+        alert("Please login to save jobs");
         return;
       }
 
       if (isSaved) {
         // Remove from favorites - need to find the saved job record ID first
         // For now, we'll use the job ID directly and let backend handle it
-        const response = await fetch(`${API_BASE_URL}/saved-jobs/by-job/${jobId}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+        const response = await fetch(
+          `${API_BASE_URL}/saved-jobs/by-job/${jobId}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
           }
-        });
+        );
 
         if (response.ok) {
-          console.log('✅ Job removed from favorites');
+          console.log("✅ Job removed from favorites");
           // Update local state
-          setSavedJobIds(prev => {
+          setSavedJobIds((prev) => {
             const newSet = new Set(prev);
             newSet.delete(jobId.toString());
             return newSet;
           });
         } else {
-          const error = await response.json().catch(() => ({ message: 'Failed to remove from favorites' }));
-          console.error('❌ Failed to remove from favorites:', error);
-          alert(error.message || 'Failed to remove from favorites');
+          const error = await response
+            .json()
+            .catch(() => ({ message: "Failed to remove from favorites" }));
+          console.error("❌ Failed to remove from favorites:", error);
+          alert(error.message || "Failed to remove from favorites");
         }
       } else {
         // Add to favorites - send the MongoDB ObjectId as string
         const response = await fetch(`${API_BASE_URL}/saved-jobs`, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
-          body: JSON.stringify({ 
-            job_id: typeof jobId === 'object' ? jobId.toString() : jobId 
-          })
+          body: JSON.stringify({
+            job_id: typeof jobId === "object" ? jobId.toString() : jobId,
+          }),
         });
 
         if (response.ok) {
-          console.log('✅ Job added to favorites');
+          console.log("✅ Job added to favorites");
           // Update local state
-          setSavedJobIds(prev => new Set([...prev, jobId.toString()]));
+          setSavedJobIds((prev) => new Set([...prev, jobId.toString()]));
         } else {
           const error = await response.json();
-          console.error('❌ Failed to add to favorites:', error);
+          console.error("❌ Failed to add to favorites:", error);
           if (response.status === 409) {
             // Already saved - just show message
-            alert('This job is already in your favorites');
+            alert("This job is already in your favorites");
           } else {
-            alert(error.message || 'Failed to add to favorites');
+            alert(error.message || "Failed to add to favorites");
           }
         }
       }
     } catch (error) {
-      console.error('❌ Error saving job:', error);
-      alert('An error occurred while saving the job');
+      console.error("❌ Error saving job:", error);
+      alert("An error occurred while saving the job");
     } finally {
-      setSaving(prev => ({ ...prev, [jobId]: false }));
+      setSaving((prev) => ({ ...prev, [jobId]: false }));
     }
   };
 
   const handleUpdateJob = async (jobId, updateData) => {
-    console.log('🔍 Updating job:', jobId, updateData);
-    
+    console.log("🔍 Updating job:", jobId, updateData);
+
     try {
-      setUpdating(prev => ({ ...prev, [jobId]: true }));
-      
+      setUpdating((prev) => ({ ...prev, [jobId]: true }));
+
       // Call API to update job
       const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify(updateData)
+        body: JSON.stringify(updateData),
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const result = await response.json();
-      console.log('✅ Job updated successfully:', result);
-      
+      console.log("✅ Job updated successfully:", result);
+
       // Update local jobs list
-      setRecruiterJobs(prevJobs => 
-        prevJobs.map(job => 
-          (job.id === jobId || job._id === jobId) 
+      setRecruiterJobs((prevJobs) =>
+        prevJobs.map((job) =>
+          job.id === jobId || job._id === jobId
             ? { ...job, ...updateData, id: job.id || job._id }
             : job
         )
       );
-      
+
       // Close modal
       setEditModal({ isOpen: false, job: null });
-      
+
       return result;
     } catch (error) {
-      console.error('❌ Error updating job:', error);
+      console.error("❌ Error updating job:", error);
       throw error;
     } finally {
-      setUpdating(prev => ({ ...prev, [jobId]: false }));
+      setUpdating((prev) => ({ ...prev, [jobId]: false }));
     }
   };
 
   // Handle view applications
   const handleViewApplications = async (jobId) => {
-    console.log('🔍 View applications for job:', jobId);
+    console.log("🔍 View applications for job:", jobId);
     try {
       // Import applicationsAPI dynamically to avoid circular imports
       const { applicationsAPI } = await import("../../services/api");
-      console.log('🔍 Calling API with jobId:', jobId);
-      
+      console.log("🔍 Calling API with jobId:", jobId);
+
       const response = await applicationsAPI.getApplicationsByJob(jobId);
-      console.log('🔍 API Response:', response);
-      console.log('🔍 API Response structure:', {
+      console.log("🔍 API Response:", response);
+      console.log("🔍 API Response structure:", {
         hasData: !!response.data,
         hasDataData: !!response.data?.data,
         hasApplications: !!response.data?.data?.applications,
         firstApp: response.data?.data?.applications?.[0],
-        firstAppSnapshot: response.data?.data?.applications?.[0]?.applicantSnapshot
+        firstAppSnapshot:
+          response.data?.data?.applications?.[0]?.applicantSnapshot,
       });
-      
-      const applications = response.data.data?.applications || response.data.applications || [];
-      console.log('🔍 Extracted applications:', applications);
-      console.log('🔍 First application has snapshot?', !!applications[0]?.applicantSnapshot);
-      console.log('🔍 First application fields:', applications[0] ? Object.keys(applications[0]) : 'No applications');
-      console.log('🔍 First application appliedAt:', applications[0]?.appliedAt);
-      console.log('🔍 First application createdAt:', applications[0]?.createdAt);
-      console.log('🔍 First application timeline:', applications[0]?.timeline);
-      
-      const currentJob = jobs.find(job => job.id === jobId || job._id === jobId);
-      console.log('🔍 Found job:', currentJob);
-      
+
+      const applications =
+        response.data.data?.applications || response.data.applications || [];
+      console.log("🔍 Extracted applications:", applications);
+      console.log(
+        "🔍 First application has snapshot?",
+        !!applications[0]?.applicantSnapshot
+      );
+      console.log(
+        "🔍 First application fields:",
+        applications[0] ? Object.keys(applications[0]) : "No applications"
+      );
+      console.log(
+        "🔍 First application appliedAt:",
+        applications[0]?.appliedAt
+      );
+      console.log(
+        "🔍 First application createdAt:",
+        applications[0]?.createdAt
+      );
+      console.log("🔍 First application timeline:", applications[0]?.timeline);
+
+      const currentJob = jobs.find(
+        (job) => job.id === jobId || job._id === jobId
+      );
+      console.log("🔍 Found job:", currentJob);
+
       // Open the applications modal with job and applications data
       setApplicationsModal({
         isOpen: true,
         job: currentJob,
-        applications: applications
+        applications: applications,
       });
-      
     } catch (error) {
-      console.error('Error fetching applications:', error);
-      alert('Failed to fetch applications. Please try again.');
+      console.error("Error fetching applications:", error);
+      alert("Failed to fetch applications. Please try again.");
     }
   };
 
   // Transform application data to candidate format for CandidateProfileModal
   const transformApplicationToCandidate = (app) => {
-    console.log('Transforming application:', app);
-    console.log('🔍 app.applicantSnapshot exists?', !!app.applicantSnapshot);
-    console.log('🔍 app.applicantSnapshot keys:', app.applicantSnapshot ? Object.keys(app.applicantSnapshot) : 'N/A');
-    console.log('🔍 app.applicantSnapshot.education:', app.applicantSnapshot?.education?.length || 0);
-    console.log('🔍 app.applicantSnapshot.workExperience:', app.applicantSnapshot?.workExperience?.length || 0);
-    console.log('🔍 app.applicantSnapshot.bio:', app.applicantSnapshot?.bio ? 'Present' : 'Missing');
-    
+    console.log("Transforming application:", app);
+    console.log("🔍 app.applicantSnapshot exists?", !!app.applicantSnapshot);
+    console.log(
+      "🔍 app.applicantSnapshot keys:",
+      app.applicantSnapshot ? Object.keys(app.applicantSnapshot) : "N/A"
+    );
+    console.log(
+      "🔍 app.applicantSnapshot.education:",
+      app.applicantSnapshot?.education?.length || 0
+    );
+    console.log(
+      "🔍 app.applicantSnapshot.workExperience:",
+      app.applicantSnapshot?.workExperience?.length || 0
+    );
+    console.log(
+      "🔍 app.applicantSnapshot.bio:",
+      app.applicantSnapshot?.bio ? "Present" : "Missing"
+    );
+
     // PRIORITY: Use applicantSnapshot if available (has complete data at application time)
     const snapshot = app.applicantSnapshot || {};
     const applicant = app.applicant || app.applicantId || {};
     const appInfo = app.applicationInfo || app.applicationData || {};
     const firstJob = appInfo.firstJob || appInfo.job || {};
-    
-    console.log('🔍 Job title field:', firstJob.jobTitle);
-    console.log('🔍 Company field:', firstJob.companyName);
-    console.log('🔍 Skills field:', firstJob.requiredSkills);
-    console.log('🔍 Salary field:', firstJob.salaryRange);
-    console.log('🔍 Job urgency field:', firstJob.jobUrgency);
-    console.log('🔍 Job urgency type:', typeof firstJob.jobUrgency);
-    
-    console.log('Applicant data:', applicant);
-    console.log('Application info:', appInfo);
-    console.log('Applicant skills:', applicant.skills);
-    console.log('Applicant socialLinks:', applicant.socialLinks);
-    console.log('Applicant portfolioLinks:', applicant.portfolioLinks);
-    
+
+    console.log("🔍 Job title field:", firstJob.jobTitle);
+    console.log("🔍 Company field:", firstJob.companyName);
+    console.log("🔍 Skills field:", firstJob.requiredSkills);
+    console.log("🔍 Salary field:", firstJob.salaryRange);
+    console.log("🔍 Job urgency field:", firstJob.jobUrgency);
+    console.log("🔍 Job urgency type:", typeof firstJob.jobUrgency);
+
+    console.log("Applicant data:", applicant);
+    console.log("Application info:", appInfo);
+    console.log("Applicant skills:", applicant.skills);
+    console.log("Applicant socialLinks:", applicant.socialLinks);
+    console.log("Applicant portfolioLinks:", applicant.portfolioLinks);
+
     // Extract structured data from applicationInfo
     const basicInfo = appInfo.basicInfo || {};
     const experience = appInfo.experience || {};
@@ -2050,213 +1743,326 @@ export const EnhancedJobsTab = ({
     const skills = appInfo.skills || {};
     const socialLinks = appInfo.socialLinks || {};
     const education = appInfo.education || [];
-    
-    console.log('🔍 Extracted appInfo:', appInfo);
-    console.log('🔍 Extracted basicInfo:', basicInfo);
-    console.log('🔍 Extracted experience:', experience);
-    console.log('🔍 Extracted expectedSalary:', expectedSalary);
-    console.log('🔍 Applicant yearsOfExperience:', applicant.yearsOfExperience);
-    console.log('🔍 Applicant experience_years:', applicant.experience_years);
-    console.log('🔍 Applicant expectedSalary:', applicant.expectedSalary);
-    console.log('🔍 Applicant careerInfo:', applicant.careerInfo);
-    console.log('🔍 Extracted skills from appInfo:', skills);
-    console.log('🔍 Extracted socialLinks from appInfo:', socialLinks);
-    
+
+    console.log("🔍 Extracted appInfo:", appInfo);
+    console.log("🔍 Extracted basicInfo:", basicInfo);
+    console.log("🔍 Extracted experience:", experience);
+    console.log("🔍 Extracted expectedSalary:", expectedSalary);
+    console.log("🔍 Applicant yearsOfExperience:", applicant.yearsOfExperience);
+    console.log("🔍 Applicant experience_years:", applicant.experience_years);
+    console.log("🔍 Applicant expectedSalary:", applicant.expectedSalary);
+    console.log("🔍 Applicant careerInfo:", applicant.careerInfo);
+    console.log("🔍 Extracted skills from appInfo:", skills);
+    console.log("🔍 Extracted socialLinks from appInfo:", socialLinks);
+
     // PRIORITY 1: Use applicantSnapshot (complete data at application time)
     // PRIORITY 2: Use applicant/applicantId (current profile)
     // PRIORITY 3: Use appInfo (application form data)
-    
+
     return {
       // ID - Try multiple sources
-      id: app.applicantId?._id || app.applicantId?.id || app.applicant?._id || app.applicant?.id || app._id,
-      
+      id:
+        app.applicantId?._id ||
+        app.applicantId?.id ||
+        app.applicant?._id ||
+        app.applicant?.id ||
+        app._id,
+
       // Basic Information - Prioritize snapshot
-      name: snapshot.firstName && snapshot.lastName
-        ? `${snapshot.firstName} ${snapshot.lastName}`
-        : basicInfo.firstName && basicInfo.lastName 
-        ? `${basicInfo.firstName} ${basicInfo.lastName}`
-        : applicant.fullName || applicant.name || `${applicant.firstName || ''} ${applicant.lastName || ''}`.trim() || 'Unknown Applicant',
-      email: snapshot.email || basicInfo.email || applicant.email || 'No email provided',
-      phone: snapshot.phone || basicInfo.phone || applicant.phone || 'No phone provided',
-      location: snapshot.location || applicant.location || appInfo.personalInfo?.location || 'Location not specified',
-      
+      name:
+        snapshot.firstName && snapshot.lastName
+          ? `${snapshot.firstName} ${snapshot.lastName}`
+          : basicInfo.firstName && basicInfo.lastName
+          ? `${basicInfo.firstName} ${basicInfo.lastName}`
+          : applicant.fullName ||
+            applicant.name ||
+            `${applicant.firstName || ""} ${applicant.lastName || ""}`.trim() ||
+            "Unknown Applicant",
+      email:
+        snapshot.email ||
+        basicInfo.email ||
+        applicant.email ||
+        "No email provided",
+      phone:
+        snapshot.phone ||
+        basicInfo.phone ||
+        applicant.phone ||
+        "No phone provided",
+      location:
+        snapshot.location ||
+        applicant.location ||
+        appInfo.personalInfo?.location ||
+        "Location not specified",
+
       // Professional Information - Prioritize snapshot
-      currentRole: snapshot.currentJobTitle || experience.currentJob?.jobTitle || applicant.currentJobTitle || 'Not specified',
-      
+      currentRole:
+        snapshot.currentJobTitle ||
+        experience.currentJob?.jobTitle ||
+        applicant.currentJobTitle ||
+        "Not specified",
+
       // Bio/Summary - Prioritize snapshot
-      bio: snapshot.bio || snapshot.professionalSummary || applicant.bio || applicant.professionalSummary || '',
-      
+      bio:
+        snapshot.bio ||
+        snapshot.professionalSummary ||
+        applicant.bio ||
+        applicant.professionalSummary ||
+        "",
+
       // Experience data - Prioritize snapshot
       experience: snapshot.experience
-        ? (typeof snapshot.experience === 'number' ? `${snapshot.experience} years` : snapshot.experience)
+        ? typeof snapshot.experience === "number"
+          ? `${snapshot.experience} years`
+          : snapshot.experience
         : snapshot.yearsOfExperience
         ? `${snapshot.yearsOfExperience} years`
-        : experience.totalYears 
+        : experience.totalYears
         ? `${experience.totalYears} years`
-        : basicInfo.experienceYears 
+        : basicInfo.experienceYears
         ? `${basicInfo.experienceYears} years`
-        : applicant.yearsOfExperience 
+        : applicant.yearsOfExperience
         ? `${applicant.yearsOfExperience} years`
-        : applicant.experience_years 
+        : applicant.experience_years
         ? `${applicant.experience_years} years`
-        : app.applicationData?.experience || 'Not specified',
-      
+        : app.applicationData?.experience || "Not specified",
+
       // Expected Salary - Prioritize snapshot
       expectedSalary: snapshot.expectedSalary
         ? snapshot.expectedSalary
-        : expectedSalary.displayText 
+        : expectedSalary.displayText
         ? expectedSalary.displayText
-        : expectedSalary.rawSalaryText 
+        : expectedSalary.rawSalaryText
         ? expectedSalary.rawSalaryText
         : expectedSalary.salaryRange?.min && expectedSalary.salaryRange?.max
-        ? `₹${expectedSalary.salaryRange.min}K - ₹${expectedSalary.salaryRange.max}K ${expectedSalary.salaryRange.period || 'yearly'}`
+        ? `₹${expectedSalary.salaryRange.min}K - ₹${
+            expectedSalary.salaryRange.max
+          }K ${expectedSalary.salaryRange.period || "yearly"}`
         : expectedSalary.salaryRange?.min
-        ? `₹${expectedSalary.salaryRange.min}K+ ${expectedSalary.salaryRange.period || 'yearly'}`
-        : basicInfo.expectedSalary || applicant.expectedSalary || applicant.careerInfo?.expectedSalary || app.applicationData?.expectedSalary || 'Not specified',
-      
+        ? `₹${expectedSalary.salaryRange.min}K+ ${
+            expectedSalary.salaryRange.period || "yearly"
+          }`
+        : basicInfo.expectedSalary ||
+          applicant.expectedSalary ||
+          applicant.careerInfo?.expectedSalary ||
+          app.applicationData?.expectedSalary ||
+          "Not specified",
+
       // Skills data - PRIORITIZE snapshot
       skills: [
         // PRIORITY 1: From applicantSnapshot (complete data at application time)
-        ...(snapshot.skills?.primary?.map(s => s.skill || s) || []),
-        ...(snapshot.skills?.technical?.map(s => s.skill || s) || []),
-        ...(snapshot.skills?.soft?.map(s => s.skill || s) || []),
+        ...(snapshot.skills?.primary?.map((s) => s.skill || s) || []),
+        ...(snapshot.skills?.technical?.map((s) => s.skill || s) || []),
+        ...(snapshot.skills?.soft?.map((s) => s.skill || s) || []),
         ...(Array.isArray(snapshot.skills) ? snapshot.skills : []),
-        
+
         // PRIORITY 2: From ApplicationInformation
-        ...(skills.primary?.map(s => s.skill || s) || []),
-        ...(skills.technical?.map(s => s.skill || s) || []),
-        ...(skills.soft?.map(s => s.skill || s) || []),
-        
+        ...(skills.primary?.map((s) => s.skill || s) || []),
+        ...(skills.technical?.map((s) => s.skill || s) || []),
+        ...(skills.soft?.map((s) => s.skill || s) || []),
+
         // PRIORITY 3: From user profile (current profile data)
-        ...(applicant.skills?.primary?.map(s => s.skill || s) || []),
-        ...(applicant.skills?.technical?.map(s => s.skill || s) || []),
-        ...(applicant.skills?.soft?.map(s => s.skill || s) || []),
+        ...(applicant.skills?.primary?.map((s) => s.skill || s) || []),
+        ...(applicant.skills?.technical?.map((s) => s.skill || s) || []),
+        ...(applicant.skills?.soft?.map((s) => s.skill || s) || []),
         ...(Array.isArray(applicant.skills) ? applicant.skills : []),
-        
+
         // Fallbacks
         ...(basicInfo.skills || []),
         ...(app.applicationData?.skills || []),
         ...(applicant.primary_skills || []),
-        ...(applicant.skills_array || [])
+        ...(applicant.skills_array || []),
       ].filter(Boolean),
-      
+
       // Education data - PRIORITIZE snapshot
-      education: snapshot.education && snapshot.education.length > 0
-        ? snapshot.education
-        : education.length > 0 
-        ? education 
-        : applicant.education || [],
-      
+      education:
+        snapshot.education && snapshot.education.length > 0
+          ? snapshot.education
+          : education.length > 0
+          ? education
+          : applicant.education || [],
+
       // Work experience data - PRIORITIZE snapshot
-      workExperience: snapshot.workExperience && snapshot.workExperience.length > 0
-        ? snapshot.workExperience
-        : appInfo.workExperience || applicant.workExperience || [],
-      
+      workExperience:
+        snapshot.workExperience && snapshot.workExperience.length > 0
+          ? snapshot.workExperience
+          : appInfo.workExperience || applicant.workExperience || [],
+
       // Portfolio links - combine from multiple sources
       portfolioLinks: [
         // From ApplicationInformation (application-time snapshot)
-        socialLinks.portfolio?.url && { type: 'Portfolio', url: socialLinks.portfolio.url, label: 'Personal Portfolio' },
-        socialLinks.linkedin?.url && { type: 'LinkedIn', url: socialLinks.linkedin.url, label: 'LinkedIn Profile' },
-        socialLinks.github?.url && { type: 'GitHub', url: socialLinks.github.url, label: 'GitHub Profile' },
-        socialLinks.personalWebsite && { type: 'Website', url: socialLinks.personalWebsite, label: 'Personal Website' },
-        
+        socialLinks.portfolio?.url && {
+          type: "Portfolio",
+          url: socialLinks.portfolio.url,
+          label: "Personal Portfolio",
+        },
+        socialLinks.linkedin?.url && {
+          type: "LinkedIn",
+          url: socialLinks.linkedin.url,
+          label: "LinkedIn Profile",
+        },
+        socialLinks.github?.url && {
+          type: "GitHub",
+          url: socialLinks.github.url,
+          label: "GitHub Profile",
+        },
+        socialLinks.personalWebsite && {
+          type: "Website",
+          url: socialLinks.personalWebsite,
+          label: "Personal Website",
+        },
+
         // From user profile (current profile data)
-        applicant.socialLinks?.portfolio && { type: 'Portfolio', url: applicant.socialLinks.portfolio, label: 'Personal Portfolio' },
-        applicant.socialLinks?.linkedin && { type: 'LinkedIn', url: applicant.socialLinks.linkedin, label: 'LinkedIn Profile' },
-        applicant.socialLinks?.github && { type: 'GitHub', url: applicant.socialLinks.github, label: 'GitHub Profile' },
-        applicant.socialLinks?.website && { type: 'Website', url: applicant.socialLinks.website, label: 'Personal Website' },
-        
+        applicant.socialLinks?.portfolio && {
+          type: "Portfolio",
+          url: applicant.socialLinks.portfolio,
+          label: "Personal Portfolio",
+        },
+        applicant.socialLinks?.linkedin && {
+          type: "LinkedIn",
+          url: applicant.socialLinks.linkedin,
+          label: "LinkedIn Profile",
+        },
+        applicant.socialLinks?.github && {
+          type: "GitHub",
+          url: applicant.socialLinks.github,
+          label: "GitHub Profile",
+        },
+        applicant.socialLinks?.website && {
+          type: "Website",
+          url: applicant.socialLinks.website,
+          label: "Personal Website",
+        },
+
         // From portfolioLinks field (if exists)
-        ...(applicant.portfolioLinks?.map(link => ({
-          type: link.type || 'Link',
+        ...(applicant.portfolioLinks?.map((link) => ({
+          type: link.type || "Link",
           url: link.url,
-          label: link.label || link.title || 'Portfolio Link'
+          label: link.label || link.title || "Portfolio Link",
         })) || []),
-        
+
         // From application data (fallback)
-        app.applicationData?.portfolioUrl && { type: 'Portfolio', url: app.applicationData.portfolioUrl, label: 'Personal Portfolio' },
-        app.applicationData?.linkedinUrl && { type: 'LinkedIn', url: app.applicationData.linkedinUrl, label: 'LinkedIn Profile' },
-        app.applicationData?.githubUrl && { type: 'GitHub', url: app.applicationData.githubUrl, label: 'GitHub Profile' },
-        
+        app.applicationData?.portfolioUrl && {
+          type: "Portfolio",
+          url: app.applicationData.portfolioUrl,
+          label: "Personal Portfolio",
+        },
+        app.applicationData?.linkedinUrl && {
+          type: "LinkedIn",
+          url: app.applicationData.linkedinUrl,
+          label: "LinkedIn Profile",
+        },
+        app.applicationData?.githubUrl && {
+          type: "GitHub",
+          url: app.applicationData.githubUrl,
+          label: "GitHub Profile",
+        },
+
         // From basicInfo social links
-        basicInfo.linkedin && { type: 'LinkedIn', url: basicInfo.linkedin, label: 'LinkedIn Profile' },
-        basicInfo.github && { type: 'GitHub', url: basicInfo.github, label: 'GitHub Profile' },
-        basicInfo.portfolio && { type: 'Portfolio', url: basicInfo.portfolio, label: 'Personal Portfolio' }
+        basicInfo.linkedin && {
+          type: "LinkedIn",
+          url: basicInfo.linkedin,
+          label: "LinkedIn Profile",
+        },
+        basicInfo.github && {
+          type: "GitHub",
+          url: basicInfo.github,
+          label: "GitHub Profile",
+        },
+        basicInfo.portfolio && {
+          type: "Portfolio",
+          url: basicInfo.portfolio,
+          label: "Personal Portfolio",
+        },
       ].filter(Boolean),
-      
+
       // Application specific data
       // Extract applied date from timeline if appliedAt/createdAt not available
-      appliedAt: app.appliedAt || app.createdAt || app.timeline?.find(t => t.status === 'applied')?.timestamp || app.timeline?.[0]?.timestamp,
-      appliedDate: app.appliedAt ? new Date(app.appliedAt).toLocaleDateString() : 
-                   app.createdAt ? new Date(app.createdAt).toLocaleDateString() :
-                   app.timeline?.find(t => t.status === 'applied')?.timestamp ? new Date(app.timeline.find(t => t.status === 'applied').timestamp).toLocaleDateString() :
-                   app.timeline?.[0]?.timestamp ? new Date(app.timeline[0].timestamp).toLocaleDateString() : 'Unknown',
-      status: app.applicationStatus || app.status || 'pending',
-      summary: basicInfo.bio || app.coverLetter || applicant.bio || 'No summary provided',
+      appliedAt:
+        app.appliedAt ||
+        app.createdAt ||
+        app.timeline?.find((t) => t.status === "applied")?.timestamp ||
+        app.timeline?.[0]?.timestamp,
+      appliedDate: app.appliedAt
+        ? new Date(app.appliedAt).toLocaleDateString()
+        : app.createdAt
+        ? new Date(app.createdAt).toLocaleDateString()
+        : app.timeline?.find((t) => t.status === "applied")?.timestamp
+        ? new Date(
+            app.timeline.find((t) => t.status === "applied").timestamp
+          ).toLocaleDateString()
+        : app.timeline?.[0]?.timestamp
+        ? new Date(app.timeline[0].timestamp).toLocaleDateString()
+        : "Unknown",
+      status: app.applicationStatus || app.status || "pending",
+      summary:
+        basicInfo.bio ||
+        app.coverLetter ||
+        applicant.bio ||
+        "No summary provided",
       rating: 4, // Default rating
-      notes: app.notes || '',
-      isShortlisted: (app.applicationStatus || app.status) === 'shortlisted'
+      notes: app.notes || "",
+      isShortlisted: (app.applicationStatus || app.status) === "shortlisted",
     };
   };
 
   // Handle schedule interview
   const handleScheduleInterview = (application, job) => {
-    console.log('📅 Scheduling interview for:', application, job);
-    
+    console.log("📅 Scheduling interview for:", application, job);
+
     // Transform application to candidate format
     const candidate = transformApplicationToCandidate(application);
-    
+
     setScheduleInterviewModal({
       isOpen: true,
       candidate: candidate,
       job: job,
-      application: application
+      application: application,
     });
   };
 
   // Handle view candidate profile
   const handleViewCandidate = (app) => {
-    console.log('🔍 Viewing candidate profile for:', app);
-    console.log('🔍 app.appliedAt:', app.appliedAt);
-    console.log('🔍 app.createdAt:', app.createdAt);
+    console.log("🔍 Viewing candidate profile for:", app);
+    console.log("🔍 app.appliedAt:", app.appliedAt);
+    console.log("🔍 app.createdAt:", app.createdAt);
     const candidateData = transformApplicationToCandidate(app);
-    console.log('🔍 Transformed candidate data:', candidateData);
-    console.log('🔍 candidateData.appliedAt:', candidateData.appliedAt);
-    console.log('🔍 candidateData.appliedDate:', candidateData.appliedDate);
+    console.log("🔍 Transformed candidate data:", candidateData);
+    console.log("🔍 candidateData.appliedAt:", candidateData.appliedAt);
+    console.log("🔍 candidateData.appliedDate:", candidateData.appliedDate);
     setCandidateModal({ isOpen: true, candidate: candidateData });
   };
 
   // Handle contact candidate
   const handleContactCandidate = (candidate) => {
-    console.log('📞 Opening contact modal for:', candidate);
+    console.log("📞 Opening contact modal for:", candidate);
     setContactModal({ isOpen: true, candidate });
   };
 
   // Handle send email
   const handleSendEmail = async (emailData) => {
     try {
-      console.log('📧 Sending email:', emailData);
+      console.log("📧 Sending email:", emailData);
       const response = await communicationsAPI.sendEmail(emailData);
-      console.log('✅ Email sent successfully:', response);
-      
+      console.log("✅ Email sent successfully:", response);
+
       // Show success message
       toast({
         title: "Email Sent Successfully!",
         description: `Email sent to ${emailData.to}`,
         variant: "default",
       });
-      
+
       return response;
     } catch (error) {
-      console.error('❌ Failed to send email:', error);
-      
+      console.error("❌ Failed to send email:", error);
+
       // Show error message
       toast({
         title: "Failed to Send Email",
-        description: error.message || 'Please try again later',
+        description: error.message || "Please try again later",
         variant: "destructive",
       });
-      
+
       throw error;
     }
   };
@@ -2264,42 +2070,43 @@ export const EnhancedJobsTab = ({
   // Handle send message/SMS
   const handleSendMessage = async (candidate) => {
     try {
-      console.log('📱 Sending message to:', candidate);
-      
+      console.log("📱 Sending message to:", candidate);
+
       if (!candidate.phone) {
-        throw new Error('No phone number available for this candidate');
+        throw new Error("No phone number available for this candidate");
       }
 
       // For now, we'll open the default SMS app
       const message = `Hi ${candidate.name}, I'm interested in discussing a job opportunity with you. Please let me know if you're available for a conversation.`;
-      const smsUrl = `sms:${candidate.phone}?body=${encodeURIComponent(message)}`;
-      
+      const smsUrl = `sms:${candidate.phone}?body=${encodeURIComponent(
+        message
+      )}`;
+
       // Try to open SMS app
-      window.open(smsUrl, '_self');
-      
+      window.open(smsUrl, "_self");
+
       // Also send via our API if available
       try {
         const response = await communicationsAPI.sendSMS({
           to: candidate.phone,
-          message: message
+          message: message,
         });
-        console.log('✅ SMS sent via API:', response);
+        console.log("✅ SMS sent via API:", response);
       } catch (apiError) {
-        console.log('ℹ️ SMS API not available, opened default SMS app');
+        console.log("ℹ️ SMS API not available, opened default SMS app");
       }
-      
+
       toast({
         title: "SMS App Opened",
         description: `Message prepared for ${candidate.name}`,
         variant: "default",
       });
-      
     } catch (error) {
-      console.error('❌ Failed to send message:', error);
-      
+      console.error("❌ Failed to send message:", error);
+
       toast({
         title: "Failed to Send Message",
-        description: error.message || 'Please try again later',
+        description: error.message || "Please try again later",
         variant: "destructive",
       });
     }
@@ -2402,14 +2209,14 @@ export const EnhancedJobsTab = ({
           {/* Jobs Display */}
           {viewMode === "table" ? (
             /* Table View */
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-              <div 
-                className="overflow-x-auto max-w-full" 
-                style={{ 
-                  scrollbarWidth: 'thin',
-                  scrollBehavior: 'smooth',
-                  maxWidth: '100%',
-                  overflowY: 'visible'
+            <div className="bg-white dark:bg-gray-800 rounded-md shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div
+                className="overflow-x-auto max-w-full"
+                style={{
+                  scrollbarWidth: "thin",
+                  scrollBehavior: "smooth",
+                  maxWidth: "100%",
+                  overflowY: "visible",
                 }}
               >
                 <table className="w-full table-fixed">
@@ -2457,7 +2264,10 @@ export const EnhancedJobsTab = ({
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700" style={{ position: 'relative' }}>
+                  <tbody
+                    className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
+                    style={{ position: "relative" }}
+                  >
                     {displayedJobs.map((job, index) => (
                       <motion.tr
                         key={job.id}
@@ -2482,21 +2292,27 @@ export const EnhancedJobsTab = ({
                                     {skill}
                                   </span>
                                 ))}
-                              {(job.requiredSkills || job.skills || [])?.length > 2 && (
+                              {(job.requiredSkills || job.skills || [])
+                                ?.length > 2 && (
                                 <span className="text-xs text-gray-500 dark:text-gray-400">
-                                  +{(job.requiredSkills || job.skills || []).length - 2}
+                                  +
+                                  {(job.requiredSkills || job.skills || [])
+                                    .length - 2}
                                 </span>
                               )}
                             </div>
                             <div className="text-xs text-gray-600 dark:text-gray-400">
-                              {job.industry || 'Not specified'}
+                              {job.industry || "Not specified"}
                             </div>
                           </div>
                         </td>
                         {userRole === "applicant" && (
                           <td className="px-6 py-5">
                             <div className="text-sm font-medium text-gray-900 dark:text-white mb-2">
-                              {job.companyName || job.company || job.companyInfo?.companyName || 'Not specified'}
+                              {job.companyName ||
+                                job.company ||
+                                job.companyInfo?.companyName ||
+                                "Not specified"}
                             </div>
                             <div className="text-xs text-gray-600 dark:text-gray-400 flex items-center">
                               <span className="mr-1">📍</span>
@@ -2508,13 +2324,23 @@ export const EnhancedJobsTab = ({
                           <div className="text-sm text-gray-900 dark:text-white flex items-center gap-1.5">
                             <span className="mr-1">💰</span>
                             <span className="truncate">
-                              {job.salary || job.formattedSalary || 
-                               (job.salaryRange?.min && job.salaryRange?.max ? 
-                                `₹${(job.salaryRange.min / 100000).toFixed(1)}L - ₹${(job.salaryRange.max / 100000).toFixed(1)}L` :
-                                job.salaryRange?.min ? 
-                                `₹${(job.salaryRange.min / 100000).toFixed(1)}L+` : 
-                                (job.salaryMin && job.salaryMax ? `₹${job.salaryMin}-${job.salaryMax}` : 
-                                 job.salaryMin ? `₹${job.salaryMin}+` : 'Negotiable'))}
+                              {job.salary ||
+                                job.formattedSalary ||
+                                (job.salaryRange?.min && job.salaryRange?.max
+                                  ? `₹${(job.salaryRange.min / 100000).toFixed(
+                                      1
+                                    )}L - ₹${(
+                                      job.salaryRange.max / 100000
+                                    ).toFixed(1)}L`
+                                  : job.salaryRange?.min
+                                  ? `₹${(job.salaryRange.min / 100000).toFixed(
+                                      1
+                                    )}L+`
+                                  : job.salaryMin && job.salaryMax
+                                  ? `₹${job.salaryMin}-${job.salaryMax}`
+                                  : job.salaryMin
+                                  ? `₹${job.salaryMin}+`
+                                  : "Negotiable")}
                             </span>
                           </div>
                         </td>
@@ -2522,29 +2348,41 @@ export const EnhancedJobsTab = ({
                           <div className="space-y-2.5">
                             {/* Job Type */}
                             <div className="flex items-center gap-1.5">
-                              <span className="text-xs text-gray-500 dark:text-gray-400 font-medium w-10">Type:</span>
+                              <span className="text-xs text-gray-500 dark:text-gray-400 font-medium w-10">
+                                Type:
+                              </span>
                               <span className="px-2.5 py-0.5 inline-flex text-xs font-semibold rounded-md bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                {job.jobType || job.type || 'N/A'}
+                                {job.jobType || job.type || "N/A"}
                               </span>
                             </div>
                             {/* Work Mode */}
                             <div className="flex items-center gap-1.5">
-                              <span className="text-xs text-gray-500 dark:text-gray-400 font-medium w-10">Mode:</span>
-                              <span className={`px-2.5 py-0.5 inline-flex items-center gap-1 text-xs font-semibold rounded-md ${
-                                job.workArrangement === 'remote' 
-                                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' 
-                                  : job.workArrangement === 'hybrid'
-                                  ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-                                  : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-                              }`}>
-                                {job.workArrangement === 'remote' ? (
+                              <span className="text-xs text-gray-500 dark:text-gray-400 font-medium w-10">
+                                Mode:
+                              </span>
+                              <span
+                                className={`px-2.5 py-0.5 inline-flex items-center gap-1 text-xs font-semibold rounded-md ${
+                                  job.workArrangement?.toLowerCase() ===
+                                  "remote"
+                                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                                    : job.workArrangement?.toLowerCase() ===
+                                      "hybrid"
+                                    ? "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+                                    : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+                                }`}
+                              >
+                                {job.workArrangement?.toLowerCase() ===
+                                "remote" ? (
                                   <>🏠 Remote</>
-                                ) : job.workArrangement === 'hybrid' ? (
+                                ) : job.workArrangement?.toLowerCase() ===
+                                  "hybrid" ? (
                                   <>🔄 Hybrid</>
-                                ) : job.workArrangement === 'onsite' ? (
+                                ) : job.workArrangement
+                                    ?.toLowerCase()
+                                    .includes("site") ? (
                                   <>🏢 Onsite</>
                                 ) : (
-                                  <>🏢 Onsite</>
+                                  <>{job.workArrangement || "Onsite"}</>
                                 )}
                               </span>
                             </div>
@@ -2553,14 +2391,17 @@ export const EnhancedJobsTab = ({
                         <td className="px-6 py-5">
                           <div className="text-sm text-gray-900 dark:text-white">
                             {(() => {
-                              if (!job.experience) return 'Not specified';
-                              if (typeof job.experience === 'object') {
-                                if (job.experience.min !== undefined && job.experience.max !== undefined) {
+                              if (!job.experience) return "Not specified";
+                              if (typeof job.experience === "object") {
+                                if (
+                                  job.experience.min !== undefined &&
+                                  job.experience.max !== undefined
+                                ) {
                                   return `${job.experience.min}-${job.experience.max} yrs`;
                                 } else if (job.experience.min !== undefined) {
                                   return `${job.experience.min}+ yrs`;
                                 }
-                                return 'Not specified';
+                                return "Not specified";
                               }
                               return job.experience;
                             })()}
@@ -2572,11 +2413,15 @@ export const EnhancedJobsTab = ({
                               <div className="flex items-center gap-3">
                                 <div className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900">
                                   <span className="text-base font-bold text-blue-600 dark:text-blue-300">
-                                    {job.applicantsCount || job.applications?.length || 0}
+                                    {job.applicantsCount ||
+                                      job.applications?.length ||
+                                      0}
                                   </span>
                                 </div>
                                 <div className="text-xs text-gray-600 dark:text-gray-400 font-medium">
-                                  {job.applicantsCount === 1 ? 'Applicant' : 'Applicants'}
+                                  {job.applicantsCount === 1
+                                    ? "Applicant"
+                                    : "Applicants"}
                                 </div>
                               </div>
                             </td>
@@ -2585,28 +2430,60 @@ export const EnhancedJobsTab = ({
                                 {job.applicationDeadline ? (
                                   <div className="flex flex-col gap-1.5">
                                     <span className="font-medium text-sm">
-                                      {new Date(job.applicationDeadline).toLocaleDateString('en-US', { 
-                                        month: 'short', 
-                                        day: 'numeric',
-                                        year: 'numeric'
+                                      {new Date(
+                                        job.applicationDeadline
+                                      ).toLocaleDateString("en-US", {
+                                        month: "short",
+                                        day: "numeric",
+                                        year: "numeric",
                                       })}
                                     </span>
                                     <span className="text-xs font-medium">
                                       {(() => {
-                                        const deadline = new Date(job.applicationDeadline);
+                                        const deadline = new Date(
+                                          job.applicationDeadline
+                                        );
                                         const today = new Date();
                                         const diffTime = deadline - today;
-                                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                                        if (diffDays < 0) return <span className="text-red-600 dark:text-red-400">⚠️ Expired</span>;
-                                        if (diffDays === 0) return <span className="text-red-600 dark:text-red-400">🔴 Today</span>;
-                                        if (diffDays === 1) return <span className="text-yellow-600 dark:text-yellow-400">🟡 Tomorrow</span>;
-                                        if (diffDays <= 7) return <span className="text-yellow-600 dark:text-yellow-400">🟡 {diffDays} days left</span>;
-                                        return <span className="text-green-600 dark:text-green-400">🟢 {diffDays} days left</span>;
+                                        const diffDays = Math.ceil(
+                                          diffTime / (1000 * 60 * 60 * 24)
+                                        );
+                                        if (diffDays < 0)
+                                          return (
+                                            <span className="text-red-600 dark:text-red-400">
+                                              ⚠️ Expired
+                                            </span>
+                                          );
+                                        if (diffDays === 0)
+                                          return (
+                                            <span className="text-red-600 dark:text-red-400">
+                                              🔴 Today
+                                            </span>
+                                          );
+                                        if (diffDays === 1)
+                                          return (
+                                            <span className="text-yellow-600 dark:text-yellow-400">
+                                              🟡 Tomorrow
+                                            </span>
+                                          );
+                                        if (diffDays <= 7)
+                                          return (
+                                            <span className="text-yellow-600 dark:text-yellow-400">
+                                              🟡 {diffDays} days left
+                                            </span>
+                                          );
+                                        return (
+                                          <span className="text-green-600 dark:text-green-400">
+                                            🟢 {diffDays} days left
+                                          </span>
+                                        );
                                       })()}
                                     </span>
                                   </div>
                                 ) : (
-                                  <span className="text-gray-500 dark:text-gray-400">No deadline</span>
+                                  <span className="text-gray-500 dark:text-gray-400">
+                                    No deadline
+                                  </span>
                                 )}
                               </div>
                             </td>
@@ -2620,34 +2497,48 @@ export const EnhancedJobsTab = ({
                                 {job.createdAt || job.postedDate ? (
                                   <div className="flex flex-col gap-1.5">
                                     <span className="font-medium text-sm">
-                                      {new Date(job.createdAt || job.postedDate).toLocaleDateString('en-US', { 
-                                        month: 'short', 
-                                        day: 'numeric',
-                                        year: 'numeric'
+                                      {new Date(
+                                        job.createdAt || job.postedDate
+                                      ).toLocaleDateString("en-US", {
+                                        month: "short",
+                                        day: "numeric",
+                                        year: "numeric",
                                       })}
                                     </span>
                                     <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
                                       {(() => {
-                                        const posted = new Date(job.createdAt || job.postedDate);
+                                        const posted = new Date(
+                                          job.createdAt || job.postedDate
+                                        );
                                         const today = new Date();
-                                        
+
                                         // Normalize dates to midnight for accurate day comparison
                                         posted.setHours(0, 0, 0, 0);
                                         today.setHours(0, 0, 0, 0);
-                                        
+
                                         const diffTime = today - posted;
-                                        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                                        
-                                        if (diffDays === 0) return 'Today';
-                                        if (diffDays === 1) return 'Yesterday';
-                                        if (diffDays < 7) return `${diffDays} days ago`;
-                                        if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-                                        return `${Math.floor(diffDays / 30)} months ago`;
+                                        const diffDays = Math.floor(
+                                          diffTime / (1000 * 60 * 60 * 24)
+                                        );
+
+                                        if (diffDays === 0) return "Today";
+                                        if (diffDays === 1) return "Yesterday";
+                                        if (diffDays < 7)
+                                          return `${diffDays} days ago`;
+                                        if (diffDays < 30)
+                                          return `${Math.floor(
+                                            diffDays / 7
+                                          )} weeks ago`;
+                                        return `${Math.floor(
+                                          diffDays / 30
+                                        )} months ago`;
                                       })()}
                                     </span>
                                   </div>
                                 ) : (
-                                  <span className="text-gray-500 dark:text-gray-400">Recently</span>
+                                  <span className="text-gray-500 dark:text-gray-400">
+                                    Recently
+                                  </span>
                                 )}
                               </div>
                             </td>
@@ -2657,28 +2548,60 @@ export const EnhancedJobsTab = ({
                                 {job.applicationDeadline ? (
                                   <div className="flex flex-col gap-1.5">
                                     <span className="font-medium text-sm">
-                                      {new Date(job.applicationDeadline).toLocaleDateString('en-US', { 
-                                        month: 'short', 
-                                        day: 'numeric',
-                                        year: 'numeric'
+                                      {new Date(
+                                        job.applicationDeadline
+                                      ).toLocaleDateString("en-US", {
+                                        month: "short",
+                                        day: "numeric",
+                                        year: "numeric",
                                       })}
                                     </span>
                                     <span className="text-xs font-medium">
                                       {(() => {
-                                        const deadline = new Date(job.applicationDeadline);
+                                        const deadline = new Date(
+                                          job.applicationDeadline
+                                        );
                                         const today = new Date();
                                         const diffTime = deadline - today;
-                                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                                        if (diffDays < 0) return <span className="text-red-600 dark:text-red-400">⚠️ Expired</span>;
-                                        if (diffDays === 0) return <span className="text-red-600 dark:text-red-400">🔴 Today</span>;
-                                        if (diffDays === 1) return <span className="text-yellow-600 dark:text-yellow-400">🟡 Tomorrow</span>;
-                                        if (diffDays <= 7) return <span className="text-yellow-600 dark:text-yellow-400">🟡 {diffDays} days left</span>;
-                                        return <span className="text-green-600 dark:text-green-400">🟢 {diffDays} days left</span>;
+                                        const diffDays = Math.ceil(
+                                          diffTime / (1000 * 60 * 60 * 24)
+                                        );
+                                        if (diffDays < 0)
+                                          return (
+                                            <span className="text-red-600 dark:text-red-400">
+                                              ⚠️ Expired
+                                            </span>
+                                          );
+                                        if (diffDays === 0)
+                                          return (
+                                            <span className="text-red-600 dark:text-red-400">
+                                              🔴 Today
+                                            </span>
+                                          );
+                                        if (diffDays === 1)
+                                          return (
+                                            <span className="text-yellow-600 dark:text-yellow-400">
+                                              🟡 Tomorrow
+                                            </span>
+                                          );
+                                        if (diffDays <= 7)
+                                          return (
+                                            <span className="text-yellow-600 dark:text-yellow-400">
+                                              🟡 {diffDays} days left
+                                            </span>
+                                          );
+                                        return (
+                                          <span className="text-green-600 dark:text-green-400">
+                                            🟢 {diffDays} days left
+                                          </span>
+                                        );
                                       })()}
                                     </span>
                                   </div>
                                 ) : (
-                                  <span className="text-gray-500 dark:text-gray-400">No deadline</span>
+                                  <span className="text-gray-500 dark:text-gray-400">
+                                    No deadline
+                                  </span>
                                 )}
                               </div>
                             </td>
@@ -2691,11 +2614,23 @@ export const EnhancedJobsTab = ({
                                 className="p-2 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors duration-200 group"
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.95 }}
-                                onClick={() => handleViewApplications(job._id || job.id)}
+                                onClick={() =>
+                                  handleViewApplications(job._id || job.id)
+                                }
                                 title="View Applications"
                               >
-                                <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                <svg
+                                  className="w-5 h-5 text-green-600 dark:text-green-400"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                                  />
                                 </svg>
                               </motion.button>
                               <motion.button
@@ -2705,8 +2640,18 @@ export const EnhancedJobsTab = ({
                                 onClick={() => handleEdit(job._id || job.id)}
                                 title="Edit Job"
                               >
-                                <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                <svg
+                                  className="w-5 h-5 text-blue-600 dark:text-blue-400"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                  />
                                 </svg>
                               </motion.button>
                               <motion.button
@@ -2715,10 +2660,24 @@ export const EnhancedJobsTab = ({
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => handleDelete(job.id)}
                                 disabled={deleting[job.id]}
-                                title={deleting[job.id] ? 'Deleting...' : 'Delete Job'}
+                                title={
+                                  deleting[job.id]
+                                    ? "Deleting..."
+                                    : "Delete Job"
+                                }
                               >
-                                <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                <svg
+                                  className="w-5 h-5 text-red-600 dark:text-red-400"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                  />
                                 </svg>
                               </motion.button>
                             </div>
@@ -2733,23 +2692,58 @@ export const EnhancedJobsTab = ({
                                 }`}
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.95 }}
-                                onClick={() => handleSaveJob(job._id || job.id, job.saved)}
+                                onClick={() =>
+                                  handleSaveJob(job._id || job.id, job.saved)
+                                }
                                 disabled={saving[job._id || job.id]}
-                                title={job.saved ? "Remove from Favorites" : "Add to Favorites"}
+                                title={
+                                  job.saved
+                                    ? "Remove from Favorites"
+                                    : "Add to Favorites"
+                                }
                               >
                                 {saving[job._id || job.id] ? (
-                                  <svg className="w-5 h-5 text-gray-400 animate-spin" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                  <svg
+                                    className="w-5 h-5 text-gray-400 animate-spin"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <circle
+                                      className="opacity-25"
+                                      cx="12"
+                                      cy="12"
+                                      r="10"
+                                      stroke="currentColor"
+                                      strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                      className="opacity-75"
+                                      fill="currentColor"
+                                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
                                   </svg>
                                 ) : job.saved ? (
-                                  <svg className="w-6 h-6 text-red-500 dark:text-red-500" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                  <svg
+                                    className="w-6 h-6 text-red-500 dark:text-red-500"
+                                    fill="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                                   </svg>
                                 ) : (
-                                  <svg className="w-6 h-6 text-gray-400 dark:text-gray-500 group-hover:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-  </svg>
+                                  <svg
+                                    className="w-6 h-6 text-gray-400 dark:text-gray-500 group-hover:text-red-500"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                                    />
+                                  </svg>
                                 )}
                               </motion.button>
                               {/* View Details Button */}
@@ -2763,9 +2757,24 @@ export const EnhancedJobsTab = ({
                                 }}
                                 title="View Details"
                               >
-                                <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                <svg
+                                  className="w-5 h-5 text-purple-600 dark:text-purple-400"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                  />
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                  />
                                 </svg>
                               </motion.button>
                               {/* Apply Button */}
@@ -2776,8 +2785,18 @@ export const EnhancedJobsTab = ({
                                 onClick={() => handleApply(job.id)}
                                 disabled={applying[job.id]}
                               >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                  />
                                 </svg>
                                 {applying[job.id] ? "Applying..." : "Apply"}
                               </motion.button>
@@ -2802,7 +2821,7 @@ export const EnhancedJobsTab = ({
               {displayedJobs.map((job, index) => (
                 <motion.div
                   key={job.id}
-                  className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-300"
+                  className="bg-white dark:bg-gray-800 rounded-md p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-300"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -2815,31 +2834,41 @@ export const EnhancedJobsTab = ({
                         {job.jobTitle || job.title}
                       </h3>
                       <p className="text-gray-600 dark:text-gray-400 mb-2">
-                        {job.companyName || job.company || job.companyInfo?.companyName || 'Company not specified'}
+                        {job.companyName ||
+                          job.company ||
+                          job.companyInfo?.companyName ||
+                          "Company not specified"}
                       </p>
                       <div className="flex items-center space-x-2">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          job.status === 'active' 
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-                            : job.status === 'draft'
-                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                            : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-                        }`}>
-                          {job.status || 'Active'}
+                        <span
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            job.status === "active"
+                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                              : job.status === "draft"
+                              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                              : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+                          }`}
+                        >
+                          {job.status || "Active"}
                         </span>
-                        {job.jobUrgency && job.jobUrgency !== 'Normal Priority' && (
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            job.jobUrgency === 'High Priority' 
-                              ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' 
-                              : job.jobUrgency === 'Urgent'
-                              ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
-                              : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                          }`}>
-                            {job.jobUrgency === 'High Priority' ? '🔴 High Priority' : 
-                             job.jobUrgency === 'Urgent' ? '🟡 Urgent' : 
-                             '🟢 Normal Priority'}
-                          </span>
-                        )}
+                        {job.jobUrgency &&
+                          job.jobUrgency !== "Normal Priority" && (
+                            <span
+                              className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                job.jobUrgency === "High Priority"
+                                  ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                                  : job.jobUrgency === "Urgent"
+                                  ? "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
+                                  : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                              }`}
+                            >
+                              {job.jobUrgency === "High Priority"
+                                ? "🔴 High Priority"
+                                : job.jobUrgency === "Urgent"
+                                ? "🟡 Urgent"
+                                : "🟢 Normal Priority"}
+                            </span>
+                          )}
                       </div>
                     </div>
                     {userRole === "applicant" && (
@@ -2870,27 +2899,42 @@ export const EnhancedJobsTab = ({
                     <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                       <span className="mr-2">💰</span>
                       <span className="truncate">
-                        {job.salary || job.formattedSalary || 
-                         (job.salaryRange?.min && job.salaryRange?.max ? 
-                          `₹${(job.salaryRange.min / 100000).toFixed(1)}L - ₹${(job.salaryRange.max / 100000).toFixed(1)}L` :
-                          job.salaryRange?.min ? 
-                          `₹${(job.salaryRange.min / 100000).toFixed(1)}L+` : 
-                          (job.salaryMin && job.salaryMax ? `₹${job.salaryMin}-${job.salaryMax} ${job.salaryPeriod || 'yearly'}` : 
-                           job.salaryMin ? `₹${job.salaryMin}+ ${job.salaryPeriod || 'yearly'}` : 'Negotiable'))}
+                        {job.salary ||
+                          job.formattedSalary ||
+                          (job.salaryRange?.min && job.salaryRange?.max
+                            ? `₹${(job.salaryRange.min / 100000).toFixed(
+                                1
+                              )}L - ₹${(job.salaryRange.max / 100000).toFixed(
+                                1
+                              )}L`
+                            : job.salaryRange?.min
+                            ? `₹${(job.salaryRange.min / 100000).toFixed(1)}L+`
+                            : job.salaryMin && job.salaryMax
+                            ? `₹${job.salaryMin}-${job.salaryMax} ${
+                                job.salaryPeriod || "yearly"
+                              }`
+                            : job.salaryMin
+                            ? `₹${job.salaryMin}+ ${
+                                job.salaryPeriod || "yearly"
+                              }`
+                            : "Negotiable")}
                       </span>
                     </div>
                     <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                       <span className="mr-2">⏱️</span>
                       <span className="truncate">
                         {(() => {
-                          if (!job.experience) return 'Not specified';
-                          if (typeof job.experience === 'object') {
-                            if (job.experience.min !== undefined && job.experience.max !== undefined) {
+                          if (!job.experience) return "Not specified";
+                          if (typeof job.experience === "object") {
+                            if (
+                              job.experience.min !== undefined &&
+                              job.experience.max !== undefined
+                            ) {
                               return `${job.experience.min}-${job.experience.max} years`;
                             } else if (job.experience.min !== undefined) {
                               return `${job.experience.min}+ years`;
                             }
-                            return 'Not specified';
+                            return "Not specified";
                           }
                           return job.experience;
                         })()}
@@ -2898,19 +2942,26 @@ export const EnhancedJobsTab = ({
                     </div>
                     <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                       <span className="mr-2">💼</span>
-                      <span className="truncate">{job.jobType || job.type}</span>
+                      <span className="truncate">
+                        {job.jobType || job.type}
+                      </span>
                     </div>
                     <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                       <span className="mr-2">🏭</span>
-                      <span className="truncate">{job.industry || 'Not specified'}</span>
+                      <span className="truncate">
+                        {job.industry || "Not specified"}
+                      </span>
                     </div>
                     <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                       <span className="mr-2">🏠</span>
                       <span className="truncate">
-                        {job.workArrangement === 'remote' ? 'Remote' : 
-                         job.workArrangement === 'hybrid' ? 'Hybrid' : 
-                         job.workArrangement === 'onsite' ? 'Onsite' : 
-                         job.workArrangement || 'Onsite'}
+                        {job.workArrangement?.toLowerCase() === "remote"
+                          ? "Remote"
+                          : job.workArrangement?.toLowerCase() === "hybrid"
+                          ? "Hybrid"
+                          : job.workArrangement?.toLowerCase().includes("site")
+                          ? "Onsite"
+                          : job.workArrangement || "Onsite"}
                       </span>
                     </div>
                   </div>
@@ -2927,7 +2978,9 @@ export const EnhancedJobsTab = ({
                   {/* Requirements */}
                   {job.requirements && job.requirements.length > 0 && (
                     <div className="mb-4">
-                      <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Requirements:</h4>
+                      <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+                        Requirements:
+                      </h4>
                       <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                         {job.requirements.slice(0, 3).map((req, index) => (
                           <li key={index} className="flex items-start">
@@ -2947,7 +3000,9 @@ export const EnhancedJobsTab = ({
                   {/* Responsibilities */}
                   {job.responsibilities && job.responsibilities.length > 0 && (
                     <div className="mb-4">
-                      <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Responsibilities:</h4>
+                      <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+                        Responsibilities:
+                      </h4>
                       <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                         {job.responsibilities.slice(0, 3).map((resp, index) => (
                           <li key={index} className="flex items-start">
@@ -2957,7 +3012,8 @@ export const EnhancedJobsTab = ({
                         ))}
                         {job.responsibilities.length > 3 && (
                           <li className="text-xs text-gray-500">
-                            +{job.responsibilities.length - 3} more responsibilities
+                            +{job.responsibilities.length - 3} more
+                            responsibilities
                           </li>
                         )}
                       </ul>
@@ -2989,14 +3045,22 @@ export const EnhancedJobsTab = ({
                           className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.95 }}
-                          onClick={() => setOpenDropdown(openDropdown === job.id ? null : job.id)}
+                          onClick={() =>
+                            setOpenDropdown(
+                              openDropdown === job.id ? null : job.id
+                            )
+                          }
                           title="Actions"
                         >
-                          <svg className="w-6 h-6 text-gray-600 dark:text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                          <svg
+                            className="w-6 h-6 text-gray-600 dark:text-gray-300"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
                             <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
                           </svg>
                         </motion.button>
-                        
+
                         {/* Dropdown Menu */}
                         <AnimatePresence>
                           {openDropdown === job.id && (
@@ -3037,8 +3101,14 @@ export const EnhancedJobsTab = ({
                                   }}
                                   disabled={deleting[job.id]}
                                 >
-                                  <span className="text-lg">{deleting[job.id] ? '⏳' : '🗑️'}</span>
-                                  <span>{deleting[job.id] ? 'Deleting...' : 'Delete Job'}</span>
+                                  <span className="text-lg">
+                                    {deleting[job.id] ? "⏳" : "🗑️"}
+                                  </span>
+                                  <span>
+                                    {deleting[job.id]
+                                      ? "Deleting..."
+                                      : "Delete Job"}
+                                  </span>
                                 </button>
                               </div>
                             </motion.div>
@@ -3074,13 +3144,14 @@ export const EnhancedJobsTab = ({
         </div>
       </div>
 
-
       {/* Applications Modal */}
       <ApplicationsModal
         isOpen={applicationsModal.isOpen}
         job={applicationsModal.job}
         applications={applicationsModal.applications}
-        onClose={() => setApplicationsModal({ isOpen: false, job: null, applications: [] })}
+        onClose={() =>
+          setApplicationsModal({ isOpen: false, job: null, applications: [] })
+        }
         onViewCandidate={handleViewCandidate}
         onScheduleInterview={handleScheduleInterview}
       />
@@ -3091,7 +3162,7 @@ export const EnhancedJobsTab = ({
         onClose={handleCloseJobDetails}
         job={selectedJob}
         onApply={(jobId) => {
-          console.log('Apply to job from modal:', jobId);
+          console.log("Apply to job from modal:", jobId);
           handleCloseJobDetails();
           // Add apply logic here if needed
         }}
@@ -3104,15 +3175,15 @@ export const EnhancedJobsTab = ({
         onClose={() => setCandidateModal({ isOpen: false, candidate: null })}
         onContact={handleContactCandidate}
         onSchedule={(candidate) => {
-          console.log('Schedule interview with candidate:', candidate);
+          console.log("Schedule interview with candidate:", candidate);
           // Add schedule logic here
         }}
         onShortlist={(candidate) => {
-          console.log('Shortlist candidate:', candidate);
+          console.log("Shortlist candidate:", candidate);
           // Add shortlist logic here
         }}
         onDownloadResume={(candidateId) => {
-          console.log('Download resume for candidate:', candidateId);
+          console.log("Download resume for candidate:", candidateId);
           // Add resume download logic here
         }}
       />
@@ -3130,31 +3201,53 @@ export const EnhancedJobsTab = ({
       <ScheduleModal
         candidate={scheduleInterviewModal.candidate}
         isOpen={scheduleInterviewModal.isOpen}
-        onClose={() => setScheduleInterviewModal({ isOpen: false, candidate: null, job: null, application: null })}
+        onClose={() =>
+          setScheduleInterviewModal({
+            isOpen: false,
+            candidate: null,
+            job: null,
+            application: null,
+          })
+        }
         onScheduleInterview={async (interviewData) => {
           try {
-            console.log('📅 Scheduling interview:', interviewData);
-            
+            console.log("📅 Scheduling interview:", interviewData);
+
             // Import interviewsAPI dynamically to avoid circular imports
             const { interviewsAPI } = await import("../../services/api");
-            
+
             // Add job and application data to interview data
             const completeInterviewData = {
               ...interviewData,
-              jobId: scheduleInterviewModal.job?.id || scheduleInterviewModal.job?._id,
-              applicationId: scheduleInterviewModal.application?.id || scheduleInterviewModal.application?._id,
-              candidateId: scheduleInterviewModal.candidate?.id || scheduleInterviewModal.candidate?._id,
-              candidateName: scheduleInterviewModal.candidate?.name || scheduleInterviewModal.candidate?.fullName,
-              candidateEmail: scheduleInterviewModal.candidate?.email
+              jobId:
+                scheduleInterviewModal.job?.id ||
+                scheduleInterviewModal.job?._id,
+              applicationId:
+                scheduleInterviewModal.application?.id ||
+                scheduleInterviewModal.application?._id,
+              candidateId:
+                scheduleInterviewModal.candidate?.id ||
+                scheduleInterviewModal.candidate?._id,
+              candidateName:
+                scheduleInterviewModal.candidate?.name ||
+                scheduleInterviewModal.candidate?.fullName,
+              candidateEmail: scheduleInterviewModal.candidate?.email,
             };
-            
-            const response = await interviewsAPI.scheduleInterview(completeInterviewData);
-            console.log('✅ Interview scheduled successfully:', response);
-            alert('Interview scheduled successfully!');
-            setScheduleInterviewModal({ isOpen: false, candidate: null, job: null, application: null });
+
+            const response = await interviewsAPI.scheduleInterview(
+              completeInterviewData
+            );
+            console.log("✅ Interview scheduled successfully:", response);
+            alert("Interview scheduled successfully!");
+            setScheduleInterviewModal({
+              isOpen: false,
+              candidate: null,
+              job: null,
+              application: null,
+            });
           } catch (error) {
-            console.error('❌ Failed to schedule interview:', error);
-            alert('Failed to schedule interview. Please try again.');
+            console.error("❌ Failed to schedule interview:", error);
+            alert("Failed to schedule interview. Please try again.");
           }
         }}
       />
@@ -3170,7 +3263,7 @@ export const EnhancedJobsTab = ({
             onClick={() => setIsJobDetailsModalOpen(false)}
           >
             <motion.div
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+              className="bg-white dark:bg-gray-800 rounded-md shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
@@ -3178,13 +3271,25 @@ export const EnhancedJobsTab = ({
             >
               {/* Header */}
               <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex justify-between items-center">
-                <h3 className="text-base font-bold text-gray-900 dark:text-white">Job Details</h3>
+                <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                  Job Details
+                </h3>
                 <button
                   onClick={() => setIsJobDetailsModalOpen(false)}
                   className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
@@ -3197,8 +3302,12 @@ export const EnhancedJobsTab = ({
                   <div className="flex items-start gap-3">
                     <span className="text-lg mt-0.5">📍</span>
                     <div className="flex-1">
-                      <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">Location</p>
-                      <p className="text-sm text-gray-900 dark:text-white">{selectedJob.location || 'Not specified'}</p>
+                      <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">
+                        Location
+                      </p>
+                      <p className="text-sm text-gray-900 dark:text-white">
+                        {selectedJob.location || "Not specified"}
+                      </p>
                     </div>
                   </div>
 
@@ -3206,17 +3315,31 @@ export const EnhancedJobsTab = ({
                   <div className="flex items-start gap-3">
                     <span className="text-lg mt-0.5">💰</span>
                     <div className="flex-1">
-                      <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">Salary</p>
+                      <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">
+                        Salary
+                      </p>
                       <p className="text-sm text-gray-900 dark:text-white">
-                        {selectedJob.salary || selectedJob.formattedSalary || 
-                         (selectedJob.salaryRange?.min && selectedJob.salaryRange?.max ? 
-                          `₹${(selectedJob.salaryRange.min / 100000).toFixed(1)}L - ₹${(selectedJob.salaryRange.max / 100000).toFixed(1)}L Yearly` :
-                          selectedJob.salaryRange?.min ? 
-                          `₹${(selectedJob.salaryRange.min / 100000).toFixed(1)}L+ Yearly` : 'Negotiable')}
+                        {selectedJob.salary ||
+                          selectedJob.formattedSalary ||
+                          (selectedJob.salaryRange?.min &&
+                          selectedJob.salaryRange?.max
+                            ? `₹${(
+                                selectedJob.salaryRange.min / 100000
+                              ).toFixed(1)}L - ₹${(
+                                selectedJob.salaryRange.max / 100000
+                              ).toFixed(1)}L Yearly`
+                            : selectedJob.salaryRange?.min
+                            ? `₹${(
+                                selectedJob.salaryRange.min / 100000
+                              ).toFixed(1)}L+ Yearly`
+                            : "Negotiable")}
                       </p>
                       {selectedJob.salaryRange?.min && (
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                          INR {selectedJob.salaryRange.min.toLocaleString()} - {selectedJob.salaryRange.max?.toLocaleString() || selectedJob.salaryRange.min.toLocaleString()} Yearly
+                          INR {selectedJob.salaryRange.min.toLocaleString()} -{" "}
+                          {selectedJob.salaryRange.max?.toLocaleString() ||
+                            selectedJob.salaryRange.min.toLocaleString()}{" "}
+                          Yearly
                         </p>
                       )}
                     </div>
@@ -3226,17 +3349,24 @@ export const EnhancedJobsTab = ({
                   <div className="flex items-start gap-3">
                     <span className="text-lg mt-0.5">⏱️</span>
                     <div className="flex-1">
-                      <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">Experience Required</p>
+                      <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">
+                        Experience Required
+                      </p>
                       <p className="text-sm text-gray-900 dark:text-white">
                         {(() => {
-                          if (!selectedJob.experience) return 'Not specified';
-                          if (typeof selectedJob.experience === 'object') {
-                            if (selectedJob.experience.min !== undefined && selectedJob.experience.max !== undefined) {
+                          if (!selectedJob.experience) return "Not specified";
+                          if (typeof selectedJob.experience === "object") {
+                            if (
+                              selectedJob.experience.min !== undefined &&
+                              selectedJob.experience.max !== undefined
+                            ) {
                               return `${selectedJob.experience.min} - ${selectedJob.experience.max} years`;
-                            } else if (selectedJob.experience.min !== undefined) {
+                            } else if (
+                              selectedJob.experience.min !== undefined
+                            ) {
                               return `${selectedJob.experience.min}+ years`;
                             }
-                            return 'Not specified';
+                            return "Not specified";
                           }
                           return selectedJob.experience;
                         })()}
@@ -3248,9 +3378,11 @@ export const EnhancedJobsTab = ({
                   <div className="flex items-start gap-3">
                     <span className="text-lg mt-0.5">💼</span>
                     <div className="flex-1">
-                      <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">Job Type</p>
+                      <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">
+                        Job Type
+                      </p>
                       <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs font-medium rounded-full">
-                        {selectedJob.jobType || selectedJob.type || 'Full Time'}
+                        {selectedJob.jobType || selectedJob.type || "Full Time"}
                       </span>
                     </div>
                   </div>
@@ -3260,15 +3392,20 @@ export const EnhancedJobsTab = ({
                     <div className="flex items-start gap-3">
                       <span className="text-lg mt-0.5">🏢</span>
                       <div className="flex-1">
-                        <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">Work Arrangement</p>
-                        <span className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${
-                          selectedJob.workArrangement === 'remote' 
-                            ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' 
-                            : selectedJob.workArrangement === 'hybrid'
-                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                            : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-                        }`}>
-                          {selectedJob.workArrangement.charAt(0).toUpperCase() + selectedJob.workArrangement.slice(1)}
+                        <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">
+                          Work Arrangement
+                        </p>
+                        <span
+                          className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${
+                            selectedJob.workArrangement === "remote"
+                              ? "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+                              : selectedJob.workArrangement === "hybrid"
+                              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                              : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+                          }`}
+                        >
+                          {selectedJob.workArrangement.charAt(0).toUpperCase() +
+                            selectedJob.workArrangement.slice(1)}
                         </span>
                       </div>
                     </div>
@@ -3279,9 +3416,17 @@ export const EnhancedJobsTab = ({
                     <div className="flex items-start gap-3">
                       <span className="text-lg mt-0.5">📆</span>
                       <div className="flex-1">
-                        <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">Application Deadline</p>
+                        <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">
+                          Application Deadline
+                        </p>
                         <p className="text-sm text-red-600 dark:text-red-400 font-medium">
-                          {new Date(selectedJob.applicationDeadline).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                          {new Date(
+                            selectedJob.applicationDeadline
+                          ).toLocaleDateString("en-IN", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                          })}
                         </p>
                       </div>
                     </div>
@@ -3292,14 +3437,18 @@ export const EnhancedJobsTab = ({
                     <div className="flex items-start gap-3">
                       <span className="text-lg mt-0.5">⭐</span>
                       <div className="flex-1">
-                        <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">Job Priority</p>
-                        <span className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${
-                          selectedJob.jobUrgency === 'High Priority' 
-                            ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' 
-                            : selectedJob.jobUrgency === 'Urgent'
-                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                            : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                        }`}>
+                        <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">
+                          Job Priority
+                        </p>
+                        <span
+                          className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${
+                            selectedJob.jobUrgency === "High Priority"
+                              ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                              : selectedJob.jobUrgency === "Urgent"
+                              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                              : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          }`}
+                        >
                           {selectedJob.jobUrgency}
                         </span>
                       </div>
@@ -3310,7 +3459,9 @@ export const EnhancedJobsTab = ({
                 {/* Job Description */}
                 {selectedJob.description && (
                   <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3">
-                    <h4 className="text-xs font-semibold text-gray-900 dark:text-white mb-1.5">Job Description</h4>
+                    <h4 className="text-xs font-semibold text-gray-900 dark:text-white mb-1.5">
+                      Job Description
+                    </h4>
                     <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
                       {selectedJob.description}
                     </p>
@@ -3318,26 +3469,34 @@ export const EnhancedJobsTab = ({
                 )}
 
                 {/* Required Skills */}
-                {(selectedJob.requiredSkills || selectedJob.skills) && (selectedJob.requiredSkills || selectedJob.skills).length > 0 && (
-                  <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3">
-                    <h4 className="text-xs font-semibold text-gray-900 dark:text-white mb-1.5">Required Skills</h4>
-                    <div className="flex flex-wrap gap-1.5">
-                      {(selectedJob.requiredSkills || selectedJob.skills).map((skill, index) => (
-                        <span
-                          key={index}
-                          className="px-2.5 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs font-medium rounded"
-                        >
-                          {skill}
-                        </span>
-                      ))}
+                {(selectedJob.requiredSkills || selectedJob.skills) &&
+                  (selectedJob.requiredSkills || selectedJob.skills).length >
+                    0 && (
+                    <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3">
+                      <h4 className="text-xs font-semibold text-gray-900 dark:text-white mb-1.5">
+                        Required Skills
+                      </h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {(selectedJob.requiredSkills || selectedJob.skills).map(
+                          (skill, index) => (
+                            <span
+                              key={index}
+                              className="px-2.5 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs font-medium rounded"
+                            >
+                              {skill}
+                            </span>
+                          )
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Requirements */}
                 {selectedJob.requirements && (
                   <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3">
-                    <h4 className="text-xs font-semibold text-gray-900 dark:text-white mb-1.5">Requirements</h4>
+                    <h4 className="text-xs font-semibold text-gray-900 dark:text-white mb-1.5">
+                      Requirements
+                    </h4>
                     <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-0.5 list-disc list-inside">
                       {Array.isArray(selectedJob.requirements) ? (
                         selectedJob.requirements.map((req, index) => (
@@ -3393,33 +3552,33 @@ const JobEditModal = ({ isOpen, job, onClose, onSave }) => {
     type: "full-time",
     workArrangement: "onsite",
     applicationDeadline: "",
-    
+
     // Experience & Skills
     experienceMin: 0,
     experienceMax: 10,
     skills: [],
-    
+
     // Salary & Compensation
     salaryMin: "",
     salaryMax: "",
     salaryPeriod: "yearly",
     currency: "INR",
     salary: "",
-    
+
     // Job Description & Details
     description: "",
     responsibilities: [],
     requirements: [],
     qualifications: [],
     benefits: [],
-    
+
     // Contact Information
     contactEmail: "",
     urgency: "normal",
-    
+
     // AI Enhancement
     keywordsForAI: "",
-    
+
     // Legacy fields for compatibility
     experience: "",
     sector: "automobile",
@@ -3433,11 +3592,11 @@ const JobEditModal = ({ isOpen, job, onClose, onSave }) => {
 
   // Populate form when job data is provided
   useEffect(() => {
-    console.log('🔍 JobEditModal useEffect triggered, job:', job);
+    console.log("🔍 JobEditModal useEffect triggered, job:", job);
     if (job) {
-      console.log('🔍 JobEditModal received job data:', job);
-      console.log('🔍 Job fields available:', Object.keys(job));
-      
+      console.log("🔍 JobEditModal received job data:", job);
+      console.log("🔍 Job fields available:", Object.keys(job));
+
       const populatedData = {
         // Basic Information
         title: job.title || "",
@@ -3447,79 +3606,96 @@ const JobEditModal = ({ isOpen, job, onClose, onSave }) => {
         category: job.category || "",
         type: job.type || "full-time",
         workArrangement: job.workArrangement || "onsite",
-        applicationDeadline: job.applicationDeadline ? new Date(job.applicationDeadline).toISOString().split('T')[0] : "",
-        
+        applicationDeadline: job.applicationDeadline
+          ? new Date(job.applicationDeadline).toISOString().split("T")[0]
+          : "",
+
         // Experience & Skills
         experienceMin: job.experienceMin || 0,
         experienceMax: job.experienceMax || 10,
         skills: Array.isArray(job.skills) ? job.skills : [],
-        
+
         // Salary & Compensation
         salaryMin: job.salaryMin || "",
         salaryMax: job.salaryMax || "",
         salaryPeriod: job.salaryPeriod || "yearly",
         currency: job.currency || "INR",
         salary: job.salary || "",
-        
+
         // Job Description & Details
         description: job.description || "",
-        responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities : [],
+        responsibilities: Array.isArray(job.responsibilities)
+          ? job.responsibilities
+          : [],
         requirements: Array.isArray(job.requirements) ? job.requirements : [],
-        qualifications: Array.isArray(job.qualifications) ? job.qualifications : [],
+        qualifications: Array.isArray(job.qualifications)
+          ? job.qualifications
+          : [],
         benefits: Array.isArray(job.benefits) ? job.benefits : [],
-        
+
         // Contact Information
         contactEmail: job.contactEmail || "",
-        urgency: job.jobUrgency === 'High Priority' ? 'high-priority' :
-                 job.jobUrgency === 'Urgent' ? 'urgent' : 'normal',
-        
+        urgency:
+          job.jobUrgency === "High Priority"
+            ? "high-priority"
+            : job.jobUrgency === "Urgent"
+            ? "urgent"
+            : "normal",
+
         // AI Enhancement
         keywordsForAI: job.keywordsForAI || "",
-        
+
         // Legacy fields for compatibility
         experience: job.experience || "",
         sector: job.sector || job.industry || "automobile",
         jobFunction: job.jobFunction || "",
         shift: job.shift || "",
         preferredQualification: job.preferredQualification || "",
-        certificationsRequired: Array.isArray(job.certificationsRequired) ? job.certificationsRequired : [],
-        toolsAndTechnologies: Array.isArray(job.toolsAndTechnologies) ? job.toolsAndTechnologies : [],
+        certificationsRequired: Array.isArray(job.certificationsRequired)
+          ? job.certificationsRequired
+          : [],
+        toolsAndTechnologies: Array.isArray(job.toolsAndTechnologies)
+          ? job.toolsAndTechnologies
+          : [],
       };
-      
-      console.log('🔍 Setting formData with populated data:', populatedData);
+
+      console.log("🔍 Setting formData with populated data:", populatedData);
       setFormData(populatedData);
-      console.log('✅ JobEditModal formData set successfully');
+      console.log("✅ JobEditModal formData set successfully");
     } else {
-      console.log('🔍 No job data provided to JobEditModal');
+      console.log("🔍 No job data provided to JobEditModal");
     }
   }, [job]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleArrayInput = (name, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value.split(',').map(item => item.trim()).filter(item => item)
+      [name]: value
+        .split(",")
+        .map((item) => item.trim())
+        .filter((item) => item),
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('🔍 JobEditModal handleSubmit called');
-    console.log('🔍 Current formData being saved:', formData);
+    console.log("🔍 JobEditModal handleSubmit called");
+    console.log("🔍 Current formData being saved:", formData);
     setLoading(true);
     try {
-      console.log('🔍 Calling onSave with formData...');
+      console.log("🔍 Calling onSave with formData...");
       await onSave(formData);
-      console.log('✅ JobEditModal onSave completed successfully');
+      console.log("✅ JobEditModal onSave completed successfully");
     } catch (error) {
-      console.error('❌ JobEditModal onSave failed:', error);
+      console.error("❌ JobEditModal onSave failed:", error);
     } finally {
       setLoading(false);
     }
@@ -3537,7 +3713,7 @@ const JobEditModal = ({ isOpen, job, onClose, onSave }) => {
                 Edit Job
               </h2>
               <p className="text-gray-600 dark:text-gray-400">
-                Edit "{job?.title || 'Job'}" details
+                Edit "{job?.title || "Job"}" details
               </p>
             </div>
             <button
@@ -3550,8 +3726,8 @@ const JobEditModal = ({ isOpen, job, onClose, onSave }) => {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information Section */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+            <div className="bg-white dark:bg-gray-800 rounded-md p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-black mb-4 flex items-center">
                 <span className="mr-2">📋</span> Basic Information
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -3664,7 +3840,9 @@ const JobEditModal = ({ isOpen, job, onClose, onSave }) => {
                         <option value="accountant">Accountant</option>
                         <option value="consultant">Financial Consultant</option>
                         <option value="banker">Banker</option>
-                        <option value="insurance">Insurance Professional</option>
+                        <option value="insurance">
+                          Insurance Professional
+                        </option>
                         <option value="trader">Trader</option>
                       </>
                     )}
@@ -3900,14 +4078,14 @@ const JobEditModal = ({ isOpen, job, onClose, onSave }) => {
 export const EnhancedApplicationsTab = ({ userRole = "applicant" }) => {
   const { dashboardData, loading, error } = useDashboard();
   const [filters, setFilters] = useState({
-    status: '',
-    company: '',
-    dateRange: ''
+    status: "",
+    company: "",
+    dateRange: "",
   });
 
   // Get applications from dashboard data with fallback and ensure it's an array
-  const applications = Array.isArray(dashboardData?.applications) 
-    ? dashboardData.applications 
+  const applications = Array.isArray(dashboardData?.applications)
+    ? dashboardData.applications
     : [];
   const displayedApplications = applications.filter((app) => {
     return (
@@ -3951,7 +4129,7 @@ export const EnhancedApplicationsTab = ({ userRole = "applicant" }) => {
     return (
       colors[status] ||
       "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
-    )
+    );
   };
 
   // Dropdown handlers
@@ -3972,8 +4150,8 @@ export const EnhancedApplicationsTab = ({ userRole = "applicant" }) => {
     };
 
     if (openDropdown) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
+      document.addEventListener("click", handleClickOutside);
+      return () => document.removeEventListener("click", handleClickOutside);
     }
   }, [openDropdown, dropdownRef]);
 
@@ -4037,7 +4215,7 @@ export const EnhancedApplicationsTab = ({ userRole = "applicant" }) => {
           {displayedApplications.map((application, index) => (
             <motion.div
               key={application.id}
-              className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-300"
+              className="bg-white dark:bg-gray-800 rounded-md p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-300"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -4101,9 +4279,9 @@ export const EnhancedApplicationsTab = ({ userRole = "applicant" }) => {
 
 // Enhanced Recommendations Tab Component
 export const EnhancedRecommendationsTab = ({ userRole = "applicant" }) => {
-  if (userRole !== 'applicant') {
+  if (userRole !== "applicant") {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
+      <div className="bg-white dark:bg-gray-800 rounded-md p-6 shadow-lg">
         <div className="text-center py-8">
           <Sparkles className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
@@ -4120,9 +4298,9 @@ export const EnhancedRecommendationsTab = ({ userRole = "applicant" }) => {
   return (
     <div className="space-y-6">
       <JobRecommendations limit={25} showTitle={false} />
-      
+
       {/* Additional recommendation insights */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-700">
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-md p-6 border border-blue-200 dark:border-blue-700">
         <div className="flex items-center space-x-3 mb-4">
           <Target className="w-6 h-6 text-blue-600 dark:text-blue-400" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -4133,7 +4311,9 @@ export const EnhancedRecommendationsTab = ({ userRole = "applicant" }) => {
           <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
             <div className="flex items-center space-x-2 mb-2">
               <Award className="w-5 h-5 text-green-600" />
-              <span className="font-medium text-gray-900 dark:text-white">Add Skills</span>
+              <span className="font-medium text-gray-900 dark:text-white">
+                Add Skills
+              </span>
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Complete your skills profile to get better job matches
@@ -4142,7 +4322,9 @@ export const EnhancedRecommendationsTab = ({ userRole = "applicant" }) => {
           <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
             <div className="flex items-center space-x-2 mb-2">
               <GraduationCap className="w-5 h-5 text-blue-600" />
-              <span className="font-medium text-gray-900 dark:text-white">Update Education</span>
+              <span className="font-medium text-gray-900 dark:text-white">
+                Update Education
+              </span>
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Add your educational background for relevant opportunities
@@ -4151,7 +4333,9 @@ export const EnhancedRecommendationsTab = ({ userRole = "applicant" }) => {
           <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
             <div className="flex items-center space-x-2 mb-2">
               <Briefcase className="w-5 h-5 text-purple-600" />
-              <span className="font-medium text-gray-900 dark:text-white">Work Experience</span>
+              <span className="font-medium text-gray-900 dark:text-white">
+                Work Experience
+              </span>
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Update your experience level to find suitable positions
@@ -4179,19 +4363,22 @@ export const EnhancedAnalyticsTab = ({ userRole = "applicant" }) => {
       try {
         setLoading(true);
         setError(null);
-        
+
         // Import analyticsAPI dynamically
         const { analyticsAPI } = await import("../../services/api");
         const response = await analyticsAPI.getDashboardAnalytics(userRole);
-        
+
         if (response.data.success) {
           setAnalyticsData(response.data.data.analytics);
-          console.log('✅ Analytics data loaded:', response.data.data.analytics);
+          console.log(
+            "✅ Analytics data loaded:",
+            response.data.data.analytics
+          );
         } else {
-          throw new Error(response.data.message || 'Failed to fetch analytics');
+          throw new Error(response.data.message || "Failed to fetch analytics");
         }
       } catch (error) {
-        console.error('❌ Error fetching analytics:', error);
+        console.error("❌ Error fetching analytics:", error);
         setError(error.message);
         // Set fallback data
         setAnalyticsData({
@@ -4199,13 +4386,13 @@ export const EnhancedAnalyticsTab = ({ userRole = "applicant" }) => {
             totalApplications: 0,
             shortlisted: 0,
             interviews: 0,
-            hired: 0
+            hired: 0,
           },
           performance: {
             shortlistRate: 0,
             interviewRate: 0,
-            hireRate: 0
-          }
+            hireRate: 0,
+          },
         });
       } finally {
         setLoading(false);
@@ -4236,7 +4423,9 @@ export const EnhancedAnalyticsTab = ({ userRole = "applicant" }) => {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading analytics...</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            Loading analytics...
+          </p>
         </div>
       </div>
     );
@@ -4301,11 +4490,13 @@ export const EnhancedAnalyticsTab = ({ userRole = "applicant" }) => {
         <div className="flex-1 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Analytics Cards with Real Data */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-gray-800 rounded-md p-6 shadow-sm border border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {userRole === 'recruiter' ? 'Total Applications' : 'Applications Sent'}
+                    {userRole === "recruiter"
+                      ? "Total Applications"
+                      : "Applications Sent"}
                   </p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
                     {analyticsData?.overview?.totalApplications || 0}
@@ -4315,51 +4506,52 @@ export const EnhancedAnalyticsTab = ({ userRole = "applicant" }) => {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-gray-800 rounded-md p-6 shadow-sm border border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {userRole === 'recruiter' ? 'Active Jobs' : 'Shortlisted'}
+                    {userRole === "recruiter" ? "Active Jobs" : "Shortlisted"}
                   </p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {userRole === 'recruiter' 
-                      ? (analyticsData?.overview?.activeJobs || 0)
-                      : (analyticsData?.overview?.shortlisted || 0)
-                    }
+                    {userRole === "recruiter"
+                      ? analyticsData?.overview?.activeJobs || 0
+                      : analyticsData?.overview?.shortlisted || 0}
                   </p>
                 </div>
-                <div className="text-3xl">{userRole === 'recruiter' ? '💼' : '⭐'}</div>
+                <div className="text-3xl">
+                  {userRole === "recruiter" ? "💼" : "⭐"}
+                </div>
               </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-gray-800 rounded-md p-6 shadow-sm border border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {userRole === 'recruiter' ? 'Shortlisted' : 'Interviews'}
+                    {userRole === "recruiter" ? "Shortlisted" : "Interviews"}
                   </p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {userRole === 'recruiter' 
-                      ? (analyticsData?.overview?.shortlisted || 0)
-                      : (analyticsData?.overview?.interviews || 0)
-                    }
+                    {userRole === "recruiter"
+                      ? analyticsData?.overview?.shortlisted || 0
+                      : analyticsData?.overview?.interviews || 0}
                   </p>
                 </div>
-                <div className="text-3xl">{userRole === 'recruiter' ? '⭐' : '🗣️'}</div>
+                <div className="text-3xl">
+                  {userRole === "recruiter" ? "⭐" : "🗣️"}
+                </div>
               </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-gray-800 rounded-md p-6 shadow-sm border border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {userRole === 'recruiter' ? 'Hire Rate' : 'Success Rate'}
+                    {userRole === "recruiter" ? "Hire Rate" : "Success Rate"}
                   </p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {userRole === 'recruiter' 
+                    {userRole === "recruiter"
                       ? `${analyticsData?.performance?.hireRate || 0}%`
-                      : `${analyticsData?.performance?.shortlistRate || 0}%`
-                    }
+                      : `${analyticsData?.performance?.shortlistRate || 0}%`}
                   </p>
                 </div>
                 <div className="text-3xl">📊</div>
@@ -4367,7 +4559,7 @@ export const EnhancedAnalyticsTab = ({ userRole = "applicant" }) => {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="bg-white dark:bg-gray-800 rounded-md p-6 shadow-sm border border-gray-200 dark:border-gray-700">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
               Application Trends
             </h3>
@@ -4383,7 +4575,10 @@ export const EnhancedAnalyticsTab = ({ userRole = "applicant" }) => {
 };
 
 // Enhanced Job Posting Tab Component
-export const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
+export const EnhancedJobPostingTab = ({
+  editingJob = null,
+  onJobSaved = null,
+}) => {
   const { dashboardData, loading, postJob } = useDashboard();
   const [formData, setFormData] = useState({
     title: "",
@@ -4407,12 +4602,15 @@ export const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) 
 
   // Populate form when editing a job
   useEffect(() => {
-    console.log('🔍 EnhancedJobPostingTab useEffect triggered, editingJob:', editingJob);
-    
+    console.log(
+      "🔍 EnhancedJobPostingTab useEffect triggered, editingJob:",
+      editingJob
+    );
+
     if (editingJob) {
-      console.log('🔍 EnhancedJobPostingTab received editingJob:', editingJob);
-      console.log('🔍 Job fields available:', Object.keys(editingJob));
-      
+      console.log("🔍 EnhancedJobPostingTab received editingJob:", editingJob);
+      console.log("🔍 Job fields available:", Object.keys(editingJob));
+
       // Handle different possible data structures
       const jobData = {
         title: editingJob.title || editingJob.jobTitle || "",
@@ -4420,29 +4618,44 @@ export const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) 
         company: editingJob.company || editingJob.companyName || "",
         location: editingJob.location || editingJob.jobLocation || "",
         type: editingJob.type || editingJob.jobType || "full-time",
-        experience: editingJob.experience || editingJob.experienceRequired || "",
+        experience:
+          editingJob.experience || editingJob.experienceRequired || "",
         salary: editingJob.salary || editingJob.salaryRange || "",
-        skills: Array.isArray(editingJob.skills) ? editingJob.skills : 
-                (typeof editingJob.skills === 'string' ? editingJob.skills.split(',').map(s => s.trim()) : []),
-        requirements: Array.isArray(editingJob.requirements) ? editingJob.requirements : 
-                     (typeof editingJob.requirements === 'string' ? editingJob.requirements.split('\n').filter(r => r.trim()) : []),
-        responsibilities: Array.isArray(editingJob.responsibilities) ? editingJob.responsibilities : 
-                         (typeof editingJob.responsibilities === 'string' ? editingJob.responsibilities.split('\n').filter(r => r.trim()) : []),
+        skills: Array.isArray(editingJob.skills)
+          ? editingJob.skills
+          : typeof editingJob.skills === "string"
+          ? editingJob.skills.split(",").map((s) => s.trim())
+          : [],
+        requirements: Array.isArray(editingJob.requirements)
+          ? editingJob.requirements
+          : typeof editingJob.requirements === "string"
+          ? editingJob.requirements.split("\n").filter((r) => r.trim())
+          : [],
+        responsibilities: Array.isArray(editingJob.responsibilities)
+          ? editingJob.responsibilities
+          : typeof editingJob.responsibilities === "string"
+          ? editingJob.responsibilities.split("\n").filter((r) => r.trim())
+          : [],
         sector: editingJob.sector || editingJob.industry || "automobile",
         jobFunction: editingJob.jobFunction || editingJob.function || "",
         shift: editingJob.shift || editingJob.workShift || "",
-        preferredQualification: editingJob.preferredQualification || editingJob.qualifications || "",
-        certificationsRequired: Array.isArray(editingJob.certificationsRequired) ? editingJob.certificationsRequired : [],
+        preferredQualification:
+          editingJob.preferredQualification || editingJob.qualifications || "",
+        certificationsRequired: Array.isArray(editingJob.certificationsRequired)
+          ? editingJob.certificationsRequired
+          : [],
         benefits: Array.isArray(editingJob.benefits) ? editingJob.benefits : [],
-        toolsAndTechnologies: Array.isArray(editingJob.toolsAndTechnologies) ? editingJob.toolsAndTechnologies : [],
+        toolsAndTechnologies: Array.isArray(editingJob.toolsAndTechnologies)
+          ? editingJob.toolsAndTechnologies
+          : [],
       };
-      
-      console.log('🔍 Processed job data for form:', jobData);
-      console.log('🔍 Setting form data...');
+
+      console.log("🔍 Processed job data for form:", jobData);
+      console.log("🔍 Setting form data...");
       setFormData(jobData);
-      console.log('✅ Form data set successfully');
+      console.log("✅ Form data set successfully");
     } else {
-      console.log('🔍 No editingJob provided, resetting to empty form');
+      console.log("🔍 No editingJob provided, resetting to empty form");
       // Reset to empty form when no job is being edited
       setFormData({
         title: "",
@@ -4468,34 +4681,37 @@ export const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('🔍 EnhancedJobPostingTab handleSubmit called');
-    console.log('🔍 Current formData being submitted:', formData);
-    console.log('🔍 Experience field value:', formData.experience);
-    
+    console.log("🔍 EnhancedJobPostingTab handleSubmit called");
+    console.log("🔍 Current formData being submitted:", formData);
+    console.log("🔍 Experience field value:", formData.experience);
+
     try {
       if (editingJob) {
         // Update existing job
-        console.log('🔍 Updating existing job with formData:', formData);
+        console.log("🔍 Updating existing job with formData:", formData);
         const { jobsAPI } = await import("../../services/api");
-        const response = await jobsAPI.updateJob(editingJob.id || editingJob._id, formData);
-        
+        const response = await jobsAPI.updateJob(
+          editingJob.id || editingJob._id,
+          formData
+        );
+
         if (response.data.success) {
-          alert('Job updated successfully!');
+          alert("Job updated successfully!");
           if (onJobSaved) {
             onJobSaved();
           }
         } else {
-          throw new Error(response.data.message || 'Failed to update job');
+          throw new Error(response.data.message || "Failed to update job");
         }
       } else {
         // Create new job
-        console.log('🔍 Creating new job with formData:', formData);
-        console.log('🔍 Calling postJob function...');
+        console.log("🔍 Creating new job with formData:", formData);
+        console.log("🔍 Calling postJob function...");
         await postJob(formData);
-        console.log('✅ postJob completed successfully');
-        alert('Job posted successfully!');
+        console.log("✅ postJob completed successfully");
+        alert("Job posted successfully!");
       }
-      
+
       // Reset form
       setFormData({
         title: "",
@@ -4518,19 +4734,19 @@ export const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) 
       });
     } catch (error) {
       console.error("Failed to save job:", error);
-      alert('Failed to save job. Please try again.');
+      alert("Failed to save job. Please try again.");
     }
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    console.log('🔍 EnhancedJobPostingTab handleInputChange:', { name, value });
+    console.log("🔍 EnhancedJobPostingTab handleInputChange:", { name, value });
     setFormData((prev) => {
       const newFormData = {
         ...prev,
         [name]: value,
       };
-      console.log('🔍 Updated formData:', newFormData);
+      console.log("🔍 Updated formData:", newFormData);
       return newFormData;
     });
   };
@@ -4543,8 +4759,11 @@ export const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) 
   };
 
   // Debug: Log current formData
-  console.log('🔍 EnhancedJobPostingTab current formData:', formData);
-  console.log('🔍 EnhancedJobPostingTab experience value:', formData.experience);
+  console.log("🔍 EnhancedJobPostingTab current formData:", formData);
+  console.log(
+    "🔍 EnhancedJobPostingTab experience value:",
+    formData.experience
+  );
 
   return (
     <motion.div
@@ -4556,10 +4775,12 @@ export const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) 
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {editingJob ? 'Edit Job' : 'Post New Job'}
+            {editingJob ? "Edit Job" : "Post New Job"}
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
-            {editingJob ? `Edit "${editingJob.title || 'Job'}"` : 'Create a new job posting'}
+            {editingJob
+              ? `Edit "${editingJob.title || "Job"}"`
+              : "Create a new job posting"}
           </p>
           {editingJob && (
             <div className="mt-2 p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
@@ -4567,7 +4788,7 @@ export const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) 
                 📝 Editing Mode: Form should be pre-filled with job data
               </p>
               <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">
-                Current form title: "{formData.title || 'Not loaded'}"
+                Current form title: "{formData.title || "Not loaded"}"
               </p>
             </div>
           )}
@@ -4575,7 +4796,7 @@ export const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) 
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-800 rounded-md p-6 shadow-sm border border-gray-200 dark:border-gray-700">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -5049,7 +5270,11 @@ export const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) 
               whileTap={{ scale: 0.95 }}
               disabled={loading}
             >
-              {loading ? "⏳ Saving..." : editingJob ? "💾 Update Job" : "📝 Post Job"}
+              {loading
+                ? "⏳ Saving..."
+                : editingJob
+                ? "💾 Update Job"
+                : "📝 Post Job"}
             </motion.button>
           </div>
         </div>
@@ -5074,16 +5299,20 @@ export const EnhancedActiveJobsTab = () => {
   };
 
   const handleDeleteJob = async (jobId) => {
-    if (window.confirm("Are you sure you want to delete this job posting? This action cannot be undone.")) {
+    if (
+      window.confirm(
+        "Are you sure you want to delete this job posting? This action cannot be undone."
+      )
+    ) {
       try {
-        console.log('🗑️ Deleting job:', jobId);
+        console.log("🗑️ Deleting job:", jobId);
         await deleteJob(jobId);
-        console.log('✅ Job deleted successfully:', jobId);
-        alert('Job has been deleted successfully!');
+        console.log("✅ Job deleted successfully:", jobId);
+        alert("Job has been deleted successfully!");
         // Job will be removed from the dashboard data automatically
       } catch (error) {
         console.error("Failed to delete job:", error);
-        alert('Failed to delete job. Please try again.');
+        alert("Failed to delete job. Please try again.");
       }
     }
   };
@@ -5110,7 +5339,7 @@ export const EnhancedActiveJobsTab = () => {
         {activeJobs.map((job) => (
           <motion.div
             key={job.id}
-            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+            className="bg-white dark:bg-gray-800 rounded-md p-6 shadow-sm border border-gray-200 dark:border-gray-700"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ y: -2 }}
@@ -5218,29 +5447,38 @@ export const EnhancedActiveJobsTab = () => {
           </div>
         )}
       </div>
-
     </motion.div>
   );
 };
 
 // Applications Modal Component
-const ApplicationsModal = ({ isOpen, job, applications, onClose, onViewCandidate, onScheduleInterview }) => {
+const ApplicationsModal = ({
+  isOpen,
+  job,
+  applications,
+  onClose,
+  onViewCandidate,
+  onScheduleInterview,
+}) => {
   if (!isOpen) return null;
 
   // Handle schedule interview
   const handleScheduleInterview = (app, jobData) => {
-    console.log('📅 Schedule interview clicked for:', app.applicantSnapshot?.fullName || app.name);
-    if (typeof onScheduleInterview === 'function') {
+    console.log(
+      "📅 Schedule interview clicked for:",
+      app.applicantSnapshot?.fullName || app.name
+    );
+    if (typeof onScheduleInterview === "function") {
       onScheduleInterview(app, jobData);
     } else {
-      console.error('❌ onScheduleInterview function not provided');
-      alert('Schedule interview function not available');
+      console.error("❌ onScheduleInterview function not provided");
+      alert("Schedule interview function not available");
     }
   };
-  
+
   // Debug: Log the job object to understand its structure
-  console.log('🔍 ApplicationsModal job object:', job);
-  console.log('🔍 ApplicationsModal applications:', applications);
+  console.log("🔍 ApplicationsModal job object:", job);
+  console.log("🔍 ApplicationsModal applications:", applications);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -5252,139 +5490,245 @@ const ApplicationsModal = ({ isOpen, job, applications, onClose, onViewCandidate
                 Job Applications
               </h2>
               <p className="text-gray-600 dark:text-gray-400">
-                {job?.jobTitle || job?.title || 'Job'} - {applications?.length || 0} applications
+                {job?.jobTitle || job?.title || "Job"} -{" "}
+                {applications?.length || 0} applications
               </p>
             </div>
-            <button onClick={onClose} className="text-2xl">×</button>
+            <button onClick={onClose} className="text-2xl">
+              ×
+            </button>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Job Details */}
-            <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
-              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">💼 Job Details</h3>
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-md p-4">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+                💼 Job Details
+              </h3>
               {job && (
                 <div className="space-y-3 text-sm text-gray-800 dark:text-gray-200">
-                  <div><strong>Title:</strong> {job.jobTitle || job.title || 'Not specified'}</div>
-                  <div><strong>Company:</strong> {job.companyName || job.company || job.companyInfo?.companyName || 'Not specified'}</div>
-                  <div><strong>Location:</strong> {job.location || 'Not specified'}</div>
-                  <div><strong>Industry:</strong> {job.industry || 'Not specified'}</div>
-                  <div><strong>Type:</strong> {job.jobType || job.type || 'Not specified'}</div>
-                  <div><strong>Work Mode:</strong> {job.workArrangement || 'Not specified'}</div>
-                  <div><strong>Salary:</strong> {job.salary || job.formattedSalary || (job.salaryRange?.min && job.salaryRange?.max ? `₹${(job.salaryRange.min / 100000).toFixed(1)}L - ₹${(job.salaryRange.max / 100000).toFixed(1)}L ${job.salaryRange.period || 'Yearly'}` : 'Negotiable')}</div>
-                  <div><strong>Experience:</strong> {
-                    (() => {
+                  <div>
+                    <strong>Title:</strong>{" "}
+                    {job.jobTitle || job.title || "Not specified"}
+                  </div>
+                  <div>
+                    <strong>Company:</strong>{" "}
+                    {job.companyName ||
+                      job.company ||
+                      job.companyInfo?.companyName ||
+                      "Not specified"}
+                  </div>
+                  <div>
+                    <strong>Location:</strong> {job.location || "Not specified"}
+                  </div>
+                  <div>
+                    <strong>Industry:</strong> {job.industry || "Not specified"}
+                  </div>
+                  <div>
+                    <strong>Type:</strong>{" "}
+                    {job.jobType || job.type || "Not specified"}
+                  </div>
+                  <div>
+                    <strong>Work Mode:</strong>{" "}
+                    {job.workArrangement || "Not specified"}
+                  </div>
+                  <div>
+                    <strong>Salary:</strong>{" "}
+                    {job.salary ||
+                      job.formattedSalary ||
+                      (job.salaryRange?.min && job.salaryRange?.max
+                        ? `₹${(job.salaryRange.min / 100000).toFixed(1)}L - ₹${(
+                            job.salaryRange.max / 100000
+                          ).toFixed(1)}L ${job.salaryRange.period || "Yearly"}`
+                        : "Negotiable")}
+                  </div>
+                  <div>
+                    <strong>Experience:</strong>{" "}
+                    {(() => {
                       // Check experience object with min/max
-                      if (job.experience?.min !== undefined && job.experience?.max !== undefined) {
+                      if (
+                        job.experience?.min !== undefined &&
+                        job.experience?.max !== undefined
+                      ) {
                         return `${job.experience.min}-${job.experience.max} years`;
                       }
                       // Check experience object with minimum/maximum
-                      if (job.experience?.minimum !== undefined && job.experience?.maximum !== undefined) {
+                      if (
+                        job.experience?.minimum !== undefined &&
+                        job.experience?.maximum !== undefined
+                      ) {
                         return `${job.experience.minimum}-${job.experience.maximum} years`;
                       }
                       // Check flat experienceMin/experienceMax fields
-                      if (job.experienceMin !== undefined && job.experienceMax !== undefined) {
+                      if (
+                        job.experienceMin !== undefined &&
+                        job.experienceMax !== undefined
+                      ) {
                         return `${job.experienceMin}-${job.experienceMax} years`;
                       }
                       // Check if experience is a string
-                      if (typeof job.experience === 'string' && job.experience.trim()) {
+                      if (
+                        typeof job.experience === "string" &&
+                        job.experience.trim()
+                      ) {
                         return job.experience;
                       }
-                      return 'Not specified';
-                    })()
-                  }</div>
+                      return "Not specified";
+                    })()}
+                  </div>
                   {job.applicationDeadline && (
-                    <div><strong>Application Deadline:</strong> {new Date(job.applicationDeadline).toLocaleDateString()}</div>
+                    <div>
+                      <strong>Application Deadline:</strong>{" "}
+                      {new Date(job.applicationDeadline).toLocaleDateString()}
+                    </div>
                   )}
                   {job.jobUrgency && (
-                    <div><strong>Priority:</strong> 
-                      <span className={`ml-2 px-2 py-1 text-xs rounded ${
-                        job.jobUrgency === 'High Priority' ? 'bg-red-100 text-red-800' :
-                        job.jobUrgency === 'Urgent' ? 'bg-orange-100 text-orange-800' :
-                        'bg-green-100 text-green-800'
-                      }`}>
+                    <div>
+                      <strong>Priority:</strong>
+                      <span
+                        className={`ml-2 px-2 py-1 text-xs rounded ${
+                          job.jobUrgency === "High Priority"
+                            ? "bg-red-100 text-red-800"
+                            : job.jobUrgency === "Urgent"
+                            ? "bg-orange-100 text-orange-800"
+                            : "bg-green-100 text-green-800"
+                        }`}
+                      >
                         {job.jobUrgency}
                       </span>
                     </div>
                   )}
                   {job.contactEmail && (
-                    <div><strong>Contact:</strong> {job.contactEmail}</div>
+                    <div>
+                      <strong>Contact:</strong> {job.contactEmail}
+                    </div>
                   )}
                   {(job.jobDescription || job.description) && (
-                    <div><strong>Description:</strong> 
-                      <p className="text-sm mt-1 max-h-20 overflow-y-auto bg-white dark:bg-gray-600 p-2 rounded text-gray-800 dark:text-gray-200">{job.jobDescription || job.description}</p>
+                    <div>
+                      <strong>Description:</strong>
+                      <p className="text-sm mt-1 max-h-20 overflow-y-auto bg-white dark:bg-gray-600 p-2 rounded text-gray-800 dark:text-gray-200">
+                        {job.jobDescription || job.description}
+                      </p>
                     </div>
                   )}
-                  {(job.requiredSkills || job.skills) && (job.requiredSkills || job.skills).length > 0 && (
-                    <div><strong>Skills:</strong> 
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {(job.requiredSkills || job.skills).slice(0, 5).map((skill, index) => (
-                          <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-                            {skill}
-                          </span>
-                        ))}
-                        {(job.requiredSkills || job.skills).length > 5 && <span className="text-xs text-gray-600 dark:text-gray-400">+{(job.requiredSkills || job.skills).length - 5} more</span>}
+                  {(job.requiredSkills || job.skills) &&
+                    (job.requiredSkills || job.skills).length > 0 && (
+                      <div>
+                        <strong>Skills:</strong>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {(job.requiredSkills || job.skills)
+                            .slice(0, 5)
+                            .map((skill, index) => (
+                              <span
+                                key={index}
+                                className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded"
+                              >
+                                {skill}
+                              </span>
+                            ))}
+                          {(job.requiredSkills || job.skills).length > 5 && (
+                            <span className="text-xs text-gray-600 dark:text-gray-400">
+                              +{(job.requiredSkills || job.skills).length - 5}{" "}
+                              more
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                 </div>
               )}
             </div>
 
             {/* Applications List */}
-            <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
-              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">👥 Applications ({applications?.length || 0})</h3>
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-md p-4">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+                👥 Applications ({applications?.length || 0})
+              </h3>
               <div className="space-y-3 max-h-80 overflow-y-auto">
                 {applications && applications.length > 0 ? (
                   applications.map((app, index) => (
-                    <div key={index} className="bg-white dark:bg-gray-600 p-3 rounded border">
+                    <div
+                      key={index}
+                      className="bg-white dark:bg-gray-600 p-3 rounded border"
+                    >
                       <div className="flex justify-between items-start mb-2">
                         <div>
                           <h4 className="font-medium text-gray-900 dark:text-white">
-                            {app.applicant?.name || app.applicantSnapshot?.fullName || app.applicantName || app.name || 'Unknown Applicant'}
+                            {app.applicant?.name ||
+                              app.applicantSnapshot?.fullName ||
+                              app.applicantName ||
+                              app.name ||
+                              "Unknown Applicant"}
                           </h4>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {app.applicant?.email || app.applicantSnapshot?.email || app.email || 'No email provided'}
+                            {app.applicant?.email ||
+                              app.applicantSnapshot?.email ||
+                              app.email ||
+                              "No email provided"}
                           </p>
-                          {(app.applicant?.phone || app.applicantSnapshot?.phone) && (
+                          {(app.applicant?.phone ||
+                            app.applicantSnapshot?.phone) && (
                             <p className="text-xs text-gray-500 dark:text-gray-400">
-                              📞 {app.applicant?.phone || app.applicantSnapshot?.phone}
+                              📞{" "}
+                              {app.applicant?.phone ||
+                                app.applicantSnapshot?.phone}
                             </p>
                           )}
                         </div>
-                        <span className={`px-2 py-1 text-xs font-medium rounded ${
-                          app.applicationStatus === 'selected' ? 'bg-green-100 text-green-800' :
-                          app.applicationStatus === 'rejected' ? 'bg-red-100 text-red-800' :
-                          app.applicationStatus === 'shortlisted' ? 'bg-blue-100 text-blue-800' :
-                          app.applicationStatus === 'interviewed' ? 'bg-purple-100 text-purple-800' :
-                          'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {app.applicationStatus || app.status || 'pending'}
+                        <span
+                          className={`px-2 py-1 text-xs font-medium rounded ${
+                            app.applicationStatus === "selected"
+                              ? "bg-green-100 text-green-800"
+                              : app.applicationStatus === "rejected"
+                              ? "bg-red-100 text-red-800"
+                              : app.applicationStatus === "shortlisted"
+                              ? "bg-blue-100 text-blue-800"
+                              : app.applicationStatus === "interviewed"
+                              ? "bg-purple-100 text-purple-800"
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}
+                        >
+                          {app.applicationStatus || app.status || "pending"}
                         </span>
                       </div>
                       {(app.appliedAt || app.appliedDate) && (
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Applied: {new Date(app.appliedAt || app.appliedDate).toLocaleDateString()}
+                          Applied:{" "}
+                          {new Date(
+                            app.appliedAt || app.appliedDate
+                          ).toLocaleDateString()}
                         </p>
                       )}
-                      {(app.applicationData?.coverLetter || app.additionalInfo?.coverLetter || app.coverLetter) && (
+                      {(app.applicationData?.coverLetter ||
+                        app.additionalInfo?.coverLetter ||
+                        app.coverLetter) && (
                         <div className="mt-2">
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Cover Letter:</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                            Cover Letter:
+                          </p>
                           <p className="text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 p-2 rounded text-xs max-h-16 overflow-y-auto">
-                            {app.applicationData?.coverLetter || app.additionalInfo?.coverLetter || app.coverLetter}
+                            {app.applicationData?.coverLetter ||
+                              app.additionalInfo?.coverLetter ||
+                              app.coverLetter}
                           </p>
                         </div>
                       )}
-                      
+
                       {/* Action Buttons */}
                       <div className="mt-3 flex justify-end space-x-2">
                         <button
                           onClick={() => {
-                            console.log('👤 View Profile clicked for:', app.applicantSnapshot?.fullName || app.name);
-                            if (typeof onViewCandidate === 'function') {
+                            console.log(
+                              "👤 View Profile clicked for:",
+                              app.applicantSnapshot?.fullName || app.name
+                            );
+                            if (typeof onViewCandidate === "function") {
                               onViewCandidate(app);
                             } else {
-                              console.error('❌ onViewCandidate function not provided');
-                              alert('View profile function not available');
+                              console.error(
+                                "❌ onViewCandidate function not provided"
+                              );
+                              alert("View profile function not available");
                             }
                           }}
                           className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors duration-200"
@@ -5403,8 +5747,12 @@ const ApplicationsModal = ({ isOpen, job, applications, onClose, onViewCandidate
                 ) : (
                   <div className="text-center py-8">
                     <div className="text-4xl mb-2">📋</div>
-                    <p className="text-gray-500 dark:text-gray-400">No applications yet</p>
-                    <p className="text-sm text-gray-400 dark:text-gray-500">Applications will appear here once candidates apply</p>
+                    <p className="text-gray-500 dark:text-gray-400">
+                      No applications yet
+                    </p>
+                    <p className="text-sm text-gray-400 dark:text-gray-500">
+                      Applications will appear here once candidates apply
+                    </p>
                   </div>
                 )}
               </div>

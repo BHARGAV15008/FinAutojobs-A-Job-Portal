@@ -11,10 +11,10 @@ import ErrorBoundary from './components/ui/ErrorBoundary';
 import NotificationSystem from './components/notifications/NotificationSystem';
 import AppRoutes from './routes/AppRoutes'
 import './styles/responsive.css'
-import './styles/dashboard-theme-fix.css'
 import './styles/tiny-screen-responsive.css'
 import './styles/modern-ui-enhancements.css'
 import './styles/typography.css'
+import './styles/dashboard-theme-fix.css'
 
 function App() {
   // Memoize query client to prevent recreation on re-renders
@@ -38,7 +38,7 @@ function App() {
               <FavoritesProvider>
                 <OAuthProvider>
                   <DashboardProvider>
-                    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 typography-fix">
+                    <div className="min-h-screen app-background typography-fix">
                       <AppRoutes />
                       <NotificationSystem />
                     </div>

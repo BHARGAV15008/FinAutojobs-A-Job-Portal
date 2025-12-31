@@ -5,7 +5,7 @@
  * Creates multiple test accounts for comprehensive testing
  */
 
-import fetch from 'node-fetch';
+
 
 const CONFIG = {
     API_BASE_URL: 'http://192.168.41.134:5000/api',

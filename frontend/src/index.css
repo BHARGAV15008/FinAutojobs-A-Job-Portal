@@ -19,82 +19,38 @@
 /* Import ultimate dark mode override */
 @import "./styles/dark-mode-override.css";
 
+/* Import theme-aware text colors */
+@import "./styles/theme-text-colors.css";
+
 /* Import modal responsive styles */
 @import "./styles/modal-responsive.css";
 
 /* Import form interaction fix */
 @import "./styles/form-interaction-fix.css";
 
-/* Global dark mode text visibility fix */
+/* Global dark mode text visibility fix - Let MUI theme handle text colors */
 .dark {
-  color: #ffffff;
+  color-scheme: dark;
 }
 
-.dark * {
-  color: inherit;
-}
-
-/* Ensure all text is visible in dark mode */
+/* Only fix Tailwind gray text classes that conflict with dark backgrounds */
 .dark .text-gray-900,
-.dark .text-gray-800,
+.dark .text-gray-800 {
+  color: #F7FAFC;
+}
+
 .dark .text-gray-700,
-.dark .text-gray-600,
+.dark .text-gray-600 {
+  color: #E2E8F0;
+}
+
 .dark .text-gray-500,
 .dark .text-gray-400 {
-  color: #ffffff !important;
+  color: #CBD5E0;
 }
 
-/* Secondary text should be light gray */
-.dark .text-sm.text-gray-600,
-.dark .text-sm.text-gray-500,
-.dark .text-sm.text-gray-400 {
-  color: #e2e8f0 !important;
-}
-
-/* Muted text should be visible */
-.dark .text-xs.text-gray-500,
-.dark .text-xs.text-gray-400 {
-  color: #cbd5e0 !important;
-}
-
-/* ULTIMATE OVERRIDE - Force ALL elements to have white text in dark mode */
-.dark {
-  color: #ffffff !important;
-}
-
-.dark
-  *:not([class*="text-blue"]):not([class*="text-green"]):not(
-    [class*="text-yellow"]
-  ):not([class*="text-red"]):not([class*="text-purple"]) {
-  color: #ffffff !important;
-}
-
-/* Ensure all dashboard components are visible */
-.dark .bg-white,
-.dark .bg-gray-50,
-.dark .bg-gray-100 {
-  color: #ffffff !important;
-}
-
-.dark .bg-white *,
-.dark .bg-gray-50 *,
-.dark .bg-gray-100 * {
-  color: #ffffff !important;
-}
-
-/* Force visibility for any remaining elements */
-.dark p,
-.dark span,
-.dark div,
-.dark h1,
-.dark h2,
-.dark h3,
-.dark h4,
-.dark h5,
-.dark h6,
-.dark label,
-.dark button {
-  color: #ffffff !important;
+.dark .text-gray-300 {
+  color: #A0AEC0;
 }
 
 /* CRITICAL: Fix form input interactions in dark mode */
@@ -982,30 +938,34 @@ img {
   color: white !important;
 }
 
-/* Ensure text is white on dark backgrounds */
-div[class*="bg-"],
+/* Ensure text is white on gradient and colored backgrounds */
 div[class*="gradient-"],
-p[class*="bg-"],
 p[class*="gradient-"],
-h1[class*="bg-"],
 h1[class*="gradient-"],
-a[class*="bg-"],
 a[class*="gradient-"] {
-  color: white !important;
+  color: white;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-/* Additional specific selectors for common dark background components */
-.MuiButton-contained,
-.MuiButton-containedPrimary,
-.MuiButton-containedSecondary,
+/* Text on colored backgrounds should be white */
 .bg-primary,
 .bg-secondary,
-.bg-dark,
 .bg-blue-600,
+.bg-blue-700,
 .bg-indigo-600,
-.bg-purple-600 {
-  color: white !important;
+.bg-indigo-700,
+.bg-purple-600,
+.bg-purple-700,
+.bg-green-600,
+.bg-green-700,
+.bg-red-600,
+.bg-red-700 {
+  color: white;
+}
+
+/* MUI buttons maintain their own contrast colors */
+.MuiButton-contained {
+  color: inherit;
 }
 
 /* Animation keyframes */
@@ -1054,18 +1014,18 @@ a[class*="gradient-"] {
 }
 
 .dark * {
-  border-color: theme("colors.gray.700");
+  border-color: #4A5568;
 }
 
 /* Global text color inheritance - using CSS custom properties */
 :root {
-  --text-primary: theme("colors.gray.900");
-  --text-secondary: theme("colors.gray.700");
+  --text-primary: #1A202C;
+  --text-secondary: #718096;
 }
 
 .dark {
-  --text-primary: theme("colors.white");
-  --text-secondary: theme("colors.gray.300");
+  --text-primary: #F7FAFC;
+  --text-secondary: #CBD5E0;
 }
 
 /* Override for components that already have proper theme classes */
@@ -1095,30 +1055,23 @@ a[class*="gradient-"] {
   color: var(--text-secondary);
 }
 
-/* Ensure buttons and interactive elements maintain their colors */
-.dashboard-container button {
-  color: inherit;
-}
-
-/* Fix for any hardcoded text colors */
+/* Dashboard text colors - use theme-aware variables */
 .dashboard-container .text-black {
-  color: var(--text-primary) !important;
+  color: var(--text-primary);
 }
 
-.dashboard-container .text-gray-800 {
-  color: theme("colors.gray.800") !important;
-}
-
+.dark .dashboard-container .text-gray-900,
 .dark .dashboard-container .text-gray-800 {
-  color: theme("colors.gray.200") !important;
+  color: #E2E8F0;
 }
 
-.dashboard-container .text-gray-600 {
-  color: theme("colors.gray.600") !important;
-}
-
+.dark .dashboard-container .text-gray-700,
 .dark .dashboard-container .text-gray-600 {
-  color: theme("colors.gray.400") !important;
+  color: #CBD5E0;
+}
+
+.dark .dashboard-container .text-gray-500 {
+  color: #A0AEC0;
 }
 
 /* ===== COMPREHENSIVE RESPONSIVE DESIGN SYSTEM ===== */
@@ -1528,10 +1481,16 @@ textarea {
 /* Ensure login/register pages don't get cut off on mobile */
 .auth-page-container {
   min-height: 100vh;
-  min-height: -webkit-fill-available;
   position: relative;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+/* iOS Safari specific fix */
+@supports (-webkit-touch-callout: none) {
+  .auth-page-container {
+    min-height: -webkit-fill-available;
+  }
 }
 
 /* Mobile-specific auth form container */
@@ -1540,7 +1499,12 @@ textarea {
     padding-top: env(safe-area-inset-top, 20px) !important;
     padding-bottom: env(safe-area-inset-bottom, 20px) !important;
     min-height: 100vh;
-    min-height: -webkit-fill-available;
+  }
+
+  @supports (-webkit-touch-callout: none) {
+    .auth-form-container {
+      min-height: -webkit-fill-available;
+    }
   }
 
   /* Ensure auth cards are properly sized on mobile */
@@ -1565,7 +1529,12 @@ textarea {
 /* iOS Safari viewport height fix */
 .ios-vh-fix {
   height: 100vh;
-  height: -webkit-fill-available;
+}
+
+@supports (-webkit-touch-callout: none) {
+  .ios-vh-fix {
+    height: -webkit-fill-available;
+  }
 }
 
 /* ===== GLOBAL BORDER-RADIUS STANDARDIZATION (5-6px) ===== */

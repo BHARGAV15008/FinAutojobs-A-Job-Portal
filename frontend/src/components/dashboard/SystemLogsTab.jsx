@@ -116,7 +116,7 @@ const SystemLogsTab = () => {
             </div>
 
             {/* Filters */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Filters</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
@@ -168,7 +168,7 @@ const SystemLogsTab = () => {
 
             {/* Log Statistics */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                <div className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 p-6">
                     <div className="flex items-center">
                         <div className="p-3 bg-red-100 dark:bg-red-900 rounded-lg">
                             <span className="text-2xl">❌</span>
@@ -182,7 +182,7 @@ const SystemLogsTab = () => {
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                <div className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 p-6">
                     <div className="flex items-center">
                         <div className="p-3 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
                             <span className="text-2xl">⚠️</span>
@@ -196,7 +196,7 @@ const SystemLogsTab = () => {
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                <div className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 p-6">
                     <div className="flex items-center">
                         <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
                             <span className="text-2xl">ℹ️</span>
@@ -210,7 +210,7 @@ const SystemLogsTab = () => {
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                <div className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 p-6">
                     <div className="flex items-center">
                         <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-lg">
                             <span className="text-2xl">📊</span>
@@ -226,7 +226,7 @@ const SystemLogsTab = () => {
             </div>
 
             {/* Logs Table */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                         System Logs ({filteredLogs.length} entries)

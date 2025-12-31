@@ -77,13 +77,22 @@ const buildApiUrl = () => {
     console.log('🌐 Environment detected:', environment);
     console.log('🔍 Host info:', hostInfo);
 
-    // 1. Explicit environment variable (highest priority)
+    // 1. For development and network modes, always prioritize the current host
+    // This fixes connection timeouts when IP addresses change
+    if (environment === 'development' || environment === 'network') {
+        const backendPort = import.meta.env.VITE_BACKEND_PORT || '5000';
+        const dynamicUrl = `${hostInfo.protocol}//${hostInfo.hostname}:${backendPort}/api`;
+        console.log('🔧 Using dynamic development URL:', dynamicUrl);
+        return dynamicUrl;
+    }
+
+    // 2. Explicit environment variable (for production or specific overrides)
     if (import.meta.env.VITE_API_URL) {
         console.log('✅ Using explicit VITE_API_URL:', import.meta.env.VITE_API_URL);
         return import.meta.env.VITE_API_URL;
     }
 
-    // 2. Production environment
+    // 3. Production environment mapping
     if (environment === 'production') {
         // Known production URL mappings
         const productionUrls = {
@@ -109,7 +118,7 @@ const buildApiUrl = () => {
     // 3. Local development (localhost)
     if (environment === 'development') {
         const backendPort = import.meta.env.VITE_BACKEND_PORT || '5000';
-        const localUrl = `http://192.168.41.134:${backendPort}/api`;
+        const localUrl = `http://${hostInfo.hostname}:${backendPort}/api`;
         console.log('🔧 Using local development URL:', localUrl);
         return localUrl;
     }
@@ -124,7 +133,7 @@ const buildApiUrl = () => {
 
     // 5. Ultimate fallback
     const backendPort = import.meta.env.VITE_BACKEND_PORT || '5000';
-    const fallbackUrl = `http://192.168.41.134:${backendPort}/api`;
+    const fallbackUrl = `http://${hostInfo.hostname || 'localhost'}:${backendPort}/api`;
     console.log('⚠️ Using ultimate fallback:', fallbackUrl);
     return fallbackUrl;
 };

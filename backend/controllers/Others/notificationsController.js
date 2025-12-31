@@ -1,17 +1,13 @@
-import { db } from '../config/database.js';
-import { notifications } from '../models/Others/schema.js';
-import { eq, desc, and } from 'drizzle-orm';
+import Notification from '../models/Notification.js';
+import NotificationSetting from '../models/NotificationSetting.js';
 
 export const getNotifications = async (req, res, next) => {
   try {
     const userId = req.user.userId;
     const limit = parseInt(req.query.limit) || 50;
     
-    const notificationsList = await db
-      .select()
-      .from(notifications)
-      .where(eq(notifications.userId, userId))
-      .orderBy(desc(notifications.createdAt))
+    const notificationsList = await Notification.find({ userId: userId })
+      .sort({ createdAt: -1 })
       .limit(limit);
     
     res.json({
@@ -27,13 +23,10 @@ export const getNotificationSettings = async (req, res, next) => {
   try {
     const userId = req.user.userId;
     
-    const settings = await db
-      .select()
-      .from(dashboardSchema.userPreferences)
-      .where(eq(dashboardSchema.userPreferences.userId, userId));
+    const settings = await NotificationSetting.findOne({ userId: userId });
 
     // Return default settings if none exist
-    if (!settings.length) {
+    if (!settings) {
       return res.json({
         success: true,
         data: {
@@ -49,14 +42,7 @@ export const getNotificationSettings = async (req, res, next) => {
     
     res.json({
       success: true,
-      data: {
-        emailNotifications: Boolean(settings[0].emailNotifications),
-        pushNotifications: Boolean(settings[0].pushNotifications),
-        jobAlerts: Boolean(settings[0].jobAlerts),
-        applicationUpdates: true,
-        interviewReminders: true,
-        marketingEmails: false,
-      }
+      data: settings
     });
   } catch (error) {
     next(error);
@@ -68,34 +54,11 @@ export const updateNotificationSettings = async (req, res, next) => {
     const userId = req.user.userId;
     const settings = req.body;
     
-    // Check if user preferences exist
-    const existingSettings = await db
-      .select()
-      .from(dashboardSchema.userPreferences)
-      .where(eq(dashboardSchema.userPreferences.userId, userId));
-    
-    if (existingSettings.length > 0) {
-      // Update existing settings
-      await db
-        .update(dashboardSchema.userPreferences)
-        .set({
-          emailNotifications: settings.emailNotifications ? 1 : 0,
-          pushNotifications: settings.pushNotifications ? 1 : 0,
-          jobAlerts: settings.jobAlerts ? 1 : 0,
-          updatedAt: new Date().toISOString()
-        })
-        .where(eq(dashboardSchema.userPreferences.userId, userId));
-    } else {
-      // Insert new settings
-      await db.insert(dashboardSchema.userPreferences).values({
-        userId: userId,
-        emailNotifications: settings.emailNotifications ? 1 : 0,
-        pushNotifications: settings.pushNotifications ? 1 : 0,
-        jobAlerts: settings.jobAlerts ? 1 : 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      });
-    }
+    await NotificationSetting.findOneAndUpdate(
+      { userId: userId },
+      settings,
+      { upsert: true, new: true, runValidators: true }
+    );
     
     res.json({
       success: true,
@@ -111,13 +74,15 @@ export const markAsRead = async (req, res, next) => {
     const userId = req.user.userId;
     const notificationId = req.params.id;
     
-    await db
-      .update(dashboardSchema.notifications)
-      .set({ isRead: 1 })
-      .where(and(
-        eq(dashboardSchema.notifications.id, notificationId),
-        eq(dashboardSchema.notifications.userId, userId)
-      ));
+    const notification = await Notification.findOneAndUpdate(
+      { _id: notificationId, userId: userId },
+      { read: true },
+      { new: true }
+    );
+
+    if (!notification) {
+      return res.status(404).json({ success: false, message: 'Notification not found' });
+    }
     
     res.json({
       success: true,
@@ -132,10 +97,7 @@ export const markAllAsRead = async (req, res, next) => {
   try {
     const userId = req.user.userId;
     
-    await db
-      .update(dashboardSchema.notifications)
-      .set({ isRead: 1 })
-      .where(eq(dashboardSchema.notifications.userId, userId));
+    await Notification.updateMany({ userId: userId }, { read: true });
     
     res.json({
       success: true,
@@ -151,12 +113,11 @@ export const deleteNotification = async (req, res, next) => {
     const userId = req.user.userId;
     const notificationId = req.params.id;
     
-    await db
-      .delete(dashboardSchema.notifications)
-      .where(and(
-        eq(dashboardSchema.notifications.id, notificationId),
-        eq(dashboardSchema.notifications.userId, userId)
-      ));
+    const result = await Notification.deleteOne({ _id: notificationId, userId: userId });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ success: false, message: 'Notification not found' });
+    }
     
     res.json({
       success: true,

@@ -1,18 +1,57 @@
 import React, { useState } from 'react';
 import {
-  Box, Card, CardContent, Typography, Grid, Button, Switch,
+  Box, Card, CardContent, Typography, Grid, Button,
   FormControlLabel, Select, MenuItem, FormControl, InputLabel,
   Slider, Divider, Alert, Snackbar, Accordion, AccordionSummary,
-  AccordionDetails, List, ListItem, ListItemText, ListItemIcon,
-  ListItemSecondaryAction, Dialog, DialogTitle, DialogContent,
-  DialogActions, TextField
+  AccordionDetails, Dialog, DialogTitle, DialogContent,
+  DialogActions
 } from '@mui/material';
 import {
-  Settings, Palette, TextFields, Language, Notifications,
-  Security, Privacy, ExpandMore, Save, RestoreFromTrash,
-  Brightness4, Brightness7, VolumeUp, Email, Sms, Push
-} from '@mui/icons-material';
+  Settings, Palette, Language, ExpandMore, Save, RestoreFromTrash,
+  VolumeUp, Mail, Smartphone, Briefcase, MessageSquare
+} from 'lucide-react';
 import { motion } from 'framer-motion';
+
+const CustomSwitch = ({ checked, onChange }) => {
+  // Use internal state to manage visual state immediately, then call prop
+  const [isEnabled, setIsEnabled] = useState(checked);
+
+  const handleClick = () => {
+    const newChecked = !isEnabled;
+    setIsEnabled(newChecked);
+    onChange(newChecked);
+  };
+
+  return (
+    <div
+      onClick={handleClick}
+      className={`w-14 h-7 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ${
+        isEnabled ? 'bg-blue-600 justify-end' : 'bg-gray-200 dark:bg-gray-600 justify-start'
+      }`}
+    >
+      <motion.div
+        layout
+        className="w-5 h-5 bg-white rounded-full shadow-md"
+        transition={{ type: 'spring', stiffness: 700, damping: 30 }}
+      />
+    </div>
+  );
+};
+
+const NotificationRow = ({ icon, title, description, checked, onChange }) => (
+  <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/40 rounded-xl transition-colors duration-300">
+    <div className="flex items-center gap-4">
+      <div className="w-12 h-12 rounded-lg bg-white dark:bg-gray-800 shadow-sm flex items-center justify-center">
+        {icon}
+      </div>
+      <div>
+        <h4 className="font-bold text-gray-900 dark:text-white">{title}</h4>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{description}</p>
+      </div>
+    </div>
+    <CustomSwitch checked={checked} onChange={onChange} />
+  </div>
+);
 
 const ApplicantSettingsTab = ({ user, onUpdate }) => {
   const [settings, setSettings] = useState({
@@ -238,68 +277,36 @@ const ApplicantSettingsTab = ({ user, onUpdate }) => {
                 </Box>
               </AccordionSummary>
               <AccordionDetails>
-                <List>
-                  <ListItem>
-                    <ListItemIcon>
-                      <Email />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="Email Notifications"
-                      secondary="Receive notifications via email"
-                    />
-                    <ListItemSecondaryAction>
-                      <Switch
-                        checked={settings.emailNotifications}
-                        onChange={(e) => handleSettingChange('emailNotifications', e.target.checked)}
-                      />
-                    </ListItemSecondaryAction>
-                  </ListItem>
-                  <ListItem>
-                    <ListItemIcon>
-                      <Push />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="Push Notifications"
-                      secondary="Receive browser push notifications"
-                    />
-                    <ListItemSecondaryAction>
-                      <Switch
-                        checked={settings.pushNotifications}
-                        onChange={(e) => handleSettingChange('pushNotifications', e.target.checked)}
-                      />
-                    </ListItemSecondaryAction>
-                  </ListItem>
-                  <ListItem>
-                    <ListItemIcon>
-                      <Notifications />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="Job Alert Notifications"
-                      secondary="Get notified about new job matches"
-                    />
-                    <ListItemSecondaryAction>
-                      <Switch
-                        checked={settings.jobAlertNotifications}
-                        onChange={(e) => handleSettingChange('jobAlertNotifications', e.target.checked)}
-                      />
-                    </ListItemSecondaryAction>
-                  </ListItem>
-                  <ListItem>
-                    <ListItemIcon>
-                      <Notifications />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="Interview Reminders"
-                      secondary="Reminders for upcoming interviews"
-                    />
-                    <ListItemSecondaryAction>
-                      <Switch
-                        checked={settings.interviewReminders}
-                        onChange={(e) => handleSettingChange('interviewReminders', e.target.checked)}
-                      />
-                    </ListItemSecondaryAction>
-                  </ListItem>
-                </List>
+                <div className="space-y-4">
+                  <NotificationRow 
+                    icon={<Mail className="w-6 h-6 text-blue-500"/>}
+                    title="Email Notifications"
+                    description="Receive job alerts and updates via email"
+                    checked={settings.emailNotifications}
+                    onChange={(val) => handleSettingChange('emailNotifications', val)}
+                  />
+                  <NotificationRow 
+                    icon={<Smartphone className="w-6 h-6 text-green-500"/>}
+                    title="Push Notifications"
+                    description="Get instant notifications on your device"
+                    checked={settings.pushNotifications}
+                    onChange={(val) => handleSettingChange('pushNotifications', val)}
+                  />
+                   <NotificationRow 
+                    icon={<Briefcase className="w-6 h-6 text-indigo-500"/>}
+                    title="Job Alerts"
+                    description="Notifications for new job matches"
+                    checked={settings.jobAlertNotifications}
+                    onChange={(val) => handleSettingChange('jobAlertNotifications', val)}
+                  />
+                  <NotificationRow 
+                    icon={<MessageSquare className="w-6 h-6 text-orange-500"/>}
+                    title="Interview Reminders"
+                    description="Reminders for upcoming interviews"
+                    checked={settings.interviewReminders}
+                    onChange={(val) => handleSettingChange('interviewReminders', val)}
+                  />
+                </div>
               </AccordionDetails>
             </Accordion>
 

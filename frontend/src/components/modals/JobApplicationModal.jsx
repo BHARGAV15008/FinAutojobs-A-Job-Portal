@@ -68,11 +68,17 @@ const JobApplicationModal = ({ open, onClose, job, user, onSubmit }) => {
     expectedSalary: '',
     noticePeriod: '',
     
+    // Skills
+    primarySkills: [],
+    technicalSkills: [],
+    softSkills: [],
+    
     // Application Specific
     coverLetter: '',
     resumeFile: null,
     portfolioUrl: '',
     linkedinUrl: '',
+    githubUrl: '',
     
     // Preferences
     willingToRelocate: false,
@@ -81,6 +87,13 @@ const JobApplicationModal = ({ open, onClose, job, user, onSubmit }) => {
     // Additional
     additionalInfo: '',
     referralSource: '',
+    
+    // Rich Data (Snapshot)
+    education: [],
+    workExperience: [],
+    languages: [],
+    bio: '',
+    highestEducation: '',
   });
 
   // State to track if user has resume in profile
@@ -161,6 +174,9 @@ const JobApplicationModal = ({ open, onClose, job, user, onSubmit }) => {
             languages: profileData.languages || [],
             education: profileData.education || [],
             workExperience: profileData.workExperience || [],
+            highestEducation: profileData.highestEducation || '',
+            certifications: profileData.certifications || [],
+            projects: profileData.projects || [],
           }));
           
           setProfileDataFetched(true);
@@ -469,6 +485,8 @@ to recruiters when they review your application.
         profilePicture: applicationData.profilePicture || '',
         workExperience: applicationData.workExperience || [],
         education: applicationData.education || [],
+        certifications: applicationData.certifications || [],
+        projects: applicationData.projects || [],
         
         // Application Specific Data
         coverLetter: applicationData.coverLetter || '',
@@ -484,6 +502,8 @@ to recruiters when they review your application.
         howDidYouHear: applicationData.referralSource || '',
         willingToRelocate: applicationData.willingToRelocate || false,
         preferRemoteWork: applicationData.remoteWorkPreference || false,
+        preferredLocations: applicationData.preferredLocations || [],
+        preferredJobTypes: applicationData.preferredJobTypes || [],
         additionalInformation: applicationData.additionalInfo || ''
       };
       
@@ -629,7 +649,7 @@ to recruiters when they review your application.
                 <FormControl fullWidth>
                   <InputLabel>Years of Experience</InputLabel>
                   <Select
-                    value={applicationData.experience || (applicationData.experience === '' ? '' : '3-5')}
+                    value={applicationData.experience || ''}
                     onChange={(e) => handleInputChange('experience', e.target.value)}
                   >
                     <MenuItem value="0-1">0-1 years</MenuItem>
@@ -641,7 +661,7 @@ to recruiters when they review your application.
                   </Select>
                   {applicationData.experience && (
                     <Typography variant="caption" color="success.main" sx={{ mt: 1 }}>
-                      ✓ Auto-filled from profile (4 years experience)
+                      ✓ Auto-filled from profile
                     </Typography>
                   )}
                 </FormControl>
@@ -654,6 +674,50 @@ to recruiters when they review your application.
                   onChange={(e) => handleInputChange('expectedSalary', e.target.value)}
                   placeholder="e.g., 8-12 LPA"
                 />
+              </Grid>
+
+              {/* Profile Summary - New Section */}
+              <Grid item xs={12}>
+                <Divider sx={{ my: 2 }}>
+                  <Chip label="Profile Snapshot" size="small" />
+                </Divider>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {/* Skills Summary */}
+                  <Box>
+                    <Typography variant="subtitle2" color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <CheckCircle sx={{ fontSize: 16 }} /> Skills
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
+                      {applicationData.primarySkills?.length > 0 ? (
+                        applicationData.primarySkills.map((skill, index) => (
+                          <Chip key={index} label={skill} size="small" variant="outlined" />
+                        ))
+                      ) : (
+                        <Typography variant="caption" color="text.secondary">No skills found in profile</Typography>
+                      )}
+                    </Box>
+                  </Box>
+
+                  {/* Education & Experience Summary */}
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <Typography variant="subtitle2" color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <School sx={{ fontSize: 16 }} /> Education
+                      </Typography>
+                      <Typography variant="caption" display="block" sx={{ mt: 0.5 }}>
+                        {applicationData.education?.length || 0} entries found
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="subtitle2" color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Work sx={{ fontSize: 16 }} /> Experience
+                      </Typography>
+                      <Typography variant="caption" display="block" sx={{ mt: 0.5 }}>
+                        {applicationData.workExperience?.length || 0} entries found
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </Box>
               </Grid>
             </Grid>
           </Box>

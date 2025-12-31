@@ -3,10 +3,15 @@ import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as LinkedInStrategy } from "passport-linkedin-oauth2";
 import jwt from "jsonwebtoken";
-import UserModels, {
-  createUserByRole,
+import {
   BaseUser,
-} from "../models/UserModels.js";
+  Applicant,
+  Recruiter,
+  Admin,
+  findUserByIdAndRole,
+  createUserByRole,
+  authenticateUser
+} from '../models/UserModels.js';
 import networkConfig from "../utils/networkConfig.js";
 
 const router = express.Router();

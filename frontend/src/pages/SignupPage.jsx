@@ -203,7 +203,7 @@ const SignupPage = () => {
 
           <div className="space-y-6">
             <div className="flex items-center space-x-4">
-              <div className="bg-white/20 p-3 rounded-xl">
+              <div className="bg-white/20 p-3 rounded-md">
                 <Calculator className="w-6 h-6" />
               </div>
               <div>
@@ -213,7 +213,7 @@ const SignupPage = () => {
             </div>
 
             <div className="flex items-center space-x-4">
-              <div className="bg-white/20 p-3 rounded-xl">
+              <div className="bg-white/20 p-3 rounded-md">
                 <Car className="w-6 h-6" />
               </div>
               <div>
@@ -223,7 +223,7 @@ const SignupPage = () => {
             </div>
 
             <div className="flex items-center space-x-4">
-              <div className="bg-white/20 p-3 rounded-xl">
+              <div className="bg-white/20 p-3 rounded-md">
                 <TrendingUp className="w-6 h-6" />
               </div>
               <div>
@@ -270,7 +270,7 @@ const SignupPage = () => {
           </div>
 
           {/* OAuth Buttons */}
-          <div className="bg-white/80 backdrop-blur-sm p-6 rounded-3xl shadow-2xl border border-gray-100 mb-6">
+          <div className="bg-white/80 backdrop-blur-sm p-6 rounded-md shadow-2xl border border-gray-100 mb-6">
             <p className="text-center text-sm font-semibold text-gray-700 mb-4">
               Quick sign up with:
             </p>
@@ -278,7 +278,7 @@ const SignupPage = () => {
               <button
                 type="button"
                 onClick={() => handleOAuthSignup('google')}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors duration-200 text-gray-700 font-medium"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-200 text-gray-700 font-medium"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -291,7 +291,7 @@ const SignupPage = () => {
               <button
                 type="button"
                 onClick={() => handleOAuthSignup('microsoft')}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors duration-200 text-gray-700 font-medium"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-200 text-gray-700 font-medium"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#F25022" d="M11.4 11.4H0V0h11.4v11.4z"/>
@@ -304,7 +304,7 @@ const SignupPage = () => {
               <button
                 type="button"
                 onClick={() => handleOAuthSignup('apple')}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors duration-200 text-gray-700 font-medium"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-200 text-gray-700 font-medium"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
@@ -318,7 +318,7 @@ const SignupPage = () => {
               <button
                 type="button"
                 onClick={handlePhoneSignup}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-blue-500 rounded-xl hover:bg-blue-50 transition-colors duration-200 text-blue-600 font-semibold"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-blue-500 rounded-md hover:bg-blue-50 transition-colors duration-200 text-blue-600 font-semibold"
               >
                 <Phone className="w-5 h-5" />
                 Sign up with Phone Number
@@ -330,7 +330,7 @@ const SignupPage = () => {
             <span className="text-gray-500 text-sm">or continue with email</span>
           </div>
 
-          <form onSubmit={handleSubmit} className="bg-white/80 backdrop-blur-sm p-8 rounded-3xl shadow-2xl border border-gray-100 space-y-6">
+          <form onSubmit={handleSubmit} className="bg-white/80 backdrop-blur-sm p-8 rounded-md shadow-2xl border border-gray-100 space-y-6">
             {/* Full Name Field */}
             <div>
               <label htmlFor="full_name" className="block text-sm font-semibold text-gray-700 mb-2">
@@ -345,7 +345,7 @@ const SignupPage = () => {
                   required
                   value={formData.full_name}
                   onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-4 bg-gray-50/80 border border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 text-gray-900 placeholder-gray-500"
+                  className="w-full pl-12 pr-4 py-4 bg-gray-50/80 border border-gray-200 rounded-md focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 text-gray-900 placeholder-gray-500"
                   placeholder="Enter your full name"
                 />
               </div>
@@ -364,7 +364,7 @@ const SignupPage = () => {
                   type="text"
                   value={formData.username}
                   onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-4 bg-gray-50/80 border border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 text-gray-900 placeholder-gray-500"
+                  className="w-full pl-12 pr-4 py-4 bg-gray-50/80 border border-gray-200 rounded-md focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 text-gray-900 placeholder-gray-500"
                   placeholder="Enter your username (optional)"
                 />
               </div>
@@ -384,7 +384,7 @@ const SignupPage = () => {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-4 bg-gray-50/80 border border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 text-gray-900 placeholder-gray-500"
+                  className="w-full pl-12 pr-4 py-4 bg-gray-50/80 border border-gray-200 rounded-md focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 text-gray-900 placeholder-gray-500"
                   placeholder="Enter your email address"
                 />
               </div>
@@ -400,7 +400,7 @@ const SignupPage = () => {
                 name="role"
                 value={formData.role}
                 onChange={handleChange}
-                className="w-full px-4 py-4 bg-gray-50/80 border border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 text-gray-900"
+                className="w-full px-4 py-4 bg-gray-50/80 border border-gray-200 rounded-md focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 text-gray-900"
               >
                 <option value="job_seeker">🔍 Job Seeker</option>
                 <option value="employer">🏢 Employer / Recruiter</option>
@@ -421,7 +421,7 @@ const SignupPage = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full pl-12 pr-12 py-4 bg-gray-50/80 border border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 text-gray-900 placeholder-gray-500"
+                  className="w-full pl-12 pr-12 py-4 bg-gray-50/80 border border-gray-200 rounded-md focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 text-gray-900 placeholder-gray-500"
                   placeholder="Create a strong password"
                 />
                 <button
@@ -448,7 +448,7 @@ const SignupPage = () => {
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="w-full pl-12 pr-12 py-4 bg-gray-50/80 border border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 text-gray-900 placeholder-gray-500"
+                  className="w-full pl-12 pr-12 py-4 bg-gray-50/80 border border-gray-200 rounded-md focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 text-gray-900 placeholder-gray-500"
                   placeholder="Confirm your password"
                 />
                 <button
@@ -487,7 +487,7 @@ const SignupPage = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-2xl font-semibold text-lg hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105"
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-md font-semibold text-lg hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105"
               >
                 {loading ? '🔄 Creating Account...' : '🎉 Create Account'}
               </button>
@@ -507,7 +507,7 @@ const SignupPage = () => {
 
             <button 
               onClick={() => setOauthPopupOpen(true)}
-              className="w-full inline-flex justify-center items-center py-3 px-4 border border-gray-200 rounded-xl shadow-sm bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 hover:shadow-md"
+              className="w-full inline-flex justify-center items-center py-3 px-4 border border-gray-200 rounded-md shadow-sm bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 hover:shadow-md"
             >
               Continue with Social Login
             </button>

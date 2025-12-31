@@ -81,7 +81,21 @@ const AddJobPage = React.lazy(() =>
 );
 
 const AppRoutes = () => {
-  const { loading } = useAuth();
+  const auth = useAuth();
+  
+  // Safety check for null auth context
+  if (!auth) {
+    return (
+      <SmoothLoader
+        loading={true}
+        message="Initializing Auth..."
+        fullScreen={true}
+        size={60}
+      />
+    );
+  }
+
+  const { loading } = auth;
   const [location] = useLocation();
   const isDashboard =
     location.includes("-dashboard") || location.includes("/demo");
@@ -107,7 +121,7 @@ const AppRoutes = () => {
     <Box
       sx={{
         minHeight: "100vh",
-        backgroundColor: "#ffffff",
+        backgroundColor: "background.default",
         display: "flex",
         flexDirection: "column",
         width: "100%",

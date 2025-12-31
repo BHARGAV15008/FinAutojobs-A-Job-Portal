@@ -54,12 +54,14 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         title: 'Dashboard',
         href: '/dashboard',
         icon: LayoutDashboard,
+        color: '#2563eb', // blue-600
         description: 'Overview and analytics'
       },
       {
         title: 'Profile',
         href: '/profile',
         icon: User,
+        color: '#db2777', // pink-600
         description: 'Manage your profile'
       }
     ];
@@ -71,42 +73,49 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           title: 'Browse Jobs',
           href: '/jobs',
           icon: Search,
+          color: '#4f46e5', // indigo-600
           description: 'Find your dream job'
         },
         {
           title: 'Recommended',
           href: '/recommended',
           icon: Star,
+          color: '#f59e0b', // amber-500
           description: 'Jobs matching your skills'
         },
         {
           title: 'Bookmarks',
           href: '/bookmarks',
           icon: Bookmark,
+          color: '#ef4444', // red-500
           description: 'Saved jobs'
         },
         {
           title: 'Applications',
           href: '/applications',
           icon: Send,
+          color: '#10b981', // emerald-500
           description: 'Track your applications'
         },
         {
           title: 'Interviews',
           href: '/interviews',
           icon: Calendar,
+          color: '#8b5cf6', // violet-500
           description: 'Upcoming interviews'
         },
         {
           title: 'Job Alerts',
           href: '/alerts',
           icon: Bell,
+          color: '#f97316', // orange-500
           description: 'New job notifications'
         },
         {
           title: 'Analytics',
           href: '/analytics',
           icon: BarChart3,
+          color: '#6366f1', // indigo-500
           description: 'Application insights'
         }
       ];
@@ -117,65 +126,36 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           title: 'Job Posting',
           href: '/post-job',
           icon: Plus,
+          color: '#10b981',
           description: 'Post new job'
         },
         {
           title: 'My Jobs',
           href: '/my-jobs',
           icon: Briefcase,
+          color: '#4f46e5',
           description: 'Manage job postings'
         },
         {
           title: 'Applicants',
           href: '/applicants',
           icon: Users,
+          color: '#8b5cf6',
           description: 'View applications'
         },
         {
           title: 'Messages',
           href: '/messages',
           icon: MessageSquare,
+          color: '#f97316',
           description: 'Communicate with applicants'
         },
         {
           title: 'Analytics',
           href: '/analytics',
           icon: TrendingUp,
+          color: '#2563eb',
           description: 'Job performance'
-        }
-      ];
-    } else if (user?.role === 'admin') {
-      return [
-        ...baseItems,
-        {
-          title: 'Applicants',
-          href: '/admin/applicants',
-          icon: Users,
-          description: 'Manage applicants'
-        },
-        {
-          title: 'Recruiters',
-          href: '/admin/recruiters',
-          icon: Building2,
-          description: 'Manage recruiters'
-        },
-        {
-          title: 'Jobs',
-          href: '/admin/jobs',
-          icon: Briefcase,
-          description: 'Manage all jobs'
-        },
-        {
-          title: 'Analytics',
-          href: '/admin/analytics',
-          icon: BarChart3,
-          description: 'System analytics'
-        },
-        {
-          title: 'Messages',
-          href: '/admin/messages',
-          icon: MessageSquare,
-          description: 'System messages'
         }
       ];
     }
@@ -203,11 +183,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           }}
           className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
             active
-              ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
+              ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300'
               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100'
           }`}
         >
-          <item.icon className={`flex-shrink-0 h-5 w-5 ${active ? 'text-indigo-500' : 'text-gray-400 group-hover:text-gray-500'}`} />
+          <item.icon className={`flex-shrink-0 h-5 w-5 ${active ? 'text-indigo-500' : ''}`} style={{ color: active ? undefined : item.color }} />
           <span className="ml-3 flex-1">{item.title}</span>
           {hasSubItems && (
             <motion.div

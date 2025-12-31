@@ -6,26 +6,8 @@ import rateLimit from "express-rate-limit";
 import session from "express-session";
 import passport from "passport";
 import dotenv from "dotenv";
+dotenv.config();
 import MongoStore from "connect-mongo";
-
-// Load environment variables based on NODE_ENV
-let envFile;
-if (process.env.NODE_ENV === "production") {
-  envFile = "./.env.production";
-} else if (process.env.NODE_ENV === "development") {
-  envFile = "./.env.development";
-} else {
-  envFile = "./.env";
-}
-
-console.log("🔧 Loading environment from:", envFile);
-dotenv.config({ path: envFile });
-
-// Fallback to .env if specific environment file doesn't exist
-if (!process.env.MONGODB_URI) {
-  console.log("🔄 Fallback to .env file...");
-  dotenv.config({ path: "./.env" });
-}
 import { createServer } from "http";
 import { Server } from "socket.io";
 import path from "path";
@@ -186,6 +168,7 @@ import testOAuthRoutes from "./routes/testOAuth.js";
 import notificationsRoutes from "./routes/notifications.js";
 import usersRoutes from "./routes/users.js";
 import savedJobsRoutes from "./routes/Applicants/savedJobs.js";
+import savedJobsApiRoutes from "./routes/savedJobs.js";
 import recruiterRoutes from "./routes/recruiters.js";
 import adminRoutes from "./routes/admin.js";
 import analyticsRoutes from "./routes/analytics.js";
@@ -214,7 +197,8 @@ console.log("✅ /api/applications routes registered successfully");
 apiRouter.use("/companies", companyRoutes);
 console.log("✅ /api/companies routes registered successfully");
 apiRouter.use("/users", usersRoutes);
-apiRouter.use("/saved-jobs", savedJobsRoutes);
+apiRouter.use("/saved-jobs", savedJobsApiRoutes);
+apiRouter.use("/applicants/saved-jobs", savedJobsRoutes);
 apiRouter.use("/notifications", notificationsRoutes);
 apiRouter.use("/recruiters", recruiterRoutes);
 apiRouter.use("/recommendations", recommendationsRoutes);

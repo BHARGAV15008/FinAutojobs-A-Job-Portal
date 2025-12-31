@@ -8,7 +8,7 @@ export const JobsFilter = ({ filters, onFilterChange, onReset }) => {
   const experienceLevels = ['Entry Level', '1-2 years', '3-5 years', '5+ years'];
 
   return (
-    <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-xl">
+    <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-md">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">🔍 Job Filters</h3>
         <button
@@ -96,7 +96,7 @@ export const ApplicationsFilter = ({ filters, onFilterChange, onReset }) => {
   const dateRanges = ['Last 7 days', 'Last 30 days', 'Last 3 months', 'All time'];
 
   return (
-    <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-xl">
+    <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-md">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">📋 Application Filters</h3>
         <button
@@ -159,7 +159,7 @@ export const AnalyticsFilter = ({ filters, onFilterChange, onReset }) => {
   ];
 
   return (
-    <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-xl">
+    <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-md">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">📊 Analytics Filters</h3>
         <button

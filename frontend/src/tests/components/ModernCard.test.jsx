@@ -90,7 +90,7 @@ describe('ModernCard', () => {
     );
     const card = container.firstChild;
     
-    expect(card).toHaveClass('rounded-2xl');
+    expect(card).toHaveClass('rounded-md');
   });
 
   it('applies custom className', () => {

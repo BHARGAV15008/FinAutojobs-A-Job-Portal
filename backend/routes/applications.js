@@ -7,8 +7,6 @@ import ApplicationInformation from '../models/ApplicationInformation.js';
 import Job from '../models/Job.js';
 // Import the correct user model that other routes use
 import { BaseUser } from '../models/UserModels.js';
-import CleanUser from '../models/CleanUser.js';
-import SimpleUser from '../models/User.js'; // Simple User model for admin accounts
 import Notification from '../models/Notification.js';
 import { sendInterviewUpdate, NotificationService } from '../services/notifications.js';
 import joi from 'joi';
@@ -131,42 +129,10 @@ const authenticateToken = async (req, res, next) => {
       }
     }
     
-    // Method 5: Fallback to CleanUser (legacy)
-    if (!user) {
-      try {
-        user = await CleanUser.findById(decoded.userId);
-        console.log('🔍 CleanUser fallback lookup result:', user ? 'Found' : 'Not found');
-        if (!user && decoded.email) {
-          user = await CleanUser.findOne({ email: decoded.email });
-          console.log('🔍 CleanUser fallback by email result:', user ? 'Found' : 'Not found');
-        }
-      } catch (error) {
-        console.log('⚠️ CleanUser fallback lookup failed:', error.message);
-      }
-    }
-    
-    // Method 6: Try SimpleUser for admin accounts
-    if (!user && decoded.role === 'admin') {
-      try {
-        // Try by _id first
-        if (decoded.id) {
-          user = await SimpleUser.findById(decoded.id);
-          console.log('🔍 SimpleUser lookup by id result:', user ? 'Found' : 'Not found');
-        }
-        // Try by email if not found
-        if (!user && decoded.email) {
-          user = await SimpleUser.findOne({ email: decoded.email, role: 'admin' });
-          console.log('🔍 SimpleUser lookup by email result:', user ? 'Found' : 'Not found');
-        }
-      } catch (error) {
-        console.log('⚠️ SimpleUser lookup failed:', error.message);
-      }
-    }
-    
     if (!user) {
       console.log('❌ Auth failed: User not found with any method');
       console.log('🔍 Available decoded fields:', Object.keys(decoded));
-      console.log('🔍 Tried user models: BaseUser, CleanUser, SimpleUser');
+      console.log('🔍 Tried user models: BaseUser');
       return res.status(401).json({
         success: false,
         message: 'Invalid token - user not found'
@@ -763,18 +729,10 @@ router.post('/', (req, res, next) => {
     
     if (!applicantUser) {
       console.log('❌ Applicant user not found in BaseUser for ID:', req.user.userId);
-      
-      // Try CleanUser as fallback
-      console.log('🔄 Trying CleanUser fallback lookup...');
-      applicantUser = await CleanUser.findById(req.user.userId);
-      console.log('🔍 CleanUser fallback result:', applicantUser ? 'Found' : 'Not found');
-      
-      if (!applicantUser) {
-        return res.status(400).json({
-          success: false,
-          message: 'Applicant user not found'
-        });
-      }
+      return res.status(400).json({
+        success: false,
+        message: 'Applicant user not found'
+      });
     }
 
     // Create comprehensive applicant snapshot with ALL profile details

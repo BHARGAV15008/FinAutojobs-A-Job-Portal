@@ -2,7 +2,7 @@ import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as MicrosoftStrategy } from 'passport-microsoft';
 import { Strategy as AppleStrategy } from 'passport-apple';
-import User from '../models/User.js';
+import { BaseUser } from '../models/UserModels.js';
 import { createUserProfile } from '../services/profileService.js';
 
 // Helper function to find or create user from OAuth profile
@@ -16,7 +16,7 @@ const findOrCreateUser = async (profile, provider) => {
     }
 
     // Check if user exists with this OAuth provider
-    let user = await User.findOne({
+    let user = await BaseUser.findOne({
       [`oauthProviders.${provider}.id`]: providerId
     });
 
@@ -28,7 +28,7 @@ const findOrCreateUser = async (profile, provider) => {
     }
 
     // Check if user exists with this email
-    user = await User.findOne({ email });
+    user = await BaseUser.findOne({ email });
 
     if (user) {
       // Link OAuth account to existing user
@@ -48,7 +48,7 @@ const findOrCreateUser = async (profile, provider) => {
     const lastName = name?.familyName || displayName?.split(' ').slice(1).join(' ') || '';
     const avatar = photos?.[0]?.value;
 
-    const newUser = new User({
+    const newUser = new BaseUser({
       firstName,
       lastName,
       email,
@@ -60,10 +60,7 @@ const findOrCreateUser = async (profile, provider) => {
           linkedAt: new Date()
         }
       },
-      profile: {
-        avatar,
-        completionPercentage: 20
-      },
+      profileImage: avatar,
       lastLogin: new Date(),
       registrationSource: provider
     });

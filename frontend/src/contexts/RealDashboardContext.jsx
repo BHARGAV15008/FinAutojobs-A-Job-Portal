@@ -486,8 +486,8 @@ export const DashboardProvider = ({ children }) => {
         }));
       }
       
-      // Refresh stats to reflect the new job
-      await refreshStats();
+      // Refresh full dashboard data to get the new job in the list
+      await refreshData();
       return response.data;
     } catch (error) {
       console.error("Failed to post job:", error);
@@ -510,8 +510,8 @@ export const DashboardProvider = ({ children }) => {
         ) || []
       }));
       
-      // Refresh stats to reflect changes
-      await refreshStats();
+      // Refresh full dashboard data to reflect changes
+      await refreshData();
       return response.data;
     } catch (error) {
       console.error("Failed to update job:", error);

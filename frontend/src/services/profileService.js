@@ -112,7 +112,18 @@ export const profileService = {
       console.log('Fetching comprehensive application data...');
       
       const response = await apiClient.get('/auth/profile');
-      const profileData = response.data.data || response.data;
+      let profileData = response.data.data || response.data;
+      
+      // Auto-parse JSON strings if they come from backend (extra safety)
+      ['skills', 'education', 'workExperience'].forEach(field => {
+        if (typeof profileData[field] === 'string' && profileData[field] && (profileData[field].startsWith('[') || profileData[field].startsWith('{'))) {
+          try {
+            profileData[field] = JSON.parse(profileData[field]);
+          } catch (e) {
+            console.warn(`Failed to parse ${field} from backend:`, e);
+          }
+        }
+      });
       
       // Transform and organize data for application form
       const applicationData = {
@@ -129,16 +140,19 @@ export const profileService = {
         // Professional Information - Enhanced mapping
         currentJobTitle: profileData.current_job_title || 
                            profileData.careerInfo?.currentJobTitle || 
+                           profileData.position ||
                            profileData.workExperience?.[0]?.jobTitle || 
                            (profileData.workExperience?.[0]?.isCurrentJob ? profileData.workExperience[0].jobTitle : '') || '',
         
         currentCompany: profileData.current_company || 
                          profileData.careerInfo?.currentCompany || 
+                         profileData.company_name ||
                          profileData.workExperience?.[0]?.companyName || 
                          (profileData.workExperience?.[0]?.isCurrentJob ? profileData.workExperience[0].companyName : '') || '',
         
         experience: (() => {
           const years = profileData.experience_years || profileData.yearsOfExperience || 0;
+          if (years === 0) return '';
           if (years <= 1) return '0-1';
           if (years <= 3) return '1-3';
           if (years <= 5) return '3-5';
@@ -147,43 +161,50 @@ export const profileService = {
           return '12+';
         })(),
         
-        expectedSalary: profileData.expected_salary || profileData.careerInfo?.expectedSalary || '',
+        expectedSalary: profileData.expected_salary || profileData.careerInfo?.expectedSalary || profileData.expectedSalary || '',
         
         // Skills - Enhanced mapping
-        primarySkills: profileData.skills?.primary || profileData.primary_skills || [],
+        primarySkills: profileData.skills?.primary || profileData.primary_skills || (Array.isArray(profileData.skills) ? profileData.skills : []),
         technicalSkills: profileData.skills?.technical || profileData.technical_skills || [],
         softSkills: profileData.skills?.soft || profileData.soft_skills || [],
         
         // Social Links - Enhanced mapping with multiple fallbacks
         linkedinUrl: profileData.linkedin_url || 
+                      profileData.linkedinUrl ||
                       profileData.socialLinks?.linkedinUrl || 
                       profileData.socialLinks?.linkedin || '',
         
         portfolioUrl: profileData.portfolio_url || 
+                       profileData.portfolioUrl ||
                        profileData.socialLinks?.portfolioUrl || 
                        profileData.socialLinks?.portfolio || 
                        profileData.documents?.portfolioUrl || '',
         
         githubUrl: profileData.github_url || 
+                    profileData.githubUrl ||
                     profileData.socialLinks?.githubUrl || 
                     profileData.socialLinks?.github || '',
         
         // Preferences - Enhanced mapping
         willingToRelocate: profileData.willing_to_relocate || 
+                            profileData.willingToRelocate ||
                             profileData.jobPreferences?.willingToRelocate || false,
         
         remoteWorkPreference: profileData.remote_work_preference || 
+                               profileData.remoteWorkPreference ||
                                profileData.jobPreferences?.remoteWorkPreference || false,
         
-        noticePeriod: profileData.notice_period || profileData.jobPreferences?.noticePeriod || '',
+        noticePeriod: profileData.notice_period || profileData.noticePeriod || profileData.jobPreferences?.noticePeriod || '',
         
         // Education - Get highest degree
-        highestEducation: profileData.education?.[0]?.degree || '',
+        highestEducation: profileData.highestEducation || profileData.qualification || profileData.education?.[0]?.degree || '',
         
         // Additional data
         languages: profileData.languages || [],
         education: profileData.education || [],
         workExperience: profileData.workExperience || [],
+        certifications: profileData.certifications || [],
+        projects: profileData.projects || [],
         
         // Resume URL
         resumeUrl: profileData.resume_url || profileData.documents?.resumeUrl || '',

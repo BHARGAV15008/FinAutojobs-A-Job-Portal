@@ -157,7 +157,7 @@ const ApplicantNotificationsTab = () => {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex flex-wrap gap-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+      <div className="flex flex-wrap gap-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-md">
         {filterOptions.map((filter) => (
           <motion.button
             key={filter.value}
@@ -207,7 +207,7 @@ const ApplicantNotificationsTab = () => {
             {filteredNotifications.map((notification, index) => (
               <motion.div
                 key={notification.id}
-                className={`bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border-l-4 transition-all duration-300 cursor-pointer ${
+                className={`bg-white dark:bg-gray-800 rounded-md p-6 shadow-sm border-l-4 transition-all duration-300 cursor-pointer ${
                   notification.isRead 
                     ? 'border-gray-300 dark:border-gray-600' 
                     : 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'

@@ -4,6 +4,7 @@ import AdminMetrics from './AdminMetrics';
 import AdminActivity from './AdminActivity';
 import LoginStatusBanner from './LoginStatusBanner';
 import { useDashboard } from '../../contexts/RealDashboardContext';
+import { getDisplayName } from '../../utils/textHelpers';
 
 const AdminDashboardMain = ({ user }) => {
   const { dashboardData, getStats } = useDashboard();
@@ -26,17 +27,17 @@ const AdminDashboardMain = ({ user }) => {
       
       {/* Welcome Section */}
       <motion.div
-        className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl p-8 text-white"
+        className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-md p-8 text-white"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold mb-2">
-              Welcome back, {user.name}! ⚡
+            <h2 className="text-3xl font-extrabold mb-2 text-white">
+              Welcome Back, {getDisplayName(user)}! ⚡
             </h2>
-            <p className="text-purple-100 text-lg">
+            <p className="text-white text-lg opacity-90">
               Monitor and manage the entire FinAutoJobs platform
             </p>
           </div>
@@ -53,8 +54,8 @@ const AdminDashboardMain = ({ user }) => {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         {/* System Overview Chart */}
         <div className="xl:col-span-2">
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+          <div className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 p-6">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">
               Platform Overview
             </h3>
             <div className="grid grid-cols-2 gap-6">
@@ -62,25 +63,25 @@ const AdminDashboardMain = ({ user }) => {
                 <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
                   {stats.totalUsers?.toLocaleString() || '0'}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Total Users</div>
+                <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Users</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-green-600 dark:text-green-400">
                   {stats.activeJobs?.toLocaleString() || '0'}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Active Jobs</div>
+                <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Jobs</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
                   {stats.totalApplications?.toLocaleString() || '0'}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Applications</div>
+                <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Applications</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">
                   {stats.systemHealth || 100}%
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Uptime</div>
+                <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Uptime</div>
               </div>
             </div>
           </div>
@@ -95,9 +96,9 @@ const AdminDashboardMain = ({ user }) => {
       {/* Management Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* User Management */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-md shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
               User Management
             </h3>
             <button className="text-blue-600 hover:text-blue-700 dark:text-blue-400 text-sm font-medium">
@@ -136,9 +137,9 @@ const AdminDashboardMain = ({ user }) => {
         </div>
 
         {/* Job Moderation */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-md shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
               Job Moderation
             </h3>
             <button className="text-blue-600 hover:text-blue-700 dark:text-blue-400 text-sm font-medium">
@@ -177,9 +178,9 @@ const AdminDashboardMain = ({ user }) => {
         </div>
 
         {/* System Health */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-md shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
               System Health
             </h3>
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">

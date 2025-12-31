@@ -102,7 +102,7 @@ const ApplicantInterviewsTab = () => {
       </div>
 
       {/* Status Filters */}
-      <div className="flex flex-wrap gap-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+      <div className="flex flex-wrap gap-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-md">
         {Object.entries(statusConfig).map(([status, config]) => (
           <motion.button
             key={status}
@@ -152,7 +152,7 @@ const ApplicantInterviewsTab = () => {
             {filteredInterviews.map((interview, index) => (
               <motion.div
                 key={interview.id}
-                className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-300"
+                className="bg-white dark:bg-gray-800 rounded-md p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-300"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}

@@ -54,6 +54,7 @@ import {
 import { styled, keyframes } from "@mui/material/styles";
 import API_BASE_URL from "../services/apiConfig";
 import colors, { fonts, fontSizes } from "../styles/uiColors";
+import { mapBackendJobToFrontend } from "../utils/jobMapper";
 
 // Animations
 const float = keyframes`
@@ -100,7 +101,7 @@ const HeroSection = styled(Box)(() => ({
 
 const FloatingCard = styled(Card)(() => ({
   position: "absolute",
-  borderRadius: "16px",
+  borderRadius: "6px",
   boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
   animation: `${float} 4s ease-in-out infinite`,
   backdropFilter: "blur(10px)",
@@ -109,7 +110,7 @@ const FloatingCard = styled(Card)(() => ({
 
 const StatsCard = styled(Box)(({ bgcolor }) => ({
   padding: "24px",
-  borderRadius: "20px",
+  borderRadius: "6px",
   background: bgcolor || "linear-gradient(135deg, #fff 0%, #f9fafb 100%)",
   boxShadow: "0 10px 40px rgba(0,0,0,0.08)",
   transition: "all 0.3s ease",
@@ -122,7 +123,7 @@ const StatsCard = styled(Box)(({ bgcolor }) => ({
 
 const CategoryCard = styled(Box)(({ gradient }) => ({
   padding: "28px",
-  borderRadius: "20px",
+  borderRadius: "6px",
   background: gradient || "#fff",
   boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
   cursor: "pointer",
@@ -151,7 +152,7 @@ const CategoryCard = styled(Box)(({ gradient }) => ({
 }));
 
 const JobCard = styled(Card)(() => ({
-  borderRadius: "16px",
+  borderRadius: "6px",
   boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
   transition: "all 0.3s ease",
   border: "1px solid transparent",
@@ -168,7 +169,7 @@ const JobCard = styled(Card)(() => ({
 }));
 
 const CompanyCard = styled(Card)(() => ({
-  borderRadius: "16px",
+  borderRadius: "6px",
   padding: "24px",
   boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
   transition: "all 0.3s ease",
@@ -186,7 +187,7 @@ const GradientButton = styled(Button)(() => ({
   textTransform: "none",
   fontWeight: 600,
   padding: "14px 32px",
-  borderRadius: "12px",
+  borderRadius: "6px",
   boxShadow: "0 4px 20px rgba(99, 102, 241, 0.4)",
   transition: "all 0.3s ease",
   "&:hover": {
@@ -204,25 +205,41 @@ const SectionTitle = styled(Box)(() => ({
 const HomePageNaukri = () => {
   const [savedJobs, setSavedJobs] = useState([]);
   const [featuredJobs, setFeaturedJobs] = useState([]);
+  const [topCompanies, setTopCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   useEffect(() => {
     fetchFeaturedJobs();
+    fetchTopCompanies();
   }, []);
 
   const fetchFeaturedJobs = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/jobs?limit=8`);
       if (response.ok) {
-        const data = await response.json();
-        setFeaturedJobs(data.jobs || data || []);
+        const result = await response.json();
+        const jobsData = result.data?.jobs || [];
+        setFeaturedJobs(jobsData.map(mapBackendJobToFrontend));
       }
     } catch (error) {
       console.error("Error fetching jobs:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchTopCompanies = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/companies?limit=6`);
+      if (response.ok) {
+        const result = await response.json();
+        const companiesData = result.data?.companies || result.companies || [];
+        setTopCompanies(companiesData);
+      }
+    } catch (error) {
+      console.error("Error fetching companies:", error);
     }
   };
 
@@ -237,28 +254,28 @@ const HomePageNaukri = () => {
   const stats = [
     {
       icon: <Work sx={{ fontSize: 32 }} />,
-      value: "2M+",
+      value: "Many",
       label: "Active Jobs",
       color: colors.primary,
       bgGradient: "linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%)",
     },
     {
       icon: <Business sx={{ fontSize: 32 }} />,
-      value: "50K+",
+      value: "Top",
       label: "Companies",
       color: "#8b5cf6",
       bgGradient: "linear-gradient(135deg, #fae8ff 0%, #f5d0fe 100%)",
     },
     {
       icon: <Person sx={{ fontSize: 32 }} />,
-      value: "30M+",
+      value: "Verified",
       label: "Job Seekers",
       color: "#06b6d4",
       bgGradient: "linear-gradient(135deg, #cffafe 0%, #a5f3fc 100%)",
     },
     {
       icon: <EmojiEvents sx={{ fontSize: 32 }} />,
-      value: "91",
+      value: "Leading",
       label: "Unicorns Hiring",
       color: "#f59e0b",
       bgGradient: "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
@@ -269,49 +286,41 @@ const HomePageNaukri = () => {
     {
       icon: <Code />,
       title: "IT & Software",
-      count: "85,000+",
       gradient: "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
     },
     {
       icon: <Analytics />,
       title: "Data Science",
-      count: "25,000+",
       gradient: "linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)",
     },
     {
       icon: <DesignServices />,
       title: "Design",
-      count: "15,000+",
       gradient: "linear-gradient(135deg, #ec4899 0%, #be185d 100%)",
     },
     {
       icon: <Campaign />,
       title: "Marketing",
-      count: "22,000+",
       gradient: "linear-gradient(135deg, #f97316 0%, #c2410c 100%)",
     },
     {
       icon: <AccountBalance />,
       title: "Banking & Finance",
-      count: "18,000+",
       gradient: "linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)",
     },
     {
       icon: <HealthAndSafety />,
       title: "Healthcare",
-      count: "12,000+",
       gradient: "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
     },
     {
       icon: <Engineering />,
       title: "Engineering",
-      count: "30,000+",
       gradient: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
     },
     {
       icon: <SupportAgent />,
       title: "Customer Support",
-      count: "20,000+",
       gradient: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryDark} 100%)`,
     },
   ];
@@ -411,7 +420,7 @@ const HomePageNaukri = () => {
                   icon={
                     <LocalFireDepartment sx={{ color: "#fbbf24 !important" }} />
                   }
-                  label="🎉 Over 2 Million Jobs Available"
+                  label="🔥 Specialized Jobs Available"
                   sx={{
                     mb: 4,
                     bgcolor: "rgba(255,255,255,0.15)",
@@ -502,7 +511,7 @@ const HomePageNaukri = () => {
                       fontWeight: 600,
                       px: 4,
                       py: 1.5,
-                      borderRadius: "12px",
+                      borderRadius: "6px",
                       "&:hover": {
                         borderColor: "#fff",
                         bgcolor: "rgba(255,255,255,0.1)",
@@ -540,7 +549,7 @@ const HomePageNaukri = () => {
                       variant="body2"
                       sx={{ color: "rgba(255,255,255,0.9)" }}
                     >
-                      <strong>30M+</strong> job seekers trust us
+                      Professionals trust us
                     </Typography>
                   </Box>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
@@ -679,7 +688,7 @@ const HomePageNaukri = () => {
                     sx={{
                       width: 56,
                       height: 56,
-                      borderRadius: "14px",
+                      borderRadius: "6px",
                       bgcolor: `${stat.color}20`,
                       display: "flex",
                       alignItems: "center",
@@ -767,7 +776,7 @@ const HomePageNaukri = () => {
                     sx={{
                       width: 56,
                       height: 56,
-                      borderRadius: "14px",
+                      borderRadius: "6px",
                       bgcolor: "rgba(255,255,255,0.25)",
                       display: "flex",
                       alignItems: "center",
@@ -791,15 +800,9 @@ const HomePageNaukri = () => {
                     sx={{
                       display: "flex",
                       alignItems: "center",
-                      justifyContent: "space-between",
+                      justifyContent: "flex-end",
                     }}
                   >
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "rgba(255,255,255,0.85)" }}
-                    >
-                      {category.count} jobs
-                    </Typography>
                     <ArrowForward
                       className="arrow-icon"
                       sx={{
@@ -874,47 +877,7 @@ const HomePageNaukri = () => {
             </Box>
           ) : (
             <Grid container spacing={3}>
-              {(featuredJobs.length > 0
-                ? featuredJobs
-                : [
-                    {
-                      _id: 1,
-                      title: "Senior Software Engineer",
-                      company: "Google",
-                      location: "Bangalore",
-                      salary: "25-35 LPA",
-                      type: "Full-time",
-                      skills: ["React", "Node.js", "Python"],
-                    },
-                    {
-                      _id: 2,
-                      title: "Product Manager",
-                      company: "Amazon",
-                      location: "Mumbai",
-                      salary: "30-40 LPA",
-                      type: "Full-time",
-                      skills: ["Strategy", "Analytics", "Leadership"],
-                    },
-                    {
-                      _id: 3,
-                      title: "Data Scientist",
-                      company: "Microsoft",
-                      location: "Hyderabad",
-                      salary: "20-30 LPA",
-                      type: "Full-time",
-                      skills: ["Python", "ML", "SQL"],
-                    },
-                    {
-                      _id: 4,
-                      title: "UX Designer",
-                      company: "Meta",
-                      location: "Remote",
-                      salary: "18-25 LPA",
-                      type: "Full-time",
-                      skills: ["Figma", "UX Research", "Prototyping"],
-                    },
-                  ]
-              )
+              {featuredJobs
                 .slice(0, 8)
                 .map((job, index) => (
                   <Grid item xs={12} sm={6} lg={3} key={job._id || index}>
@@ -973,7 +936,7 @@ const HomePageNaukri = () => {
                           variant="body2"
                           sx={{ color: "#6b7280", fontWeight: 500, mb: 0.5 }}
                         >
-                          {job.company || "Company"}
+                          {job.company}
                         </Typography>
                         <Typography
                           variant="h6"
@@ -998,7 +961,7 @@ const HomePageNaukri = () => {
                         >
                           <LocationOn sx={{ fontSize: 16 }} />
                           <Typography variant="body2">
-                            {job.location || "Remote"}
+                            {job.location}
                           </Typography>
                         </Box>
 
@@ -1010,7 +973,7 @@ const HomePageNaukri = () => {
                             flexWrap: "wrap",
                           }}
                         >
-                          {(job.skills || ["React", "Node.js"])
+                          {(job.skills || [])
                             .slice(0, 3)
                             .map((skill, i) => (
                               <Chip
@@ -1035,13 +998,13 @@ const HomePageNaukri = () => {
                               variant="body2"
                               sx={{ color: "#22c55e", fontWeight: 600 }}
                             >
-                              ₹{job.salary || "15-25 LPA"}
+                              {job.salary}
                             </Typography>
                             <Typography
                               variant="caption"
                               sx={{ color: "#9ca3af" }}
                             >
-                              {job.type || "Full-time"}
+                              {job.type}
                             </Typography>
                           </Box>
                           <Button
@@ -1079,121 +1042,127 @@ const HomePageNaukri = () => {
       </Box>
 
       {/* Top Companies Section */}
-      <Container maxWidth="lg" sx={{ py: 10, px: { xs: 2, sm: 4, md: 6 } }}>
-        <SectionTitle>
-          <Chip
-            label="TOP EMPLOYERS"
-            size="small"
-            sx={{
-              mb: 2,
-              bgcolor: "#dbeafe",
-              color: "#2563eb",
-              fontWeight: 700,
-              fontFamily: fonts.body,
-              letterSpacing: "0.1em",
-            }}
-          />
-          <Typography
-            variant="h3"
-            sx={{
-              fontWeight: 800,
-              mb: 2,
-              fontFamily: fonts.heading,
-              fontSize: fontSizes.sectionTitle,
-              color: "#1f2937",
-              letterSpacing: "-0.02em",
-            }}
-          >
-            Dream Companies Hiring
-          </Typography>
-          <Typography
-            variant="h6"
-            sx={{
-              color: "#6b7280",
-              fontWeight: 400,
-              fontFamily: fonts.body,
-              fontSize: "1.1rem",
-            }}
-          >
-            Get noticed by world's top employers
-          </Typography>
-        </SectionTitle>
+      {topCompanies.length > 0 && (
+        <Container maxWidth="lg" sx={{ py: 10, px: { xs: 2, sm: 4, md: 6 } }}>
+          <SectionTitle>
+            <Chip
+              label="TOP EMPLOYERS"
+              size="small"
+              sx={{
+                mb: 2,
+                bgcolor: "#dbeafe",
+                color: "#2563eb",
+                fontWeight: 700,
+                fontFamily: fonts.body,
+                letterSpacing: "0.1em",
+              }}
+            />
+            <Typography
+              variant="h3"
+              sx={{
+                fontWeight: 800,
+                mb: 2,
+                fontFamily: fonts.heading,
+                fontSize: fontSizes.sectionTitle,
+                color: "#1f2937",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              Dream Companies Hiring
+            </Typography>
+            <Typography
+              variant="h6"
+              sx={{
+                color: "#6b7280",
+                fontWeight: 400,
+                fontFamily: fonts.body,
+                fontSize: "1.1rem",
+              }}
+            >
+              Get noticed by world's top employers
+            </Typography>
+          </SectionTitle>
 
-        <Grid container spacing={3}>
-          {topCompanies.map((company, index) => (
-            <Grid item xs={6} sm={4} md={2} key={index}>
-              <CompanyCard>
-                <Avatar
-                  sx={{
-                    width: 64,
-                    height: 64,
-                    bgcolor: company.color,
-                    fontSize: "28px",
-                    fontWeight: 700,
-                    mx: "auto",
-                    mb: 2,
-                    boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-                  }}
-                >
-                  {company.logo}
-                </Avatar>
-                <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
-                  {company.name}
-                </Typography>
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 0.5,
-                    mb: 1,
-                  }}
-                >
-                  <Rating
-                    value={company.rating}
-                    precision={0.1}
-                    size="small"
-                    readOnly
-                  />
-                  <Typography variant="caption" sx={{ color: "#6b7280" }}>
-                    ({company.reviews})
+          <Grid container spacing={3}>
+            {topCompanies.map((company, index) => (
+              <Grid item xs={6} sm={4} md={2} key={index}>
+                <CompanyCard>
+                  <Avatar
+                    sx={{
+                      width: 64,
+                      height: 64,
+                      bgcolor: company.color || colors.primary,
+                      fontSize: "28px",
+                      fontWeight: 700,
+                      mx: "auto",
+                      mb: 2,
+                      boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+                    }}
+                  >
+                    {company.logo || (company.name || "C").charAt(0)}
+                  </Avatar>
+                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
+                    {company.name}
                   </Typography>
-                </Box>
-                <Chip
-                  label={`${company.openings} Openings`}
-                  size="small"
-                  sx={{ bgcolor: "#f3f4f6", fontWeight: 500 }}
-                />
-              </CompanyCard>
-            </Grid>
-          ))}
-        </Grid>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 0.5,
+                      mb: 1,
+                    }}
+                  >
+                    <Rating
+                      value={company.rating || 0}
+                      precision={0.1}
+                      size="small"
+                      readOnly
+                    />
+                    {company.reviews && (
+                      <Typography variant="caption" sx={{ color: "#6b7280" }}>
+                        ({company.reviews})
+                      </Typography>
+                    )}
+                  </Box>
+                  {company.openings && (
+                    <Chip
+                      label={`${company.openings} Openings`}
+                      size="small"
+                      sx={{ bgcolor: "#f3f4f6", fontWeight: 500 }}
+                    />
+                  )}
+                </CompanyCard>
+              </Grid>
+            ))}
+          </Grid>
 
-        <Box sx={{ textAlign: "center", mt: 6 }}>
-          <Button
-            component={Link}
-            href="/companies"
-            variant="outlined"
-            size="large"
-            endIcon={<ArrowForward />}
-            sx={{
-              textTransform: "none",
-              fontWeight: 600,
-              borderColor: colors.primary,
-              color: colors.primary,
-              px: 4,
-              py: 1.5,
-              borderRadius: "12px",
-              "&:hover": {
-                borderColor: colors.primaryDark,
-                bgcolor: "rgba(99,102,241,0.08)",
-              },
-            }}
-          >
-            View All Companies
-          </Button>
-        </Box>
-      </Container>
+          <Box sx={{ textAlign: "center", mt: 6 }}>
+            <Button
+              component={Link}
+              href="/companies"
+              variant="outlined"
+              size="large"
+              endIcon={<ArrowForward />}
+              sx={{
+                textTransform: "none",
+                fontWeight: 600,
+                borderColor: colors.primary,
+                color: colors.primary,
+                px: 4,
+                py: 1.5,
+                borderRadius: "6px",
+                "&:hover": {
+                  borderColor: colors.primaryDark,
+                  bgcolor: "rgba(99,102,241,0.08)",
+                },
+              }}
+            >
+              View All Companies
+            </Button>
+          </Box>
+        </Container>
+      )}
 
       {/* Features Section */}
       <Box
@@ -1237,7 +1206,7 @@ const HomePageNaukri = () => {
                 <Box
                   sx={{
                     p: 4,
-                    borderRadius: "20px",
+                    borderRadius: "6px",
                     bgcolor: "rgba(255,255,255,0.1)",
                     backdropFilter: "blur(10px)",
                     border: "1px solid rgba(255,255,255,0.1)",
@@ -1253,7 +1222,7 @@ const HomePageNaukri = () => {
                     sx={{
                       width: 64,
                       height: 64,
-                      borderRadius: "16px",
+                      borderRadius: "6px",
                       bgcolor: "rgba(255,255,255,0.2)",
                       display: "flex",
                       alignItems: "center",
@@ -1291,7 +1260,7 @@ const HomePageNaukri = () => {
           <Box
             sx={{
               p: { xs: 4, md: 6 },
-              borderRadius: "24px",
+              borderRadius: "6px",
               background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
               textAlign: "center",
               position: "relative",
@@ -1349,17 +1318,17 @@ const HomePageNaukri = () => {
               <Button
                 component={Link}
                 href="/register"
-                variant="contained"
+                variant="outlined"
                 size="large"
                 sx={{
                   bgcolor: "#fff",
-                  color: colors.primary,
+                  color: "#0000",
                   textTransform: "none",
                   fontWeight: 700,
                   px: 4,
                   py: 1.5,
-                  borderRadius: "12px",
-                  "&:hover": { bgcolor: "#f3f4f6" },
+                  borderRadius: "6px",
+                  "&:hover": { bgcolor: "#f3f4f6", color: "rgba(0,0,0,0.95)" },
                 }}
               >
                 Create Free Account
@@ -1376,7 +1345,7 @@ const HomePageNaukri = () => {
                   fontWeight: 600,
                   px: 4,
                   py: 1.5,
-                  borderRadius: "12px",
+                  borderRadius: "6px",
                   "&:hover": {
                     borderColor: "#fff",
                     bgcolor: "rgba(255,255,255,0.1)",

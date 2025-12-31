@@ -250,7 +250,7 @@ const ResumeBuilderTab = () => {
       </div>
 
       {/* Template Selection */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 p-6">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
           Choose Template
         </h3>
@@ -272,7 +272,7 @@ const ResumeBuilderTab = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Section Navigation */}
         <div className="lg:col-span-1">
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 p-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
               Resume Sections
             </h3>
@@ -297,7 +297,7 @@ const ResumeBuilderTab = () => {
 
         {/* Section Content */}
         <div className="lg:col-span-2">
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 p-6">
             <motion.div
               key={activeSection}
               initial={{ opacity: 0, x: 20 }}
@@ -311,7 +311,7 @@ const ResumeBuilderTab = () => {
       </div>
 
       {/* Resume Preview */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 p-6">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
           Resume Preview
         </h3>

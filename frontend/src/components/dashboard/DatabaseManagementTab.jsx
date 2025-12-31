@@ -136,7 +136,7 @@ const DatabaseManagementTab = () => {
 
             {/* Database Statistics */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                <div className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 p-6">
                     <div className="flex items-center">
                         <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
                             <span className="text-2xl">🗄️</span>
@@ -148,7 +148,7 @@ const DatabaseManagementTab = () => {
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                <div className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 p-6">
                     <div className="flex items-center">
                         <div className="p-3 bg-green-100 dark:bg-green-900 rounded-lg">
                             <span className="text-2xl">📊</span>
@@ -162,7 +162,7 @@ const DatabaseManagementTab = () => {
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                <div className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 p-6">
                     <div className="flex items-center">
                         <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-lg">
                             <span className="text-2xl">💾</span>
@@ -174,7 +174,7 @@ const DatabaseManagementTab = () => {
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                <div className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 p-6">
                     <div className="flex items-center">
                         <div className="p-3 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
                             <span className="text-2xl">⚡</span>
@@ -188,7 +188,7 @@ const DatabaseManagementTab = () => {
             </div>
 
             {/* Database Tables */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Database Tables</h3>
                 </div>
@@ -261,7 +261,7 @@ const DatabaseManagementTab = () => {
             </div>
 
             {/* Database Backups */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Database Backups</h3>
                 </div>

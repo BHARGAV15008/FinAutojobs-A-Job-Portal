@@ -66,7 +66,7 @@ export const unpublishJob = async (id) => {
 
 export const getJobsByRecruiter = async (recruiterId) => {
   try {
-    const response = await apiClient.get(`/jobs/recruiter/${recruiterId}`);
+    const response = await apiClient.get('/jobs', { params: { postedBy: recruiterId } });
     return response.data;
   } catch (error) {
     throw error.response?.data || error.message;
@@ -123,6 +123,32 @@ export const unsaveJob = async (jobId) => {
 export const getSavedJobs = async () => {
   try {
     const response = await apiClient.get('/jobs/saved');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+};
+
+export const getRecruiterJobs = async (status = null, recruiterId = null) => {
+  try {
+    const params = {};
+    if (status) {
+      params.status = status;
+    }
+    // For recruiter dashboard, pass the recruiter ID to show their jobs
+    if (recruiterId) {
+      params.postedBy = recruiterId;
+    }
+    const response = await apiClient.get('/jobs', { params });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+};
+
+export const debugJobs = async () => {
+  try {
+    const response = await apiClient.get('/jobs/debug');
     return response.data;
   } catch (error) {
     throw error.response?.data || error.message;

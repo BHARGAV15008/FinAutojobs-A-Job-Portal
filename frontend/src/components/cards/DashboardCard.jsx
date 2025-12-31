@@ -16,32 +16,32 @@ const DashboardCard = ({
   animated = true,
   size = 'default' // 'small', 'default', 'large'
 }) => {
-  // Enhanced gradient definitions with unique color combinations
+  // Enhanced gradient definitions with vibrant, professional color combinations
   const gradients = {
-    blue: 'from-blue-500 via-blue-600 to-indigo-600',
-    green: 'from-emerald-500 via-green-600 to-teal-600',
-    purple: 'from-purple-500 via-violet-600 to-indigo-600',
-    orange: 'from-orange-500 via-amber-600 to-yellow-600',
-    red: 'from-red-500 via-rose-600 to-pink-600',
-    indigo: 'from-indigo-500 via-blue-600 to-cyan-600',
-    pink: 'from-pink-500 via-rose-600 to-red-600',
-    teal: 'from-teal-500 via-cyan-600 to-blue-600',
-    slate: 'from-slate-500 via-gray-600 to-zinc-600',
-    emerald: 'from-emerald-400 via-green-500 to-teal-600'
+    blue: 'from-blue-500 via-sky-500 to-cyan-500',
+    green: 'from-emerald-500 via-green-500 to-teal-500',
+    purple: 'from-purple-500 via-violet-500 to-fuchsia-500',
+    orange: 'from-orange-500 via-amber-500 to-yellow-500',
+    red: 'from-red-500 via-rose-500 to-pink-500',
+    indigo: 'from-indigo-500 via-blue-500 to-sky-500',
+    pink: 'from-pink-500 via-rose-500 to-red-500',
+    teal: 'from-teal-500 via-cyan-500 to-blue-500',
+    slate: 'from-slate-500 via-gray-500 to-zinc-500',
+    emerald: 'from-emerald-400 via-green-400 to-teal-400'
   };
 
-  // Enhanced background gradients for card backgrounds
+  // Enhanced background gradients for card backgrounds - more vibrant in light mode
   const backgroundGradients = {
-    blue: 'bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20',
-    green: 'bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-emerald-900/20 dark:to-teal-900/20',
-    purple: 'bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-900/20 dark:to-violet-900/20',
-    orange: 'bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-900/20 dark:to-amber-900/20',
-    red: 'bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-900/20 dark:to-rose-900/20',
-    indigo: 'bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-indigo-900/20 dark:to-blue-900/20',
-    pink: 'bg-gradient-to-br from-pink-50 to-rose-100 dark:from-pink-900/20 dark:to-rose-900/20',
-    teal: 'bg-gradient-to-br from-teal-50 to-cyan-100 dark:from-teal-900/20 dark:to-cyan-900/20',
-    slate: 'bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-900/20 dark:to-gray-900/20',
-    emerald: 'bg-gradient-to-br from-emerald-50 to-green-100 dark:from-emerald-900/20 dark:to-green-900/20'
+    blue: 'bg-gradient-to-br from-blue-50 via-sky-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20',
+    green: 'bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20',
+    purple: 'bg-gradient-to-br from-purple-50 via-violet-50 to-fuchsia-50 dark:from-purple-900/20 dark:to-fuchsia-900/20',
+    orange: 'bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20',
+    red: 'bg-gradient-to-br from-red-50 via-rose-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20',
+    indigo: 'bg-gradient-to-br from-indigo-50 via-blue-50 to-sky-50 dark:from-indigo-900/20 dark:to-sky-900/20',
+    pink: 'bg-gradient-to-br from-pink-50 via-rose-50 to-red-50 dark:from-pink-900/20 dark:to-red-900/20',
+    teal: 'bg-gradient-to-br from-teal-50 via-cyan-50 to-blue-50 dark:from-teal-900/20 dark:to-blue-900/20',
+    slate: 'bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 dark:from-slate-900/20 dark:to-zinc-900/20',
+    emerald: 'bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20'
   };
 
   const changeColors = {
@@ -114,9 +114,9 @@ const DashboardCard = ({
   return (
     <motion.div
       className={`
-        relative overflow-hidden rounded-xl border border-gray-200/50 dark:border-gray-700/50
-        bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm
-        shadow-lg hover:shadow-2xl transition-all duration-500
+        relative overflow-hidden rounded-2xl border-2 border-gray-200/60 dark:border-gray-700/50
+        bg-white dark:bg-gray-800 backdrop-blur-sm
+        shadow-xl hover:shadow-2xl transition-all duration-500
         ${backgroundGradients[gradient]}
         ${onClick ? 'cursor-pointer' : ''}
         ${className}
@@ -128,18 +128,18 @@ const DashboardCard = ({
       whileTap={animated && onClick ? "tap" : {}}
       onClick={onClick}
     >
-      {/* Animated background pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <div className={`absolute top-0 right-0 w-40 h-40 bg-gradient-to-br ${gradients[gradient]} rounded-full transform translate-x-20 -translate-y-20`}></div>
-        <div className={`absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr ${gradients[gradient]} rounded-full transform -translate-x-16 translate-y-16`}></div>
+      {/* Animated background pattern - more prominent */}
+      <div className="absolute inset-0 opacity-10">
+        <div className={`absolute top-0 right-0 w-48 h-48 bg-gradient-to-br ${gradients[gradient]} rounded-full transform translate-x-20 -translate-y-20 blur-2xl`}></div>
+        <div className={`absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr ${gradients[gradient]} rounded-full transform -translate-x-16 translate-y-16 blur-2xl`}></div>
       </div>
       
-      {/* Floating light effect */}
+      {/* Animated top border accent */}
       <motion.div
-        className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${gradients[gradient]} opacity-60`}
-        initial={{ scaleX: 0 }}
-        animate={{ scaleX: 1 }}
-        transition={{ delay: 0.5, duration: 0.8 }}
+        className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${gradients[gradient]}`}
+        initial={{ scaleX: 0, opacity: 0 }}
+        animate={{ scaleX: 1, opacity: 1 }}
+        transition={{ delay: 0.3, duration: 0.8 }}
       />
       
       <div className={`relative z-10 ${sizeClasses[size]}`}>
@@ -157,7 +157,7 @@ const DashboardCard = ({
             {/* Header */}
             <div className="flex items-center justify-between mb-4 sm:mb-5 md:mb-6">
               <motion.h3 
-                className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                className="text-xs sm:text-sm font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.1 }}
@@ -166,13 +166,16 @@ const DashboardCard = ({
               </motion.h3>
               {icon && (
                 <motion.div 
-                  className={`p-2 sm:p-2.5 md:p-3 rounded-lg sm:rounded-xl bg-gradient-to-br ${gradients[gradient]} text-white shadow-lg`}
+                  className={`p-3 sm:p-3.5 rounded-xl bg-gradient-to-br ${gradients[gradient]} shadow-lg flex items-center justify-center ring-4 ring-white/50 dark:ring-gray-800/50`}
                   variants={animated ? iconVariants : {}}
                   initial={animated ? "initial" : false}
                   animate={animated ? "animate" : false}
                   whileHover={animated ? "hover" : {}}
                 >
-                  {icon}
+                  {React.isValidElement(icon) ? React.cloneElement(icon, { 
+                    sx: { fontSize: 26, color: '#ffffff', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' },
+                    className: "dashboard-card-icon"
+                  }) : icon}
                 </motion.div>
               )}
             </div>
@@ -242,7 +245,7 @@ const DashboardCard = ({
       
       {/* Hover glow effect */}
       <motion.div
-        className={`absolute inset-0 rounded-xl bg-gradient-to-br ${gradients[gradient]} opacity-0`}
+        className={`absolute inset-0 rounded-md bg-gradient-to-br ${gradients[gradient]} opacity-0`}
         whileHover={{ opacity: 0.05 }}
         transition={{ duration: 0.3 }}
       />

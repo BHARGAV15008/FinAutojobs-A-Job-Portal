@@ -16,7 +16,7 @@ const __dirname = path.dirname(__filename);
 
 // Configuration
 const CONFIG = {
-    BASE_URL: 'http://192.168.41.134:5000/api',
+    BASE_URL: 'http://localhost:5000/api',
     TEST_EMAIL: 'technogenius1500@gmail.com',
     TEST_PASSWORD: 'TestPassword123!',
     TEST_PHONE: '+919876543210',

@@ -72,12 +72,12 @@ const float = keyframes`
 `;
 
 // Styled Components
-const NavbarWrapper = styled(Box)(({ scrolled }) => ({
+const NavbarWrapper = styled(Box)(({ theme, $scrolled }) => ({
   position: "sticky",
   top: 0,
   zIndex: 1100,
-  backgroundColor: "#fff",
-  boxShadow: scrolled
+  backgroundColor: theme.palette.background.paper,
+  boxShadow: $scrolled
     ? "0 4px 20px rgba(0,0,0,0.1)"
     : "0 2px 8px rgba(0,0,0,0.06)",
   transition: "all 0.3s ease",
@@ -100,56 +100,62 @@ const TopBar = styled(Box)(() => ({
   },
 }));
 
-const MainNav = styled(Box)(() => ({
-  backgroundColor: "#fff",
-  borderBottom: "1px solid #e8e8e8",
+const MainNav = styled(Box)(({ theme }) => ({
+  backgroundColor: theme.palette.background.paper,
+  borderBottom: `1px solid ${theme.palette.divider}`,
 }));
 
-const SearchWrapper = styled(Paper)(({ focused }) => ({
+const SearchWrapper = styled(Paper)(({ theme, $focused }) => ({
   display: "flex",
   alignItems: "center",
-  borderRadius: "12px",
-  border: focused ? `2px solid ${colors.primary}` : "1px solid #e0e0e0",
-  boxShadow: focused ? `0 4px 20px ${colors.primary}33` : "none",
+  borderRadius: "6px",
+  border: $focused ? `2px solid ${colors.primary}` : `1px solid ${theme.palette.divider}`,
+  boxShadow: $focused ? `0 4px 20px ${colors.primary}33` : "none",
   transition: "all 0.3s ease",
-  backgroundColor: focused ? "#fafafe" : "#fff",
+  backgroundColor: $focused
+    ? theme.palette.mode === "dark"
+      ? theme.palette.action.hover
+      : "#fafafe"
+    : theme.palette.background.paper,
   "&:hover": {
     borderColor: colors.primary,
     boxShadow: `0 2px 12px ${colors.primary}26`,
   },
 }));
 
-const SearchInput = styled(InputBase)(() => ({
+const SearchInput = styled(InputBase)(({ theme }) => ({
   flex: 1,
   padding: "10px 14px",
   fontSize: "14px",
+  color: theme.palette.text.primary,
   "& input::placeholder": {
-    color: "#9ca3af",
+    color: theme.palette.text.secondary,
     opacity: 1,
   },
 }));
 
-const SearchSuggestionsBox = styled(Paper)(() => ({
+const SearchSuggestionsBox = styled(Paper)(({ theme }) => ({
   position: "absolute",
   top: "100%",
   left: 0,
   right: 0,
   marginTop: "8px",
-  borderRadius: "12px",
+  borderRadius: "6px",
   boxShadow: "0 10px 40px rgba(0,0,0,0.15)",
   overflow: "hidden",
   zIndex: 1300,
   maxHeight: "400px",
   overflowY: "auto",
+  backgroundColor: theme.palette.background.paper,
 }));
 
-const NavLink = styled(Button)(({ active }) => ({
+const NavLink = styled(Button)(({ theme, $active }) => ({
   textTransform: "none",
-  fontWeight: active ? 600 : 500,
+  fontWeight: $active ? 600 : 500,
   fontSize: "14px",
-  color: active ? colors.primary : colors.neutralText,
+  color: $active ? colors.primary : theme.palette.text.primary,
   padding: "10px 18px",
-  borderRadius: "8px",
+  borderRadius: "6px",
   position: "relative",
   transition: "all 0.2s ease",
   "&:hover": {
@@ -157,7 +163,7 @@ const NavLink = styled(Button)(({ active }) => ({
     color: colors.primaryDark,
     transform: "translateY(-1px)",
   },
-  "&::after": active
+  "&::after": $active
     ? {
         content: '""',
         position: "absolute",
@@ -172,13 +178,13 @@ const NavLink = styled(Button)(({ active }) => ({
     : {},
 }));
 
-const MegaMenuDropdown = styled(Box)(() => ({
+const MegaMenuDropdown = styled(Box)(({ theme }) => ({
   position: "absolute",
   top: "calc(100% + 10px)",
   left: "50%",
   transform: "translateX(-50%)",
-  backgroundColor: "#fff",
-  borderRadius: "16px",
+  backgroundColor: theme.palette.background.paper,
+  borderRadius: "6px",
   boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
   padding: "24px",
   minWidth: "600px",
@@ -193,7 +199,7 @@ const MegaMenuDropdown = styled(Box)(() => ({
     left: "50%",
     width: "16px",
     height: "16px",
-    backgroundColor: "#fff",
+    backgroundColor: theme.palette.background.paper,
     borderRadius: "4px",
     transform: "translateX(-50%) rotate(45deg)",
     boxShadow: "-2px -2px 5px rgba(0,0,0,0.03)",
@@ -205,7 +211,7 @@ const MenuItemStyled = styled(Box)(() => ({
   alignItems: "center",
   gap: "12px",
   padding: "12px 16px",
-  borderRadius: "10px",
+  borderRadius: "6px",
   cursor: "pointer",
   transition: "all 0.2s ease",
   "&:hover": {
@@ -307,26 +313,22 @@ const NaukriNavbar = () => {
       {
         icon: <Work />,
         title: "IT Jobs",
-        count: "50,000+",
         link: "/jobs?category=it",
         hot: true,
       },
       {
         icon: <TrendingUp />,
         title: "Sales Jobs",
-        count: "25,000+",
         link: "/jobs?category=sales",
       },
       {
         icon: <Business />,
         title: "Marketing Jobs",
-        count: "15,000+",
         link: "/jobs?category=marketing",
       },
       {
         icon: <School />,
         title: "Data Science Jobs",
-        count: "10,000+",
         link: "/jobs?category=data-science",
         hot: true,
       },
@@ -335,40 +337,34 @@ const NaukriNavbar = () => {
       {
         icon: <Star />,
         title: "Fresher Jobs",
-        count: "30,000+",
         link: "/jobs?category=fresher",
       },
       {
         icon: <HomeWork />,
         title: "Remote Jobs",
-        count: "20,000+",
         link: "/jobs?category=remote",
         new: true,
       },
       {
         icon: <LocalFireDepartment />,
         title: "Walk-in Jobs",
-        count: "5,000+",
         link: "/jobs?category=walkin",
       },
       {
         icon: <FlashOn />,
         title: "Part-time Jobs",
-        count: "8,000+",
         link: "/jobs?category=part-time",
       },
     ],
     byLocation: [
       {
         title: "Bangalore",
-        count: "45,000+",
         link: "/jobs?location=bangalore",
       },
-      { title: "Mumbai", count: "38,000+", link: "/jobs?location=mumbai" },
-      { title: "Delhi NCR", count: "42,000+", link: "/jobs?location=delhi" },
+      { title: "Mumbai", link: "/jobs?location=mumbai" },
+      { title: "Delhi NCR", link: "/jobs?location=delhi" },
       {
         title: "Hyderabad",
-        count: "28,000+",
         link: "/jobs?location=hyderabad",
       },
     ],
@@ -379,45 +375,38 @@ const NaukriNavbar = () => {
       {
         icon: <Verified />,
         title: "MNCs",
-        count: "2,100+",
         link: "/companies?type=mnc",
         badge: "Popular",
       },
       {
         icon: <TrendingUp />,
         title: "Startups",
-        count: "755",
         link: "/companies?type=startup",
       },
       {
         icon: <EmojiEvents />,
         title: "Unicorns",
-        count: "91",
         link: "/companies?type=unicorn",
         badge: "Hot",
       },
       {
         icon: <Business />,
         title: "Product Companies",
-        count: "1,200+",
         link: "/companies?type=product",
       },
     ],
     byIndustry: [
-      { title: "IT Services", count: "2,432", link: "/companies?industry=it" },
+      { title: "IT Services", link: "/companies?industry=it" },
       {
         title: "Banking & Finance",
-        count: "416",
         link: "/companies?industry=finance",
       },
       {
         title: "E-commerce",
-        count: "234",
         link: "/companies?industry=ecommerce",
       },
       {
         title: "Healthcare",
-        count: "658",
         link: "/companies?industry=healthcare",
       },
     ],
@@ -435,7 +424,7 @@ const NaukriNavbar = () => {
         <Typography
           variant="subtitle2"
           sx={{
-            color: "#6b7280",
+            color: "text.secondary",
             fontWeight: 600,
             mb: 2,
             textTransform: "uppercase",
@@ -450,7 +439,7 @@ const NaukriNavbar = () => {
             <MenuItemStyled>
               <Box
                 className="menu-icon"
-                sx={{ color: "#6b7280", transition: "all 0.2s" }}
+                sx={{ color: "text.secondary", transition: "all 0.2s" }}
               >
                 {item.icon}
               </Box>
@@ -460,7 +449,7 @@ const NaukriNavbar = () => {
                     className="menu-title"
                     variant="body2"
                     fontWeight={600}
-                    sx={{ color: "#1f2937", transition: "color 0.2s" }}
+                    sx={{ color: "text.primary", transition: "color 0.2s" }}
                   >
                     {item.title}
                   </Typography>
@@ -478,15 +467,13 @@ const NaukriNavbar = () => {
                     />
                   )}
                 </Box>
-                <Typography variant="caption" sx={{ color: "#9ca3af" }}>
-                  {item.count} jobs
-                </Typography>
+
               </Box>
               <ArrowForward
                 className="arrow-icon"
                 sx={{
                   fontSize: 16,
-                  color: "#d1d5db",
+                  color: "action.disabled",
                   opacity: 0,
                   transition: "all 0.2s",
                 }}
@@ -497,7 +484,7 @@ const NaukriNavbar = () => {
         <Typography
           variant="subtitle2"
           sx={{
-            color: "#6b7280",
+            color: "text.secondary",
             fontWeight: 600,
             mt: 3,
             mb: 2,
@@ -513,7 +500,7 @@ const NaukriNavbar = () => {
             <MenuItemStyled>
               <Box
                 className="menu-icon"
-                sx={{ color: "#6b7280", transition: "all 0.2s" }}
+                sx={{ color: "text.secondary", transition: "all 0.2s" }}
               >
                 {item.icon}
               </Box>
@@ -523,7 +510,7 @@ const NaukriNavbar = () => {
                     className="menu-title"
                     variant="body2"
                     fontWeight={600}
-                    sx={{ color: "#1f2937", transition: "color 0.2s" }}
+                    sx={{ color: "text.primary", transition: "color 0.2s" }}
                   >
                     {item.title}
                   </Typography>
@@ -541,9 +528,7 @@ const NaukriNavbar = () => {
                     />
                   )}
                 </Box>
-                <Typography variant="caption" sx={{ color: "#9ca3af" }}>
-                  {item.count} jobs
-                </Typography>
+
               </Box>
             </MenuItemStyled>
           </Link>
@@ -553,7 +538,7 @@ const NaukriNavbar = () => {
         <Typography
           variant="subtitle2"
           sx={{
-            color: "#6b7280",
+            color: "text.secondary",
             fontWeight: 600,
             mb: 2,
             textTransform: "uppercase",
@@ -568,7 +553,7 @@ const NaukriNavbar = () => {
             <MenuItemStyled>
               <LocationOn
                 className="menu-icon"
-                sx={{ color: "#6b7280", fontSize: 20 }}
+                sx={{ color: "text.secondary", fontSize: 20 }}
               />
               <Box sx={{ flex: 1 }}>
                 <Typography
@@ -578,9 +563,7 @@ const NaukriNavbar = () => {
                 >
                   {item.title}
                 </Typography>
-                <Typography variant="caption" sx={{ color: "#9ca3af" }}>
-                  {item.count} jobs
-                </Typography>
+
               </Box>
             </MenuItemStyled>
           </Link>
@@ -595,7 +578,7 @@ const NaukriNavbar = () => {
               fontWeight: 600,
               py: 1.5,
               background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
-              borderRadius: "10px",
+              borderRadius: "6px",
               "&:hover": {
                 background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
               },
@@ -605,7 +588,7 @@ const NaukriNavbar = () => {
           </Button>
         </Link>
       </Box>
-      <Box sx={{ bgcolor: "#f9fafb", p: 2, borderRadius: "12px" }}>
+      <Box sx={{ bgcolor: "action.hover", p: 2, borderRadius: "6px" }}>
         <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2 }}>
           🔥 Trending Searches
         </Typography>
@@ -640,7 +623,7 @@ const NaukriNavbar = () => {
         <Typography
           variant="subtitle2"
           sx={{
-            color: "#6b7280",
+            color: "text.secondary",
             fontWeight: 600,
             mb: 2,
             textTransform: "uppercase",
@@ -655,7 +638,7 @@ const NaukriNavbar = () => {
             <MenuItemStyled>
               <Box
                 className="menu-icon"
-                sx={{ color: "#6b7280", transition: "all 0.2s" }}
+                sx={{ color: "text.secondary", transition: "all 0.2s" }}
               >
                 {item.icon}
               </Box>
@@ -682,9 +665,7 @@ const NaukriNavbar = () => {
                     />
                   )}
                 </Box>
-                <Typography variant="caption" sx={{ color: "#9ca3af" }}>
-                  {item.count} companies
-                </Typography>
+
               </Box>
             </MenuItemStyled>
           </Link>
@@ -694,7 +675,7 @@ const NaukriNavbar = () => {
         <Typography
           variant="subtitle2"
           sx={{
-            color: "#6b7280",
+            color: "text.secondary",
             fontWeight: 600,
             mb: 2,
             textTransform: "uppercase",
@@ -709,7 +690,7 @@ const NaukriNavbar = () => {
             <MenuItemStyled>
               <Business
                 className="menu-icon"
-                sx={{ color: "#6b7280", fontSize: 20 }}
+                sx={{ color: "text.secondary", fontSize: 20 }}
               />
               <Box sx={{ flex: 1 }}>
                 <Typography
@@ -719,9 +700,7 @@ const NaukriNavbar = () => {
                 >
                   {item.title}
                 </Typography>
-                <Typography variant="caption" sx={{ color: "#9ca3af" }}>
-                  {item.count} companies
-                </Typography>
+
               </Box>
             </MenuItemStyled>
           </Link>
@@ -736,14 +715,14 @@ const NaukriNavbar = () => {
               fontWeight: 600,
               py: 1.5,
               background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
-              borderRadius: "10px",
+              borderRadius: "6px",
             }}
           >
             View All Companies →
           </Button>
         </Link>
       </Box>
-      <Box sx={{ bgcolor: "#f9fafb", p: 2, borderRadius: "12px" }}>
+      <Box sx={{ bgcolor: "action.hover", p: 2, borderRadius: "6px" }}>
         <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2 }}>
           ⭐ Featured Companies
         </Typography>
@@ -756,8 +735,8 @@ const NaukriNavbar = () => {
                 alignItems: "center",
                 gap: 1.5,
                 p: 1,
-                borderRadius: "8px",
-                "&:hover": { bgcolor: "#fff" },
+                borderRadius: "6px",
+                "&:hover": { bgcolor: "background.paper" },
                 cursor: "pointer",
               }}
             >
@@ -783,7 +762,7 @@ const NaukriNavbar = () => {
   );
 
   return (
-    <NavbarWrapper scrolled={trigger}>
+    <NavbarWrapper $scrolled={trigger}>
       {/* Top Bar */}
       <TopBar>
         <Container maxWidth="xl">
@@ -799,18 +778,18 @@ const NaukriNavbar = () => {
             <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
               <TopBarChip
                 icon={<LocalFireDepartment sx={{ fontSize: 16 }} />}
-                label="2M+ Active Jobs"
+                label="Active Jobs"
                 size="small"
               />
               <TopBarChip
                 icon={<Business sx={{ fontSize: 16 }} />}
-                label="50K+ Companies"
+                label="Top Companies"
                 size="small"
                 sx={{ display: { xs: "none", sm: "flex" } }}
               />
               <TopBarChip
                 icon={<EmojiEvents sx={{ fontSize: 16 }} />}
-                label="91 Unicorns Hiring"
+                label="Unicorns Hiring"
                 size="small"
                 sx={{ display: { xs: "none", md: "flex" } }}
               />
@@ -870,7 +849,7 @@ const NaukriNavbar = () => {
                     height: 44,
                     background:
                       "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
-                    borderRadius: "12px",
+                    borderRadius: "6px",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -884,7 +863,7 @@ const NaukriNavbar = () => {
                     variant="h6"
                     sx={{
                       fontWeight: 800,
-                      color: "#1f2937",
+                      color: "text.primary",
                       lineHeight: 1.1,
                       fontSize: "1.15rem",
                       background:
@@ -919,19 +898,18 @@ const NaukriNavbar = () => {
               <SearchWrapper
                 component="form"
                 onSubmit={handleSearch}
-                focused={searchFocused}
+                $focused={searchFocused}
               >
                 <Box
                   sx={{
                     display: "flex",
                     alignItems: "center",
                     px: 1.5,
-                    borderRight: "1px solid #e5e7eb",
                   }}
                 >
                   <Search
                     sx={{
-                      color: searchFocused ? "#6366f1" : "#9ca3af",
+                      color: searchFocused ? "primary.main" : "text.secondary",
                       fontSize: 22,
                       transition: "color 0.2s",
                     }}
@@ -952,10 +930,9 @@ const NaukriNavbar = () => {
                     display: "flex",
                     alignItems: "center",
                     px: 1.5,
-                    borderLeft: "1px solid #e5e7eb",
                   }}
                 >
-                  <LocationOn sx={{ color: "#9ca3af", fontSize: 20 }} />
+                  <LocationOn sx={{ color: "text.secondary", fontSize: 20 }} />
                 </Box>
                 <SearchInput
                   placeholder="Location"
@@ -969,7 +946,7 @@ const NaukriNavbar = () => {
                   sx={{
                     m: 0.5,
                     px: 3,
-                    borderRadius: "8px",
+                    borderRadius: "6px",
                     textTransform: "none",
                     fontWeight: 600,
                     background:
@@ -1101,7 +1078,7 @@ const NaukriNavbar = () => {
                 onMouseLeave={() => setActiveDropdown(null)}
               >
                 <NavLink
-                  active={location.startsWith("/jobs")}
+                  $active={location.startsWith("/jobs")}
                   endIcon={
                     <KeyboardArrowDown
                       sx={{
@@ -1139,7 +1116,7 @@ const NaukriNavbar = () => {
                 onMouseLeave={() => setActiveDropdown(null)}
               >
                 <NavLink
-                  active={location.startsWith("/companies")}
+                  $active={location.startsWith("/companies")}
                   endIcon={
                     <KeyboardArrowDown
                       sx={{
@@ -1174,14 +1151,14 @@ const NaukriNavbar = () => {
 
               {/* Salary Insights Link */}
               <Link href="/salary-insights">
-                <NavLink active={location.startsWith("/salary-insights")}>
+                <NavLink $active={location.startsWith("/salary-insights")}>
                   Salary Insights
                 </NavLink>
               </Link>
 
               {/* Skills Assessment Link */}
               <Link href="/skills-assessment">
-                <NavLink active={location.startsWith("/skills-assessment")}>
+                <NavLink $active={location.startsWith("/skills-assessment")}>
                   Skills Assessment
                 </NavLink>
               </Link>
@@ -1201,19 +1178,19 @@ const NaukriNavbar = () => {
                   <Tooltip title="Notifications">
                     <IconButton>
                       <NotificationBadge badgeContent={5} max={99}>
-                        <Notifications sx={{ color: "#6b7280" }} />
+                        <Notifications sx={{ color: "text.secondary" }} />
                       </NotificationBadge>
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Saved Jobs">
                     <IconButton sx={{ display: { xs: "none", md: "flex" } }}>
-                      <Bookmark sx={{ color: "#6b7280" }} />
+                      <Bookmark sx={{ color: "text.secondary" }} />
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Messages">
                     <IconButton sx={{ display: { xs: "none", md: "flex" } }}>
                       <Badge badgeContent={2} color="primary">
-                        <Chat sx={{ color: "#6b7280" }} />
+                        <Chat sx={{ color: "text.secondary" }} />
                       </Badge>
                     </IconButton>
                   </Tooltip>
@@ -1226,7 +1203,7 @@ const NaukriNavbar = () => {
                       gap: 1,
                       cursor: "pointer",
                       p: 1,
-                      borderRadius: "10px",
+                      borderRadius: "6px",
                       transition: "all 0.2s",
                       "&:hover": { bgcolor: "rgba(99, 102, 241, 0.08)" },
                     }}
@@ -1248,18 +1225,18 @@ const NaukriNavbar = () => {
                       <Typography
                         variant="body2"
                         fontWeight={600}
-                        sx={{ color: "#1f2937", lineHeight: 1.2 }}
+                        sx={{ color: "text.primary", lineHeight: 1.2 }}
                       >
                         {user.name ||
                           `${user.firstName} ${user.lastName}` ||
                           "User"}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: "#6b7280" }}>
+                      <Typography variant="caption" sx={{ color: "text.secondary" }}>
                         {user.role === "recruiter" ? "Recruiter" : "Job Seeker"}
                       </Typography>
                     </Box>
                     <KeyboardArrowDown
-                      sx={{ color: "#6b7280", fontSize: 18 }}
+                      sx={{ color: "text.secondary", fontSize: 18 }}
                     />
                   </Box>
 
@@ -1270,7 +1247,7 @@ const NaukriNavbar = () => {
                     PaperProps={{
                       sx: {
                         mt: 1.5,
-                        borderRadius: "14px",
+                        borderRadius: "6px",
                         boxShadow: "0 10px 40px rgba(0,0,0,0.15)",
                         minWidth: 240,
                       },
@@ -1280,9 +1257,9 @@ const NaukriNavbar = () => {
                       sx={{
                         px: 2.5,
                         py: 2,
-                        borderBottom: "1px solid #f3f4f6",
-                        background:
-                          "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
+                        borderBottom: 1,
+                        borderColor: "divider",
+                        background: (theme) => theme.palette.mode === 'dark' ? theme.palette.background.default : "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
                       }}
                     >
                       <Typography variant="subtitle1" fontWeight={700}>
@@ -1386,7 +1363,7 @@ const NaukriNavbar = () => {
                       borderColor: "#6366f1",
                       color: "#6366f1",
                       px: 3,
-                      borderRadius: "10px",
+                      borderRadius: "6px",
                       "&:hover": {
                         borderColor: "#4f46e5",
                         bgcolor: "rgba(99, 102, 241, 0.08)",
@@ -1404,7 +1381,7 @@ const NaukriNavbar = () => {
                       textTransform: "none",
                       fontWeight: 600,
                       px: 3,
-                      borderRadius: "10px",
+                      borderRadius: "6px",
                       background:
                         "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
                       boxShadow: "0 4px 14px rgba(99, 102, 241, 0.4)",
@@ -1438,7 +1415,7 @@ const NaukriNavbar = () => {
         open={mobileOpen}
         onClose={() => setMobileOpen(false)}
         PaperProps={{
-          sx: { width: "90%", maxWidth: 380, borderRadius: "20px 0 0 20px" },
+          sx: { width: "90%", maxWidth: 380, borderRadius: "6px 0 0 6px" },
         }}
       >
         <Box sx={{ p: 2.5 }}>
@@ -1457,7 +1434,7 @@ const NaukriNavbar = () => {
                   height: 40,
                   background:
                     "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
-                  borderRadius: "10px",
+                  borderRadius: "6px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -1471,7 +1448,7 @@ const NaukriNavbar = () => {
             </Box>
             <IconButton
               onClick={() => setMobileOpen(false)}
-              sx={{ bgcolor: "#f3f4f6" }}
+              sx={{ bgcolor: "action.hover" }}
             >
               <Close />
             </IconButton>
@@ -1482,7 +1459,7 @@ const NaukriNavbar = () => {
             onSubmit={handleSearch}
             sx={{ mb: 3 }}
           >
-            <Search sx={{ ml: 1.5, color: "#9ca3af" }} />
+            <Search sx={{ ml: 1.5, color: "text.secondary" }} />
             <SearchInput
               placeholder="Search jobs..."
               value={searchQuery}
@@ -1497,7 +1474,7 @@ const NaukriNavbar = () => {
               href="/jobs"
               onClick={() => setMobileOpen(false)}
               sx={{
-                borderRadius: "10px",
+                borderRadius: "6px",
                 mb: 1,
                 "&:hover": { bgcolor: "rgba(99,102,241,0.08)" },
               }}
@@ -1515,7 +1492,7 @@ const NaukriNavbar = () => {
               href="/companies"
               onClick={() => setMobileOpen(false)}
               sx={{
-                borderRadius: "10px",
+                borderRadius: "6px",
                 mb: 1,
                 "&:hover": { bgcolor: "rgba(99,102,241,0.08)" },
               }}
@@ -1533,7 +1510,7 @@ const NaukriNavbar = () => {
               href="/salary-insights"
               onClick={() => setMobileOpen(false)}
               sx={{
-                borderRadius: "10px",
+                borderRadius: "6px",
                 mb: 1,
                 "&:hover": { bgcolor: "rgba(99,102,241,0.08)" },
               }}
@@ -1551,7 +1528,7 @@ const NaukriNavbar = () => {
               href="/skills-assessment"
               onClick={() => setMobileOpen(false)}
               sx={{
-                borderRadius: "10px",
+                borderRadius: "6px",
                 mb: 1,
                 "&:hover": { bgcolor: "rgba(99,102,241,0.08)" },
               }}
@@ -1578,7 +1555,7 @@ const NaukriNavbar = () => {
                     : "/applicant-dashboard"
                 }
                 onClick={() => setMobileOpen(false)}
-                sx={{ borderRadius: "10px", mb: 1 }}
+                sx={{ borderRadius: "6px", mb: 1 }}
               >
                 <ListItemIcon>
                   <Dashboard sx={{ color: "#6366f1" }} />
@@ -1589,7 +1566,7 @@ const NaukriNavbar = () => {
                 component={Link}
                 href="/profile"
                 onClick={() => setMobileOpen(false)}
-                sx={{ borderRadius: "10px", mb: 1 }}
+                sx={{ borderRadius: "6px", mb: 1 }}
               >
                 <ListItemIcon>
                   <Person sx={{ color: "#6366f1" }} />
@@ -1601,7 +1578,7 @@ const NaukriNavbar = () => {
                   setMobileOpen(false);
                   logout();
                 }}
-                sx={{ borderRadius: "10px", color: "error.main" }}
+                sx={{ borderRadius: "6px", color: "error.main" }}
               >
                 <ListItemIcon>
                   <Logout sx={{ color: "error.main" }} />
@@ -1624,7 +1601,7 @@ const NaukriNavbar = () => {
                   borderColor: "#6366f1",
                   color: "#6366f1",
                   py: 1.5,
-                  borderRadius: "10px",
+                  borderRadius: "6px",
                 }}
               >
                 Login
@@ -1638,7 +1615,7 @@ const NaukriNavbar = () => {
                   textTransform: "none",
                   fontWeight: 600,
                   py: 1.5,
-                  borderRadius: "10px",
+                  borderRadius: "6px",
                   background:
                     "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
                 }}

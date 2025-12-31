@@ -1,6 +1,6 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
+import { BaseUser } from '../models/UserModels.js';
 import { verifyIdToken } from '../config/firebase.js';
 
 const router = express.Router();
@@ -37,7 +37,7 @@ router.post('/verify-phone', async (req, res) => {
     });
 
     // Check if user already exists with this phone number
-    let user = await User.findOne({ phoneNumber });
+    let user = await BaseUser.findOne({ phone: phoneNumber });
 
     if (user && isRegistration) {
       // User already exists but trying to register
@@ -50,23 +50,20 @@ router.post('/verify-phone', async (req, res) => {
 
     if (user) {
       // Existing user logging in
-      user.verification.phone = true;
-      user.authProviders.phone = true;
-      user.authProviders.firebase = firebaseUid;
+      user.isPhoneVerified = true;
+      user.oauthProviders.phone = true;
+      user.oauthProviders.firebase = firebaseUid;
       user.lastLogin = new Date();
       await user.save();
 
       console.log('✅ Existing user verified for login:', user._id);
     } else {
       // Create new user (registration)
-      user = new User({
-        phoneNumber,
+      user = new BaseUser({
+        phone: phoneNumber,
         role,
-        verification: {
-          phone: true,
-          email: false
-        },
-        authProviders: {
+        isPhoneVerified: true,
+        oauthProviders: {
           phone: true,
           firebase: firebaseUid
         },
@@ -103,10 +100,10 @@ router.post('/verify-phone', async (req, res) => {
       isNewUser: !user.lastLogin || isRegistration,
       user: {
         id: user._id,
-        phoneNumber: user.phoneNumber,
+        phoneNumber: user.phone,
         role: user.role,
-        isVerified: user.verification.phone,
-        profile: user.profile
+        isVerified: user.isPhoneVerified,
+        profile: user
       },
       token,
       refreshToken

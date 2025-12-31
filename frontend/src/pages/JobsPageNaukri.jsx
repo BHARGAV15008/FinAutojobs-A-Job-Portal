@@ -62,10 +62,17 @@ import {
   People,
   WorkOutline,
   CurrencyRupee,
+  Description,
 } from "@mui/icons-material";
 import { styled, keyframes } from "@mui/material/styles";
 import API_BASE_URL from "../services/apiConfig";
 import colors, { fonts, fontSizes } from "../styles/uiColors";
+import JobDetailsDrawer from "../components/drawers/JobDetailsDrawer";
+import { mapBackendJobToFrontend } from "../utils/jobMapper";
+import AuthModal from "../components/modals/AuthModal";
+import JobApplicationModal from "../components/modals/JobApplicationModal";
+import { useAuth } from "../contexts/AuthContext.jsx";
+import { applicationService } from "../services/applicationService";
 
 // Animations
 const fadeIn = keyframes`
@@ -97,7 +104,7 @@ const PageHeader = styled(Box)(() => ({
 }));
 
 const FilterCard = styled(Card)(() => ({
-  borderRadius: "16px",
+  borderRadius: "6px",
   boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
   position: "sticky",
   top: 100,
@@ -113,7 +120,7 @@ const FilterSection = styled(Box)(() => ({
 }));
 
 const JobCard = styled(Card)(({ viewMode }) => ({
-  borderRadius: "16px",
+  borderRadius: "6px",
   boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
   transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
   border: "1px solid transparent",
@@ -130,7 +137,7 @@ const JobCard = styled(Card)(({ viewMode }) => ({
 
 const QuickFilterChip = styled(Chip)(({ selected }) => ({
   fontWeight: 500,
-  borderRadius: "10px",
+  borderRadius: "6px",
   transition: "all 0.2s",
   cursor: "pointer",
   backgroundColor: selected ? colors.primary : "#f3f4f6",
@@ -154,7 +161,8 @@ const ActiveFilterBadge = styled(Badge)(() => ({
 }));
 
 const JobsPageNaukri = () => {
-  const [location] = useLocation();
+  const { user } = useAuth();
+  const [location, setLocation] = useLocation();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savedJobs, setSavedJobs] = useState([]);
@@ -165,6 +173,15 @@ const JobsPageNaukri = () => {
   const [searchInFilter, setSearchInFilter] = useState("");
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [jobDetailOpen, setJobDetailOpen] = useState(false);
+
+  // Modal states
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [applicationModalOpen, setApplicationModalOpen] = useState(false);
+  const [selectedJobForApplication, setSelectedJobForApplication] = useState(null);
+  const [appliedJobs, setAppliedJobs] = useState(new Set());
+  const [applicationLoading, setApplicationLoading] = useState(false);
 
   // Filters State
   const [filters, setFilters] = useState({
@@ -173,6 +190,11 @@ const JobsPageNaukri = () => {
     location: [],
     workMode: [],
     jobType: [],
+    department: [],
+    role: [],
+    education: [],
+    industry: [],
+    topCompanies: [],
     postedDate: "anytime",
     company: [],
     skills: [],
@@ -184,6 +206,11 @@ const JobsPageNaukri = () => {
     location: true,
     workMode: true,
     jobType: true,
+    department: false,
+    role: false,
+    education: false,
+    industry: false,
+    topCompanies: false,
     postedDate: false,
     company: false,
     skills: false,
@@ -198,6 +225,40 @@ const JobsPageNaukri = () => {
     fetchJobs();
   }, [page, filters, searchQuery, locationQuery]);
 
+  // Fetch applied jobs and saved jobs
+  useEffect(() => {
+    const fetchUserStats = async () => {
+      if (user && (user.id || user._id)) {
+        try {
+          const userId = user.id || user._id;
+          
+          // Fetch Applications
+          const appsResponse = await applicationService.getUserApplications(50, 1);
+          if (appsResponse.success) {
+            const appliedJobIds = new Set(appsResponse.data.applications.map(app => 
+              app.jobId?._id || app.jobId
+            ));
+            setAppliedJobs(appliedJobIds);
+          }
+
+          // Fetch Saved Jobs
+          const savedResponse = await fetch(`${API_BASE_URL}/saved-jobs`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+          });
+          const savedData = await savedResponse.json();
+          if (savedData.success) {
+            const savedIds = savedData.data.jobs.map(job => job.id || job._id);
+            setSavedJobs(savedIds);
+          }
+        } catch (error) {
+          console.error("Error fetching user stats:", error);
+        }
+      }
+    };
+
+    fetchUserStats();
+  }, [user]);
+
   const fetchJobs = async () => {
     try {
       setLoading(true);
@@ -207,26 +268,140 @@ const JobsPageNaukri = () => {
       if (searchQuery) params.append("search", searchQuery);
       if (locationQuery) params.append("location", locationQuery);
 
+      // Append filters to API request
+      if (filters.experience.length > 0) {
+        const exp = filters.experience[0];
+        if (exp === "Fresher") { params.append("experienceMax", "0"); }
+        else if (exp.includes("-")) {
+          const parts = exp.split(" ")[0].split("-");
+          params.append("experienceMin", parts[0]);
+          params.append("experienceMax", parts[1]);
+        } else if (exp.includes("+")) {
+          params.append("experienceMin", exp.replace("+", "").split(" ")[0]);
+        }
+      }
+
+      if (filters.location.length > 0) {
+        params.append("location", filters.location.join(","));
+      }
+
+      if (filters.workMode.length > 0) {
+        const modes = filters.workMode.map(m => m === "Work from Office" ? "On-site" : m);
+        params.append("workArrangement", modes.join(","));
+      }
+
+      if (filters.jobType.length > 0) {
+        params.append("jobType", filters.jobType.join(","));
+      }
+
+      if (filters.industry.length > 0) {
+        params.append("industry", filters.industry.join(","));
+      }
+
+      if (filters.salary[0] > 0) params.append("salaryMin", filters.salary[0] * 100000);
+      if (filters.salary[1] < 100) params.append("salaryMax", filters.salary[1] * 100000);
+
       const response = await fetch(`${API_BASE_URL}/jobs?${params.toString()}`);
       if (response.ok) {
-        const data = await response.json();
-        setJobs(data.jobs || data || []);
-        setTotalPages(data.totalPages || Math.ceil((data.total || 20) / 12));
+        const result = await response.json();
+        const jobsData = result.data?.jobs || [];
+        
+        console.log('🔍 Raw jobs from API:', jobsData);
+        
+        // Transform backend data to frontend structure using centralized mapper
+        const transformedJobs = jobsData.map(mapBackendJobToFrontend);
+        
+        console.log('🔍 Transformed jobs for UI:', transformedJobs);
+
+        setJobs(transformedJobs);
+        setTotalPages(result.data?.totalPages || Math.ceil((result.data?.total || 0) / 12));
       }
     } catch (error) {
       console.error("Error fetching jobs:", error);
+      setJobs([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const toggleSaveJob = (e, jobId) => {
-    e.stopPropagation();
-    setSavedJobs((prev) =>
-      prev.includes(jobId)
-        ? prev.filter((id) => id !== jobId)
-        : [...prev, jobId]
-    );
+  const toggleSaveJob = async (e, jobId) => {
+    if (e) e.stopPropagation();
+    
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+
+    const isSaved = savedJobs.includes(jobId);
+    try {
+      const method = isSaved ? 'DELETE' : 'POST';
+      const url = isSaved ? `${API_BASE_URL}/saved-jobs/${jobId}` : `${API_BASE_URL}/saved-jobs`;
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: isSaved ? null : JSON.stringify({ jobId })
+      });
+
+      if (response.ok) {
+        setSavedJobs((prev) =>
+          isSaved
+            ? prev.filter((id) => id !== jobId)
+            : [...prev, jobId]
+        );
+        // Dispatch event to refresh dashboards
+        window.dispatchEvent(new CustomEvent("refreshDashboard"));
+      }
+    } catch (error) {
+      console.error("Error toggling saved job:", error);
+    }
+  };
+
+  const handleApply = (job) => {
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+
+    if (user.role === 'recruiter') {
+      alert('Recruiters cannot apply to jobs. Please switch to an applicant account.');
+      return;
+    }
+
+    const jobId = job.id || job._id;
+    if (appliedJobs.has(jobId)) {
+      alert('You have already applied to this job!');
+      return;
+    }
+
+    setSelectedJobForApplication(job);
+    setApplicationModalOpen(true);
+  };
+
+  const handleSubmitApplication = async (applicationData) => {
+    try {
+      setApplicationLoading(true);
+      const response = await applicationService.submitApplication(applicationData);
+      
+      const jobId = applicationData.get('jobId');
+      setAppliedJobs(prev => new Set([...prev, jobId]));
+      
+      alert(`Application submitted successfully for ${selectedJobForApplication?.jobTitle || selectedJobForApplication?.title}!`);
+      
+      // Dispatch event to refresh dashboards
+      window.dispatchEvent(new CustomEvent("refreshDashboard"));
+      
+      setApplicationModalOpen(false);
+      setSelectedJobForApplication(null);
+    } catch (error) {
+      console.error('Error submitting application:', error);
+      alert('Error submitting application. Please try again.');
+    } finally {
+      setApplicationLoading(false);
+    }
   };
 
   const toggleSection = (section) => {
@@ -253,6 +428,11 @@ const JobsPageNaukri = () => {
       location: [],
       workMode: [],
       jobType: [],
+      department: [],
+      role: [],
+      education: [],
+      industry: [],
+      topCompanies: [],
       postedDate: "anytime",
       company: [],
       skills: [],
@@ -263,9 +443,14 @@ const JobsPageNaukri = () => {
   const activeFiltersCount = useMemo(() => {
     let count = 0;
     Object.entries(filters).forEach(([key, value]) => {
-      if (Array.isArray(value) && value.length > 0) count += value.length;
-      else if (key === "postedDate" && value !== "anytime") count += 1;
-      else if (key === "salary" && (value[0] > 0 || value[1] < 100)) count += 1;
+      if (key === "salary") {
+        // Only count salary if it differs from the default range [0, 100]
+        if (value[0] > 0 || value[1] < 100) count += 1;
+      } else if (key === "postedDate") {
+        if (value !== "anytime") count += 1;
+      } else if (Array.isArray(value) && value.length > 0) {
+        count += value.length;
+      }
     });
     return count;
   }, [filters]);
@@ -329,6 +514,49 @@ const JobsPageNaukri = () => {
     { label: "Last 30 days", value: "30days" },
   ];
 
+  const departmentOptions = [
+    "Engineering - Software & QA",
+    "Product Management",
+    "Data Science & Analytics",
+    "Design",
+    "Marketing & Communication",
+    "Sales & Business Development",
+  ];
+  const roleOptions = [
+    "Software Development",
+    "Frontend Developer",
+    "Backend Developer",
+    "Full Stack Developer",
+    "QA Engineer",
+    "DevOps Engineer",
+  ];
+  const educationOptions = [
+    "Any Graduate",
+    "B.Tech/B.E.",
+    "M.Tech",
+    "MCA",
+    "MBA/PGDM",
+    "PhD/Doctorate",
+  ];
+  const industryOptions = [
+    "IT Services & Consulting",
+    "Software Product",
+    "Fintech / Financial Services",
+    "E-commerce",
+    "Banking",
+    "Automotive",
+  ];
+  const topCompaniesOptions = [
+    "Google",
+    "Amazon",
+    "Microsoft",
+    "TCS",
+    "Infosys",
+    "Wipro",
+    "Accenture",
+    "Flipkart",
+  ];
+
   const renderFilters = () => (
     <Box>
       {/* Filter Header */}
@@ -376,7 +604,7 @@ const JobsPageNaukri = () => {
                 </IconButton>
               </InputAdornment>
             ),
-            sx: { borderRadius: "10px", fontSize: "14px" },
+            sx: { borderRadius: "6px", fontSize: "14px" },
           }}
         />
       </Box>
@@ -637,7 +865,7 @@ const JobsPageNaukri = () => {
             <Select
               value={filters.postedDate}
               onChange={(e) => handleFilterChange("postedDate", e.target.value)}
-              sx={{ borderRadius: "10px", fontSize: "14px" }}
+              sx={{ borderRadius: "6px", fontSize: "14px" }}
             >
               {postedDateOptions.map((option) => (
                 <MenuItem key={option.value} value={option.value}>
@@ -646,6 +874,231 @@ const JobsPageNaukri = () => {
               ))}
             </Select>
           </FormControl>
+        </Collapse>
+      </FilterSection>
+
+      {/* Department Filter */}
+      <FilterSection>
+        <Box
+          onClick={() => toggleSection("department")}
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            cursor: "pointer",
+            mb: expandedSections.department ? 2 : 0,
+          }}
+        >
+          <Typography variant="subtitle2" fontWeight={600}>
+            Department
+          </Typography>
+          {expandedSections.department ? (
+            <KeyboardArrowUp sx={{ color: "#6b7280" }} />
+          ) : (
+            <KeyboardArrowDown sx={{ color: "#6b7280" }} />
+          )}
+        </Box>
+        <Collapse in={expandedSections.department}>
+          <FormGroup>
+            {departmentOptions.map((dept) => (
+              <FormControlLabel
+                key={dept}
+                control={
+                  <Checkbox
+                    size="small"
+                    checked={filters.department.includes(dept)}
+                    onChange={() => handleFilterChange("department", dept)}
+                    sx={{
+                      color: "#d1d5db",
+                      "&.Mui-checked": { color: colors.primary },
+                    }}
+                  />
+                }
+                label={<Typography variant="body2">{dept}</Typography>}
+                sx={{ mb: 0.5 }}
+              />
+            ))}
+          </FormGroup>
+        </Collapse>
+      </FilterSection>
+
+      {/* Role Filter */}
+      <FilterSection>
+        <Box
+          onClick={() => toggleSection("role")}
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            cursor: "pointer",
+            mb: expandedSections.role ? 2 : 0,
+          }}
+        >
+          <Typography variant="subtitle2" fontWeight={600}>
+            Role
+          </Typography>
+          {expandedSections.role ? (
+            <KeyboardArrowUp sx={{ color: "#6b7280" }} />
+          ) : (
+            <KeyboardArrowDown sx={{ color: "#6b7280" }} />
+          )}
+        </Box>
+        <Collapse in={expandedSections.role}>
+          <FormGroup>
+            {roleOptions.map((role) => (
+              <FormControlLabel
+                key={role}
+                control={
+                  <Checkbox
+                    size="small"
+                    checked={filters.role.includes(role)}
+                    onChange={() => handleFilterChange("role", role)}
+                    sx={{
+                      color: "#d1d5db",
+                      "&.Mui-checked": { color: colors.primary },
+                    }}
+                  />
+                }
+                label={<Typography variant="body2">{role}</Typography>}
+                sx={{ mb: 0.5 }}
+              />
+            ))}
+          </FormGroup>
+        </Collapse>
+      </FilterSection>
+
+      {/* Education Filter */}
+      <FilterSection>
+        <Box
+          onClick={() => toggleSection("education")}
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            cursor: "pointer",
+            mb: expandedSections.education ? 2 : 0,
+          }}
+        >
+          <Typography variant="subtitle2" fontWeight={600}>
+            Education
+          </Typography>
+          {expandedSections.education ? (
+            <KeyboardArrowUp sx={{ color: "#6b7280" }} />
+          ) : (
+            <KeyboardArrowDown sx={{ color: "#6b7280" }} />
+          )}
+        </Box>
+        <Collapse in={expandedSections.education}>
+          <FormGroup>
+            {educationOptions.map((edu) => (
+              <FormControlLabel
+                key={edu}
+                control={
+                  <Checkbox
+                    size="small"
+                    checked={filters.education.includes(edu)}
+                    onChange={() => handleFilterChange("education", edu)}
+                    sx={{
+                      color: "#d1d5db",
+                      "&.Mui-checked": { color: colors.primary },
+                    }}
+                  />
+                }
+                label={<Typography variant="body2">{edu}</Typography>}
+                sx={{ mb: 0.5 }}
+              />
+            ))}
+          </FormGroup>
+        </Collapse>
+      </FilterSection>
+
+      {/* Industry Filter */}
+      <FilterSection>
+        <Box
+          onClick={() => toggleSection("industry")}
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            cursor: "pointer",
+            mb: expandedSections.industry ? 2 : 0,
+          }}
+        >
+          <Typography variant="subtitle2" fontWeight={600}>
+            Industry
+          </Typography>
+          {expandedSections.industry ? (
+            <KeyboardArrowUp sx={{ color: "#6b7280" }} />
+          ) : (
+            <KeyboardArrowDown sx={{ color: "#6b7280" }} />
+          )}
+        </Box>
+        <Collapse in={expandedSections.industry}>
+          <FormGroup>
+            {industryOptions.map((ind) => (
+              <FormControlLabel
+                key={ind}
+                control={
+                  <Checkbox
+                    size="small"
+                    checked={filters.industry.includes(ind)}
+                    onChange={() => handleFilterChange("industry", ind)}
+                    sx={{
+                      color: "#d1d5db",
+                      "&.Mui-checked": { color: colors.primary },
+                    }}
+                  />
+                }
+                label={<Typography variant="body2">{ind}</Typography>}
+                sx={{ mb: 0.5 }}
+              />
+            ))}
+          </FormGroup>
+        </Collapse>
+      </FilterSection>
+
+      {/* Top Companies Filter */}
+      <FilterSection>
+        <Box
+          onClick={() => toggleSection("topCompanies")}
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            cursor: "pointer",
+            mb: expandedSections.topCompanies ? 2 : 0,
+          }}
+        >
+          <Typography variant="subtitle2" fontWeight={600}>
+            Top Companies
+          </Typography>
+          {expandedSections.topCompanies ? (
+            <KeyboardArrowUp sx={{ color: "#6b7280" }} />
+          ) : (
+            <KeyboardArrowDown sx={{ color: "#6b7280" }} />
+          )}
+        </Box>
+        <Collapse in={expandedSections.topCompanies}>
+          <FormGroup>
+            {topCompaniesOptions.map((company) => (
+              <FormControlLabel
+                key={company}
+                control={
+                  <Checkbox
+                    size="small"
+                    checked={filters.topCompanies.includes(company)}
+                    onChange={() => handleFilterChange("topCompanies", company)}
+                    sx={{
+                      color: "#d1d5db",
+                      "&.Mui-checked": { color: colors.primary },
+                    }}
+                  />
+                }
+                label={<Typography variant="body2">{company}</Typography>}
+                sx={{ mb: 0.5 }}
+              />
+            ))}
+          </FormGroup>
         </Collapse>
       </FilterSection>
     </Box>
@@ -659,360 +1112,355 @@ const JobsPageNaukri = () => {
       lg={viewMode === "grid" ? 4 : 12}
       key={job._id || index}
     >
-      <Link href={`/jobs/${job._id}`}>
-        <JobCard viewMode={viewMode}>
-          {index < 3 && (
-            <Chip
-              icon={
-                <LocalFireDepartment
-                  sx={{ fontSize: 14, color: "#fff !important" }}
-                />
-              }
-              label="Hot"
-              size="small"
-              sx={{
-                position: "absolute",
-                top: 12,
-                right: 12,
-                bgcolor: colors.danger,
-                color: "#fff",
-                fontWeight: 600,
-                fontSize: "11px",
-              }}
-            />
-          )}
-          {viewMode === "list" ? (
-            // List View
-            <Box sx={{ display: "flex", width: "100%", p: 2.5 }}>
-              <Avatar
-                className="company-logo"
+      <JobCard
+        viewMode={viewMode}
+        onClick={() => {
+          setSelectedJob(job);
+          setJobDetailOpen(true);
+        }}
+      >
+        {index < 3 && (
+          <Chip
+            icon={
+              <LocalFireDepartment
+                sx={{ fontSize: 14, color: "#fff !important" }}
+              />
+            }
+            label="Hot"
+            size="small"
+            sx={{
+              position: "absolute",
+              top: 12,
+              right: 12,
+              bgcolor: colors.danger,
+              color: "#fff",
+              fontWeight: 600,
+              fontSize: "11px",
+            }}
+          />
+        )}
+        {viewMode === "list" ? (
+          // List View - Optimized Hybrid Design
+          <Box
+            sx={{
+              display: "flex",
+              width: "100%",
+              p: 2.5,
+              position: "relative",
+            }}
+          >
+            <Box sx={{ flex: 1, minWidth: 0, pr: 2 }}>
+              {/* Header: Title & Company Info */}
+              <Box sx={{ mb: 1.5 }}>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: "1.1rem",
+                    mb: 0.5,
+                    color: "#111827",
+                  }}
+                >
+                  {job.title}
+                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ color: "#374151", fontWeight: 500 }}
+                  >
+                    {job.company}
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.5,
+                      pl: 1,
+                      borderLeft: "1px solid #e5e7eb",
+                    }}
+                  >
+                    <Star sx={{ fontSize: 14, color: "#fbbf24" }} />
+                    <Typography
+                      variant="caption"
+                      sx={{ fontWeight: 600, color: "#374151" }}
+                    >
+                      {job.rating || "4.2"}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: "#6b7280" }}>
+                      (4841 Reviews)
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+
+              {/* Meta Info Row */}
+              <Box
                 sx={{
-                  width: 60,
-                  height: 60,
-                  bgcolor: colors.primary,
-                  fontSize: "22px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 3,
+                  mb: 2,
+                  flexWrap: "wrap",
+                  color: "#4b5563",
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <WorkOutline sx={{ fontSize: 18, color: "#6b7280" }} />
+                  <Typography variant="body2">
+                    {job.experience}
+                  </Typography>
+                </Box>
+                <Typography sx={{ color: "#d1d5db" }}>|</Typography>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <CurrencyRupee sx={{ fontSize: 18, color: "#6b7280" }} />
+                  <Typography variant="body2">
+                    {job.salary}
+                  </Typography>
+                </Box>
+                <Typography sx={{ color: "#d1d5db" }}>|</Typography>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <LocationOn sx={{ fontSize: 18, color: "#6b7280" }} />
+                  <Typography variant="body2">
+                    {job.location}
+                  </Typography>
+                </Box>
+                <Typography sx={{ color: "#d1d5db" }}>|</Typography>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <People sx={{ fontSize: 18, color: "#6b7280" }} />
+                  <Typography variant="body2">
+                    {job.vacancy} Vacancies
+                  </Typography>
+                </Box>
+              </Box>
+
+              {/* Skills Text List */}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: 1,
+                  mb: 2,
+                }}
+              >
+                <Description sx={{ fontSize: 16, color: "#6b7280", mr: 0.5 }} />
+                <Typography
+                  variant="body2"
+                  sx={{ color: "#4b5563", fontSize: "0.85rem" }}
+                >
+                  {(job.skills || []).join(
+                    " • "
+                  )}
+                </Typography>
+              </Box>
+
+              {/* Footer */}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  mt: 1,
+                }}
+              >
+                <Typography variant="caption" sx={{ color: "#9ca3af" }}>
+                  {job.postedAt}
+                </Typography>
+
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleApply(job);
+                  }}
+                  variant={appliedJobs.has(job._id) ? "outlined" : "contained"}
+                  disabled={appliedJobs.has(job._id)}
+                  size="small"
+                  sx={{
+                    ml: 2,
+                    textTransform: "none",
+                    borderRadius: "6px",
+                    fontWeight: 600
+                  }}
+                >
+                  {appliedJobs.has(job._id) ? "Applied" : "Apply"}
+                </Button>
+
+                <Button
+                  onClick={(e) => toggleSaveJob(e, job._id)}
+                  startIcon={
+                    savedJobs.includes(job._id) ? (
+                      <Bookmark />
+                    ) : (
+                      <BookmarkBorder />
+                    )
+                  }
+                  size="small"
+                  sx={{
+                    color: savedJobs.includes(job._id)
+                      ? colors.primary
+                      : "#6b7280",
+                    textTransform: "none",
+                    "&:hover": {
+                      bgcolor: "transparent",
+                      color: colors.primary,
+                    },
+                  }}
+                >
+                  Save
+                </Button>
+              </Box>
+            </Box>
+
+            {/* Company Logo - Right Side */}
+            <Box>
+              <Avatar
+                variant="rounded"
+                src={job.logo} // Assuming logo URL is in job object, fallback below
+                sx={{
+                  width: 50,
+                  height: 50,
+                  bgcolor: "#fff",
+                  border: "1px solid #e5e7eb",
+                  color: colors.primary,
                   fontWeight: 700,
-                  transition: "transform 0.3s",
-                  mr: 2.5,
+                  fontSize: "1.2rem",
                 }}
               >
                 {(job.company || "C").charAt(0)}
               </Avatar>
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                    mb: 1,
-                  }}
-                >
-                  <Box>
-                    <Typography
-                      variant="h6"
-                      sx={{ fontWeight: 700, fontSize: "1rem", mb: 0.5 }}
-                    >
-                      {job.title || "Software Engineer"}
-                    </Typography>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "#6b7280", fontWeight: 500 }}
-                      >
-                        {job.company || "Tech Company"}
-                      </Typography>
-                      {job.verified && (
-                        <Verified sx={{ fontSize: 16, color: "#22c55e" }} />
-                      )}
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-                      >
-                        <Star sx={{ fontSize: 14, color: "#fbbf24" }} />
-                        <Typography variant="caption" color="text.secondary">
-                          {job.rating || "4.2"}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </Box>
-                  <IconButton
-                    onClick={(e) => toggleSaveJob(e, job._id)}
-                    size="small"
-                  >
-                    {savedJobs.includes(job._id) ? (
-                      <Bookmark sx={{ color: colors.primary }} />
-                    ) : (
-                      <BookmarkBorder sx={{ color: "#9ca3af" }} />
-                    )}
-                  </IconButton>
-                </Box>
-
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 3,
-                    mb: 2,
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.5,
-                      color: "#6b7280",
-                    }}
-                  >
-                    <WorkOutline sx={{ fontSize: 16 }} />
-                    <Typography variant="body2">
-                      {job.experience || "2-5 years"}
-                    </Typography>
-                  </Box>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.5,
-                      color: "#6b7280",
-                    }}
-                  >
-                    <CurrencyRupee sx={{ fontSize: 16 }} />
-                    <Typography variant="body2">
-                      {job.salary || "Not disclosed"}
-                    </Typography>
-                  </Box>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.5,
-                      color: "#6b7280",
-                    }}
-                  >
-                    <LocationOn sx={{ fontSize: 16 }} />
-                    <Typography variant="body2">
-                      {job.location || "Bangalore"}
-                    </Typography>
-                  </Box>
-                </Box>
-
-                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2 }}>
-                  {(job.skills || ["React", "Node.js", "MongoDB"])
-                    .slice(0, 5)
-                    .map((skill, i) => (
-                      <Chip
-                        key={i}
-                        label={skill}
-                        size="small"
-                        variant="outlined"
-                        sx={{
-                          fontSize: "11px",
-                          height: 24,
-                          borderRadius: "6px",
-                        }}
-                      />
-                    ))}
-                  {(job.skills || []).length > 5 && (
-                    <Chip
-                      label={`+${job.skills.length - 5}`}
-                      size="small"
-                      sx={{ fontSize: "11px", height: 24, bgcolor: "#f3f4f6" }}
-                    />
-                  )}
-                </Box>
-
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                    <Box
-                      sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-                    >
-                      <Schedule sx={{ fontSize: 14, color: "#9ca3af" }} />
-                      <Typography variant="caption" color="text.secondary">
-                        {job.postedAt || "2 days ago"}
-                      </Typography>
-                    </Box>
-                    {job.applicants && (
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-                      >
-                        <People sx={{ fontSize: 14, color: "#9ca3af" }} />
-                        <Typography variant="caption" color="text.secondary">
-                          {job.applicants} applicants
-                        </Typography>
-                      </Box>
-                    )}
-                  </Box>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    sx={{
-                      textTransform: "none",
-                      fontWeight: 600,
-                      borderRadius: "8px",
-                      background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
-                      px: 3,
-                      "&:hover": {
-                        background: `linear-gradient(135deg, ${colors.primaryDark} 0%, ${colors.secondary} 100%)`,
-                      },
-                    }}
-                  >
-                    Apply Now
-                  </Button>
-                </Box>
-              </Box>
             </Box>
-          ) : (
-            // Grid View
-            <CardContent sx={{ p: 2.5 }}>
-              <Box
-                sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}
+          </Box>
+        ) : (
+          // Grid View
+          <CardContent sx={{ p: 2.5 }}>
+            <Box
+              sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}
+            >
+              <Avatar
+                className="company-logo"
+                sx={{
+                  width: 52,
+                  height: 52,
+                  bgcolor: colors.primary,
+                  fontSize: "20px",
+                  fontWeight: 700,
+                  transition: "transform 0.3s",
+                }}
               >
-                <Avatar
-                  className="company-logo"
-                  sx={{
-                    width: 52,
-                    height: 52,
-                    bgcolor: colors.primary,
-                    fontSize: "20px",
-                    fontWeight: 700,
-                    transition: "transform 0.3s",
-                  }}
-                >
-                  {(job.company || "C").charAt(0)}
-                </Avatar>
-                <IconButton
-                  onClick={(e) => toggleSaveJob(e, job._id)}
-                  size="small"
-                >
-                  {savedJobs.includes(job._id) ? (
-                    <Bookmark sx={{ color: colors.primary }} />
-                  ) : (
-                    <BookmarkBorder sx={{ color: "#9ca3af" }} />
-                  )}
-                </IconButton>
-              </Box>
+                {(job.company || "C").charAt(0)}
+              </Avatar>
+              <IconButton
+                onClick={(e) => toggleSaveJob(e, job._id)}
+                size="small"
+              >
+                {savedJobs.includes(job._id) ? (
+                  <Bookmark sx={{ color: colors.primary }} />
+                ) : (
+                  <BookmarkBorder sx={{ color: "#9ca3af" }} />
+                )}
+              </IconButton>
+            </Box>
+            <Typography
+              variant="body2"
+              sx={{ color: "#6b7280", fontWeight: 500, mb: 0.5 }}
+            >
+              {job.company}
+            </Typography>
+            <Typography
+              variant="subtitle1"
+              sx={{ fontWeight: 700, mb: 1.5, lineHeight: 1.3 }}
+            >
+              {job.title}
+            </Typography>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 0.5,
+                mb: 1,
+                color: "#6b7280",
+              }}
+            >
+              <LocationOn sx={{ fontSize: 16 }} />
+              <Typography variant="body2">
+                {job.location}
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 0.5,
+                mb: 1,
+                color: "#6b7280",
+              }}
+            >
+              <People sx={{ fontSize: 16 }} />
+              <Typography variant="body2">
+                {job.vacancy} Vacancies
+              </Typography>
+            </Box>
+            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2 }}>
+              {(job.skills || [])
+                .slice(0, 3)
+                .map((skill, i) => (
+                  <Chip
+                    key={i}
+                    label={skill}
+                    size="small"
+                    variant="outlined"
+                    sx={{ fontSize: "10px", height: 22 }}
+                  />
+                ))}
+            </Box>
+            <Divider sx={{ my: 1.5 }} />
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
               <Typography
                 variant="body2"
-                sx={{ color: "#6b7280", fontWeight: 500, mb: 0.5 }}
+                sx={{ color: "#22c55e", fontWeight: 600 }}
               >
-                {job.company || "Company"}
+                {job.salary}
               </Typography>
-              <Typography
-                variant="subtitle1"
-                sx={{ fontWeight: 700, mb: 1.5, lineHeight: 1.3 }}
-              >
-                {job.title || "Job Title"}
+              <Typography variant="caption" color="text.secondary">
+                {job.postedAt}
               </Typography>
-              <Box
+            </Box>
+            <Box sx={{ mt: 2 }}>
+              <Button
+                fullWidth
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleApply(job);
+                }}
+                disabled={appliedJobs.has(job._id)}
+                variant={appliedJobs.has(job._id) ? "outlined" : "contained"}
+                size="small"
                 sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.5,
-                  mb: 1,
-                  color: "#6b7280",
+                  textTransform: "none",
+                  fontWeight: 600,
+                  borderRadius: "6px",
+                  color: appliedJobs.has(job._id) ? "success.main" : "white",
+                  borderColor: appliedJobs.has(job._id) ? "success.main" : "transparent"
                 }}
               >
-                <LocationOn sx={{ fontSize: 16 }} />
-                <Typography variant="body2">
-                  {job.location || "Location"}
-                </Typography>
-              </Box>
-              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2 }}>
-                {(job.skills || ["React", "Node.js"])
-                  .slice(0, 3)
-                  .map((skill, i) => (
-                    <Chip
-                      key={i}
-                      label={skill}
-                      size="small"
-                      variant="outlined"
-                      sx={{ fontSize: "10px", height: 22 }}
-                    />
-                  ))}
-              </Box>
-              <Divider sx={{ my: 1.5 }} />
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <Typography
-                  variant="body2"
-                  sx={{ color: "#22c55e", fontWeight: 600 }}
-                >
-                  ₹{job.salary || "15-25 LPA"}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {job.postedAt || "2d ago"}
-                </Typography>
-              </Box>
-            </CardContent>
-          )}
-        </JobCard>
-      </Link>
+                {appliedJobs.has(job._id) ? "Applied" : "Apply Now"}
+              </Button>
+            </Box>
+          </CardContent>
+        )}
+      </JobCard>
     </Grid>
   );
 
-  // Generate mock jobs if API returns empty
-  const displayJobs =
-    jobs.length > 0
-      ? jobs
-      : Array.from({ length: 12 }, (_, i) => ({
-          _id: `mock-${i}`,
-          title: [
-            "Senior Software Engineer",
-            "Product Manager",
-            "Data Scientist",
-            "UX Designer",
-            "DevOps Engineer",
-            "Full Stack Developer",
-          ][i % 6],
-          company: [
-            "Google",
-            "Amazon",
-            "Microsoft",
-            "Meta",
-            "Apple",
-            "Netflix",
-          ][i % 6],
-          location: ["Bangalore", "Mumbai", "Delhi NCR", "Hyderabad", "Remote"][
-            i % 5
-          ],
-          salary: [
-            "15-25 LPA",
-            "20-30 LPA",
-            "25-40 LPA",
-            "18-28 LPA",
-            "30-50 LPA",
-          ][i % 5],
-          experience: ["2-5 years", "3-7 years", "5-10 years", "0-2 years"][
-            i % 4
-          ],
-          skills: [
-            ["React", "Node.js", "TypeScript"],
-            ["Strategy", "Analytics", "Leadership"],
-            ["Python", "ML", "TensorFlow"],
-            ["Figma", "UI/UX", "Research"],
-          ][i % 4],
-          postedAt: [
-            "Just now",
-            "1 day ago",
-            "2 days ago",
-            "3 days ago",
-            "1 week ago",
-          ][i % 5],
-          verified: i % 2 === 0,
-          rating: (4 + Math.random() * 0.5).toFixed(1),
-          applicants: Math.floor(Math.random() * 200) + 50,
-        }));
+  const displayJobs = useMemo(() => {
+    return jobs;
+  }, [jobs]);
 
   return (
     <Box sx={{ backgroundColor: "#f8fafc", minHeight: "100vh" }}>
@@ -1050,18 +1498,35 @@ const JobsPageNaukri = () => {
 
           {/* Quick Filters */}
           <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
-            {quickFilters.map((filter) => (
-              <QuickFilterChip
-                key={filter.value}
-                icon={filter.icon}
-                label={filter.label}
-                selected={
-                  filters.workMode.includes(filter.value) ||
-                  filters.experience.includes(filter.value)
-                }
-                onClick={() => handleFilterChange("workMode", filter.value)}
-              />
-            ))}
+            {quickFilters.map((filter) => {
+              // Determine category and correct value based on filter type
+              let category = "jobType";
+              let value = filter.value;
+
+              if (filter.value === "remote") {
+                category = "workMode";
+                value = "Remote";
+              } else if (filter.value === "fresher") {
+                category = "experience";
+                value = "Fresher";
+              } else if (filter.value === "mnc") {
+                category = "company"; // Assuming we treat MNC as a company tag for now
+              }
+
+              const isSelected = Array.isArray(filters[category])
+                ? filters[category].includes(value)
+                : filters[category] === value;
+
+              return (
+                <QuickFilterChip
+                  key={filter.value}
+                  icon={filter.icon}
+                  label={filter.label}
+                  selected={isSelected}
+                  onClick={() => handleFilterChange(category, value)}
+                />
+              );
+            })}
           </Box>
         </Container>
       </PageHeader>
@@ -1105,7 +1570,7 @@ const JobsPageNaukri = () => {
                     sx={{
                       textTransform: "none",
                       fontWeight: 600,
-                      borderRadius: "10px",
+                      borderRadius: "6px",
                     }}
                   >
                     Filters
@@ -1115,7 +1580,7 @@ const JobsPageNaukri = () => {
                   <Select
                     defaultValue="relevance"
                     sx={{
-                      borderRadius: "10px",
+                      borderRadius: "6px",
                       fontSize: "14px",
                       bgcolor: "#fff",
                     }}
@@ -1131,7 +1596,41 @@ const JobsPageNaukri = () => {
                 exclusive
                 onChange={(e, newMode) => newMode && setViewMode(newMode)}
                 size="small"
-                sx={{ bgcolor: "#fff", borderRadius: "10px" }}
+                sx={{
+                  bgcolor: "#fff",
+                  borderRadius: "6px",
+                  border: "1px solid #e5e7eb",
+                  "& .MuiToggleButton-root": {
+                    border: "none",
+                    borderRadius: "6px",
+                    mx: 0.5,
+                    my: 0.5,
+                    color: "#6b7280",
+                    transition: "all 0.2s ease",
+                    "& .MuiSvgIcon-root": {
+                      fontSize: "26px !important",
+                      width: "26px !important",
+                      height: "26px !important",
+                      color: "#6b7280 !important",
+                    },
+                    "&.Mui-selected": {
+                      bgcolor: `${colors.primary} !important`,
+                      color: "#fff !important",
+                      "& .MuiSvgIcon-root": {
+                        color: "#fff !important",
+                      },
+                      "&:hover": {
+                        bgcolor: `${colors.primaryDark} !important`,
+                      },
+                    },
+                    "&:hover": {
+                      bgcolor: "#f3f4f6",
+                      "& .MuiSvgIcon-root": {
+                        color: `${colors.primary} !important`,
+                      },
+                    },
+                  },
+                }}
               >
                 <ToggleButton value="list" sx={{ px: 2 }}>
                   <ViewList />
@@ -1153,7 +1652,7 @@ const JobsPageNaukri = () => {
                     lg={viewMode === "grid" ? 4 : 12}
                     key={i}
                   >
-                    <Card sx={{ p: 3, borderRadius: "16px" }}>
+                    <Card sx={{ p: 3, borderRadius: "6px" }}>
                       <Box sx={{ display: "flex", gap: 2 }}>
                         <Skeleton variant="circular" width={60} height={60} />
                         <Box sx={{ flex: 1 }}>
@@ -1188,7 +1687,7 @@ const JobsPageNaukri = () => {
                     sx={{
                       "& .MuiPaginationItem-root": {
                         fontWeight: 600,
-                        borderRadius: "10px",
+                        borderRadius: "6px",
                         "&.Mui-selected": {
                           background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
                         },
@@ -1202,49 +1701,34 @@ const JobsPageNaukri = () => {
         </Grid>
       </Container>
 
-      {/* Mobile Filters Drawer */}
-      <Drawer
-        anchor="left"
-        open={mobileFiltersOpen}
-        onClose={() => setMobileFiltersOpen(false)}
-        PaperProps={{
-          sx: { width: "85%", maxWidth: 360, borderRadius: "0 20px 20px 0" },
+      <JobDetailsDrawer
+        open={jobDetailOpen}
+        onClose={() => setJobDetailOpen(false)}
+        job={selectedJob}
+        onApply={handleApply}
+        onSave={() => toggleSaveJob(null, selectedJob?._id)}
+        isSaved={selectedJob && savedJobs.includes(selectedJob._id)}
+      />
+
+      {/* Authentication Modal */}
+      <AuthModal
+        open={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        onSuccess={() => setAuthModalOpen(false)}
+      />
+
+      {/* Job Application Modal */}
+      <JobApplicationModal
+        open={applicationModalOpen}
+        onClose={() => {
+          setApplicationModalOpen(false);
+          setSelectedJobForApplication(null);
         }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            p: 2,
-            borderBottom: "1px solid #f3f4f6",
-          }}
-        >
-          <Typography variant="h6" fontWeight={700}>
-            Filters
-          </Typography>
-          <IconButton onClick={() => setMobileFiltersOpen(false)}>
-            <Close />
-          </IconButton>
-        </Box>
-        {renderFilters()}
-        <Box sx={{ p: 2, borderTop: "1px solid #f3f4f6" }}>
-          <Button
-            fullWidth
-            variant="contained"
-            onClick={() => setMobileFiltersOpen(false)}
-            sx={{
-              textTransform: "none",
-              fontWeight: 600,
-              py: 1.5,
-              borderRadius: "12px",
-              background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
-            }}
-          >
-            Apply Filters
-          </Button>
-        </Box>
-      </Drawer>
+        job={selectedJobForApplication}
+        user={user}
+        onSubmit={handleSubmitApplication}
+        loading={applicationLoading}
+      />
     </Box>
   );
 };

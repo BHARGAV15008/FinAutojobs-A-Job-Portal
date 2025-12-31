@@ -54,7 +54,7 @@ const ForgotPasswordPage = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-6">
         <div className="w-full max-w-md">
-          <div className="bg-white/80 backdrop-blur-sm p-8 rounded-3xl shadow-2xl border border-gray-100 text-center">
+          <div className="bg-white/80 backdrop-blur-sm p-8 rounded-md shadow-2xl border border-gray-100 text-center">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <Check className="w-8 h-8 text-green-600" />
             </div>
@@ -70,14 +70,14 @@ const ForgotPasswordPage = () => {
             <div className="space-y-4">
               <button
                 onClick={() => setSent(false)}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-2xl font-semibold hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-300"
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-md font-semibold hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-300"
               >
                 Send another email
               </button>
               
               <Link
                 to="/login"
-                className="w-full inline-flex items-center justify-center py-3 px-6 border border-gray-200 rounded-2xl font-semibold text-gray-700 hover:bg-gray-50 transition-all duration-200"
+                className="w-full inline-flex items-center justify-center py-3 px-6 border border-gray-200 rounded-md font-semibold text-gray-700 hover:bg-gray-50 transition-all duration-200"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to login
@@ -99,7 +99,7 @@ const ForgotPasswordPage = () => {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white/80 backdrop-blur-sm p-8 rounded-3xl shadow-2xl border border-gray-100 space-y-6">
+        <form onSubmit={handleSubmit} className="bg-white/80 backdrop-blur-sm p-8 rounded-md shadow-2xl border border-gray-100 space-y-6">
           <div>
             <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
               📧 Email Address
@@ -113,7 +113,7 @@ const ForgotPasswordPage = () => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 bg-gray-50/80 border border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 text-gray-900 placeholder-gray-500"
+                className="w-full pl-12 pr-4 py-4 bg-gray-50/80 border border-gray-200 rounded-md focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 text-gray-900 placeholder-gray-500"
                 placeholder="Enter your email address"
               />
             </div>
@@ -123,7 +123,7 @@ const ForgotPasswordPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-2xl font-semibold text-lg hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105"
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-md font-semibold text-lg hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105"
             >
               {loading ? '📤 Sending...' : '📤 Send Reset Link'}
             </button>

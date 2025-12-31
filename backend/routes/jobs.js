@@ -2,11 +2,10 @@ import express from "express";
 import { body, validationResult } from "express-validator";
 import Job from "../models/Job.js";
 import Application from "../models/unified/Application.js";
-import ApplicationInformation from "../models/ApplicationInformation.js";
-import Interview from "../models/Interview.js";
 import { BaseUser, Recruiter } from "../models/UserModels.js";
 import Notification from "../models/Notification.js";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import { sendJobMatchEmail } from "../services/notifications.js";
 import cacheService, { CacheKeys } from "../services/Others/cacheService.js";
 
@@ -17,7 +16,10 @@ const notifyMatchingApplicants = async (job) => {
   try {
     const applicants = await BaseUser.find({ role: "applicant" });
     for (const applicant of applicants) {
-      const skills = [...(applicant.skills?.primary || [])];
+      const skills = [
+        ...(applicant.skills?.primary || []),
+        ...(applicant.skills?.technical || []),
+      ];
       const matches = (job.requiredSkills || []).filter((skill) =>
         skills.some((s) => s.toLowerCase().includes(skill.toLowerCase()))
       );
@@ -130,12 +132,15 @@ router.get("/", async (req, res) => {
     } = req.query;
 
     // Generate cache key based on query parameters
-    const cacheKey = CacheKeys.jobList(req.query);
+    const cacheKey = CacheKeys.jobs(req.query);
 
-    // Try to get from cache (5 minute TTL for job listings)
-    const cachedResult = await cacheService.getOrSet(
-      cacheKey,
-      async () => {
+    // Disable cache for now to ensure immediate updates
+    // const cachedResult = await cacheService.getOrSet(
+    //   cacheKey,
+    //   async () => {
+    
+    // Direct fetch without cache
+    const fetchJobsFromDB = async () => {
         // Cache miss - fetch from database
         // Build query - if postedBy is provided, include all statuses for recruiter's dashboard
         const query = {};
@@ -147,7 +152,7 @@ router.get("/", async (req, res) => {
           if (currentRecruiterId && currentCompanyName) {
             query.$or = [
               { postedBy: currentRecruiterId }, // Jobs posted by the recruiter themselves
-              { "companyInfo.companyName": currentCompanyName }, // Jobs posted by anyone from the same company
+              { companyName: currentCompanyName }, // Jobs posted by anyone from the same company
             ];
             // For recruiter dashboard, include all statuses unless specifically filtered
             if (status) {
@@ -246,8 +251,9 @@ router.get("/", async (req, res) => {
           query.requiredSkills = { $in: skillsArray };
         }
 
-        // Only show jobs with future deadlines for active jobs (not for draft jobs)
-        if (!postedBy || (status && status !== "draft")) {
+        // Only show jobs with future deadlines for public job listings
+        // For recruiter dashboards (when postedBy is provided), show all jobs regardless of deadline
+        if (!postedBy && !recruiterAndCompany && !companyName) {
           query.applicationDeadline = { $gt: new Date() };
         }
 
@@ -272,44 +278,58 @@ router.get("/", async (req, res) => {
         ]);
 
         // Transform jobs for frontend
-        const transformedJobs = jobs.map((job) => ({
-          id: job._id,
-          jobTitle: job.jobTitle,
-          companyName: job.companyName,
-          location: job.location,
-          industry: job.industry,
-          jobCategory: job.jobCategory,
-          jobType: job.jobType,
-          workArrangement: job.workArrangement,
-          salary: job.formattedSalary,
-          salaryRange: {
-            min: job.salary?.minimum,
-            max: job.salary?.maximum,
-            type: job.salary?.type,
-            period: job.salary?.period,
-            currency: job.salary?.currency,
-          },
-          experience: {
-            min: job.experience?.minimum,
-            max: job.experience?.maximum,
-          },
-          requiredSkills: job.requiredSkills,
-          jobDescription: job.jobDescription.substring(0, 200) + "...", // Truncated for listing
-          keyResponsibilities: job.keyResponsibilities,
-          requirements: job.requirements,
-          status: job.status,
-          jobUrgency: job.jobUrgency,
-          views: job.views,
-          applicationsCount: job.applicationsCount,
-          createdAt: job.createdAt,
-          applicationDeadline: job.applicationDeadline,
-          daysSincePosted: job.daysSincePosted,
-          daysUntilDeadline: job.daysUntilDeadline,
-          slug: job.slug,
-          postedBy: job.postedBy,
-          recruiterInfo: job.recruiterInfo,
-          contactEmail: job.contactEmail,
-        }));
+        const transformedJobs = jobs.map((job) => {
+          // Manual calculation of formattedSalary since .lean() excludes virtuals
+          const getFormattedSalary = (s) => {
+            if (!s) return "Negotiable";
+            const type = s.type?.toLowerCase();
+            if (type === "negotiable") return "Negotiable";
+            
+            const currency = s.currency || "INR";
+            const period = s.period || "Yearly";
+            const min = s.minimum !== undefined ? s.minimum : s.min;
+            const max = s.maximum !== undefined ? s.maximum : s.max;
+
+            if (type === "fixed" && min !== undefined) {
+              return `${currency} ${min.toLocaleString()} ${period}`;
+            }
+            if (type === "range" && min !== undefined && max !== undefined) {
+              return `${currency} ${min.toLocaleString()} - ${max.toLocaleString()} ${period}`;
+            }
+            return "Not disclosed";
+          };
+
+          return {
+            id: job._id,
+            _id: job._id,
+            jobId: job.jobId,
+            jobTitle: job.jobTitle,
+            companyName: job.companyName,
+            location: job.location,
+            industry: job.industry,
+            jobCategory: job.jobCategory,
+            jobType: job.jobType,
+            workArrangement: job.workArrangement,
+            vacancy: job.vacancy || 1,
+            salary: job.salary || { type: 'Negotiable' },
+            experience: job.experience || { minimum: 0, maximum: 0 },
+            formattedSalary: getFormattedSalary(job.salary),
+            requiredSkills: job.requiredSkills || [],
+            jobDescription: job.jobDescription || job.description,
+            keyResponsibilities: job.keyResponsibilities || [],
+            requirements: job.requirements || [],
+            status: job.status,
+            jobUrgency: job.jobUrgency,
+            views: job.views || 0,
+            applicationsCount: job.applicationsCount || 0,
+            createdAt: job.createdAt,
+            applicationDeadline: job.applicationDeadline,
+            slug: job.slug,
+            postedBy: job.postedBy,
+            recruiterInfo: job.recruiterInfo,
+            contactEmail: job.contactEmail,
+          };
+        });
 
         // Return data structure for caching
         return {
@@ -331,9 +351,12 @@ router.get("/", async (req, res) => {
             urgencyLevels: ["Normal Priority", "Urgent", "High Priority"],
           },
         };
-      },
-      300000 // Cache for 5 minutes
-    );
+      };
+      
+    // Execute the fetch
+    const cachedResult = await fetchJobsFromDB();
+      // 300000 // Cache for 5 minutes
+    // );
 
     // Send cached or fresh data
     res.json({
@@ -371,7 +394,7 @@ router.get("/search/advanced", async (req, res) => {
     } = req.query;
 
     const searchFilters = {
-      status: "Active",
+      status: "active",
       applicationDeadline: { $gt: new Date() },
     };
 
@@ -520,21 +543,21 @@ router.get("/stats/overview", async (req, res) => {
     ] = await Promise.all([
       Job.countDocuments(),
       Job.countDocuments({
-        status: "Active",
+        status: "active",
         applicationDeadline: { $gt: new Date() },
       }),
       Job.distinct("companyName").then((companies) => companies.length),
       Job.aggregate([
-        { $match: { status: "Active" } },
+        { $match: { status: "active" } },
         { $group: { _id: "$industry", count: { $sum: 1 } } },
         { $sort: { count: -1 } },
       ]),
       Job.aggregate([
-        { $match: { status: "Active" } },
+        { $match: { status: "active" } },
         { $group: { _id: "$jobType", count: { $sum: 1 } } },
         { $sort: { count: -1 } },
       ]),
-      Job.find({ status: "Active" })
+      Job.find({ status: "active" })
         .sort({ createdAt: -1 })
         .limit(5)
         .select("jobTitle companyName location createdAt")
@@ -644,6 +667,54 @@ router.get("/search", async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to search jobs",
+      error: error.message,
+    });
+  }
+});
+
+// GET /api/jobs/debug - Debug endpoint to check job fetching
+router.get("/debug", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const userRole = req.user.role;
+
+    console.log("🔍 Debug request from user:", { userId, userRole });
+
+    // Count total jobs
+    const totalJobs = await Job.countDocuments();
+    console.log(`📊 Total jobs in database: ${totalJobs}`);
+
+    // Count user's jobs if they're a recruiter
+    let userJobs = [];
+    if (userRole === 'recruiter') {
+      userJobs = await Job.find({ postedBy: userId }).select('jobTitle status applicationDeadline').lean();
+      console.log(`📊 Jobs for recruiter ${userId}: ${userJobs.length}`);
+    }
+
+    // Count jobs by status
+    const activeJobs = await Job.countDocuments({ status: 'active' });
+    const draftJobs = await Job.countDocuments({ status: 'draft' });
+    const closedJobs = await Job.countDocuments({ status: 'closed' });
+
+    res.json({
+      success: true,
+      data: {
+        user: { id: userId, role: userRole },
+        stats: {
+          totalJobs,
+          activeJobs,
+          draftJobs,
+          closedJobs,
+        },
+        userJobs: userRole === 'recruiter' ? userJobs : null,
+        sampleJobs: await Job.find().limit(3).select('jobTitle status postedBy').lean(),
+      },
+    });
+  } catch (error) {
+    console.error("Error in debug endpoint:", error);
+    res.status(500).json({
+      success: false,
+      message: "Debug endpoint failed",
       error: error.message,
     });
   }
@@ -764,7 +835,7 @@ router.get("/:id", async (req, res) => {
       tags: job.tags,
       postedBy: job.postedBy,
       recruiterInfo: job.recruiterInfo,
-      canApply: job.applicationDeadline > new Date() && job.status === "Active",
+      canApply: job.applicationDeadline > new Date() && job.status === "active",
       isExpired: job.applicationDeadline < new Date(),
     };
 
@@ -872,6 +943,7 @@ router.post("/", jobValidation, authenticateToken, async (req, res) => {
       contactEmail,
       jobUrgency,
       status,
+      vacancy,
     } = req.body;
 
     // Debug: Log the status received from frontend
@@ -880,6 +952,7 @@ router.post("/", jobValidation, authenticateToken, async (req, res) => {
 
     // Create job data with comprehensive schema
     const jobData = {
+      jobId: crypto.randomUUID(),
       jobTitle,
       companyName: companyName || recruiter.companyInfo?.companyName,
       location,
@@ -889,28 +962,28 @@ router.post("/", jobValidation, authenticateToken, async (req, res) => {
       workArrangement,
       applicationDeadline: new Date(applicationDeadline),
       experience: {
-        minimum: parseInt(experience.minimum),
-        maximum: parseInt(experience.maximum),
+        minimum: experience.minimum !== undefined ? parseInt(experience.minimum) : 0,
+        maximum: experience.maximum !== undefined ? parseInt(experience.maximum) : 0,
       },
       requiredSkills: Array.isArray(requiredSkills) ? requiredSkills : [],
       // Handle both old salary and new salaryRange formats
       salary: salaryRange
         ? {
             type:
-              salaryRange.min && salaryRange.max
+              salaryRange.min !== undefined && salaryRange.max !== undefined
                 ? "Range"
-                : salaryRange.min
+                : salaryRange.min !== undefined
                 ? "Fixed"
                 : "Negotiable",
-            minimum: salaryRange.min || null,
-            maximum: salaryRange.max || null,
+            minimum: salaryRange.min !== undefined ? parseInt(salaryRange.min) : null,
+            maximum: salaryRange.max !== undefined ? parseInt(salaryRange.max) : null,
             period: salaryRange.period || "Yearly",
             currency: salaryRange.currency || "INR",
           }
         : {
             type: salary?.type || "Negotiable",
-            minimum: salary?.minimum ? parseInt(salary.minimum) : undefined,
-            maximum: salary?.maximum ? parseInt(salary.maximum) : undefined,
+            minimum: salary?.minimum !== undefined ? parseInt(salary.minimum) : undefined,
+            maximum: salary?.maximum !== undefined ? parseInt(salary.maximum) : undefined,
             period: salary?.period || "Yearly",
             currency: salary?.currency || "INR",
           },
@@ -936,6 +1009,7 @@ router.post("/", jobValidation, authenticateToken, async (req, res) => {
         },
       },
       status: status || "active",
+      vacancy: parseInt(vacancy) || 1,
     };
 
     // Create and save job
@@ -1017,6 +1091,8 @@ router.post("/", jobValidation, authenticateToken, async (req, res) => {
     // Transform response
     const responseJob = {
       id: savedJob._id,
+      _id: savedJob._id,
+      jobId: savedJob.jobId,
       jobTitle: savedJob.jobTitle,
       companyName: savedJob.companyName,
       location: savedJob.location,
@@ -1027,6 +1103,7 @@ router.post("/", jobValidation, authenticateToken, async (req, res) => {
       formattedSalary: savedJob.formattedSalary,
       jobDescription: savedJob.jobDescription,
       status: savedJob.status,
+      vacancy: savedJob.vacancy,
     };
 
     // Notify matching applicants about new job
@@ -1124,10 +1201,10 @@ router.put("/:id", authenticateToken, async (req, res) => {
     // Transform experience field if provided
     if (updateData.experience) {
       updateData.experience = {
-        minimum: updateData.experience.minimum
+        minimum: updateData.experience.minimum !== undefined
           ? parseInt(updateData.experience.minimum)
           : 0,
-        maximum: updateData.experience.maximum
+        maximum: updateData.experience.maximum !== undefined
           ? parseInt(updateData.experience.maximum)
           : 0,
       };
@@ -1143,13 +1220,13 @@ router.put("/:id", authenticateToken, async (req, res) => {
       // Also save to old salary field for backward compatibility
       updateData.salary = {
         type:
-          salaryRange.min && salaryRange.max
+          salaryRange.min !== undefined && salaryRange.max !== undefined
             ? "Range"
-            : salaryRange.min
+            : salaryRange.min !== undefined
             ? "Fixed"
             : "Negotiable",
-        minimum: salaryRange.min || null,
-        maximum: salaryRange.max || null,
+        minimum: salaryRange.min !== undefined ? parseInt(salaryRange.min) : null,
+        maximum: salaryRange.max !== undefined ? parseInt(salaryRange.max) : null,
         period: salaryRange.period || "Yearly",
         currency: salaryRange.currency || "INR",
       };
@@ -1183,17 +1260,24 @@ router.put("/:id", authenticateToken, async (req, res) => {
     // Transform for response
     const responseJob = {
       id: updatedJob._id,
-      title: updatedJob.title,
-      company: updatedJob.company,
+      _id: updatedJob._id,
+      jobId: updatedJob.jobId,
+      jobTitle: updatedJob.jobTitle,
+      companyName: updatedJob.companyName,
       location: updatedJob.location,
-      type: updatedJob.type,
+      jobType: updatedJob.jobType,
+      workArrangement: updatedJob.workArrangement,
       salary: updatedJob.salary,
-      description: updatedJob.description,
+      salaryRange: updatedJob.salaryRange,
+      experience: updatedJob.experience,
+      jobDescription: updatedJob.jobDescription,
+      keyResponsibilities: updatedJob.keyResponsibilities,
       requirements: updatedJob.requirements,
       status: updatedJob.status,
-      postedDate: updatedJob.postedDate,
-      updatedDate: updatedJob.updatedDate,
+      createdAt: updatedJob.createdAt,
+      updatedAt: updatedJob.updatedAt,
       postedBy: updatedJob.postedBy,
+      vacancy: updatedJob.vacancy,
     };
 
     // Send WebSocket notification for real-time updates
@@ -1304,11 +1388,18 @@ router.get("/stats", authenticateToken, async (req, res) => {
       .lean();
 
     // Get application and interview stats
-    const [totalApplications, newApplications, scheduledInterviews] = await Promise.all([
-      Application.countDocuments({ recruiterId: postedBy }),
-      Application.countDocuments({ recruiterId: postedBy, applicationStatus: 'pending' }),
-      Interview.countDocuments({ recruiterId: postedBy, status: { $in: ['scheduled', 'confirmed'] } })
-    ]);
+    const [totalApplications, newApplications, scheduledInterviews] =
+      await Promise.all([
+        Application.countDocuments({ recruiterId: postedBy }),
+        Application.countDocuments({
+          recruiterId: postedBy,
+          applicationStatus: "pending",
+        }),
+        Interview.countDocuments({
+          recruiterId: postedBy,
+          status: { $in: ["scheduled", "confirmed"] },
+        }),
+      ]);
 
     const stats = {
       totalJobs,
@@ -1368,8 +1459,8 @@ router.get("/:jobId/applications", authenticateToken, async (req, res) => {
     }
 
     // Fetch real applications with populated data
-    const applications = await Application.find({ job: jobId })
-      .populate("applicant", "firstName lastName email phone profileImage")
+    const applications = await Application.find({ jobId: jobId })
+      .populate("applicantId", "firstName lastName email phone profileImage")
       .populate("applicationInfo") // Populate the ApplicationInformation
       .sort({ appliedAt: -1 });
 
@@ -1377,12 +1468,12 @@ router.get("/:jobId/applications", authenticateToken, async (req, res) => {
 
     // Transform applications to include all necessary data
     const transformedApplications = applications.map((app) => {
-      const applicant = app.applicant || {};
+      const applicant = app.applicantId || {};
       const appInfo = app.applicationInfo || {};
 
       return {
         id: app._id,
-        applicantId: app.applicant?._id,
+        applicantId: app.applicantId?._id,
         applicantName:
           `${applicant.firstName || ""} ${applicant.lastName || ""}`.trim() ||
           "Unknown Applicant",
@@ -1482,6 +1573,177 @@ router.post("/check-deadlines", authenticateToken, async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to check job deadlines",
+      error: error.message,
+    });
+  }
+});
+
+// PUT /api/jobs/:id/publish - Publish a job (change status from draft to active)
+router.put("/:id/publish", authenticateToken, async (req, res) => {
+  try {
+    // Check if user is recruiter
+    if (req.user.role !== "recruiter") {
+      return res.status(403).json({
+        success: false,
+        message: "Only recruiters can publish jobs",
+      });
+    }
+
+    const jobId = req.params.id;
+
+    // Validate MongoDB ObjectId
+    if (!jobId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid job ID format",
+      });
+    }
+
+    // Find the job and verify ownership
+    const existingJob = await Job.findById(jobId);
+
+    if (!existingJob) {
+      return res.status(404).json({
+        success: false,
+        message: "Job not found",
+      });
+    }
+
+    // Check if the recruiter owns this job
+    if (existingJob.postedBy.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only publish your own job postings",
+      });
+    }
+
+    // Check if application deadline is in the future
+    if (existingJob.applicationDeadline < new Date()) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Cannot publish job with past application deadline. Please update the deadline first.",
+      });
+    }
+
+    // Update job status to active and set publishedAt
+    const updatedJob = await Job.findByIdAndUpdate(
+      jobId,
+      {
+        status: "active",
+        publishedAt: new Date(),
+        updatedAt: new Date(),
+      },
+      { new: true, runValidators: true }
+    ).lean();
+
+    // Invalidate cache
+    await cacheService.deletePattern("jobs:list:*");
+
+    // Send WebSocket notification for real-time updates
+    const websocketService = req.app.get("websocketService");
+    if (websocketService) {
+      websocketService.notifyJobUpdate("published", updatedJob, req.user.id);
+      console.log("✅ WebSocket notification sent for job publication");
+    }
+
+    res.json({
+      success: true,
+      message: "Job published successfully",
+      data: {
+        job: {
+          id: updatedJob._id,
+          jobTitle: updatedJob.jobTitle,
+          status: updatedJob.status,
+          publishedAt: updatedJob.publishedAt,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error publishing job:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to publish job",
+      error: error.message,
+    });
+  }
+});
+
+// PUT /api/jobs/:id/unpublish - Unpublish a job (change status to draft or closed)
+router.put("/:id/unpublish", authenticateToken, async (req, res) => {
+  try {
+    // Check if user is recruiter
+    if (req.user.role !== "recruiter") {
+      return res.status(403).json({
+        success: false,
+        message: "Only recruiters can unpublish jobs",
+      });
+    }
+
+    const jobId = req.params.id;
+
+    // Validate MongoDB ObjectId
+    if (!jobId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid job ID format",
+      });
+    }
+
+    // Find the job and verify ownership
+    const existingJob = await Job.findById(jobId);
+
+    if (!existingJob) {
+      return res.status(404).json({
+        success: false,
+        message: "Job not found",
+      });
+    }
+
+    // Check if the recruiter owns this job
+    if (existingJob.postedBy.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only unpublish your own job postings",
+      });
+    }
+
+    // Update job status to draft
+    const updatedJob = await Job.findByIdAndUpdate(
+      jobId,
+      {
+        status: "draft",
+        updatedAt: new Date(),
+      },
+      { new: true, runValidators: true }
+    ).lean();
+
+    // Invalidate cache
+    await cacheService.deletePattern("jobs:list:*");
+
+    // Send WebSocket notification for real-time updates
+    const websocketService = req.app.get("websocketService");
+    if (websocketService) {
+      websocketService.notifyJobUpdate("unpublished", updatedJob, req.user.id);
+      console.log("✅ WebSocket notification sent for job unpublication");
+    }
+
+    res.json({
+      success: true,
+      message: "Job unpublished successfully and moved to drafts",
+      data: {
+        job: {
+          id: updatedJob._id,
+          jobTitle: updatedJob.jobTitle,
+          status: updatedJob.status,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error unpublishing job:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to unpublish job",
       error: error.message,
     });
   }

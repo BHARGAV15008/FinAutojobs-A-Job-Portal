@@ -29,6 +29,13 @@ import JobChart from "../components/dashboard/JobChart";
 import CandidatesTab from "../components/dashboard/CandidatesTab";
 import InterviewsTab from "../components/dashboard/InterviewsTab";
 import LoginStatusBanner from "../components/dashboard/LoginStatusBanner";
+import { 
+  Work as WorkIcon, 
+  Description as DescriptionIcon, 
+  Star as StarIcon, 
+  Person as PersonIcon 
+} from '@mui/icons-material';
+import { getDisplayName, capitalizeWords } from '../utils/textHelpers';
 
 const RecruiterDashboardContent = () => {
   const [location] = useLocation();
@@ -363,15 +370,15 @@ const RecruiterDashboardContent = () => {
           setActiveJobTab(subTab);
           console.log('✅ RecruiterDashboard: Set job tab:', mainTab, subTab);
         }
-      } else if (validTabs.includes(mainTab)) {
-        setActiveTab(mainTab);
+      } else if (validTabs.includes(mainTab) || mainTab === "applications") {
+        setActiveTab(mainTab === "applications" ? "applicants" : mainTab);
         console.log('✅ RecruiterDashboard: Set main tab:', mainTab);
       }
     } else if (pathParts.length >= 3) {
       // Handle single-level tabs: /recruiter-dashboard/profile
       const tab = pathParts[2];
-      if (validTabs.includes(tab)) {
-        setActiveTab(tab);
+      if (validTabs.includes(tab) || tab === "applications") {
+        setActiveTab(tab === "applications" ? "applicants" : tab);
         console.log('✅ RecruiterDashboard: Set single tab:', tab);
       }
     }
@@ -473,87 +480,31 @@ const RecruiterDashboardContent = () => {
       change: "+2 this month",
       changeType: "positive",
       gradient: "blue",
-        icon: (
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6"
-            />
-          </svg>
-        ),
-      },
+      icon: <WorkIcon sx={{ color: '#2563eb' }} />,
+    },
     {
       title: "Total Applications",
       value: stats?.totalApplications || 0,
       change: "+12 this week",
       changeType: "positive",
       gradient: "green",
-        icon: (
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-        ),
-      },
+      icon: <DescriptionIcon sx={{ color: '#10b981' }} />,
+    },
     {
       title: "Shortlisted",
       value: stats?.shortlisted || 0,
       change: "+5 this week",
       changeType: "positive",
       gradient: "purple",
-        icon: (
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-        ),
-      },
+      icon: <StarIcon sx={{ color: '#8b5cf6' }} />,
+    },
     {
       title: "Hired",
       value: stats?.hired || 0,
       change: "+1 this month",
       changeType: "positive",
       gradient: "orange",
-        icon: (
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
-            />
-          </svg>
-        ),
+      icon: <PersonIcon sx={{ color: '#f97316' }} />,
     },
   ];
 
@@ -694,17 +645,17 @@ const RecruiterDashboardContent = () => {
 
             {/* Welcome Section */}
             <motion.div
-              className="bg-gradient-to-r from-green-600 to-teal-600 rounded-lg md:rounded-xl p-4 sm:p-6 md:p-8 text-white"
+              className="bg-gradient-to-r from-green-600 to-teal-600 rounded-lg md:rounded-md p-4 sm:p-6 md:p-8 text-white"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
               <div className="flex items-center justify-between flex-wrap sm:flex-nowrap">
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 break-words">
-                    Welcome back, {user.name}! 🚀
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold mb-2 break-words text-white">
+                    Welcome Back, {getDisplayName(user)}! 🚀
                   </h2>
-                  <p className="text-green-100 text-sm sm:text-base md:text-lg">
+                  <p className="text-white text-sm sm:text-base md:text-lg opacity-90">
                     Ready to find the perfect candidates? Let's build your team!
                   </p>
                 </div>
@@ -716,7 +667,7 @@ const RecruiterDashboardContent = () => {
 
             {/* Job Metrics */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Dashboard Metrics</h2>
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">Dashboard Metrics</h2>
             </div>
             <JobMetrics userRole="recruiter" />
 
@@ -741,7 +692,7 @@ const RecruiterDashboardContent = () => {
               transition={{ duration: 0.5, delay: 0.4 }}
             >
               {/* Quick Post Job */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="bg-white dark:bg-gray-800 rounded-md shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                 <div className="text-center">
                   <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4">
                     <svg
@@ -758,7 +709,7 @@ const RecruiterDashboardContent = () => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
                     Post New Job
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
@@ -774,13 +725,13 @@ const RecruiterDashboardContent = () => {
               </div>
 
               {/* Recent Applications */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="bg-white dark:bg-gray-800 rounded-md shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                     Recent Applications
                   </h3>
                   <button
-                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400 text-sm font-medium"
+                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400 text-sm font-semibold"
                     onClick={() => handleTabChange("applicants")}
                   >
                     View all
@@ -799,16 +750,16 @@ const RecruiterDashboardContent = () => {
                           </span>
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-white">
-                            {app.jobSnapshot?.title || app.jobId?.title || app.jobTitle || 'Unknown Position'}
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                            {capitalizeWords(app.jobSnapshot?.title || app.jobId?.title || app.jobTitle || 'Unknown Position')}
                           </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {app.applicantSnapshot?.fullName ||
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            {capitalizeWords(app.applicantSnapshot?.fullName ||
                              (app.applicantSnapshot?.firstName && app.applicantSnapshot?.lastName 
                               ? `${app.applicantSnapshot.firstName} ${app.applicantSnapshot.lastName}`
                               : app.applicantId?.firstName && app.applicantId?.lastName
                               ? `${app.applicantId.firstName} ${app.applicantId.lastName}`
-                              : 'Unknown Applicant')}
+                              : 'Unknown Applicant'))}
                           </p>
                         </div>
                       </div>
@@ -851,13 +802,13 @@ const RecruiterDashboardContent = () => {
               </div>
 
               {/* Analytics Preview */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="bg-white dark:bg-gray-800 rounded-md shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                     Analytics
                   </h3>
                   <button
-                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400 text-sm font-medium"
+                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400 text-sm font-semibold"
                     onClick={() => handleTabChange("analytics")}
                   >
                     View details
@@ -865,26 +816,26 @@ const RecruiterDashboardContent = () => {
                 </div>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
                       Active Jobs
                     </span>
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white">
                       {stats.activeJobs || 0}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
                       Applications
                     </span>
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white">
                       {stats.totalApplications || 0}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
                       Hired
                     </span>
-                    <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                    <span className="text-sm font-semibold text-green-600 dark:text-green-400">
                       {stats.hired || 0}
                     </span>
                   </div>

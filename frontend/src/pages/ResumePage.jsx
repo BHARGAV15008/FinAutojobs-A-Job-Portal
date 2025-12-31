@@ -1224,7 +1224,7 @@ const EnhancedResumeBuilder = () => {
 
                 <StepIndicator />
 
-                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div className="bg-white rounded-md shadow-lg overflow-hidden">
                     {renderCurrentStep()}
                 </div>
             </div>

@@ -6,14 +6,6 @@ const applicantSchema = new mongoose.Schema({
   // Applicant ID (consistent with naming convention)
   applicantId: { type: mongoose.Schema.Types.ObjectId, default: () => new mongoose.Types.ObjectId() },
   
-  // Current Location (for applicants)
-  currentLocation: {
-    city: { type: String },
-    state: { type: String },
-    country: { type: String, default: 'India' },
-    address: { type: String }
-  },
-  
   // Career Information
   careerInfo: {
     currentJobTitle: { type: String },
@@ -29,15 +21,7 @@ const applicantSchema = new mongoose.Schema({
   },
   
   // Skills & Expertise (Enhanced for registration)
-  skills: {
-    technical: [{ type: String }],
-    soft: [{ type: String }],
-    primary: [{ type: String }], // Main skills for registration
-    languages: [{
-      language: { type: String },
-      proficiency: { type: String, enum: ['basic', 'intermediate', 'advanced', 'native'] }
-    }]
-  },
+  skills: [{ type: String }],
   
   // Languages (Separate field for registration)
   languages: [{
@@ -73,7 +57,6 @@ const applicantSchema = new mongoose.Schema({
   documents: {
     resumeUrl: { type: String },
     coverLetterUrl: { type: String },
-    portfolioUrl: { type: String },
     certificates: [{ type: String }]
   },
   
@@ -85,6 +68,12 @@ const applicantSchema = new mongoose.Schema({
     willingToRelocate: { type: Boolean, default: false },
     preferredIndustries: [{ type: String }]
   },
+  
+  // Compatibility fields for frontend
+  qualification: { type: String },
+  highestEducation: { type: String },
+  company_name: { type: String },
+  position: { type: String },
   
   // Profile Completion
   profileCompletion: {

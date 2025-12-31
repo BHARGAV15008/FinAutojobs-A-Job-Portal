@@ -126,7 +126,7 @@ const ApplicantDashboardNew = () => {
           <div className="space-y-8">
             {/* Welcome Section */}
             <motion.div
-              className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-8 text-white"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-md p-8 text-white"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
@@ -170,7 +170,7 @@ const ApplicantDashboardNew = () => {
               transition={{ duration: 0.5, delay: 0.4 }}
             >
               {/* Recent Applications */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="bg-white dark:bg-gray-800 rounded-md shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                     Recent Applications
@@ -203,7 +203,7 @@ const ApplicantDashboardNew = () => {
               </div>
 
               {/* Recommended Jobs */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="bg-white dark:bg-gray-800 rounded-md shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                     Recommended Jobs

@@ -57,22 +57,22 @@ const AdminMetrics = () => {
       {metrics.map((metric, index) => (
         <motion.div
           key={metric.title}
-          className={`rounded-xl border border-gray-200 dark:border-gray-700 ${metric.bgColor} p-6`}
+          className={`rounded-md border border-gray-200 dark:border-gray-700 ${metric.bgColor} p-6`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: index * 0.1 }}
           whileHover={{ y: -4 }}
         >
-          <div className={`flex items-center justify-center w-12 h-12 ${metric.iconBg} rounded-xl mb-4`}>
+          <div className={`flex items-center justify-center w-12 h-12 ${metric.iconBg} rounded-md mb-4`}>
             <span className="text-2xl">{metric.icon}</span>
           </div>
 
           <div className="flex items-end justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
                 {metric.title}
               </p>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h3 className="text-2xl font-extrabold text-gray-900 dark:text-white">
                 {metric.value}
               </h3>
             </div>

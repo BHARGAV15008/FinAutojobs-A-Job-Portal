@@ -397,7 +397,7 @@ const ScheduleModal = ({
                           key={interview.id}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className={`p-6 rounded-xl border ${
+                          className={`p-6 rounded-md border ${
                             darkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-200 bg-gray-50'
                           }`}
                         >

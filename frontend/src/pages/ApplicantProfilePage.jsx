@@ -71,6 +71,8 @@ const ApplicantProfilePage = () => {
                         return user.skills;
                     } else if (user.skills.primary) {
                         return user.skills.primary;
+                    } else if (typeof user.skills === 'object') {
+                        return [...(user.skills.primary || []), ...(user.skills.technical || []), ...(user.skills.soft || [])];
                     }
                 }
                 return [];
@@ -109,6 +111,8 @@ const ApplicantProfilePage = () => {
                                 return user.skills;
                             } else if (user.skills.primary) {
                                 return user.skills.primary;
+                            } else if (typeof user.skills === 'object') {
+                                return [...(user.skills.primary || []), ...(user.skills.technical || []), ...(user.skills.soft || [])];
                             }
                         }
                         return [];
@@ -796,7 +800,7 @@ const ApplicantProfilePage = () => {
                                                 Experience
                                             </Typography>
                                             <Typography variant="body1" gutterBottom>
-                                                {user?.experience_years ? `${user.experience_years} years` : 'Not specified'}
+                                                {user?.yearsOfExperience ? `${user.yearsOfExperience} years` : 'Not specified'}
                                             </Typography>
                                         </Grid>
                                         <Grid item xs={12}>
@@ -813,9 +817,7 @@ const ApplicantProfilePage = () => {
                                             </Typography>
                                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
                                                 {(() => {
-                                                    const skills = user?.skills ?
-                                                        (typeof user.skills === 'string' ? JSON.parse(user.skills) : user.skills) :
-                                                        [];
+                                                    const skills = Array.isArray(user?.skills) ? user.skills : [];
                                                     return skills.length > 0 ? skills.map((skill) => (
                                                         <Chip
                                                             key={skill}
@@ -855,15 +857,35 @@ const ApplicantProfilePage = () => {
                                             <Typography variant="subtitle2" color="text.secondary">
                                                 LinkedIn Profile
                                             </Typography>
-                                            {user?.linkedin_url ? (
+                                            {user?.linkedin_url || user?.socialLinks?.linkedinUrl ? (
                                                 <Button
                                                     variant="outlined"
                                                     size="small"
-                                                    href={user.linkedin_url}
+                                                    href={user.linkedin_url || user.socialLinks.linkedinUrl}
                                                     target="_blank"
                                                     sx={{ mt: 0.5 }}
                                                 >
                                                     View LinkedIn
+                                                </Button>
+                                            ) : (
+                                                <Typography variant="body1" color="text.secondary">
+                                                    Not provided
+                                                </Typography>
+                                            )}
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <Typography variant="subtitle2" color="text.secondary">
+                                                GitHub Profile
+                                            </Typography>
+                                            {user?.github_url ? (
+                                                <Button
+                                                    variant="outlined"
+                                                    size="small"
+                                                    href={user.github_url}
+                                                    target="_blank"
+                                                    sx={{ mt: 0.5 }}
+                                                >
+                                                    View GitHub
                                                 </Button>
                                             ) : (
                                                 <Typography variant="body1" color="text.secondary">

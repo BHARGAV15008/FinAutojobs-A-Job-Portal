@@ -1,7 +1,6 @@
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { BaseUser, getUserModel } from '../../models/UserModels.js';
-import SimpleUser from '../../models/User.js'; // Simple User model for admin accounts
 import { securityLogger } from './logger.js';
 
 // Enhanced token generation with session management
@@ -194,27 +193,9 @@ export const authenticateToken = async (req, res, next) => {
     }
     
     // Find user in database with additional checks
-    let user = null;
-    
-    // For admin role, try SimpleUser model first
-    if (decoded.role === 'admin') {
-      try {
-        user = await SimpleUser.findById(decoded.userId || decoded.id);
-        if (!user && decoded.email) {
-          user = await SimpleUser.findOne({ email: decoded.email, role: 'admin' });
-        }
-        console.log('🔍 SimpleUser lookup result:', user ? 'Found admin' : 'Not found');
-      } catch (error) {
-        console.log('⚠️ SimpleUser lookup failed:', error.message);
-      }
-    }
-    
-    // Fallback to getUserModel for other roles or if admin not found
-    if (!user) {
-      const UserModel = getUserModel(decoded.role);
-      user = await UserModel.findById(decoded.userId || decoded.id);
-      console.log('🔍 getUserModel lookup result:', user ? 'Found' : 'Not found');
-    }
+    const UserModel = getUserModel(decoded.role);
+    const user = await UserModel.findById(decoded.userId || decoded.id);
+    console.log('🔍 getUserModel lookup result:', user ? 'Found' : 'Not found');
     
     if (!user) {
       securityLogger.warn('USER_NOT_FOUND', { ip: req.ip, userId: decoded.userId || decoded.id, role: decoded.role });

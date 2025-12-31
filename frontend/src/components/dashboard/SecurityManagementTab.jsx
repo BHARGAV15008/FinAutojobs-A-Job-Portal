@@ -157,7 +157,7 @@ const SecurityManagementTab = () => {
 
             {/* Security Overview */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                <div className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 p-6">
                     <div className="flex items-center">
                         <div className="p-3 bg-red-100 dark:bg-red-900 rounded-lg">
                             <span className="text-2xl">🚨</span>
@@ -171,7 +171,7 @@ const SecurityManagementTab = () => {
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                <div className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 p-6">
                     <div className="flex items-center">
                         <div className="p-3 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
                             <span className="text-2xl">⚠️</span>
@@ -185,7 +185,7 @@ const SecurityManagementTab = () => {
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                <div className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 p-6">
                     <div className="flex items-center">
                         <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
                             <span className="text-2xl">🔒</span>
@@ -197,7 +197,7 @@ const SecurityManagementTab = () => {
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                <div className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 p-6">
                     <div className="flex items-center">
                         <div className="p-3 bg-green-100 dark:bg-green-900 rounded-lg">
                             <span className="text-2xl">🛡️</span>
@@ -211,7 +211,7 @@ const SecurityManagementTab = () => {
             </div>
 
             {/* Security Settings */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Security Settings</h3>
 
                 <div className="space-y-6">
@@ -327,7 +327,7 @@ const SecurityManagementTab = () => {
             </div>
 
             {/* Security Logs */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Security Logs</h3>
                 </div>
@@ -401,7 +401,7 @@ const SecurityManagementTab = () => {
             </div>
 
             {/* Blocked IPs */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Blocked IP Addresses</h3>
                 </div>

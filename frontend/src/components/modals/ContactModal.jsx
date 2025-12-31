@@ -316,7 +316,7 @@ Best regards,
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => setContactMode('email')}
-                      className={`p-4 sm:p-6 md:p-8 rounded-xl border-2 border-dashed transition-all ${
+                      className={`p-4 sm:p-6 md:p-8 rounded-md border-2 border-dashed transition-all ${
                         darkMode 
                           ? 'border-gray-600 hover:border-blue-500 hover:bg-gray-700' 
                           : 'border-gray-300 hover:border-blue-500 hover:bg-blue-50'
@@ -358,7 +358,7 @@ Best regards,
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => setContactMode('messaging')}
-                      className={`p-4 sm:p-6 md:p-8 rounded-xl border-2 border-dashed transition-all ${
+                      className={`p-4 sm:p-6 md:p-8 rounded-md border-2 border-dashed transition-all ${
                         darkMode 
                           ? 'border-gray-600 hover:border-green-500 hover:bg-gray-700' 
                           : 'border-gray-300 hover:border-green-500 hover:bg-green-50'

@@ -81,19 +81,19 @@ const RecentActivity = ({ userRole }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200';
       case 'success':
       case 'completed':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+        return 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200';
       case 'upcoming':
       case 'active':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200';
       case 'new':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200';
       case 'info':
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+        return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+        return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200';
     }
   };
 
@@ -101,14 +101,14 @@ const RecentActivity = ({ userRole }) => {
 
   return (
     <div 
-      className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
+      className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 p-6"
       style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
     >
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white font-inter dashboard-text">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white font-inter">
           Recent Activity
         </h3>
-        <button className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium font-inter transition-colors duration-200">
+        <button className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-semibold font-inter transition-colors duration-200">
           View All
         </button>
       </div>
@@ -132,7 +132,7 @@ const RecentActivity = ({ userRole }) => {
               <p className="text-sm font-medium text-gray-900 dark:text-white font-inter dashboard-text">
                 {activity.title}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-300 mt-1 font-inter dashboard-secondary">
+              <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 font-inter dashboard-secondary">
                 {activity.time}
               </p>
             </div>

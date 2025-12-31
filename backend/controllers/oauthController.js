@@ -1,6 +1,6 @@
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
+import { BaseUser } from '../models/UserModels.js';
 import { logActivity } from '../services/activityLogger.js';
 import { createUserProfile } from '../services/profileService.js';
 import { sendEmail } from '../services/emailService.js';

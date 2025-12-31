@@ -3,234 +3,209 @@ import { motion } from 'framer-motion';
 import { useLocation } from 'wouter';
 import { useTheme } from '../../contexts/IntegratedThemeContext';
 import { useAuth } from '../../contexts/AuthContext.jsx';
+import { 
+  Home, 
+  Person, 
+  Work, 
+  Description, 
+  Notifications, 
+  BarChart, 
+  Settings, 
+  Logout,
+  Business,
+  Group,
+  Security,
+  ExpandLess,
+  ExpandMore,
+  Search,
+  Star,
+  Favorite
+} from '@mui/icons-material';
 
 const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeTab, activeJobTab }) => {
   const [location, setLocation] = useLocation();
   const { darkMode } = useTheme();
   const { logout } = useAuth();
-
-  // Removed debug logging to prevent excessive console output
   const [expandedMenus, setExpandedMenus] = useState({});
 
-  // Helper function to check if a path is currently active
   const isPathActive = (path, tabId) => {
-    // Use activeTab prop if available for more accurate detection
-    if (activeTab && tabId) {
-      return activeTab === tabId;
-    }
-
-    if (path === `/${userRole}-dashboard`) {
-      return (location === `/${userRole}-dashboard` || location === '/') && (!activeTab || activeTab === 'dashboard');
-    }
-
-    // Handle dashboard internal tabs
-    if (path === '/jobs' && userRole === 'recruiter') {
-      return activeTab === 'jobs' || location === `/${userRole}-dashboard/jobs` || location.includes('/jobs');
-    }
-    if (path === '/applicants' && userRole === 'recruiter') {
-      return activeTab === 'applicants' || location === `/${userRole}-dashboard/applicants` || location.includes('/applicants');
-    }
-    if (path === '/analytics' && userRole === 'recruiter') {
-      return activeTab === 'analytics' || location === `/${userRole}-dashboard/analytics` || location.includes('/analytics');
-    }
-    if (path === '/settings' && userRole === 'recruiter') {
-      return activeTab === 'settings' || location === `/${userRole}-dashboard/settings` || location.includes('/settings');
-    }
-    if (path === '/profile' && userRole === 'recruiter') {
-      return activeTab === 'profile' || location === `/${userRole}-dashboard/profile` || location.includes('/profile');
-    }
-
+    if (activeTab && tabId) return activeTab === tabId;
+    if (path === `/${userRole}-dashboard`) return (location === `/${userRole}-dashboard` || location === '/') && (!activeTab || activeTab === 'dashboard');
     return location === path || location.startsWith(path + '/');
   };
 
-  // Navigation items based on user role
-  const getNavigationItems = () => {
-    const commonItems = [
-      {
-        name: 'Dashboard',
-        emoji: '📊',
-        icon: 'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z',
-        path: `/${userRole}-dashboard`,
-        tabId: 'dashboard',
-        current: isPathActive(`/${userRole}-dashboard`, 'dashboard')
-      }
-    ];
+  const commonItems = [
+    {
+      name: 'Dashboard',
+      icon: <Home />,
+      path: `/${userRole}-dashboard`,
+      tabId: 'dashboard',
+      current: isPathActive(`/${userRole}-dashboard`, 'dashboard'),
+      gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      color: '#667eea'
+    }
+  ];
 
+  const getNavigationItems = () => {
     switch (userRole) {
       case 'applicant':
         return [
           ...commonItems,
           {
             name: 'Profile',
-            emoji: '👤',
-            icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
+            icon: <Person />,
             path: `/profile`,
-            current: isPathActive('/profile')
+            tabId: 'profile',
+            current: isPathActive('/profile', 'profile'),
+            gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            color: '#f093fb'
           },
           {
             name: 'Browse Jobs',
-            emoji: '💼',
-            icon: 'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6',
+            icon: <Work />,
             path: `/jobs`,
-            current: isPathActive('/jobs'),
+            tabId: 'jobs',
+            current: isPathActive('/jobs', 'jobs'),
             submenu: [
-              { name: 'All Jobs', emoji: '🔍', path: `/jobs` },
-              { name: 'Recommended', emoji: '⭐', path: `/recommended` },
-              { name: 'Favorites', emoji: '❤️', path: `/favorites` }
-            ]
+              { 
+                name: 'All Jobs', 
+                icon: <Search fontSize="small" />, 
+                path: `/jobs`, 
+                tabId: 'jobs', 
+                gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: '#667eea'
+              },
+              { 
+                name: 'Recommended', 
+                icon: <Star fontSize="small" />, 
+                path: `/recommended`, 
+                tabId: 'recommended', 
+                gradient: 'linear-gradient(135deg, #fad961 0%, #f76b1c 100%)',
+                color: '#fad961'
+              },
+              { 
+                name: 'Favorites', 
+                icon: <Favorite fontSize="small" />, 
+                path: `/favorites`, 
+                tabId: 'favorites', 
+                gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+                color: '#fa709a'
+              }
+            ],
+            gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            color: '#4facfe'
           },
           {
             name: 'Applications',
-            emoji: '📄',
-            icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+            icon: <Description />,
             path: `/applications`,
-            current: isPathActive('/applications')
+            tabId: 'applications',
+            current: isPathActive('/applications', 'applications'),
+            gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+            color: '#43e97b'
           },
           {
             name: 'Job Alerts',
-            emoji: '🔔',
-            icon: 'M15 17h5l-5 5v-5zM4.828 4.828A4 4 0 015.5 4H9v1H5.5a3 3 0 00-2.121.879L4.828 4.828z',
+            icon: <Notifications />,
             path: `/job-alerts`,
-            current: isPathActive('/job-alerts')
+            tabId: 'job-alerts',
+            current: isPathActive('/job-alerts', 'job-alerts'),
+            gradient: 'linear-gradient(135deg, #fa8bff 0%, #2bd2ff 90%, #2bff88 100%)',
+            color: '#fa8bff'
           },
           {
             name: 'Analytics',
-            emoji: '📈',
-            icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+            icon: <BarChart />,
             path: `/analytics`,
-            current: isPathActive('/analytics')
+            tabId: 'analytics',
+            current: isPathActive('/analytics', 'analytics'),
+            gradient: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+            color: '#a8edea'
           },
           {
             name: 'Settings',
-            emoji: '⚙️',
-            icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z',
+            icon: <Settings />,
             path: `/settings`,
-            current: isPathActive('/settings')
+            tabId: 'settings',
+            current: isPathActive('/settings', 'settings'),
+            gradient: 'linear-gradient(135deg, #d299c2 0%, #fef9d7 100%)',
+            color: '#d299c2'
           }
         ];
-
       case 'recruiter':
         return [
           ...commonItems,
           {
             name: 'Profile',
-            emoji: '👤',
-            icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
+            icon: <Person />,
             path: `/profile`,
             tabId: 'profile',
-            current: isPathActive('/profile', 'profile')
+            current: isPathActive('/profile', 'profile'),
+            gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            color: '#f093fb'
           },
           {
-            name: 'Job Management',
-            emoji: '💼',
-            icon: 'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6',
+            name: 'Post Job',
+            icon: <Work />,
             path: `/jobs`,
             tabId: 'jobs',
-            current: isPathActive('/jobs', 'jobs'),
-            submenu: [
-              { name: 'Post New Job', emoji: '➕', path: `/jobs`, tabId: 'jobs', jobTabId: 'post', current: activeTab === 'jobs' && activeJobTab === 'post' },
-              { name: 'Active Jobs', emoji: '🟢', path: `/active-jobs`, tabId: 'jobs', jobTabId: 'active', current: activeTab === 'jobs' && activeJobTab === 'active' },
-              { name: 'Draft Jobs', emoji: '📝', path: `/draft-jobs`, tabId: 'jobs', jobTabId: 'draft', current: activeTab === 'jobs' && activeJobTab === 'draft' },
-              { name: 'Closed Jobs', emoji: '🔒', path: `/closed-jobs`, tabId: 'jobs', jobTabId: 'closed', current: activeTab === 'jobs' && activeJobTab === 'closed' }
-            ]
+            current: isPathActive('/recruiter-dashboard/jobs', 'jobs'),
+            gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            color: '#4facfe'
           },
           {
-            name: 'Applicant Management',
-            emoji: '👥',
-            icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z',
+            name: 'Applicants',
+            icon: <Group />,
             path: `/applicants`,
             tabId: 'applicants',
-            current: isPathActive('/applicants', 'applicants'),
-            submenu: [
-              { name: 'All Applications', emoji: '📋', path: `/applicants`, tabId: 'applicants', current: isPathActive('/applicants', 'applicants') },
-              { name: 'Candidates', emoji: '🎯', path: `/candidates`, tabId: 'candidates', current: isPathActive('/candidates', 'candidates') },
-              { name: 'Interviews', emoji: '🗣️', path: `/interviews`, tabId: 'interviews', current: isPathActive('/interviews', 'interviews') }
-            ]
+            current: isPathActive('/recruiter-dashboard/applicants', 'applicants'),
+            gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+            color: '#43e97b'
           },
           {
             name: 'Analytics',
-            emoji: '📈',
-            icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+            icon: <BarChart />,
             path: `/analytics`,
             tabId: 'analytics',
-            current: isPathActive('/analytics', 'analytics')
+            current: isPathActive('/recruiter-dashboard/analytics', 'analytics'),
+            gradient: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+            color: '#a8edea'
           },
           {
             name: 'Settings',
-            emoji: '⚙️',
-            icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z',
+            icon: <Settings />,
             path: `/settings`,
             tabId: 'settings',
-            current: isPathActive('/settings', 'settings')
+            current: isPathActive('/recruiter-dashboard/settings', 'settings'),
+            gradient: 'linear-gradient(135deg, #d299c2 0%, #fef9d7 100%)',
+            color: '#d299c2'
           }
         ];
-
       case 'admin':
         return [
           ...commonItems,
           {
-            name: 'Profile',
-            emoji: '👤',
-            icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
-            path: `/profile`,
-            tabId: 'profile',
-            current: isPathActive('/profile')
+            name: 'Users',
+            icon: <Group />,
+            path: `/admin-dashboard/users`,
+            current: isPathActive('/admin-dashboard/users'),
+            color: '#10b981'
           },
           {
-            name: 'User Management',
-            emoji: '👥',
-            icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z',
-            path: `/users`,
-            tabId: 'users',
-            current: isPathActive('/users'),
-            submenu: [
-              { name: 'All Users', emoji: '👤', path: `/users`, tabId: 'users', userTab: 'all' },
-              { name: 'Applicants', emoji: '🔍', path: `/users`, tabId: 'users', userTab: 'applicant' },
-              { name: 'Recruiters', emoji: '🏢', path: `/users`, tabId: 'users', userTab: 'recruiter' },
-              { name: 'Pending Approval', emoji: '⏳', path: `/users`, tabId: 'users', userTab: 'pending' }
-            ]
-          },
-          {
-            name: 'Job Management',
-            emoji: '💼',
-            icon: 'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6',
-            path: `/jobs`,
-            tabId: 'jobs',
-            current: isPathActive('/jobs'),
-            submenu: [
-              { name: 'All Jobs', emoji: '📋', path: `/jobs`, tabId: 'jobs', jobTab: 'all' },
-              { name: 'Active Jobs', emoji: '✅', path: `/jobs`, tabId: 'jobs', jobTab: 'active' },
-              { name: 'Draft Jobs', emoji: '📝', path: `/jobs`, tabId: 'jobs', jobTab: 'draft' },
-              { name: 'Closed Jobs', emoji: '🔒', path: `/jobs`, tabId: 'jobs', jobTab: 'closed' },
-              { name: 'Expired Jobs', emoji: '⏰', path: `/jobs`, tabId: 'jobs', jobTab: 'expired' }
-            ]
-          },
-          {
-            name: 'System Analytics',
-            emoji: '📈',
-            icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
-            path: `/analytics`,
-            tabId: 'analytics',
-            current: isPathActive('/analytics')
-          },
-          {
-            name: 'Content Moderation',
-            emoji: '🛡️',
-            icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
-            path: `/moderation`,
-            tabId: 'moderation',
-            current: isPathActive('/moderation')
+            name: 'Security',
+            icon: <Security />,
+            path: `/admin-dashboard/security`,
+            current: isPathActive('/admin-dashboard/security'),
+            color: '#ef4444'
           },
           {
             name: 'Settings',
-            emoji: '⚙️',
-            icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z',
+            icon: <Settings />,
             path: `/settings`,
-            tabId: 'settings',
-            current: isPathActive('/settings')
+            current: isPathActive('/settings'),
+            color: '#64748b'
           }
         ];
-
       default:
         return commonItems;
     }
@@ -239,64 +214,17 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
   const navigationItems = getNavigationItems();
 
   const toggleSubmenu = (itemName) => {
-    setExpandedMenus(prev => ({
-      ...prev,
-      [itemName]: !prev[itemName]
-    }));
+    setExpandedMenus(prev => ({ ...prev, [itemName]: !prev[itemName] }));
   };
 
   const handleNavigation = (path, tabId, jobTabId, userTab) => {
-    console.log('🔍 SIDEBAR NAVIGATION CALLED:', { 
-      path, 
-      tabId, 
-      jobTabId, 
-      userTab, 
-      userRole, 
-      currentLocation: location 
-    });
-    
-    // Check if we have the required props
-    if (!userRole) {
-      console.error('❌ SIDEBAR: userRole is missing!', { userRole, user });
-      return;
-    }
-    
-    if (!setLocation) {
-      console.error('❌ SIDEBAR: setLocation function is missing!');
-      return;
-    }
-
-    // Build the correct path based on dashboard structure
     let fullPath;
     const dashboardPrefix = `/${userRole}-dashboard`;
-    
-    // Handle different navigation scenarios
-    if (path === `/${userRole}-dashboard`) {
-      // Main dashboard path
-      fullPath = path;
-    } else if (tabId === 'dashboard') {
-      // Dashboard tab
-      fullPath = dashboardPrefix;
-    } else if (tabId) {
-      // Tab-based navigation
-      if (tabId === 'jobs' && jobTabId) {
-        // Job management with subtab
-        fullPath = `${dashboardPrefix}/${tabId}/${jobTabId}`;
-      } else {
-        // Regular tab
-        fullPath = `${dashboardPrefix}/${tabId}`;
-      }
-    } else if (path.startsWith('/') && !path.includes('dashboard')) {
-      // Legacy path handling
-      fullPath = `${dashboardPrefix}${path}`;
-    } else {
-      // Fallback
-      fullPath = `${dashboardPrefix}/${path.replace('/', '')}`;
-    }
+    if (path === `/${userRole}-dashboard`) fullPath = path;
+    else if (tabId === 'dashboard') fullPath = dashboardPrefix;
+    else if (tabId) fullPath = tabId === 'jobs' && jobTabId ? `${dashboardPrefix}/${tabId}/${jobTabId}` : `${dashboardPrefix}/${tabId}`;
+    else fullPath = `${dashboardPrefix}/${path.replace('/', '')}`;
 
-    console.log('🔗 SIDEBAR NAVIGATING TO:', fullPath);
-    
-    // Emit custom event for dashboard components to listen to
     const navigationEvent = new CustomEvent('dashboardTabChange', {
       detail: { tabId, jobTabId, userTab, path: fullPath }
     });
@@ -304,53 +232,36 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
     
     try {
       setLocation(fullPath);
-      console.log('✅ SIDEBAR: Navigation successful');
     } catch (error) {
-      console.error('❌ SIDEBAR: Navigation failed:', error);
+      console.error('Navigation failed:', error);
     }
-
-    // Close sidebar on mobile
-    if (window.innerWidth < 1024) {
-      setSidebarOpen(false);
-    }
+    if (window.innerWidth < 1024) setSidebarOpen(false);
   };
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700">
-      {/* Logo */}
-      <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center">
-          <div className="flex-shrink-0">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-              FinAutoJobs
-            </h2>
-          </div>
+    <div className="flex flex-col h-full bg-gradient-to-b from-white via-blue-50/30 to-indigo-50/30 dark:bg-gradient-to-b dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 border-r border-gray-200/50 dark:border-gray-700/50 font-sans transition-all duration-300 sidebar shadow-lg">
+      {/* Brand */}
+      <div className="flex items-center h-16 px-6 border-b border-gray-200/50 dark:border-gray-700/50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+        <div className="w-9 h-9 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 rounded-xl flex items-center justify-center mr-3 shadow-lg shadow-blue-500/30 transform hover:scale-105 transition-transform">
+          <span className="text-white font-black text-lg">F</span>
         </div>
-        <button
-          className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
-          onClick={() => setSidebarOpen(false)}
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+        <span className="text-lg font-black text-gray-900 dark:text-white tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-indigo-400">
+          FinAutoJobs
+        </span>
       </div>
 
-      {/* User info */}
-      <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+      {/* User Info Card */}
+      <div className="p-4 mx-3 mt-4 mb-2 bg-gradient-to-br from-white to-blue-50/50 dark:from-gray-800 dark:to-gray-700/50 rounded-2xl shadow-md border border-blue-100/50 dark:border-gray-700/50 backdrop-blur-sm">
         <div className="flex items-center">
-          <div className="flex-shrink-0">
-            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-medium">
-                {user?.name?.charAt(0) || 'U'}
-              </span>
-            </div>
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center text-white font-black shadow-lg shadow-blue-500/40 ring-4 ring-white/50 dark:ring-gray-800/50">
+            {user?.name?.charAt(0) || user?.firstName?.charAt(0) || user?.email?.charAt(0) || 'U'}
           </div>
-          <div className="ml-3">
-            <p className="text-sm font-medium text-gray-900 dark:text-white">
-              {user?.name || 'User'}
+          <div className="ml-3 overflow-hidden">
+            <p className="text-sm font-black text-gray-900 dark:text-white truncate">
+              {user?.name || (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.firstName) || user?.email?.split('@')[0] || 'User'}
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+            <p className="text-xs text-blue-600 dark:text-blue-400 font-bold capitalize truncate flex items-center">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-2 animate-pulse"></span>
               {userRole}
             </p>
           </div>
@@ -358,81 +269,95 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+      <nav className="flex-1 px-3 py-4 space-y-2 overflow-y-auto custom-scrollbar">
         {navigationItems.map((item) => (
           <div key={item.name}>
             <motion.button
               className={`
-                w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg
-                transition-colors duration-200
+                group w-full flex items-center px-4 py-3.5 text-sm font-black rounded-xl
+                transition-all duration-300 relative overflow-hidden
                 ${item.current
-                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200'
-                  : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
+                  ? 'bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 text-white shadow-xl shadow-blue-500/30'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800 hover:shadow-md dark:hover:text-white'
                 }
               `}
-              onClick={() => {
-                console.log('🔍 SIDEBAR: Main item clicked:', item.name, { hasSubmenu: !!item.submenu, path: item.path, tabId: item.tabId });
-                if (item.submenu) {
-                  console.log('🔍 SIDEBAR: Toggling submenu for:', item.name);
-                  toggleSubmenu(item.name);
-                } else {
-                  console.log('🔍 SIDEBAR: Navigating to:', item.path);
-                  handleNavigation(item.path, item.tabId);
-                }
-              }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              onClick={() => item.submenu ? toggleSubmenu(item.name) : handleNavigation(item.path, item.tabId)}
+              whileTap={{ scale: 0.97 }}
+              whileHover={{ x: item.current ? 0 : 4 }}
             >
-              <span className="text-lg mr-3 flex-shrink-0">{item.emoji}</span>
-              <span className="flex-1 text-left">{item.name}</span>
-              {item.submenu && (
-                <svg
-                  className={`w-4 h-4 ml-auto flex-shrink-0 transition-transform duration-200 ${expandedMenus[item.name] ? 'rotate-90' : ''
-                    }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
+              {/* Active indicator */}
+              {item.current && (
+                <motion.div
+                  layoutId="activeTab"
+                  className="absolute inset-0 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-xl"
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+              )}
+              
+              <div 
+                className="relative flex-shrink-0 mr-3 flex items-center justify-center rounded-xl transition-all duration-300 group-hover:scale-110 group-hover:rotate-3"
+                style={{
+                  width: '42px',
+                  height: '42px',
+                  background: item.current ? 'rgba(255,255,255,0.2)' : item.gradient,
+                  boxShadow: !item.current ? `0 6px 16px ${item.color}50` : '0 4px 12px rgba(0,0,0,0.2)'
+                }}
+              >
+                {React.cloneElement(item.icon, { 
+                  sx: { 
+                    fontSize: 22, 
+                    color: '#ffffff',
+                    filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3))',
+                    transition: 'all 0.3s ease'
+                  } 
+                })}
+              </div>
+              <span className="relative flex-1 text-left tracking-tight">{item.name}</span>
+              
+              {/* Shine effect on hover */}
+              {!item.current && (
+                <motion.div
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{
+                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)',
+                  }}
+                />
               )}
             </motion.button>
 
             {/* Submenu */}
             {item.submenu && expandedMenus[item.name] && (
               <motion.div
-                className="ml-8 mt-2 space-y-1"
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
+                className="ml-6 pl-4 border-l-2 border-gray-100 dark:border-gray-700 mt-1 space-y-1"
               >
                 {item.submenu.map((subItem) => (
-                  <motion.button
+                  <button
                     key={subItem.name}
-                    className={`
-                      w-full text-left px-3 py-2 text-sm rounded-md transition-colors duration-200 flex items-center
-                      ${subItem.current || isPathActive(subItem.path)
-                        ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/50 dark:text-blue-200 font-medium'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800'
-                      }
-                    `}
-                    onClick={() => {
-                      console.log('🔍 SIDEBAR: Submenu item clicked:', subItem.name, { 
-                        path: subItem.path, 
-                        tabId: subItem.tabId, 
-                        jobTab: subItem.jobTab,
-                        jobTabId: subItem.jobTabId, 
-                        userTab: subItem.userTab 
-                      });
-                      handleNavigation(subItem.path, subItem.tabId, subItem.jobTab || subItem.jobTabId, subItem.userTab);
-                    }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    className="w-full text-left px-3 py-2 text-xs font-bold text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-white rounded-md transition-colors flex items-center"
+                    onClick={() => handleNavigation(subItem.path, subItem.tabId)}
                   >
-                    <span className="text-sm mr-2">{subItem.emoji}</span>
+                    <div 
+                      className="mr-3 flex items-center justify-center rounded-lg transition-all duration-300 hover:scale-110"
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        background: subItem.gradient,
+                        boxShadow: `0 2px 8px ${subItem.color}40`
+                      }}
+                    >
+                      {React.cloneElement(subItem.icon, { 
+                        sx: { 
+                          fontSize: 16, 
+                          color: '#ffffff',
+                          filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))'
+                        } 
+                      })}
+                    </div>
                     {subItem.name}
-                  </motion.button>
+                  </button>
                 ))}
               </motion.div>
             )}
@@ -440,20 +365,19 @@ const DashboardSidebar = ({ userRole, user, sidebarOpen, setSidebarOpen, activeT
         ))}
       </nav>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-        <button
-          className="w-full flex items-center px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200"
-          onClick={() => {
-            // Handle logout properly
-            logout();
-          }}
+      {/* Footer Actions */}
+      <div className="p-4 border-t border-gray-200/50 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
+        <motion.button
+          onClick={logout}
+          whileHover={{ scale: 1.02, x: 4 }}
+          whileTap={{ scale: 0.98 }}
+          className="flex items-center w-full px-4 py-3 text-sm font-black text-gray-700 hover:text-red-600 bg-gradient-to-r from-red-50 to-rose-50 hover:from-red-100 hover:to-rose-100 dark:from-red-900/20 dark:to-rose-900/20 dark:text-gray-300 dark:hover:text-red-400 rounded-xl transition-all shadow-sm hover:shadow-md"
         >
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          Logout
-        </button>
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center mr-3 shadow-lg shadow-red-500/30">
+            <Logout sx={{ fontSize: 18, color: '#ffffff' }} />
+          </div>
+          Sign Out
+        </motion.button>
       </div>
     </div>
   );

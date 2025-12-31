@@ -68,20 +68,20 @@
 /* Card Hover Animations */
 .MuiCard-root {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid rgba(0, 0, 0, 0.04) !important;
 }
 
 .MuiCard-root:hover {
-  transform: translateY(-4px) !important;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12) !important;
-  border-color: rgba(103, 58, 183, 0.2) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06) !important;
+  border-color: rgba(103, 58, 183, 0.1) !important;
 }
 
 /* Enhanced Paper Components */
 .MuiPaper-root {
   background: #ffffff !important;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid rgba(0, 0, 0, 0.04) !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02) !important;
 }
 
 /* Smooth Input Focus Effects */
@@ -90,12 +90,12 @@
 }
 
 .MuiTextField-root .MuiOutlinedInput-root:hover {
-  box-shadow: 0 4px 12px rgba(103, 58, 183, 0.1) !important;
+  box-shadow: 0 2px 8px rgba(103, 58, 183, 0.05) !important;
 }
 
 .MuiTextField-root .MuiOutlinedInput-root.Mui-focused {
-  box-shadow: 0 6px 20px rgba(103, 58, 183, 0.2) !important;
-  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(103, 58, 183, 0.1) !important;
+  transform: translateY(-0.5px) !important;
 }
 
 /* Loading Skeleton Animation */

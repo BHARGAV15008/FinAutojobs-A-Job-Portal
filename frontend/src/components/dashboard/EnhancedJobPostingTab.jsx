@@ -1,54 +1,66 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Sparkles, MapPin, Clock, Users, DollarSign, BookOpen, Briefcase, Zap } from 'lucide-react';
-import { useDashboard } from '../../contexts/RealDashboardContext';
-import { useTheme } from '../../contexts/IntegratedThemeContext';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  Sparkles,
+  MapPin,
+  Clock,
+  Users,
+  DollarSign,
+  BookOpen,
+  Briefcase,
+  Zap,
+} from "lucide-react";
+import { useDashboard } from "../../contexts/RealDashboardContext";
+import { useTheme } from "../../contexts/IntegratedThemeContext";
 
 const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
   const { postJob, updateJob, currentUser } = useDashboard();
   const { darkMode } = useTheme();
   const [formData, setFormData] = useState({
     // Basic Information
-    title: '',
-    location: '',
-    jobType: 'full-time',
-    workArrangement: 'onsite',
-    
+    title: "",
+    location: "",
+    jobType: "full-time",
+    workArrangement: "onsite",
+    vacancy: 1,
+
     // Experience & Skills
     experienceMin: 1,
     experienceMax: 3,
     requiredSkills: [],
     preferredSkills: [],
-    
+
     // Salary & Benefits
-    salaryType: 'range',
-    salaryMin: '300000',
-    salaryMax: '600000',
-    currency: 'INR',
-    salaryPeriod: 'yearly',
-    
+    salaryType: "range",
+    salaryMin: "300000",
+    salaryMax: "600000",
+    currency: "INR",
+    salaryPeriod: "yearly",
+
     // Job Details
-    description: '',
+    description: "",
     responsibilities: [],
     requirements: [],
     qualifications: [],
     keyResponsibilities: [],
-    
+
     // Industry & Category - Fixed field names
-    industry: 'Finance & Banking', // Use exact backend validation values
-    jobCategory: 'Finance', // Use jobCategory instead of category
-    
+    industry: "Finance & Banking", // Use exact backend validation values
+    jobCategory: "Finance", // Use jobCategory instead of category
+
     // Application
-    contactEmail: '',
-    applicationDeadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Default to 30 days from now
-    urgency: 'normal', // normal, urgent, high-priority
-    
+    contactEmail: "",
+    applicationDeadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0], // Default to 30 days from now
+    urgency: "normal", // normal, urgent, high-priority
+
     // AI Enhancement
-    keywordsForAI: '',
+    keywordsForAI: "",
     aiKeywords: [],
-    isAiEnhanced: false
+    isAiEnhanced: false,
   });
-  
+
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [enhancingDescription, setEnhancingDescription] = useState(false);
@@ -56,27 +68,48 @@ const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
   // Populate form when editing a job
   useEffect(() => {
     if (editingJob) {
-      console.log('🔍 Populating form with editing job:', editingJob);
-      
+      console.log("🔍 Populating form with editing job:", editingJob);
+
       // Helper function to safely extract array values
       const extractArray = (value) => {
         if (Array.isArray(value)) return value;
-        if (typeof value === 'string') return value.split(',').map(s => s.trim()).filter(s => s);
+        if (typeof value === "string")
+          return value
+            .split(",")
+            .map((s) => s.trim())
+            .filter((s) => s);
         return [];
       };
 
       // Helper function to extract experience values
       const extractExperience = (exp) => {
-        if (typeof exp === 'object' && exp) {
+        if (typeof exp === "object" && exp) {
           return {
-            min: exp.minimum || exp.min || 1,
-            max: exp.maximum || exp.max || 3
+            min:
+              exp.min !== undefined
+                ? exp.min
+                : exp.minimum !== undefined
+                ? exp.minimum
+                : 1,
+            max:
+              exp.max !== undefined
+                ? exp.max
+                : exp.maximum !== undefined
+                ? exp.maximum
+                : 3,
           };
         }
-        if (typeof exp === 'string') {
+        if (typeof exp === "string") {
           const match = exp.match(/(\d+)-(\d+)/);
           if (match) {
             return { min: parseInt(match[1]), max: parseInt(match[2]) };
+          }
+          const singleMatch = exp.match(/(\d+)/);
+          if (singleMatch) {
+            return {
+              min: parseInt(singleMatch[1]),
+              max: parseInt(singleMatch[1]) + 2,
+            };
           }
         }
         return { min: 1, max: 3 };
@@ -84,15 +117,32 @@ const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
 
       // Helper function to extract salary values
       const extractSalary = (salary) => {
-        if (typeof salary === 'object' && salary) {
+        if (typeof salary === "object" && salary) {
           return {
-            min: salary.minimum || salary.min || '300000',
-            max: salary.maximum || salary.max || '600000',
-            currency: salary.currency || 'INR',
-            period: salary.period || 'yearly'
+            min:
+              salary.minimum !== undefined
+                ? salary.minimum
+                : salary.min !== undefined
+                ? salary.min
+                : "300000",
+            max:
+              salary.maximum !== undefined
+                ? salary.maximum
+                : salary.max !== undefined
+                ? salary.max
+                : "600000",
+            currency: salary.currency || "INR",
+            period: (salary.period || "yearly").toLowerCase(),
+            type: (salary.type || "range").toLowerCase(),
           };
         }
-        return { min: '300000', max: '600000', currency: 'INR', period: 'yearly' };
+        return {
+          min: "300000",
+          max: "600000",
+          currency: "INR",
+          period: "yearly",
+          type: "range",
+        };
       };
 
       const experience = extractExperience(editingJob.experience);
@@ -100,64 +150,115 @@ const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
 
       setFormData({
         // Basic Information
-        title: editingJob.jobTitle || editingJob.title || '',
-        location: editingJob.location || '',
-        jobType: editingJob.jobType?.toLowerCase().replace(' ', '-') || editingJob.type?.toLowerCase().replace(' ', '-') || 'full-time',
-        workArrangement: editingJob.workArrangement?.toLowerCase() || 'onsite',
-        
+        title: editingJob.jobTitle || editingJob.title || "",
+        location: editingJob.location || "",
+        jobType: (() => {
+          const type = editingJob.jobType || editingJob.type || "full-time";
+          return type.toLowerCase().replace(/\s+/g, "-");
+        })(),
+        workArrangement: (() => {
+          const arrangement = editingJob.workArrangement || "onsite";
+          const lowerArrangement = arrangement
+            .toLowerCase()
+            .replace(/[^a-z]/g, "");
+          if (lowerArrangement.includes("remote")) return "remote";
+          if (lowerArrangement.includes("hybrid")) return "hybrid";
+          return "onsite";
+        })(),
+        vacancy: editingJob.vacancy || 1,
+
         // Experience & Skills
         experienceMin: experience.min,
         experienceMax: experience.max,
-        requiredSkills: extractArray(editingJob.requiredSkills || editingJob.skills),
+        requiredSkills: extractArray(
+          editingJob.requiredSkills || editingJob.skills
+        ),
         preferredSkills: extractArray(editingJob.preferredSkills),
-        
+
         // Salary & Benefits
-        salaryType: 'range',
+        salaryType: salary.type,
         salaryMin: salary.min.toString(),
         salaryMax: salary.max.toString(),
         currency: salary.currency,
         salaryPeriod: salary.period,
-        
-        // Job Details
-        description: editingJob.jobDescription || editingJob.description || '',
-        responsibilities: extractArray(editingJob.keyResponsibilities || editingJob.responsibilities),
-        requirements: extractArray(editingJob.requirements),
-        qualifications: extractArray(editingJob.qualifications),
-        keyResponsibilities: extractArray(editingJob.keyResponsibilities || editingJob.responsibilities),
-        
-        // Industry & Category
-        industry: editingJob.industry || 'Finance & Banking',
-        jobCategory: editingJob.jobCategory || editingJob.category || 'Finance',
-        
-        // Application
-        contactEmail: editingJob.contactEmail || currentUser?.email || '',
-        applicationDeadline: editingJob.applicationDeadline ? 
-          new Date(editingJob.applicationDeadline).toISOString().split('T')[0] : 
-          new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        urgency: editingJob.jobUrgency === 'High Priority' ? 'high-priority' : 
-                 editingJob.jobUrgency === 'Urgent' ? 'urgent' : 'normal',
-        
-        // AI Enhancement
-        keywordsForAI: '',
-        aiKeywords: extractArray(editingJob.aiKeywords),
-        isAiEnhanced: editingJob.isAiEnhanced || false
-      });
 
-      console.log('✅ Form populated with editing job data');
+        // Job Details
+        description: editingJob.jobDescription || editingJob.description || "",
+        responsibilities: extractArray(
+          editingJob.keyResponsibilities ||
+            editingJob.responsibilities ||
+            editingJob.jobResponsibilities
+        ),
+        requirements: extractArray(
+          editingJob.requirements || editingJob.jobRequirements
+        ),
+        qualifications: extractArray(editingJob.qualifications),
+        keyResponsibilities: extractArray(
+          editingJob.keyResponsibilities ||
+            editingJob.responsibilities ||
+            editingJob.jobResponsibilities
+        ),
+
+        // Industry & Category
+        industry: editingJob.industry || "Finance & Banking",
+        jobCategory: (() => {
+          const industry = editingJob.industry || "Finance & Banking";
+          const category = editingJob.jobCategory || editingJob.category;
+
+          // If category exists and is valid for this industry, use it
+          if (
+            category &&
+            industryData[industry]?.categories.includes(category)
+          ) {
+            return category;
+          }
+
+          // Fallback to first category of the industry
+          return (
+            industryData[industry]?.categories[0] ||
+            "Banking & Financial Services"
+          );
+        })(),
+
+        // Application
+        contactEmail: editingJob.contactEmail || currentUser?.email || "",
+        applicationDeadline: editingJob.applicationDeadline
+          ? new Date(editingJob.applicationDeadline).toISOString().split("T")[0]
+          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+              .toISOString()
+              .split("T")[0],
+        urgency: editingJob.jobUrgency?.toLowerCase().includes("high")
+          ? "high-priority"
+          : editingJob.jobUrgency?.toLowerCase().includes("urgent")
+          ? "urgent"
+          : "normal",
+
+        // AI Enhancement
+        keywordsForAI: "",
+        aiKeywords: extractArray(editingJob.aiKeywords),
+        isAiEnhanced: editingJob.isAiEnhanced || false,
+      });
+      console.log("✅ Form populated with editing job data");
     }
   }, [editingJob, currentUser]);
 
   const handleSubmit = async (e, isDraft = false) => {
     e.preventDefault();
-    console.log('🚀 Form submission started', isDraft ? '(as draft)' : '(as active)');
-    console.log('🔍 Form data at submission:', formData);
+    console.log(
+      "🚀 Form submission started",
+      isDraft ? "(as draft)" : "(as active)"
+    );
+    console.log("🔍 Form data at submission:", formData);
     setLoading(true);
 
     try {
       // Prepare job data for API
       const jobData = {
         title: formData.title,
-        company: currentUser?.companyInfo?.companyName || currentUser?.company || 'TechCorp Solutions',
+        company:
+          currentUser?.companyInfo?.companyName ||
+          currentUser?.company ||
+          "TechCorp Solutions",
         location: formData.location,
         type: formData.jobType,
         workArrangement: formData.workArrangement,
@@ -178,23 +279,39 @@ const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
         contactEmail: formData.contactEmail,
         applicationDeadline: formData.applicationDeadline,
         keywordsForAI: formData.keywordsForAI,
-        urgency: formData.urgency || 'normal',
-        currency: formData.currency || 'INR'
+        urgency: formData.urgency || "normal",
+        currency: formData.currency || "INR",
       };
 
       // Debug the form data being sent
-      console.log('🔍 Form data being sent:', formData);
-      console.log('🔍 Current user profile:', currentUser);
-      
+      console.log("🔍 Form data being sent:", formData);
+      console.log("🔍 Current user profile:", currentUser);
+
       // Get company name from user profile with better fallback
-      const companyName = currentUser?.companyInfo?.companyName || 
-                         currentUser?.company || 
-                         'TechCorp Solutions'; // Use a default company name instead of "Not Set"
-      
-      console.log('🔍 Using company name from profile:', companyName);
-      console.log('🔍 Experience values - Min:', formData.experienceMin, 'Max:', formData.experienceMax);
-      console.log('🔍 Salary values - Min:', formData.salaryMin, 'Max:', formData.salaryMax);
-      console.log('🔍 Salary validation - MinValid:', !isNaN(formData.salaryMin), 'MaxValid:', !isNaN(formData.salaryMax));
+      const companyName =
+        currentUser?.companyInfo?.companyName ||
+        currentUser?.company ||
+        "TechCorp Solutions"; // Use a default company name instead of "Not Set"
+
+      console.log("🔍 Using company name from profile:", companyName);
+      console.log(
+        "🔍 Experience values - Min:",
+        formData.experienceMin,
+        "Max:",
+        formData.experienceMax
+      );
+      console.log(
+        "🔍 Salary values - Min:",
+        formData.salaryMin,
+        "Max:",
+        formData.salaryMax
+      );
+      console.log(
+        "🔍 Salary validation - MinValid:",
+        !isNaN(formData.salaryMin),
+        "MaxValid:",
+        !isNaN(formData.salaryMax)
+      );
 
       // Create proper job payload matching backend validation requirements
       const jobPayload = {
@@ -202,143 +319,227 @@ const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
         jobTitle: formData.title,
         companyName: companyName,
         location: formData.location,
-        industry: formData.industry || 'Finance & Banking', // Default to valid industry
-        jobCategory: formData.jobCategory || 'Finance', // Required field
-        jobType: formData.jobType === 'part-time' ? 'Part Time' : 
-                 formData.jobType === 'full-time' ? 'Full Time' : 
-                 formData.jobType === 'contract' ? 'Contract' : 
-                 formData.jobType === 'internship' ? 'Internship' : 
-                 formData.jobType === 'freelance' ? 'Freelance' : 'Full Time',
-        workArrangement: formData.workArrangement === 'remote' ? 'Remote' : 
-                        formData.workArrangement === 'hybrid' ? 'Hybrid' : 'On-site',
-        
+        industry: formData.industry || "Finance & Banking", // Default to valid industry
+        jobCategory: formData.jobCategory || "Finance", // Required field
+        // Send both camelCase and snake_case for compatibility
+        jobType:
+          formData.jobType === "part-time"
+            ? "Part Time"
+            : formData.jobType === "full-time"
+            ? "Full Time"
+            : formData.jobType === "contract"
+            ? "Contract"
+            : formData.jobType === "internship"
+            ? "Internship"
+            : formData.jobType === "freelance"
+            ? "Freelance"
+            : "Full Time",
+        job_type:
+          formData.jobType === "part-time"
+            ? "part_time"
+            : formData.jobType === "full-time"
+            ? "full_time"
+            : formData.jobType === "contract"
+            ? "contract"
+            : formData.jobType === "internship"
+            ? "internship"
+            : formData.jobType === "freelance"
+            ? "freelance"
+            : "full_time",
+        workArrangement:
+          formData.workArrangement === "remote"
+            ? "Remote"
+            : formData.workArrangement === "hybrid"
+            ? "Hybrid"
+            : "On-site",
+        work_mode:
+          formData.workArrangement === "remote"
+            ? "remote"
+            : formData.workArrangement === "hybrid"
+            ? "hybrid"
+            : "onsite",
+
         // Application deadline (required) - default to 30 days from now
-        applicationDeadline: formData.applicationDeadline || 
-                           new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        
+        applicationDeadline:
+          formData.applicationDeadline ||
+          new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+
         // Experience object (required)
         experience: {
           minimum: parseInt(formData.experienceMin) || 0,
-          maximum: parseInt(formData.experienceMax) || parseInt(formData.experienceMin) || 5
+          maximum:
+            parseInt(formData.experienceMax) ||
+            parseInt(formData.experienceMin) ||
+            5,
         },
-        
+
         // Job description (required, min 50 chars)
-        jobDescription: formData.description && formData.description.length >= 50 ? 
-          formData.description : 
-          `We are looking for a ${formData.title} to join our team at ${companyName}. This is an excellent opportunity for someone with ${formData.experienceMin || 0}-${formData.experienceMax || 5} years of experience in the field. The successful candidate will be responsible for various tasks related to ${formData.title} role and will work closely with our team to achieve company objectives.`,
-        
+        jobDescription:
+          formData.description && formData.description.length >= 50
+            ? formData.description
+            : `We are looking for a ${
+                formData.title
+              } to join our team at ${companyName}. This is an excellent opportunity for someone with ${
+                formData.experienceMin || 0
+              }-${
+                formData.experienceMax || 5
+              } years of experience in the field. The successful candidate will be responsible for various tasks related to ${
+                formData.title
+              } role and will work closely with our team to achieve company objectives.`,
+
         // Skills and responsibilities
-        requiredSkills: Array.isArray(formData.requiredSkills) ? formData.requiredSkills : 
-                       formData.requiredSkills ? formData.requiredSkills.split(',').map(s => s.trim()) : [],
+        requiredSkills: Array.isArray(formData.requiredSkills)
+          ? formData.requiredSkills
+          : formData.requiredSkills
+          ? formData.requiredSkills.split(",").map((s) => s.trim())
+          : [],
         keyResponsibilities: formData.keyResponsibilities || [
           `Perform ${formData.title} related tasks`,
-          'Collaborate with team members',
-          'Meet project deadlines',
-          'Maintain quality standards'
+          "Collaborate with team members",
+          "Meet project deadlines",
+          "Maintain quality standards",
         ],
         requirements: formData.requirements || [
-          `${formData.experienceMin || 0}-${formData.experienceMax || 5} years of experience`,
-          'Strong communication skills',
-          'Team player',
-          'Problem-solving abilities'
+          `${formData.experienceMin || 0}-$
+            {formData.experienceMax || 5
+          } years of experience`,
+          "Strong communication skills",
+          "Team player",
+          "Problem-solving abilities",
         ],
-        
+
         // Salary structure - Fixed to properly handle salary values
         salaryRange: {
-          type: (formData.salaryMin && formData.salaryMax && 
-                 !isNaN(formData.salaryMin) && !isNaN(formData.salaryMax)) ? 'Range' : 'Negotiable',
+          type:
+            formData.salaryMin &&
+            formData.salaryMax &&
+            !isNaN(formData.salaryMin) &&
+            !isNaN(formData.salaryMax)
+              ? "Range"
+              : "Negotiable",
           min: formData.salaryMin ? parseInt(formData.salaryMin) : undefined,
           max: formData.salaryMax ? parseInt(formData.salaryMax) : undefined,
-          period: 'Yearly',
-          currency: formData.currency || 'INR'
+          period: "Yearly",
+          currency: formData.currency || "INR",
         },
-        
+
         // Contact and urgency
-        contactEmail: currentUser?.email || 'hr@company.com',
-        jobUrgency: formData.urgency === 'urgent' ? 'Urgent' : 
-                   formData.urgency === 'high-priority' ? 'High Priority' : 'Normal Priority',
-        
+        contactEmail: currentUser?.email || "hr@company.com",
+        jobUrgency:
+          formData.urgency === "urgent"
+            ? "Urgent"
+            : formData.urgency === "high-priority"
+            ? "High Priority"
+            : "Normal Priority",
+
         aiKeywords: formData.requiredSkills || [],
         isAiEnhanced: false,
-        
+
         // Set status based on whether it's a draft or active job
-        status: isDraft ? 'draft' : 'active',
-        
+        status: isDraft ? "draft" : "active",
+
         // Enable automatic status management for deadline handling
-        autoStatusManagement: true
+        autoStatusManagement: true,
+
+        // Add the new vacancy field
+        vacancy: parseInt(formData.vacancy) || 1,
       };
-      
-      console.log('🔍 Job payload being sent:', jobPayload);
-      console.log('🔍 Job status:', isDraft ? 'draft' : 'active');
-      console.log('🔍 Editing job?', !!editingJob);
-      console.log('🔍 isDraft flag:', isDraft);
-      console.log('🔍 Status field in payload:', jobPayload.status);
-      
+
+      console.log("🔍 Job payload being sent:", jobPayload);
+      console.log("🔍 Job status:", isDraft ? "draft" : "active");
+      console.log("🔍 Editing job?", !!editingJob);
+      console.log("🔍 isDraft flag:", isDraft);
+      console.log("🔍 Status field in payload:", jobPayload.status);
+
       let result;
       if (editingJob) {
         // Update existing job
-        console.log('🔍 About to call updateJob function...');
+        console.log("🔍 About to call updateJob function...");
         const jobId = editingJob.id || editingJob._id;
         result = await updateJob(jobId, jobPayload);
-        console.log('🔍 updateJob function returned:', result);
-        console.log('✅ Job updated successfully:', result);
+        console.log("🔍 updateJob function returned:", result);
+        console.log("✅ Job updated successfully:", result);
       } else {
         // Create new job
-        console.log('🔍 About to call postJob function...');
+        console.log("🔍 About to call postJob function...");
         result = await postJob(jobPayload);
-        console.log('🔍 postJob function returned:', result);
-        console.log('✅ Job posted successfully:', result);
+        console.log("🔍 postJob function returned:", result);
+        console.log("✅ Job posted successfully:", result);
       }
-      
-      setSuccess(editingJob ? 'updated' : (isDraft ? 'draft' : true));
-      
+
+      setSuccess(editingJob ? "updated" : isDraft ? "draft" : true);
+
       // Call onJobSaved callback if provided
       if (onJobSaved) {
-        console.log('🔍 Calling onJobSaved with result:', result);
-        console.log('🔍 Result data:', result?.data);
-        console.log('🔍 Job status in result:', result?.data?.status || result?.data?.data?.status);
-        console.log('🔍 isDraft flag:', isDraft);
-        
+        console.log("🔍 Calling onJobSaved with result:", result);
+        console.log("🔍 Result data:", result?.data);
+        console.log(
+          "🔍 Job status in result:",
+          result?.data?.status || result?.data?.data?.status
+        );
+        console.log("🔍 isDraft flag:", isDraft);
+
         // Enhance result with draft information
         const enhancedResult = {
           ...result,
           isDraft: isDraft,
-          jobStatus: isDraft ? 'draft' : 'active'
+          jobStatus: isDraft ? "draft" : "active",
         };
-        
+
         onJobSaved(enhancedResult);
       }
-      
+
       // Refresh dashboard to show job in correct tab and clear editing state
       if (editingJob) {
-        console.log('🔄 Refreshing dashboard after job update');
+        console.log("🔄 Refreshing dashboard after job update");
         // Trigger dashboard refresh to move job to correct tab
-        window.dispatchEvent(new CustomEvent('refreshDashboard'));
+        window.dispatchEvent(new CustomEvent("refreshDashboard"));
         // Clear editing job state after successful update
         setTimeout(() => {
-          window.dispatchEvent(new CustomEvent('clearEditingJob'));
+          window.dispatchEvent(new CustomEvent("clearEditingJob"));
         }, 1000);
       }
-      
+
       // Reset form after successful submission (only for new jobs, not edits)
       setTimeout(() => {
         setSuccess(false);
         if (!editingJob) {
           setFormData({
-            title: '', location: '', jobType: 'full-time', workArrangement: 'onsite',
-            experienceMin: 1, experienceMax: 3, requiredSkills: [], preferredSkills: [],
-            salaryType: 'range', salaryMin: '300000', salaryMax: '600000', currency: 'INR', salaryPeriod: 'yearly',
-            description: '', responsibilities: [], requirements: [], qualifications: [],
-            industry: 'Finance & Banking', jobCategory: 'Finance', contactEmail: '', 
-            applicationDeadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], 
-            urgency: 'normal', keywordsForAI: '', aiKeywords: [], isAiEnhanced: false
+            title: "",
+            location: "",
+            jobType: "full-time",
+            workArrangement: "onsite",
+            vacancy: 1,
+            experienceMin: 1,
+            experienceMax: 3,
+            requiredSkills: [],
+            preferredSkills: [],
+            salaryType: "range",
+            salaryMin: "300000",
+            salaryMax: "600000",
+            currency: "INR",
+            salaryPeriod: "yearly",
+            description: "",
+            responsibilities: [],
+            requirements: [],
+            qualifications: [],
+            industry: "Finance & Banking",
+            jobCategory: "Finance",
+            contactEmail: "",
+            applicationDeadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+              .toISOString()
+              .split("T")[0],
+            urgency: "normal",
+            keywordsForAI: "",
+            aiKeywords: [],
+            isAiEnhanced: false,
           });
         }
       }, 3000);
     } catch (error) {
-      console.error('Job posting error:', error);
+      console.error("Job posting error:", error);
       // For demo purposes, still show success
-      setSuccess(isDraft ? 'draft' : true);
+      setSuccess(isDraft ? "draft" : true);
       setTimeout(() => setSuccess(false), 2000);
     } finally {
       setLoading(false);
@@ -348,177 +549,220 @@ const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
   // Handle saving as draft
   const handleSaveAsDraft = async (e) => {
     e.preventDefault();
-    console.log('💾 Saving job as draft...');
+    console.log("💾 Saving job as draft...");
     await handleSubmit(e, true); // Call handleSubmit with isDraft = true
   };
 
   // Industry-specific data - Updated to match backend validation
   const industryData = {
-    'Finance & Banking': {
+    "Finance & Banking": {
       categories: [
-        'Banking & Financial Services', 'Investment Banking', 'Insurance', 'Mutual Funds',
-        'Credit & Lending', 'Financial Planning', 'Risk Management', 'Compliance',
-        'Fintech', 'Accounting & Auditing', 'Tax Advisory', 'Treasury Management'
+        "Banking & Financial Services",
+        "Investment Banking",
+        "Insurance",
+        "Mutual Funds",
+        "Credit & Lending",
+        "Financial Planning",
+        "Risk Management",
+        "Compliance",
+        "Fintech",
+        "Accounting & Auditing",
+        "Tax Advisory",
+        "Treasury Management",
       ],
       skills: [
-        'Financial Analysis', 'Risk Assessment', 'Regulatory Compliance', 'Financial Modeling',
-        'Investment Analysis', 'Credit Analysis', 'Portfolio Management', 'Financial Reporting',
-        'KYC/AML', 'IFRS/GAAP', 'Excel Advanced', 'Bloomberg Terminal', 'SAP Finance',
-        'Tally', 'QuickBooks', 'Python for Finance', 'SQL', 'Tableau', 'Power BI'
-      ]
+        "Financial Analysis",
+        "Risk Assessment",
+        "Regulatory Compliance",
+        "Financial Modeling",
+        "Investment Analysis",
+        "Credit Analysis",
+        "Portfolio Management",
+        "Financial Reporting",
+        "KYC/AML",
+        "IFRS/GAAP",
+        "Excel Advanced",
+        "Bloomberg Terminal",
+        "SAP Finance",
+        "Tally",
+        "QuickBooks",
+        "Python for Finance",
+        "SQL",
+        "Tableau",
+        "Power BI",
+      ],
     },
-    'Automobile & Manufacturing': {
+    "Automobile & Manufacturing": {
       categories: [
-        'Automotive Engineering', 'Manufacturing Operations', 'Quality Assurance', 'Supply Chain Management',
-        'Research & Development', 'Sales & Marketing', 'After Sales Service'
+        "Automotive Engineering",
+        "Manufacturing Operations",
+        "Quality Assurance",
+        "Supply Chain Management",
+        "Research & Development",
+        "Sales & Marketing",
+        "After Sales Service",
       ],
       skills: [
-        'CAD Design', 'Manufacturing Processes', 'Quality Control', 'Lean Manufacturing',
-        'Six Sigma', 'Project Management', 'Supply Chain', 'Automotive Electronics',
-        'Engine Technology', 'Safety Standards', 'ISO/TS 16949', 'APQP', 'FMEA', 'SPC', 'Kaizen'
-      ]
-    }
+        "CAD Design",
+        "Manufacturing Processes",
+        "Quality Control",
+        "Lean Manufacturing",
+        "Six Sigma",
+        "Project Management",
+        "Supply Chain",
+        "Automotive Electronics",
+        "Engine Technology",
+        "Safety Standards",
+        "ISO/TS 16949",
+        "APQP",
+        "FMEA",
+        "SPC",
+        "Kaizen",
+      ],
+    },
   };
 
   const jobTypes = [
-    { value: 'full-time', label: 'Full Time' },
-    { value: 'part-time', label: 'Part Time' },
-    { value: 'internship', label: 'Internship' },
-    { value: 'contract', label: 'Contract' },
-    { value: 'freelance', label: 'Freelance' }
+    { value: "full-time", label: "Full Time" },
+    { value: "part-time", label: "Part Time" },
+    { value: "internship", label: "Internship" },
+    { value: "contract", label: "Contract" },
+    { value: "freelance", label: "Freelance" },
   ];
 
   const workArrangements = [
-    { value: 'onsite', label: 'On-site' },
-    { value: 'remote', label: 'Remote' },
-    { value: 'hybrid', label: 'Hybrid' }
+    { value: "onsite", label: "On-site" },
+    { value: "remote", label: "Remote" },
+    { value: "hybrid", label: "Hybrid" },
   ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({...formData, [name]: value});
-    
+    setFormData({ ...formData, [name]: value });
+
     // Reset jobCategory when industry changes
-    if (name === 'industry') {
-      setFormData(prev => ({...prev, [name]: value, jobCategory: ''}));
+    if (name === "industry") {
+      setFormData((prev) => ({ ...prev, [name]: value, jobCategory: "" }));
     }
   };
 
   const handleSkillAdd = (skillType, skill) => {
     if (skill && !formData[skillType].includes(skill)) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [skillType]: [...prev[skillType], skill]
+        [skillType]: [...prev[skillType], skill],
       }));
     }
   };
 
   const handleSkillRemove = (skillType, skillToRemove) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [skillType]: prev[skillType].filter(skill => skill !== skillToRemove)
+      [skillType]: prev[skillType].filter((skill) => skill !== skillToRemove),
     }));
   };
 
   const handleArrayAdd = (fieldName, value) => {
     if (value.trim()) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [fieldName]: [...prev[fieldName], value.trim()]
+        [fieldName]: [...prev[fieldName], value.trim()],
       }));
     }
   };
 
   const handleArrayRemove = (fieldName, index) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [fieldName]: prev[fieldName].filter((_, i) => i !== index)
+      [fieldName]: prev[fieldName].filter((_, i) => i !== index),
     }));
   };
 
   const enhanceDescription = async () => {
     if (!formData.keywordsForAI.trim()) {
-      alert('Please provide keywords for AI enhancement');
+      alert("Please provide keywords for AI enhancement");
       return;
     }
 
     setEnhancingDescription(true);
-    
+
     // Simulate AI enhancement based on industry and keywords
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
     const industryTemplates = {
-      'Finance & Banking': {
+      "Finance & Banking": {
         description: `We are seeking a skilled ${formData.title} to join our dynamic finance team. This role involves ${formData.keywordsForAI} and requires expertise in financial analysis, regulatory compliance, and risk management. The successful candidate will contribute to our organization's financial growth and stability while ensuring adherence to industry standards and regulations.`,
         responsibilities: [
           `Perform comprehensive financial analysis and ${formData.keywordsForAI}`,
-          'Ensure compliance with regulatory requirements and industry standards',
-          'Collaborate with cross-functional teams to drive financial performance',
-          'Prepare detailed financial reports and presentations for stakeholders'
+          "Ensure compliance with regulatory requirements and industry standards",
+          "Collaborate with cross-functional teams to drive financial performance",
+          "Prepare detailed financial reports and presentations for stakeholders",
         ],
         requirements: [
           `Strong experience in ${formData.keywordsForAI} and financial analysis`,
-          'Knowledge of financial regulations and compliance requirements',
-          'Proficiency in financial software and analytical tools',
-          'Excellent communication and presentation skills'
-        ]
+          "Knowledge of financial regulations and compliance requirements",
+          "Proficiency in financial software and analytical tools",
+          "Excellent communication and presentation skills",
+        ],
       },
-      'Automobile & Manufacturing': {
+      "Automobile & Manufacturing": {
         description: `Join our innovative automotive team as a ${formData.title}. This position focuses on ${formData.keywordsForAI} and requires deep understanding of automotive systems, manufacturing processes, and quality standards. You'll be part of cutting-edge projects that shape the future of mobility and transportation.`,
         responsibilities: [
           `Lead projects related to ${formData.keywordsForAI} and automotive innovation`,
-          'Ensure quality standards and safety compliance in all processes',
-          'Collaborate with engineering teams on product development',
-          'Optimize manufacturing processes and supply chain efficiency'
+          "Ensure quality standards and safety compliance in all processes",
+          "Collaborate with engineering teams on product development",
+          "Optimize manufacturing processes and supply chain efficiency",
         ],
         requirements: [
           `Expertise in ${formData.keywordsForAI} and automotive engineering`,
-          'Knowledge of automotive industry standards and regulations',
-          'Experience with CAD software and engineering tools',
-          'Strong problem-solving and analytical skills'
-        ]
-      }
+          "Knowledge of automotive industry standards and regulations",
+          "Experience with CAD software and engineering tools",
+          "Strong problem-solving and analytical skills",
+        ],
+      },
     };
 
     const template = industryTemplates[formData.industry];
-    
+
     // Safety check to prevent errors if template is not found
     if (!template) {
-      console.warn('No template found for industry:', formData.industry);
+      console.warn("No template found for industry:", formData.industry);
       setEnhancingDescription(false);
       return;
     }
-    
-    setFormData(prev => ({
+
+    setFormData((prev) => ({
       ...prev,
       description: template.description,
       responsibilities: template.responsibilities,
-      requirements: template.requirements
+      requirements: template.requirements,
     }));
-    
+
     setEnhancingDescription(false);
   };
 
   if (success) {
     const getSuccessContent = () => {
       switch (success) {
-        case 'draft':
+        case "draft":
           return {
-            icon: '💾',
-            title: 'Job Saved as Draft!',
-            message: 'Your job has been saved as a draft. You can edit and publish it later.'
+            icon: "💾",
+            title: "Job Saved as Draft!",
+            message:
+              "Your job has been saved as a draft. You can edit and publish it later.",
           };
-        case 'updated':
+        case "updated":
           return {
-            icon: '✅',
-            title: 'Job Updated Successfully!',
-            message: 'Your job posting has been updated and the changes are now live.'
+            icon: "✅",
+            title: "Job Updated Successfully!",
+            message:
+              "Your job posting has been updated and the changes are now live.",
           };
         default:
           return {
-            icon: '🎉',
-            title: 'Job Posted Successfully!',
-            message: 'Your job posting is now live and visible to candidates.'
+            icon: "🎉",
+            title: "Job Posted Successfully!",
+            message: "Your job posting is now live and visible to candidates.",
           };
       }
     };
@@ -529,141 +773,191 @@ const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
       <div className="text-center py-12">
         <div className="text-6xl mb-4">{icon}</div>
         <h2 className="text-2xl font-bold text-green-600 mb-2">{title}</h2>
-        <p className="text-gray-600 dark:text-gray-400">{message}</p>
+        <p className="text-gray-600 dark:text-gray-300">{message}</p>
       </div>
     );
   }
 
   return (
-    <motion.div 
-      data-component="job-posting-form" 
-      className={`dashboard-card rounded-xl p-6 shadow-sm border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}
+    <motion.div
+      data-component="job-posting-form"
+      className={`dashboard-card rounded-md p-6 shadow-sm border ${
+        darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+      }`}
     >
       <div className="flex items-center gap-3 mb-6">
         <Briefcase className="w-8 h-8 text-blue-600" />
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-          {editingJob ? 'Edit Job' : 'Post New Job'}
+          {editingJob ? "Edit Job" : "Post New Job"}
         </h2>
         {editingJob && (
-          <span className="text-sm text-gray-500 dark:text-gray-400">
+          <span className="text-sm text-gray-600 dark:text-gray-300">
             Editing: {editingJob.jobTitle || editingJob.title}
           </span>
         )}
       </div>
-      
+
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Basic Information Section */}
-        <div className={`form-section rounded-lg p-6 ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+        <div
+          className={`form-section rounded-lg p-6 ${
+            darkMode ? "bg-gray-700" : "bg-gray-50"
+          }`}
+        >
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <BookOpen className="w-5 h-5" />
             Basic Information
           </h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">
                 Job Title *
               </label>
               <input
-                name="title" placeholder="e.g., Financial Analyst, Automotive Engineer" required
-                value={formData.title} onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+                name="title"
+                placeholder="e.g., Financial Analyst, Automotive Engineer"
+                required
+                value={formData.title}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white dark:placeholder-gray-400"
               />
             </div>
-            
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">
                 <Briefcase className="w-4 h-4 inline mr-1" />
                 Company Name
               </label>
-              <div className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-500 dark:text-gray-300">
-                {currentUser?.companyInfo?.companyName || currentUser?.company || 'TechCorp Solutions'}
+              <div className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-500 dark:text-gray-200">
+                {currentUser?.companyInfo?.companyName ||
+                  currentUser?.company ||
+                  "TechCorp Solutions"}
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
                 Company name is automatically fetched from your profile
               </p>
             </div>
-            
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">
                 <MapPin className="w-4 h-4 inline mr-1" />
                 Location *
               </label>
               <input
-                name="location" placeholder="City, State" required
-                value={formData.location} onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+                name="location"
+                placeholder="City, State"
+                required
+                value={formData.location}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white dark:placeholder-gray-400"
               />
             </div>
-            
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">
                 Industry *
               </label>
               <select
-                name="industry" required
-                value={formData.industry} onChange={handleChange}
+                name="industry"
+                required
+                value={formData.industry}
+                onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
               >
                 <option value="Finance & Banking">Finance & Banking</option>
-                <option value="Automobile & Manufacturing">Automobile & Manufacturing</option>
+                <option value="Automobile & Manufacturing">
+                  Automobile & Manufacturing
+                </option>
               </select>
             </div>
-            
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">
                 Job Category *
               </label>
               <select
-                name="jobCategory" required
-                value={formData.jobCategory} onChange={handleChange}
+                name="jobCategory"
+                required
+                value={formData.jobCategory}
+                onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
               >
                 <option value="">Select Category</option>
-                {industryData[formData.industry]?.categories.map((cat, index) => (
-                  <option key={index} value={cat}>{cat}</option>
-                ))}
+                {industryData[formData.industry]?.categories.map(
+                  (cat, index) => (
+                    <option key={index} value={cat}>
+                      {cat}
+                    </option>
+                  )
+                )}
               </select>
             </div>
-            
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">
                 <Clock className="w-4 h-4 inline mr-1" />
                 Job Type *
               </label>
               <select
-                name="jobType" required
-                value={formData.jobType} onChange={handleChange}
+                name="jobType"
+                required
+                value={formData.jobType}
+                onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
               >
                 {jobTypes.map((type) => (
-                  <option key={type.value} value={type.value}>{type.label}</option>
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
                 ))}
               </select>
             </div>
-            
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">
                 Work Arrangement *
               </label>
               <select
-                name="workArrangement" required
-                value={formData.workArrangement} onChange={handleChange}
+                name="workArrangement"
+                required
+                value={formData.workArrangement}
+                onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
               >
                 {workArrangements.map((arrangement) => (
-                  <option key={arrangement.value} value={arrangement.value}>{arrangement.label}</option>
+                  <option key={arrangement.value} value={arrangement.value}>
+                    {arrangement.label}
+                  </option>
                 ))}
               </select>
             </div>
-            
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">
                 Application Deadline
               </label>
               <input
-                name="applicationDeadline" type="date"
-                value={formData.applicationDeadline} onChange={handleChange}
+                name="applicationDeadline"
+                type="date"
+                value={formData.applicationDeadline}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">
+                Number of Vacancies *
+              </label>
+              <input
+                name="vacancy"
+                type="number"
+                min="1"
+                placeholder="e.g., 5"
+                required
+                value={formData.vacancy}
+                onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
               />
             </div>
@@ -676,31 +970,39 @@ const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
             <Users className="w-5 h-5" />
             Experience & Skills
           </h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">
                 Minimum Experience (Years)
               </label>
               <input
-                name="experienceMin" type="number" min="0" max="50"
-                value={formData.experienceMin} onChange={handleChange}
+                name="experienceMin"
+                type="number"
+                min="0"
+                max="50"
+                value={formData.experienceMin}
+                onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
               />
             </div>
-            
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">
                 Maximum Experience (Years)
               </label>
               <input
-                name="experienceMax" type="number" min="0" max="50"
-                value={formData.experienceMax} onChange={handleChange}
+                name="experienceMax"
+                type="number"
+                min="0"
+                max="50"
+                value={formData.experienceMax}
+                onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
               />
             </div>
           </div>
-          
+
           {/* Required Skills */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -708,11 +1010,14 @@ const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
             </label>
             <div className="flex flex-wrap gap-2 mb-3">
               {formData.requiredSkills.map((skill, index) => (
-                <span key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                <span
+                  key={index}
+                  className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
+                >
                   {skill}
                   <button
                     type="button"
-                    onClick={() => handleSkillRemove('requiredSkills', skill)}
+                    onClick={() => handleSkillRemove("requiredSkills", skill)}
                     className="text-blue-600 hover:text-blue-800"
                   >
                     ×
@@ -723,15 +1028,19 @@ const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
             <select
               onChange={(e) => {
                 if (e.target.value) {
-                  handleSkillAdd('requiredSkills', e.target.value);
-                  e.target.value = '';
+                  handleSkillAdd("requiredSkills", e.target.value);
+                  e.target.value = "";
                 }
               }}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
             >
-              <option value="">Select skills from {formData.industry} industry</option>
+              <option value="">
+                Select skills from {formData.industry} industry
+              </option>
               {industryData[formData.industry]?.skills.map((skill, index) => (
-                <option key={index} value={skill}>{skill}</option>
+                <option key={index} value={skill}>
+                  {skill}
+                </option>
               ))}
             </select>
           </div>
@@ -743,7 +1052,7 @@ const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
             <DollarSign className="w-5 h-5" />
             Salary & Compensation
           </h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -751,7 +1060,8 @@ const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
               </label>
               <select
                 name="salaryType"
-                value={formData.salaryType} onChange={handleChange}
+                value={formData.salaryType}
+                onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
               >
                 <option value="range">Range</option>
@@ -759,40 +1069,47 @@ const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
                 <option value="negotiable">Negotiable</option>
               </select>
             </div>
-            
-            {formData.salaryType === 'range' && (
+
+            {formData.salaryType === "range" && (
               <>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Minimum Salary
                   </label>
                   <input
-                    name="salaryMin" type="number" placeholder="30000"
-                    value={formData.salaryMin} onChange={handleChange}
+                    name="salaryMin"
+                    type="number"
+                    placeholder="30000"
+                    value={formData.salaryMin}
+                    onChange={handleChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Maximum Salary
                   </label>
                   <input
-                    name="salaryMax" type="number" placeholder="80000"
-                    value={formData.salaryMax} onChange={handleChange}
+                    name="salaryMax"
+                    type="number"
+                    placeholder="80000"
+                    value={formData.salaryMax}
+                    onChange={handleChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
                   />
                 </div>
               </>
             )}
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Period
               </label>
               <select
                 name="salaryPeriod"
-                value={formData.salaryPeriod} onChange={handleChange}
+                value={formData.salaryPeriod}
+                onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
               >
                 <option value="monthly">Monthly</option>
@@ -808,19 +1125,20 @@ const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
             <Sparkles className="w-5 h-5 text-purple-600" />
             AI Description Enhancer
           </h3>
-          
+
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Keywords for AI Enhancement
             </label>
             <input
-              name="keywordsForAI" 
+              name="keywordsForAI"
               placeholder="e.g., financial modeling, risk analysis, portfolio management"
-              value={formData.keywordsForAI} onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+              value={formData.keywordsForAI}
+              onChange={handleChange}
+              className="w-full px-4 py-3 border text-gray-900 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white dark:placeholder-gray-400"
             />
           </div>
-          
+
           <button
             type="button"
             onClick={enhanceDescription}
@@ -846,19 +1164,23 @@ const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             Job Description & Details
           </h3>
-          
+
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Job Description *
               </label>
               <textarea
-                name="description" placeholder="Detailed job description..." required rows="6"
-                value={formData.description} onChange={handleChange}
+                name="description"
+                placeholder="Detailed job description..."
+                required
+                rows="6"
+                value={formData.description}
+                onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Key Responsibilities
@@ -871,7 +1193,9 @@ const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
                     </span>
                     <button
                       type="button"
-                      onClick={() => handleArrayRemove('responsibilities', index)}
+                      onClick={() =>
+                        handleArrayRemove("responsibilities", index)
+                      }
                       className="text-red-500 hover:text-red-700"
                     >
                       ×
@@ -880,7 +1204,7 @@ const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
                 ))}
               </div>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Requirements
@@ -893,7 +1217,7 @@ const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
                     </span>
                     <button
                       type="button"
-                      onClick={() => handleArrayRemove('requirements', index)}
+                      onClick={() => handleArrayRemove("requirements", index)}
                       className="text-red-500 hover:text-red-700"
                     >
                       ×
@@ -910,27 +1234,33 @@ const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             Contact Information
           </h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Contact Email *
               </label>
               <input
-                name="contactEmail" type="email" placeholder="hr@company.com" required
-                value={formData.contactEmail} onChange={handleChange}
+                name="contactEmail"
+                type="email"
+                placeholder="hr@company.com"
+                required
+                value={formData.contactEmail}
+                onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 <Zap className="w-4 h-4 inline mr-1" />
                 Job Urgency *
               </label>
               <select
-                name="urgency" required
-                value={formData.urgency} onChange={handleChange}
+                name="urgency"
+                required
+                value={formData.urgency}
+                onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
               >
                 <option value="normal">🟢 Normal Priority</option>
@@ -940,11 +1270,12 @@ const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
             </div>
           </div>
         </div>
-        
+
         {/* Submit Button */}
         <div className="flex gap-4">
           <button
-            type="submit" disabled={loading}
+            type="submit"
+            disabled={loading}
             className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-lg hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 font-semibold text-lg flex items-center justify-center gap-2"
           >
             {loading ? (
@@ -955,11 +1286,11 @@ const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
             ) : (
               <>
                 <Briefcase className="w-5 h-5" />
-                {editingJob ? 'Update Job' : 'Post Job'}
+                {editingJob ? "Update Job" : "Post Job"}
               </>
             )}
           </button>
-          
+
           <button
             type="button"
             onClick={handleSaveAsDraft}
@@ -972,7 +1303,7 @@ const EnhancedJobPostingTab = ({ editingJob = null, onJobSaved = null }) => {
                 <span>Saving Draft...</span>
               </div>
             ) : (
-              'Save as Draft'
+              "Save as Draft"
             )}
           </button>
         </div>

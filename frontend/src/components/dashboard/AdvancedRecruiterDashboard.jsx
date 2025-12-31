@@ -46,16 +46,7 @@ const AdvancedRecruiterDashboard = () => {
     { label: 'Settings', icon: Settings, value: 9 }
   ];
 
-  const mockUser = {
-    firstName: 'Sarah',
-    lastName: 'Johnson',
-    email: 'sarah.johnson@techcorp.com',
-    phone: '+1 555 123 4567',
-    location: 'New York, NY',
-    linkedinUrl: 'https://linkedin.com/in/sarahjohnson',
-    companyName: 'TechCorp Solutions',
-    role: 'Senior Talent Acquisition Manager'
-  };
+  // Removed mockUser. Will fetch from API.
 
   const mockJobPosts = [
     {
@@ -108,12 +99,18 @@ const AdvancedRecruiterDashboard = () => {
   ];
 
   useEffect(() => {
-    setTimeout(() => {
-      setUser(mockUser);
-      setJobPosts(mockJobPosts);
-      setApplications(mockApplications);
-      setLoading(false);
-    }, 1000);
+    const fetchProfile = async () => {
+      try {
+        const { authAPI } = await import('../../services/api');
+        const response = await authAPI.getProfile();
+        setUser(response.data);
+      } catch (error) {
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
   }, []);
 
   const StatCard = ({ title, value, icon: Icon, color, trend, onClick }) => (

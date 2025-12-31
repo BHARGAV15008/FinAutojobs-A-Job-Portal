@@ -104,7 +104,7 @@ const ResetPasswordPage = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-6">
         <div className="w-full max-w-md">
-          <div className="bg-white/80 backdrop-blur-sm p-8 rounded-3xl shadow-2xl border border-gray-100 text-center">
+          <div className="bg-white/80 backdrop-blur-sm p-8 rounded-md shadow-2xl border border-gray-100 text-center">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
@@ -116,7 +116,7 @@ const ResetPasswordPage = () => {
             
             <Link
               to="/login"
-              className="w-full inline-flex items-center justify-center bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-2xl font-semibold hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-300"
+              className="w-full inline-flex items-center justify-center bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-md font-semibold hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-300"
             >
               Sign In Now
             </Link>
@@ -136,7 +136,7 @@ const ResetPasswordPage = () => {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white/80 backdrop-blur-sm p-8 rounded-3xl shadow-2xl border border-gray-100 space-y-6">
+        <form onSubmit={handleSubmit} className="bg-white/80 backdrop-blur-sm p-8 rounded-md shadow-2xl border border-gray-100 space-y-6">
           {/* New Password Field */}
           <div>
             <label htmlFor="newPassword" className="block text-sm font-semibold text-gray-700 mb-2">
@@ -151,7 +151,7 @@ const ResetPasswordPage = () => {
                 required
                 value={formData.newPassword}
                 onChange={handleChange}
-                className="w-full pl-12 pr-12 py-4 bg-gray-50/80 border border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 text-gray-900 placeholder-gray-500"
+                className="w-full pl-12 pr-12 py-4 bg-gray-50/80 border border-gray-200 rounded-md focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 text-gray-900 placeholder-gray-500"
                 placeholder="Enter your new password"
               />
               <button
@@ -178,7 +178,7 @@ const ResetPasswordPage = () => {
                 required
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className="w-full pl-12 pr-12 py-4 bg-gray-50/80 border border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 text-gray-900 placeholder-gray-500"
+                className="w-full pl-12 pr-12 py-4 bg-gray-50/80 border border-gray-200 rounded-md focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 text-gray-900 placeholder-gray-500"
                 placeholder="Confirm your new password"
               />
               <button
@@ -192,7 +192,7 @@ const ResetPasswordPage = () => {
           </div>
 
           {/* Password Requirements */}
-          <div className="bg-blue-50 p-4 rounded-xl">
+          <div className="bg-blue-50 p-4 rounded-md">
             <h4 className="text-sm font-semibold text-blue-900 mb-2">Password Requirements:</h4>
             <ul className="text-xs text-blue-800 space-y-1">
               <li>• At least 8 characters long</li>
@@ -206,7 +206,7 @@ const ResetPasswordPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-2xl font-semibold text-lg hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105"
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-md font-semibold text-lg hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105"
             >
               {loading ? '🔄 Resetting...' : '🔐 Reset Password'}
             </button>
