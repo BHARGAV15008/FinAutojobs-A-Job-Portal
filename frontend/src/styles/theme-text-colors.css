@@ -1,0 +1,283 @@
+/* Theme-aware text color system */
+/* This file provides proper text color handling for both light and dark modes */
+
+/* Light mode text colors (default) */
+:root {
+  --mui-text-primary: #1A202C;
+  --mui-text-secondary: #718096;
+  --mui-text-disabled: #A0AEC0;
+}
+
+/* Dark mode text colors */
+.dark {
+  --mui-text-primary: #F7FAFC;
+  --mui-text-secondary: #CBD5E0;
+  --mui-text-disabled: #718096;
+}
+
+/* Apply theme-aware text colors to MUI components */
+.dark .MuiTypography-root {
+  color: var(--mui-text-primary);
+}
+
+.dark .MuiTypography-colorTextSecondary {
+  color: var(--mui-text-secondary);
+}
+
+/* Fix for cards and paper components in dark mode */
+.dark .MuiCard-root,
+.dark .MuiPaper-root {
+  color: var(--mui-text-primary);
+}
+
+/* List items in dark mode */
+.dark .MuiListItemText-primary {
+  color: var(--mui-text-primary);
+}
+
+.dark .MuiListItemText-secondary {
+  color: var(--mui-text-secondary);
+}
+
+/* Table text in dark mode */
+.dark .MuiTableCell-root {
+  color: var(--mui-text-primary);
+}
+
+/* Input labels and helper text */
+.dark .MuiInputLabel-root {
+  color: var(--mui-text-secondary);
+}
+
+.dark .MuiInputLabel-root.Mui-focused {
+  color: #8B5CF6;
+}
+
+.dark .MuiFormHelperText-root {
+  color: var(--mui-text-secondary);
+}
+
+/* Menu items */
+.dark .MuiMenuItem-root {
+  color: var(--mui-text-primary);
+}
+
+/* Chips */
+.dark .MuiChip-label {
+  color: inherit;
+}
+
+/* Dialog content */
+.dark .MuiDialogTitle-root,
+.dark .MuiDialogContent-root,
+.dark .MuiDialogContentText-root {
+  color: var(--mui-text-primary);
+}
+
+/* Tab labels */
+.dark .MuiTab-root {
+  color: var(--mui-text-secondary);
+}
+
+.dark .MuiTab-root.Mui-selected {
+  color: #8B5CF6;
+}
+
+/* Alert text */
+.dark .MuiAlert-message {
+  color: inherit;
+}
+
+/* Stepper labels */
+.dark .MuiStepLabel-label {
+  color: var(--mui-text-secondary);
+}
+
+.dark .MuiStepLabel-label.Mui-active {
+  color: var(--mui-text-primary);
+}
+
+/* Avatar text */
+.dark .MuiAvatar-root {
+  color: white;
+}
+
+/* Badge text */
+.dark .MuiBadge-badge {
+  color: white;
+}
+
+/* Breadcrumb text */
+.dark .MuiBreadcrumbs-root {
+  color: var(--mui-text-secondary);
+}
+
+/* Accordion text */
+.dark .MuiAccordionSummary-content {
+  color: var(--mui-text-primary);
+}
+
+.dark .MuiAccordionDetails-root {
+  color: var(--mui-text-secondary);
+}
+
+/* Tooltip text - always white for readability */
+.dark .MuiTooltip-tooltip {
+  color: white;
+}
+
+/* Snackbar text */
+.dark .MuiSnackbarContent-message {
+  color: white;
+}
+
+/* App bar text */
+.dark .MuiAppBar-root {
+  color: var(--mui-text-primary);
+}
+
+/* Bottom navigation */
+.dark .MuiBottomNavigationAction-label {
+  color: var(--mui-text-secondary);
+}
+
+.dark .MuiBottomNavigationAction-root.Mui-selected .MuiBottomNavigationAction-label {
+  color: #8B5CF6;
+}
+
+/* Timeline text */
+.dark .MuiTimelineContent-root {
+  color: var(--mui-text-primary);
+}
+
+.dark .MuiTimelineOppositeContent-root {
+  color: var(--mui-text-secondary);
+}
+
+/* Pagination text */
+.dark .MuiPaginationItem-root {
+  color: var(--mui-text-primary);
+}
+
+/* Speed dial tooltip */
+.dark .MuiSpeedDialAction-staticTooltipLabel {
+  color: var(--mui-text-primary);
+}
+
+/* Ensure proper contrast for buttons */
+.dark .MuiButton-contained {
+  color: white;
+}
+
+.dark .MuiButton-outlined,
+.dark .MuiButton-text {
+  color: var(--mui-text-primary);
+}
+
+/* Icon button colors */
+.dark .MuiIconButton-root {
+  color: var(--mui-text-secondary);
+}
+
+.dark .MuiIconButton-root:hover {
+  color: var(--mui-text-primary);
+}
+
+/* Fix for input text */
+.dark .MuiInputBase-input {
+  color: var(--mui-text-primary);
+}
+
+.dark .MuiInputBase-input::placeholder {
+  color: var(--mui-text-disabled);
+  opacity: 0.7;
+}
+
+/* Select dropdown text */
+.dark .MuiSelect-select {
+  color: var(--mui-text-primary);
+}
+
+/* Checkbox and radio labels */
+.dark .MuiFormControlLabel-label {
+  color: var(--mui-text-primary);
+}
+
+/* Switch labels */
+.dark .MuiFormLabel-root {
+  color: var(--mui-text-secondary);
+}
+
+/* Rating component */
+.dark .MuiRating-label {
+  color: var(--mui-text-secondary);
+}
+
+/* Slider labels */
+.dark .MuiSlider-markLabel {
+  color: var(--mui-text-secondary);
+}
+
+.dark .MuiSlider-valueLabel {
+  color: white;
+}
+
+/* Data grid text (if using) */
+.dark .MuiDataGrid-root {
+  color: var(--mui-text-primary);
+}
+
+.dark .MuiDataGrid-columnHeaders {
+  color: var(--mui-text-primary);
+}
+
+/* Skeleton (loading state) */
+.dark .MuiSkeleton-root {
+  background-color: rgba(255, 255, 255, 0.11);
+}
+
+/* Divider should remain subtle */
+.dark .MuiDivider-root {
+  border-color: #4A5568;
+}
+
+/* Special case: Ensure colored status badges maintain white text */
+.dark .MuiChip-colorPrimary,
+.dark .MuiChip-colorSecondary,
+.dark .MuiChip-colorSuccess,
+.dark .MuiChip-colorError,
+.dark .MuiChip-colorWarning,
+.dark .MuiChip-colorInfo {
+  color: white;
+}
+
+/* Fix for any nested text in colored backgrounds */
+.dark [class*="bg-primary"] *:not(.MuiSvgIcon-root),
+.dark [class*="bg-secondary"] *:not(.MuiSvgIcon-root),
+.dark [class*="bg-blue"] *:not(.MuiSvgIcon-root),
+.dark [class*="bg-purple"] *:not(.MuiSvgIcon-root),
+.dark [class*="bg-indigo"] *:not(.MuiSvgIcon-root),
+.dark [class*="bg-green"] *:not(.MuiSvgIcon-root),
+.dark [class*="bg-red"] *:not(.MuiSvgIcon-root) {
+  color: white;
+}
+
+/* Ensure proper text hierarchy in light mode too */
+.MuiTypography-h1,
+.MuiTypography-h2,
+.MuiTypography-h3,
+.MuiTypography-h4,
+.MuiTypography-h5,
+.MuiTypography-h6 {
+  color: var(--mui-text-primary);
+}
+
+.MuiTypography-body1,
+.MuiTypography-body2 {
+  color: var(--mui-text-primary);
+}
+
+.MuiTypography-caption,
+.MuiTypography-overline {
+  color: var(--mui-text-secondary);
+}
