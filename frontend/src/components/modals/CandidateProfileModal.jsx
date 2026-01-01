@@ -267,7 +267,7 @@ const CandidateProfileModal = ({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className={`relative w-full max-w-[95vw] sm:max-w-[460px] md:max-w-[490px] lg:max-w-[510px] rounded-lg shadow-2xl max-h-[95vh] overflow-hidden ${
+            className={`relative w-full max-w-[95vw] sm:max-w-3xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl rounded-lg shadow-2xl max-h-[95vh] overflow-hidden ${
               darkMode ? 'bg-gray-800' : 'bg-white'
             }`}
             onClick={(e) => e.stopPropagation()}

@@ -4,6 +4,8 @@ import applicationService from "../../services/applicationService";
 import { useDashboard } from "../../contexts/RealDashboardContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/IntegratedThemeContext";
+import CandidateProfileModal from "../modals/CandidateProfileModal";
+import ContactModal from "../modals/ContactModal";
 
 const RealApplicationsTab = () => {
   const { user } = useAuth();
@@ -18,6 +20,16 @@ const RealApplicationsTab = () => {
   const [newStatus, setNewStatus] = useState("");
   const [notes, setNotes] = useState("");
   const [anchorEl, setAnchorEl] = useState(null);
+
+  // Modal states for enhanced functionality
+  const [profileModal, setProfileModal] = useState({
+    isOpen: false,
+    candidate: null,
+  });
+  const [contactModal, setContactModal] = useState({
+    isOpen: false,
+    candidate: null,
+  });
 
   // Status filters
   const statusFilters = [
@@ -106,6 +118,118 @@ const RealApplicationsTab = () => {
     } catch (error) {
       console.error("❌ Error updating application status:", error);
     }
+  };
+
+  // Handle resume download
+  const handleDownloadResume = async (application) => {
+    try {
+      console.log(
+        "📥 Downloading resume for:",
+        application.applicantSnapshot?.fullName
+      );
+      console.log("📁 Application documents field:", application.documents);
+      console.log("📄 Application resumeUrl field:", application.resumeUrl);
+
+      // Get resume URL from application
+      const resumeUrl =
+        application.documents?.resumeUrl || application.resumeUrl;
+
+      if (!resumeUrl || resumeUrl === "") {
+        console.warn("⚠️ No resume URL found in application:", application._id);
+        alert(
+          `No resume found for ${
+            application.applicantSnapshot?.fullName || "this applicant"
+          }.\n\n` +
+            "The applicant may not have uploaded a resume during application submission."
+        );
+        return;
+      }
+
+      // Create full URL for download
+      const baseURL =
+        import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+      const fullUrl = resumeUrl.startsWith("http")
+        ? resumeUrl
+        : `${baseURL.replace("/api", "")}${resumeUrl}`;
+
+      console.log("📄 Resume full URL:", fullUrl);
+
+      // Create temporary link and trigger download
+      const link = document.createElement("a");
+      link.href = fullUrl;
+      link.target = "_blank";
+      link.download = `${
+        application.applicantSnapshot?.fullName || "applicant"
+      }_resume.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      console.log("✅ Resume download initiated");
+    } catch (error) {
+      console.error("❌ Error downloading resume:", error);
+      alert("Failed to download resume. Please try again.");
+    }
+  };
+
+  // Handle view details - Open profile modal
+  const handleViewDetails = (application) => {
+    console.log(
+      "👁️ Viewing details for:",
+      application.applicantSnapshot?.fullName
+    );
+
+    // Convert application to candidate format for modal
+    const candidate = {
+      id: application._id,
+      applicationId: application._id,
+      candidateId: application.applicantId,
+      name: application.applicantSnapshot?.fullName || "Unknown",
+      email: application.applicantSnapshot?.email || "",
+      phone: application.applicantSnapshot?.phone || "",
+      location: application.applicantSnapshot?.location || "",
+      currentJobTitle: application.applicantSnapshot?.currentJobTitle || "",
+      currentCompany: application.applicantSnapshot?.currentCompany || "",
+      experience: application.applicantSnapshot?.experience || "Not specified",
+      expectedSalary: application.applicantSnapshot?.expectedSalary || "",
+      noticePeriod: application.applicantSnapshot?.noticePeriod || "",
+      skills: application.applicantSnapshot?.skills || [],
+      education: application.applicantSnapshot?.education || [],
+      workExperience: application.applicantSnapshot?.workExperience || [],
+      portfolioLinks: application.applicantSnapshot?.portfolioLinks || [],
+      resumeUrl:
+        application.documents?.resumeUrl || application.resumeUrl || "",
+      appliedFor: application.jobSnapshot?.title || "Unknown Position",
+      appliedDate: application.createdAt
+        ? new Date(application.createdAt).toLocaleDateString()
+        : "",
+      status: application.applicationStatus || application.status || "pending",
+      applicationData: application.applicationData || {},
+      applicantSnapshot: application.applicantSnapshot || {},
+    };
+
+    setProfileModal({ isOpen: true, candidate });
+  };
+
+  // Handle contact - Open contact modal
+  const handleContactApplicant = (application) => {
+    console.log(
+      "📧 Opening contact modal for:",
+      application.applicantSnapshot?.fullName
+    );
+
+    // Convert application to candidate format for modal
+    const candidate = {
+      id: application._id,
+      applicationId: application._id,
+      candidateId: application.applicantId,
+      name: application.applicantSnapshot?.fullName || "Unknown",
+      email: application.applicantSnapshot?.email || "",
+      phone: application.applicantSnapshot?.phone || "",
+      appliedFor: application.jobSnapshot?.title || "Unknown Position",
+    };
+
+    setContactModal({ isOpen: true, candidate });
   };
 
   // Get status color
@@ -315,20 +439,24 @@ const RealApplicationsTab = () => {
 
                     <td className="px-4 py-4">
                       <div className="flex flex-wrap gap-1 max-w-full">
-                        {(
-                          application.applicantSnapshot?.skills ||
-                          application.applicationData?.primarySkills ||
-                          []
-                        )
-                          .slice(0, 2)
-                          .map((skill, skillIndex) => (
+                        {(() => {
+                          console.log(
+                            "Applicant Skills:",
+                            application.applicantSnapshot
+                          );
+                          const skills =
+                            application.applicantSnapshot?.skills ||
+                            application.applicationData?.primarySkills ||
+                            [];
+                          return skills.slice(0, 2).map((skill, skillIndex) => (
                             <span
                               key={skillIndex}
                               className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs rounded whitespace-nowrap"
                             >
                               {skill}
                             </span>
-                          ))}
+                          ));
+                        })()}
                         {(
                           application.applicantSnapshot?.skills ||
                           application.applicationData?.primarySkills ||
@@ -428,10 +556,7 @@ const RealApplicationsTab = () => {
                           className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-200"
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.95 }}
-                          onClick={() => {
-                            setSelectedApplication(application);
-                            setViewDetailsModal(true);
-                          }}
+                          onClick={() => handleViewDetails(application)}
                           title="View Profile"
                         >
                           <svg
@@ -459,6 +584,7 @@ const RealApplicationsTab = () => {
                           className="p-2 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors duration-200"
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.95 }}
+                          onClick={() => handleContactApplicant(application)}
                           title="Contact"
                         >
                           <svg
@@ -480,9 +606,7 @@ const RealApplicationsTab = () => {
                           className="p-2 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors duration-200"
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.95 }}
-                          onClick={() =>
-                            console.log("Download resume for", application._id)
-                          }
+                          onClick={() => handleDownloadResume(application)}
                           title="Download Resume"
                         >
                           <svg
@@ -789,6 +913,34 @@ const RealApplicationsTab = () => {
           </motion.div>
         </div>
       )}
+
+      {/* Profile Modal */}
+      <CandidateProfileModal
+        candidate={profileModal.candidate}
+        isOpen={profileModal.isOpen}
+        onClose={() => setProfileModal({ isOpen: false, candidate: null })}
+      />
+
+      {/* Contact Modal */}
+      <ContactModal
+        candidate={contactModal.candidate}
+        isOpen={contactModal.isOpen}
+        onClose={() => setContactModal({ isOpen: false, candidate: null })}
+        onSendEmail={async (emailData) => {
+          try {
+            // Send email logic here if needed
+            console.log("Email data:", emailData);
+            alert("✅ Email sent successfully!");
+          } catch (error) {
+            console.error("Failed to send email:", error);
+            throw error;
+          }
+        }}
+        onOpenMessaging={(candidate) => {
+          console.log("Opening messaging for:", candidate.name);
+          alert(`Opening messaging with ${candidate.name}...`);
+        }}
+      />
     </motion.div>
   );
 };

@@ -1,4 +1,4 @@
-import { apiClient } from '../api/apiClient';
+import { apiClient } from "../api/apiClient";
 
 // Profile Service initialized
 
@@ -7,14 +7,14 @@ export const profileService = {
   // Get complete user profile data
   getCompleteProfile: async (userId) => {
     try {
-      console.log('Fetching complete profile for user', userId);
-      
-      const response = await apiClient.get('/auth/profile');
-      
-      console.log('Complete profile fetched', response.data);
+      console.log("Fetching complete profile for user", userId);
+
+      const response = await apiClient.get("/auth/profile");
+
+      console.log("Complete profile fetched", response.data);
       return response.data.data || response.data;
     } catch (error) {
-      console.error('Error fetching complete profile', error);
+      console.error("Error fetching complete profile", error);
       throw error;
     }
   },
@@ -24,31 +24,49 @@ export const profileService = {
     try {
       const response = await apiClient.get(`/auth/profile`);
       const profileData = response.data.data || response.data;
-      
+
       return {
         skills: profileData.skills || { primary: [], technical: [], soft: [] },
         experience: (() => {
-          const years = profileData.experience_years || profileData.yearsOfExperience || 0;
-          if (years <= 1) return '0-1';
-          if (years <= 3) return '1-3';
-          if (years <= 5) return '3-5';
-          if (years <= 8) return '5-8';
-          if (years <= 12) return '8-12';
-          return '12+';
+          const years =
+            profileData.experience_years || profileData.yearsOfExperience || 0;
+          if (years <= 1) return "0-1";
+          if (years <= 3) return "1-3";
+          if (years <= 5) return "3-5";
+          if (years <= 8) return "5-8";
+          if (years <= 12) return "8-12";
+          return "12+";
         })(),
-        currentJobTitle: profileData.current_job_title || profileData.careerInfo?.currentJobTitle || '',
-        currentCompany: profileData.current_company || profileData.careerInfo?.currentCompany || '',
-        expectedSalary: profileData.expected_salary || profileData.careerInfo?.expectedSalary || '',
-        location: profileData.current_location || profileData.currentLocation?.city || profileData.location || '',
+        currentJobTitle:
+          profileData.current_job_title ||
+          profileData.careerInfo?.currentJobTitle ||
+          "",
+        currentCompany:
+          profileData.current_company ||
+          profileData.careerInfo?.currentCompany ||
+          "",
+        expectedSalary:
+          profileData.expected_salary ||
+          profileData.careerInfo?.expectedSalary ||
+          "",
+        location:
+          profileData.current_location ||
+          profileData.currentLocation?.city ||
+          profileData.location ||
+          "",
         education: profileData.education || [],
         workExperience: profileData.workExperience || [],
-        resume_url: profileData.resume_url || profileData.documents?.resumeUrl || '',
-        portfolio_url: profileData.portfolio_url || profileData.socialLinks?.portfolio || '',
-        linkedin_url: profileData.linkedin_url || profileData.socialLinks?.linkedin || '',
-        github_url: profileData.github_url || profileData.socialLinks?.github || '',
+        resume_url:
+          profileData.resume_url || profileData.documents?.resumeUrl || "",
+        portfolio_url:
+          profileData.portfolio_url || profileData.socialLinks?.portfolio || "",
+        linkedin_url:
+          profileData.linkedin_url || profileData.socialLinks?.linkedin || "",
+        github_url:
+          profileData.github_url || profileData.socialLinks?.github || "",
       };
     } catch (error) {
-      console.error('❌ Error fetching user skills and experience:', error);
+      console.error("❌ Error fetching user skills and experience:", error);
       throw error;
     }
   },
@@ -56,14 +74,14 @@ export const profileService = {
   // Update user profile
   updateProfile: async (profileData) => {
     try {
-      console.log('Updating profile', profileData);
-      
-      const response = await apiClient.put('/auth/profile', profileData);
-      
-      console.log('Profile updated successfully', response.data);
+      console.log("Updating profile", profileData);
+
+      const response = await apiClient.put("/auth/profile", profileData);
+
+      console.log("Profile updated successfully", response.data);
       return response.data;
     } catch (error) {
-      console.error('Error updating profile', error);
+      console.error("Error updating profile", error);
       throw error;
     }
   },
@@ -71,17 +89,25 @@ export const profileService = {
   // Get user documents
   getUserDocuments: async () => {
     try {
-      const response = await apiClient.get('/auth/profile');
+      const response = await apiClient.get("/auth/profile");
       const profileData = response.data.data || response.data;
-      
+
       return {
-        resumeUrl: profileData.resume_url || profileData.documents?.resumeUrl || '',
-        coverLetterUrl: profileData.cover_letter_url || profileData.documents?.coverLetterUrl || '',
-        portfolioUrl: profileData.portfolio_url || profileData.documents?.portfolioUrl || '',
-        certificates: profileData.certificates || profileData.documents?.certificates || [],
+        resumeUrl:
+          profileData.resume_url || profileData.documents?.resumeUrl || "",
+        coverLetterUrl:
+          profileData.cover_letter_url ||
+          profileData.documents?.coverLetterUrl ||
+          "",
+        portfolioUrl:
+          profileData.portfolio_url ||
+          profileData.documents?.portfolioUrl ||
+          "",
+        certificates:
+          profileData.certificates || profileData.documents?.certificates || [],
       };
     } catch (error) {
-      console.error('❌ Error fetching user documents:', error);
+      console.error("❌ Error fetching user documents:", error);
       throw error;
     }
   },
@@ -89,19 +115,37 @@ export const profileService = {
   // Get user preferences
   getUserPreferences: async () => {
     try {
-      const response = await apiClient.get('/auth/profile');
+      const response = await apiClient.get("/auth/profile");
       const profileData = response.data.data || response.data;
-      
+
       return {
-        willingToRelocate: profileData.willing_to_relocate || profileData.jobPreferences?.willingToRelocate || false,
-        remoteWorkPreference: profileData.remote_work_preference || profileData.jobPreferences?.remoteWorkPreference || false,
-        preferredJobTypes: profileData.preferred_job_types || profileData.jobPreferences?.preferredJobTypes || [],
-        preferredLocations: profileData.preferred_locations || profileData.jobPreferences?.preferredLocations || [],
-        salaryExpectations: profileData.salary_expectations || profileData.jobPreferences?.salaryExpectations || '',
-        noticePeriod: profileData.notice_period || profileData.jobPreferences?.noticePeriod || '',
+        willingToRelocate:
+          profileData.willing_to_relocate ||
+          profileData.jobPreferences?.willingToRelocate ||
+          false,
+        remoteWorkPreference:
+          profileData.remote_work_preference ||
+          profileData.jobPreferences?.remoteWorkPreference ||
+          false,
+        preferredJobTypes:
+          profileData.preferred_job_types ||
+          profileData.jobPreferences?.preferredJobTypes ||
+          [],
+        preferredLocations:
+          profileData.preferred_locations ||
+          profileData.jobPreferences?.preferredLocations ||
+          [],
+        salaryExpectations:
+          profileData.salary_expectations ||
+          profileData.jobPreferences?.salaryExpectations ||
+          "",
+        noticePeriod:
+          profileData.notice_period ||
+          profileData.jobPreferences?.noticePeriod ||
+          "",
       };
     } catch (error) {
-      console.error('❌ Error fetching user preferences:', error);
+      console.error("❌ Error fetching user preferences:", error);
       throw error;
     }
   },
@@ -109,111 +153,227 @@ export const profileService = {
   // Get comprehensive application data (combines all above)
   getApplicationData: async () => {
     try {
-      console.log('Fetching comprehensive application data...');
-      
-      const response = await apiClient.get('/auth/profile');
+      console.log("Fetching comprehensive application data...");
+
+      const response = await apiClient.get("/auth/profile");
       let profileData = response.data.data || response.data;
-      
+
       // Auto-parse JSON strings if they come from backend (extra safety)
-      ['skills', 'education', 'workExperience'].forEach(field => {
-        if (typeof profileData[field] === 'string' && profileData[field] && (profileData[field].startsWith('[') || profileData[field].startsWith('{'))) {
+      ["skills", "education", "workExperience"].forEach((field) => {
+        if (
+          typeof profileData[field] === "string" &&
+          profileData[field] &&
+          (profileData[field].startsWith("[") ||
+            profileData[field].startsWith("{"))
+        ) {
           try {
             profileData[field] = JSON.parse(profileData[field]);
+            console.log(
+              `✅ Parsed ${field} from JSON string:`,
+              profileData[field]
+            );
           } catch (e) {
             console.warn(`Failed to parse ${field} from backend:`, e);
           }
         }
       });
-      
+
+      console.log("📊 Raw skills data from profile:", profileData.skills);
+      console.log(
+        "📊 Skills type:",
+        typeof profileData.skills,
+        Array.isArray(profileData.skills)
+      );
+
       // Transform and organize data for application form
       const applicationData = {
         // Personal Information
-        firstName: profileData.firstName || '',
-        lastName: profileData.lastName || '',
-        email: profileData.email || '',
-        phone: profileData.phone || '',
-        location: profileData.currentLocation?.city ? 
-          `${profileData.currentLocation.city}, ${profileData.currentLocation.state || profileData.currentLocation.country}` :
-          profileData.current_location || profileData.location || '',
-        bio: profileData.bio || '',
-        
+        firstName: profileData.firstName || "",
+        lastName: profileData.lastName || "",
+        email: profileData.email || "",
+        phone: profileData.phone || "",
+        location: profileData.currentLocation?.city
+          ? `${profileData.currentLocation.city}, ${
+              profileData.currentLocation.state ||
+              profileData.currentLocation.country
+            }`
+          : profileData.current_location || profileData.location || "",
+        bio: profileData.bio || "",
+
         // Professional Information - Enhanced mapping
-        currentJobTitle: profileData.current_job_title || 
-                           profileData.careerInfo?.currentJobTitle || 
-                           profileData.position ||
-                           profileData.workExperience?.[0]?.jobTitle || 
-                           (profileData.workExperience?.[0]?.isCurrentJob ? profileData.workExperience[0].jobTitle : '') || '',
-        
-        currentCompany: profileData.current_company || 
-                         profileData.careerInfo?.currentCompany || 
-                         profileData.company_name ||
-                         profileData.workExperience?.[0]?.companyName || 
-                         (profileData.workExperience?.[0]?.isCurrentJob ? profileData.workExperience[0].companyName : '') || '',
-        
+        currentJobTitle:
+          profileData.current_job_title ||
+          profileData.careerInfo?.currentJobTitle ||
+          profileData.position ||
+          profileData.workExperience?.[0]?.jobTitle ||
+          (profileData.workExperience?.[0]?.isCurrentJob
+            ? profileData.workExperience[0].jobTitle
+            : "") ||
+          "",
+
+        currentCompany:
+          profileData.current_company ||
+          profileData.careerInfo?.currentCompany ||
+          profileData.company_name ||
+          profileData.workExperience?.[0]?.companyName ||
+          (profileData.workExperience?.[0]?.isCurrentJob
+            ? profileData.workExperience[0].companyName
+            : "") ||
+          "",
+
         experience: (() => {
-          const years = profileData.experience_years || profileData.yearsOfExperience || 0;
-          if (years === 0) return '';
-          if (years <= 1) return '0-1';
-          if (years <= 3) return '1-3';
-          if (years <= 5) return '3-5';
-          if (years <= 8) return '5-8';
-          if (years <= 12) return '8-12';
-          return '12+';
+          const years =
+            profileData.experience_years || profileData.yearsOfExperience || 0;
+          if (years === 0) return "";
+          if (years <= 1) return "0-1";
+          if (years <= 3) return "1-3";
+          if (years <= 5) return "3-5";
+          if (years <= 8) return "5-8";
+          if (years <= 12) return "8-12";
+          return "12+";
         })(),
-        
-        expectedSalary: profileData.expected_salary || profileData.careerInfo?.expectedSalary || profileData.expectedSalary || '',
-        
-        // Skills - Enhanced mapping
-        primarySkills: profileData.skills?.primary || profileData.primary_skills || (Array.isArray(profileData.skills) ? profileData.skills : []),
-        technicalSkills: profileData.skills?.technical || profileData.technical_skills || [],
-        softSkills: profileData.skills?.soft || profileData.soft_skills || [],
-        
+
+        expectedSalary:
+          profileData.expected_salary ||
+          profileData.careerInfo?.expectedSalary ||
+          profileData.expectedSalary ||
+          "",
+
+        // Skills - Enhanced mapping with multiple fallbacks
+        primarySkills: (() => {
+          let extractedSkills = [];
+
+          // If skills is a plain array, use it directly
+          if (Array.isArray(profileData.skills)) {
+            extractedSkills = profileData.skills
+              .filter(Boolean)
+              .flatMap((skill) => {
+                // Check if skill is a JSON string and parse it recursively
+                if (
+                  typeof skill === "string" &&
+                  (skill.startsWith("[") || skill.startsWith('"'))
+                ) {
+                  try {
+                    const parsed = JSON.parse(skill);
+                    return Array.isArray(parsed) ? parsed : [parsed];
+                  } catch (e) {
+                    return skill;
+                  }
+                }
+                return skill;
+              });
+            console.log(
+              "✅ Extracted skills from plain array:",
+              extractedSkills
+            );
+            return extractedSkills;
+          }
+
+          // If skills is an object with sub-categories
+          if (
+            typeof profileData.skills === "object" &&
+            profileData.skills !== null
+          ) {
+            extractedSkills = [
+              ...(profileData.skills.primary?.map((s) => s.skill || s) || []),
+              ...(profileData.skills.technical?.map((s) => s.skill || s) || []),
+              ...(profileData.skills.soft?.map((s) => s.skill || s) || []),
+              ...(profileData.skills.languages?.map((s) => s.skill || s) || []),
+            ].filter(Boolean);
+            if (extractedSkills.length > 0) {
+              console.log(
+                "✅ Extracted skills from object structure:",
+                extractedSkills
+              );
+              return extractedSkills;
+            }
+          }
+
+          // Fallback to other skill fields
+          extractedSkills = profileData.primary_skills || [];
+          console.log("⚠️ Using fallback skills:", extractedSkills);
+          return extractedSkills;
+        })(),
+        technicalSkills:
+          profileData.skills?.technical?.map((s) => s.skill || s) ||
+          profileData.technical_skills ||
+          [],
+        softSkills:
+          profileData.skills?.soft?.map((s) => s.skill || s) ||
+          profileData.soft_skills ||
+          [],
+
         // Social Links - Enhanced mapping with multiple fallbacks
-        linkedinUrl: profileData.linkedin_url || 
-                      profileData.linkedinUrl ||
-                      profileData.socialLinks?.linkedinUrl || 
-                      profileData.socialLinks?.linkedin || '',
-        
-        portfolioUrl: profileData.portfolio_url || 
-                       profileData.portfolioUrl ||
-                       profileData.socialLinks?.portfolioUrl || 
-                       profileData.socialLinks?.portfolio || 
-                       profileData.documents?.portfolioUrl || '',
-        
-        githubUrl: profileData.github_url || 
-                    profileData.githubUrl ||
-                    profileData.socialLinks?.githubUrl || 
-                    profileData.socialLinks?.github || '',
-        
+        linkedinUrl:
+          profileData.linkedin_url ||
+          profileData.linkedinUrl ||
+          profileData.socialLinks?.linkedinUrl ||
+          profileData.socialLinks?.linkedin ||
+          "",
+
+        portfolioUrl:
+          profileData.portfolio_url ||
+          profileData.portfolioUrl ||
+          profileData.socialLinks?.portfolioUrl ||
+          profileData.socialLinks?.portfolio ||
+          profileData.documents?.portfolioUrl ||
+          "",
+
+        githubUrl:
+          profileData.github_url ||
+          profileData.githubUrl ||
+          profileData.socialLinks?.githubUrl ||
+          profileData.socialLinks?.github ||
+          "",
+
         // Preferences - Enhanced mapping
-        willingToRelocate: profileData.willing_to_relocate || 
-                            profileData.willingToRelocate ||
-                            profileData.jobPreferences?.willingToRelocate || false,
-        
-        remoteWorkPreference: profileData.remote_work_preference || 
-                               profileData.remoteWorkPreference ||
-                               profileData.jobPreferences?.remoteWorkPreference || false,
-        
-        noticePeriod: profileData.notice_period || profileData.noticePeriod || profileData.jobPreferences?.noticePeriod || '',
-        
+        willingToRelocate:
+          profileData.willing_to_relocate ||
+          profileData.willingToRelocate ||
+          profileData.jobPreferences?.willingToRelocate ||
+          false,
+
+        remoteWorkPreference:
+          profileData.remote_work_preference ||
+          profileData.remoteWorkPreference ||
+          profileData.jobPreferences?.remoteWorkPreference ||
+          false,
+
+        noticePeriod:
+          profileData.notice_period ||
+          profileData.noticePeriod ||
+          profileData.jobPreferences?.noticePeriod ||
+          "",
+
         // Education - Get highest degree
-        highestEducation: profileData.highestEducation || profileData.qualification || profileData.education?.[0]?.degree || '',
-        
+        highestEducation:
+          profileData.highestEducation ||
+          profileData.qualification ||
+          profileData.education?.[0]?.degree ||
+          "",
+
         // Additional data
         languages: profileData.languages || [],
         education: profileData.education || [],
         workExperience: profileData.workExperience || [],
         certifications: profileData.certifications || [],
         projects: profileData.projects || [],
-        
+
         // Resume URL
-        resumeUrl: profileData.resume_url || profileData.documents?.resumeUrl || '',
+        resumeUrl:
+          profileData.resume_url || profileData.documents?.resumeUrl || "",
       };
-      
-      console.log('Comprehensive application data prepared', applicationData);
+
+      console.log("✅ Comprehensive application data prepared");
+      console.log("📊 Skills summary:", {
+        primarySkills: applicationData.primarySkills,
+        technicalSkills: applicationData.technicalSkills,
+        softSkills: applicationData.softSkills,
+        total: applicationData.primarySkills?.length || 0,
+      });
       return applicationData;
     } catch (error) {
-      console.error('Error fetching comprehensive application data', error);
+      console.error("Error fetching comprehensive application data", error);
       throw error;
     }
   },

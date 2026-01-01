@@ -279,6 +279,10 @@ const MyApplicationsTab = () => {
     "🎨 First application jobSnapshot:",
     applications?.[0]?.jobSnapshot
   );
+  console.log(
+    "🎨 First application applicantSnapshot:",
+    applications?.[0]?.applicantSnapshot
+  );
   console.log("🎨 User:", user);
 
   return (
@@ -517,8 +521,17 @@ const MyApplicationsTab = () => {
                           // Try multiple data sources in priority order
                           let experienceText = null;
 
-                          // Method 1: applicationInfo with detailed structure
-                          if (application.applicationInfo?.experience) {
+                          // Method 1: Applicant snapshot (highest priority)
+                          if (application.applicantSnapshot?.experience) {
+                            experienceText =
+                              application.applicantSnapshot.experience;
+                          }
+
+                          // Method 2: applicationInfo with detailed structure
+                          if (
+                            !experienceText &&
+                            application.applicationInfo?.experience
+                          ) {
                             const exp = application.applicationInfo.experience;
                             if (exp.rawExperienceText)
                               experienceText = exp.rawExperienceText;
@@ -528,21 +541,7 @@ const MyApplicationsTab = () => {
                               experienceText = `${exp.yearsOfExperience} years`;
                           }
 
-                          // Method 2: Direct experience field
-                          if (!experienceText && application.experience) {
-                            experienceText = application.experience;
-                          }
-
-                          // Method 3: Applicant snapshot
-                          if (
-                            !experienceText &&
-                            application.applicantSnapshot?.experience
-                          ) {
-                            experienceText =
-                              application.applicantSnapshot.experience;
-                          }
-
-                          // Method 4: Application data
+                          // Method 3: Application data
                           if (
                             !experienceText &&
                             application.applicationData?.experience
@@ -557,7 +556,7 @@ const MyApplicationsTab = () => {
                             application.workExperience &&
                             Array.isArray(application.workExperience)
                           ) {
-                            const totalExp = application.workExperience.length;
+                            const totalExp = application.experience.length;
                             if (totalExp > 0)
                               experienceText = `${totalExp}+ years`;
                           }
@@ -571,7 +570,7 @@ const MyApplicationsTab = () => {
                             )
                           ) {
                             const totalExp =
-                              application.applicationInfo.workExperience.length;
+                              application.applicationInfo.experience.length;
                             if (totalExp > 0)
                               experienceText = `${totalExp}+ years`;
                           }
@@ -842,8 +841,17 @@ const MyApplicationsTab = () => {
 
                         let experienceText = null;
 
-                        // Try applicationInfo first (most detailed)
-                        if (selectedApplication.applicationInfo?.experience) {
+                        // Try applicant snapshot first (most accurate)
+                        if (selectedApplication.applicantSnapshot?.experience) {
+                          experienceText =
+                            selectedApplication.applicantSnapshot.experience;
+                        }
+
+                        // Try applicationInfo (most detailed)
+                        if (
+                          !experienceText &&
+                          selectedApplication.applicationInfo?.experience
+                        ) {
                           const exp =
                             selectedApplication.applicationInfo.experience;
                           if (exp.rawExperienceText)
@@ -852,20 +860,6 @@ const MyApplicationsTab = () => {
                             experienceText = `${exp.totalYears} years`;
                           else if (exp.yearsOfExperience)
                             experienceText = `${exp.yearsOfExperience} years`;
-                        }
-
-                        // Try direct experience field
-                        if (!experienceText && selectedApplication.experience) {
-                          experienceText = selectedApplication.experience;
-                        }
-
-                        // Try applicant snapshot
-                        if (
-                          !experienceText &&
-                          selectedApplication.applicantSnapshot?.experience
-                        ) {
-                          experienceText =
-                            selectedApplication.applicantSnapshot.experience;
                         }
 
                         // Try application data
@@ -884,7 +878,7 @@ const MyApplicationsTab = () => {
                           Array.isArray(selectedApplication.workExperience)
                         ) {
                           const totalExp =
-                            selectedApplication.workExperience.length;
+                            selectedApplication.experience.length;
                           if (totalExp > 0)
                             experienceText = `${totalExp}+ years`;
                         }
@@ -914,13 +908,16 @@ const MyApplicationsTab = () => {
 
                         // Try applicationInfo nested structure first
                         if (
-                          selectedApplication.applicationInfo?.experience
-                            ?.currentJob?.jobTitle
+                          selectedApplication.applicantSnapshot?.currentJobTitle
                         ) {
                           job =
-                            selectedApplication.applicationInfo.experience
-                              .currentJob.jobTitle;
+                            selectedApplication.applicantSnapshot
+                              .currentJobTitle;
                         }
+                        console.log(
+                          "🔍 Current Job from applicantSnapshot:",
+                          job
+                        );
 
                         // Try direct applicationInfo field
                         if (
@@ -975,28 +972,25 @@ const MyApplicationsTab = () => {
                         // Try applicationInfo work experience
                         if (
                           !job &&
-                          selectedApplication.applicationInfo?.workExperience &&
+                          selectedApplication.applicantSnapshot?.experience &&
                           Array.isArray(
-                            selectedApplication.applicationInfo.workExperience
+                            selectedApplication.applicantSnapshot.experience
                           ) &&
-                          selectedApplication.applicationInfo.workExperience
+                          selectedApplication.applicantSnapshot.experience
                             .length > 0
                         ) {
                           const currentJobData =
-                            selectedApplication.applicationInfo.workExperience.find(
+                            selectedApplication.applicantSnapshot.experience.find(
                               (exp) => exp.isCurrent
                             ) ||
-                            selectedApplication.applicationInfo
-                              .workExperience[0];
+                            selectedApplication.applicantSnapshot.experience[0];
                           job =
                             currentJobData?.jobTitle ||
                             currentJobData?.position ||
                             currentJobData?.role;
                         }
 
-                        return job && job !== "NA" && job !== ""
-                          ? job
-                          : "Not specified";
+                        return job || "N/A";
                       })()}
                     </Typography>
                     <Typography>
@@ -1006,12 +1000,11 @@ const MyApplicationsTab = () => {
 
                         // Try applicationInfo nested structure
                         if (
-                          selectedApplication.applicationInfo?.experience
-                            ?.currentJob?.companyName
+                          selectedApplication.applicantSnapshot?.currentCompany
                         ) {
                           company =
-                            selectedApplication.applicationInfo.experience
-                              .currentJob.companyName;
+                            selectedApplication.applicantSnapshot
+                              .currentCompany;
                         }
 
                         // Try direct applicationInfo field
@@ -1064,31 +1057,7 @@ const MyApplicationsTab = () => {
                             currentJobData?.employer;
                         }
 
-                        // Try applicationInfo work experience
-                        if (
-                          !company &&
-                          selectedApplication.applicationInfo?.workExperience &&
-                          Array.isArray(
-                            selectedApplication.applicationInfo.workExperience
-                          ) &&
-                          selectedApplication.applicationInfo.workExperience
-                            .length > 0
-                        ) {
-                          const currentJobData =
-                            selectedApplication.applicationInfo.workExperience.find(
-                              (exp) => exp.isCurrent
-                            ) ||
-                            selectedApplication.applicationInfo
-                              .workExperience[0];
-                          company =
-                            currentJobData?.companyName ||
-                            currentJobData?.company ||
-                            currentJobData?.employer;
-                        }
-
-                        return company && company !== "NA" && company !== ""
-                          ? company
-                          : "Not specified";
+                        return company || "N/A";
                       })()}
                     </Typography>
                   </Grid>
@@ -1155,7 +1124,7 @@ const MyApplicationsTab = () => {
                           </Typography>
                         </Grid>
                       )}
-                      {selectedApplication.applicationInfo.jobPreferences && (
+                      {/* {selectedApplication.applicationInfo.jobPreferences && (
                         <>
                           <Grid item xs={12} sm={6}>
                             <Typography>
@@ -1180,7 +1149,7 @@ const MyApplicationsTab = () => {
                             </Typography>
                           </Grid>
                         </>
-                      )}
+                      )} */}
                       {/* Social Links */}
                       {selectedApplication.applicationInfo?.socialLinks && (
                         <>
@@ -1369,9 +1338,7 @@ const MyApplicationsTab = () => {
             selectedApplication.status !== "rejected" &&
             selectedApplication.status !== "selected" && (
               <Button
-                onClick={() =>
-                  handleWithdrawApplication(selectedApplication._id)
-                }
+                onClick={handleWithdrawApplication}
                 color="error"
                 variant="outlined"
                 disabled={withdrawing}

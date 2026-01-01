@@ -20,10 +20,13 @@ const router = express.Router();
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadDir = "uploads/applications/";
+    // Use project root uploads directory (one level up from backend)
+    const projectRoot = path.join(__dirname, "..");
+    const uploadDir = path.join(projectRoot, "uploads", "applications");
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
+    console.log("📁 Multer upload destination:", uploadDir);
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
@@ -204,42 +207,123 @@ router.post(
   upload.single("resume"),
   authenticateToken,
   async (req, res) => {
+    console.log("\n" + "=".repeat(80));
+    console.log("📝 NEW APPLICATION REQUEST RECEIVED");
+    console.log("=".repeat(80));
+
     try {
       console.log("🔍 Creating new application...");
-      console.log("🔍 User:", req.user);
+      console.log("🔍 User:", JSON.stringify(req.user, null, 2));
       console.log("🔍 Body fields:", Object.keys(req.body));
-      console.log("🔍 File:", req.file ? "Uploaded" : "No file");
+      console.log(
+        "🔍 File:",
+        req.file ? `Uploaded: ${req.file.filename}` : "No file"
+      );
 
+      console.log("\n🔍 Step 1: Validating required fields...");
       // Validate required fields
       const { jobId, jobTitle, companyName } = req.body;
+      console.log("  - jobId:", jobId);
+      console.log("  - jobTitle:", jobTitle);
+      console.log("  - companyName:", companyName);
 
       if (!jobId || !jobTitle || !companyName) {
+        console.log("❌ Missing required fields");
         return res.status(400).json({
           success: false,
           message: "Missing required fields: jobId, jobTitle, companyName",
         });
       }
+      console.log("✅ Step 1 passed: All required fields present\n");
+
+      console.log("🔍 Step 2: Checking for duplicate application...");
+      console.log("  - Query:", { applicantId: req.user.userId, jobId });
 
       // Check if user has already applied to this job
       const existingApplication = await Application.findOne({
         applicantId: req.user.userId,
         jobId: jobId,
       });
+      console.log("  - Existing application found:", !!existingApplication);
 
       if (existingApplication) {
+        console.log("❌ Step 2 failed: Duplicate application found");
         return res.status(400).json({
           success: false,
           message: "You have already applied to this job",
         });
       }
+      console.log("✅ Step 2 passed: No duplicate application\n");
+
+      console.log("🔍 Step 3: Verifying job exists...");
+      console.log("  - Looking up job with ID:", jobId);
 
       // Verify job exists
       const job = await Job.findById(jobId);
+      console.log("  - Job found:", !!job);
+
       if (!job) {
+        console.log("❌ Step 3 failed: Job not found");
         return res.status(404).json({
           success: false,
           message: "Job not found",
         });
+      }
+      console.log("✅ Step 3 passed: Job found -", job.jobTitle, "\n");
+
+      console.log("🔍 Step 4: Building application data object...");
+
+      // Parse applicantSnapshot if provided as JSON string (frontend sends complete snapshot)
+      let applicantSnapshot = {};
+      if (req.body.applicantSnapshot) {
+        try {
+          applicantSnapshot =
+            typeof req.body.applicantSnapshot === "string"
+              ? JSON.parse(req.body.applicantSnapshot)
+              : req.body.applicantSnapshot;
+          console.log("  - Parsed applicantSnapshot from frontend");
+          console.log(
+            "  - Snapshot has skills:",
+            applicantSnapshot.skills?.length || 0
+          );
+          console.log(
+            "  - Snapshot has education:",
+            applicantSnapshot.education?.length || 0
+          );
+          console.log(
+            "  - Snapshot has workExperience:",
+            applicantSnapshot.workExperience?.length || 0
+          );
+        } catch (e) {
+          console.error("  - Failed to parse applicantSnapshot:", e.message);
+          // Fallback to building minimal snapshot
+          applicantSnapshot = {
+            fullName: `${req.body.firstName} ${req.body.lastName}`,
+            email: req.body.email,
+            phone: req.body.phone,
+            location: req.body.location,
+            currentJobTitle: req.body.currentJobTitle,
+            currentCompany: req.body.currentCompany,
+            experience: req.body.experience,
+            skills: req.body.primarySkills
+              ? req.body.primarySkills.split(",").map((s) => s.trim())
+              : [],
+          };
+        }
+      } else {
+        // Build minimal snapshot if not provided
+        applicantSnapshot = {
+          fullName: `${req.body.firstName} ${req.body.lastName}`,
+          email: req.body.email,
+          phone: req.body.phone,
+          location: req.body.location,
+          currentJobTitle: req.body.currentJobTitle,
+          currentCompany: req.body.currentCompany,
+          experience: req.body.experience,
+          skills: req.body.primarySkills
+            ? req.body.primarySkills.split(",").map((s) => s.trim())
+            : [],
+        };
       }
 
       // Create application data
@@ -315,19 +399,8 @@ router.post(
           },
         ],
 
-        // Applicant Snapshot (required fields)
-        applicantSnapshot: {
-          fullName: `${req.body.firstName} ${req.body.lastName}`,
-          email: req.body.email,
-          phone: req.body.phone,
-          location: req.body.location,
-          currentJobTitle: req.body.currentJobTitle,
-          currentCompany: req.body.currentCompany,
-          experience: req.body.experience,
-          skills: req.body.primarySkills
-            ? req.body.primarySkills.split(",").map((s) => s.trim())
-            : [],
-        },
+        // Applicant Snapshot (complete snapshot from frontend or built from fields)
+        applicantSnapshot: applicantSnapshot,
 
         // Job Snapshot (required fields)
         jobSnapshot: {
@@ -338,41 +411,174 @@ router.post(
         },
       };
 
-      // Handle education and work experience (if provided as JSON strings)
-      if (req.body.education) {
+      // Verify resume file exists after multer upload
+      if (req.file) {
+        const projectRoot = path.join(__dirname, "..");
+        const uploadedFilePath = path.join(
+          projectRoot,
+          "uploads",
+          "applications",
+          req.file.filename
+        );
+        if (fs.existsSync(uploadedFilePath)) {
+          console.log("  ✅ Resume file verified on disk:", uploadedFilePath);
+        } else {
+          console.error(
+            "  ❌ Resume file NOT found on disk after upload:",
+            uploadedFilePath
+          );
+          return res.status(500).json({
+            success: false,
+            message: "Resume upload failed - file not saved to disk",
+          });
+        }
+      } else {
+        console.log("  ℹ️ No resume file uploaded with this application");
+      }
+
+      console.log(
+        "✅ Step 4 passed: Basic application data structure created\n"
+      );
+
+      console.log("🔍 Step 5: Parsing education and work experience data...");
+
+      // Handle education - prefer from applicantSnapshot, fallback to req.body.education
+      if (
+        applicantSnapshot.education &&
+        applicantSnapshot.education.length > 0
+      ) {
+        applicationData.education = applicantSnapshot.education;
+        console.log(
+          "  - Education from applicantSnapshot:",
+          applicationData.education.length,
+          "entries"
+        );
+      } else if (req.body.education) {
+        console.log(
+          "  - Education raw from body:",
+          typeof req.body.education,
+          req.body.education.substring(0, 100)
+        );
         try {
           applicationData.education =
             typeof req.body.education === "string"
               ? JSON.parse(req.body.education)
               : req.body.education;
+          console.log(
+            "  - Education parsed from body:",
+            applicationData.education.length,
+            "entries"
+          );
         } catch (e) {
+          console.error("  - ❌ Failed to parse education data:", e.message);
           console.warn("Failed to parse education data:", e.message);
+          applicationData.education = [];
         }
+      } else {
+        console.log("  - No education data provided");
+        applicationData.education = [];
       }
 
-      if (req.body.workExperience) {
+      // Handle workExperience - prefer from applicantSnapshot, fallback to req.body.workExperience
+      if (
+        applicantSnapshot.workExperience &&
+        applicantSnapshot.workExperience.length > 0
+      ) {
+        applicationData.workExperience = applicantSnapshot.workExperience;
+        console.log(
+          "  - WorkExperience from applicantSnapshot:",
+          applicationData.workExperience.length,
+          "entries"
+        );
+      } else if (req.body.workExperience) {
+        console.log(
+          "  - WorkExperience raw from body:",
+          typeof req.body.workExperience,
+          req.body.workExperience.substring(0, 100)
+        );
         try {
           applicationData.workExperience =
             typeof req.body.workExperience === "string"
               ? JSON.parse(req.body.workExperience)
               : req.body.workExperience;
+          console.log(
+            "  - WorkExperience parsed from body:",
+            applicationData.workExperience.length,
+            "entries"
+          );
         } catch (e) {
+          console.error(
+            "  - ❌ Failed to parse work experience data:",
+            e.message
+          );
           console.warn("Failed to parse work experience data:", e.message);
+          applicationData.workExperience = [];
         }
+      } else {
+        console.log("  - No work experience data provided");
+        applicationData.workExperience = [];
       }
+
+      console.log(
+        "✅ Step 5 passed: Education and work experience parsing completed"
+      );
+      console.log(
+        "  - Final education count:",
+        applicationData.education?.length || 0
+      );
+      console.log(
+        "  - Final workExperience count:",
+        applicationData.workExperience?.length || 0
+      );
+      console.log(
+        "  - Final skills in snapshot:",
+        applicationData.applicantSnapshot.skills?.length || 0
+      );
+      console.log("\n");
+
+      console.log("🔍 Step 6: Creating Application document...");
+      console.log("  - Application data keys:", Object.keys(applicationData));
+      console.log("  - ApplicantId:", applicationData.applicantId);
+      console.log("  - JobId:", applicationData.jobId);
+      console.log("  - RecruiterId:", applicationData.recruiterId);
+      console.log(
+        "  - Education entries:",
+        applicationData.education?.length || 0
+      );
+      console.log(
+        "  - WorkExperience entries:",
+        applicationData.workExperience?.length || 0
+      );
+      console.log(
+        "  - Skills in snapshot:",
+        applicationData.applicantSnapshot.skills?.length || 0
+      );
 
       // Create the application
       const application = new Application(applicationData);
-      await application.save();
+      console.log("  - Application instance created, now saving...");
 
+      await application.save();
+      console.log(
+        "✅ Step 6 passed: Application saved successfully with ID:",
+        application._id,
+        "\n"
+      );
+
+      console.log("🔍 Step 7: Updating job applications count...");
       // Increment applicationsCount for the job
       const updatedJob = await Job.findByIdAndUpdate(
         jobId,
         { $inc: { applicationsCount: 1 } },
         { new: true }
       );
+      console.log(
+        "✅ Step 7 passed: Job updated, new count:",
+        updatedJob?.applicationsCount,
+        "\n"
+      );
 
-      console.log("✅ Application created successfully:", application._id);
+      console.log("✅ APPLICATION SUBMITTED SUCCESSFULLY:", application._id);
 
       // Create notification for recruiter
       try {
@@ -406,7 +612,14 @@ router.post(
         },
       });
     } catch (error) {
-      console.error("❌ Error creating application:", error);
+      console.error("\n" + "=".repeat(80));
+      console.error("❌❌❌ ERROR CREATING APPLICATION ❌❌❌");
+      console.error("=".repeat(80));
+      console.error("Error message:", error.message);
+      console.error("Error name:", error.name);
+      console.error("Error stack:", error.stack);
+      console.error("=".repeat(80) + "\n");
+
       res.status(500).json({
         success: false,
         message: "Failed to submit application",
@@ -538,6 +751,24 @@ router.get("/", authenticateToken, async (req, res) => {
               application.applicantSnapshot?.location ||
               application.applicationData?.location ||
               "",
+            // Include all additional fields from applicantSnapshot
+            currentJobTitle:
+              application.applicantSnapshot?.currentJobTitle || "",
+            currentCompany: application.applicantSnapshot?.currentCompany || "",
+            experience: application.applicantSnapshot?.experience || "",
+            skills: application.applicantSnapshot?.skills || [],
+            education: application.applicantSnapshot?.education || [],
+            workExperience: application.applicantSnapshot?.workExperience || [],
+            expectedSalary: application.applicantSnapshot?.expectedSalary || "",
+            noticePeriod: application.applicantSnapshot?.noticePeriod || "",
+            currentSalary: application.applicantSnapshot?.currentSalary || "",
+            willingToRelocate:
+              application.applicantSnapshot?.willingToRelocate || false,
+            remoteWorkPreference:
+              application.applicantSnapshot?.remoteWorkPreference || false,
+            bio: application.applicantSnapshot?.bio || "",
+            professionalSummary:
+              application.applicantSnapshot?.professionalSummary || "",
           }
         : application.applicantSnapshot || null,
 
@@ -546,6 +777,11 @@ router.get("/", authenticateToken, async (req, res) => {
 
       // Application Information (populated from ApplicationInformation model)
       applicationInfo: application.applicationInfo || null,
+
+      // Documents (resume, cover letter, etc.)
+      documents: application.documents || {},
+      resumeUrl:
+        application.resumeUrl || application.documents?.resumeUrl || "",
 
       status: application.applicationStatus,
       applicationStatus: application.applicationStatus,
@@ -805,6 +1041,15 @@ router.post(
       }
 
       // Create comprehensive applicant snapshot
+      console.log("🔍 Creating applicant snapshot from user data:");
+      console.log("  - applicantUser.skills:", applicantUser.skills);
+      console.log("  - applicantUser.education:", applicantUser.education);
+      console.log(
+        "  - applicantUser.workExperience:",
+        applicantUser.workExperience
+      );
+      console.log("  - req.body.skills:", req.body.skills);
+
       const applicantSnapshot = {
         fullName: `${req.body.firstName || applicantUser.firstName || ""} ${
           req.body.lastName || applicantUser.lastName || ""
@@ -826,24 +1071,124 @@ router.post(
           "",
         experience:
           req.body.experience || applicantUser.yearsOfExperience || "",
-        skills: Array.isArray(applicantUser.skills?.primary)
-          ? applicantUser.skills.primary
-          : applicantUser.skills || [],
-        education: Array.isArray(applicantUser.education)
-          ? applicantUser.education.map((edu) => ({
+        // Capture skills from form submission or user profile - check multiple formats
+        skills: (() => {
+          // Priority 1: Form submission
+          if (req.body.skills) {
+            if (Array.isArray(req.body.skills)) return req.body.skills;
+            if (typeof req.body.skills === "string") {
+              try {
+                return JSON.parse(req.body.skills);
+              } catch (e) {
+                return req.body.skills.split(",").map((s) => s.trim());
+              }
+            }
+            return [req.body.skills];
+          }
+
+          // Priority 2: User profile skills
+          if (applicantUser.skills) {
+            if (Array.isArray(applicantUser.skills))
+              return applicantUser.skills;
+            if (Array.isArray(applicantUser.skills?.primary))
+              return applicantUser.skills.primary;
+            if (Array.isArray(applicantUser.skills?.technical))
+              return applicantUser.skills.technical;
+          }
+
+          return [];
+        })(),
+        education: (() => {
+          // Priority 1: Form submission (from applicantSnapshot in FormData)
+          if (req.body.education) {
+            const educationData =
+              typeof req.body.education === "string"
+                ? JSON.parse(req.body.education)
+                : req.body.education;
+            if (Array.isArray(educationData) && educationData.length > 0) {
+              return educationData.map((edu) => ({
+                degree: edu.degree || "",
+                institution: edu.institution || edu.school || "",
+                fieldOfStudy: edu.fieldOfStudy || edu.field || "",
+                startDate: edu.startDate || "",
+                endDate: edu.endDate || "",
+                grade: edu.grade || "",
+              }));
+            }
+          }
+          // Priority 2: User profile
+          if (Array.isArray(applicantUser.education)) {
+            return applicantUser.education.map((edu) => ({
               degree: edu.degree || "",
               institution: edu.institution || "",
               fieldOfStudy: edu.fieldOfStudy || "",
-            }))
-          : [],
-        workExperience: Array.isArray(applicantUser.workExperience)
-          ? applicantUser.workExperience.map((exp) => ({
+              startDate: edu.startDate || "",
+              endDate: edu.endDate || "",
+              grade: edu.grade || "",
+            }));
+          }
+          return [];
+        })(),
+        workExperience: (() => {
+          // Priority 1: Form submission (from applicantSnapshot in FormData)
+          if (req.body.workExperience) {
+            const workExpData =
+              typeof req.body.workExperience === "string"
+                ? JSON.parse(req.body.workExperience)
+                : req.body.workExperience;
+            if (Array.isArray(workExpData) && workExpData.length > 0) {
+              return workExpData.map((exp) => ({
+                jobTitle: exp.jobTitle || "",
+                companyName: exp.companyName || exp.company || "",
+                description: exp.description || "",
+                startDate: exp.startDate || "",
+                endDate: exp.endDate || "",
+                isCurrentJob: exp.isCurrentJob || false,
+                responsibilities: exp.responsibilities || "",
+              }));
+            }
+          }
+          // Priority 2: User profile
+          if (Array.isArray(applicantUser.workExperience)) {
+            return applicantUser.workExperience.map((exp) => ({
               jobTitle: exp.jobTitle || "",
               companyName: exp.companyName || "",
               description: exp.description || "",
-            }))
-          : [],
+              startDate: exp.startDate || "",
+              endDate: exp.endDate || "",
+              isCurrentJob: exp.isCurrentJob || false,
+              responsibilities: exp.responsibilities || "",
+            }));
+          }
+          return [];
+        })(),
+        // Additional fields from application form
+        expectedSalary:
+          req.body.expectedSalary ||
+          applicantUser.careerInfo?.expectedSalary ||
+          "",
+        noticePeriod:
+          req.body.noticePeriod || applicantUser.careerInfo?.noticePeriod || "",
+        currentSalary:
+          req.body.currentSalary ||
+          applicantUser.careerInfo?.currentSalary ||
+          "",
+        willingToRelocate:
+          req.body.willingToRelocate === "true" ||
+          applicantUser.jobPreferences?.willingToRelocate ||
+          false,
+        remoteWorkPreference:
+          req.body.remoteWorkPreference === "true" ||
+          applicantUser.jobPreferences?.remoteWorkPreference ||
+          false,
+        bio: req.body.bio || applicantUser.bio || "",
+        professionalSummary:
+          req.body.professionalSummary ||
+          applicantUser.professionalSummary ||
+          "",
       };
+
+      console.log("✅ Created applicantSnapshot:", applicantSnapshot);
 
       // Create application
       console.log("🔍 Creating new application...");
@@ -1555,11 +1900,8 @@ router.put(
         });
       }
 
-      // Check if application can be updated
-      if (
-        application.applicationStatus === "withdrawn" ||
-        application.applicationStatus === "rejected"
-      ) {
+      // Check if application can be updated (rejected applications cannot be updated)
+      if (application.applicationStatus === "rejected") {
         console.log(
           "❌ Cannot update application with status:",
           application.applicationStatus
@@ -1709,7 +2051,6 @@ router.delete("/:id", authenticateToken, async (req, res) => {
 
     // Check if application can be withdrawn
     if (
-      application.applicationStatus === "withdrawn" ||
       application.applicationStatus === "rejected" ||
       application.applicationStatus === "accepted"
     ) {
@@ -1723,21 +2064,39 @@ router.delete("/:id", authenticateToken, async (req, res) => {
       });
     }
 
-    // Update application status to withdrawn
-    application.applicationStatus = "withdrawn";
-    application.updatedAt = new Date();
-    await application.save();
+    // Get job ID to decrement applications count
+    const jobId = application.jobId;
 
-    console.log("✅ Application withdrawn successfully:", applicationId);
+    // Delete the application completely from database
+    await Application.findByIdAndDelete(applicationId);
+    console.log("✅ Application deleted from database:", applicationId);
+
+    // Decrement the job's applications count
+    if (jobId) {
+      try {
+        await Job.findByIdAndUpdate(
+          jobId,
+          { $inc: { applicationsCount: -1 } },
+          { new: true }
+        );
+        console.log("✅ Job applications count decremented for job:", jobId);
+      } catch (jobUpdateError) {
+        console.warn(
+          "⚠️ Failed to update job applications count:",
+          jobUpdateError.message
+        );
+      }
+    }
+
+    console.log(
+      "✅ Application withdrawn and deleted successfully:",
+      applicationId
+    );
 
     res.json({
       success: true,
-      message: "Application withdrawn successfully",
-      application: {
-        _id: application._id,
-        applicationStatus: application.applicationStatus,
-        updatedAt: application.updatedAt,
-      },
+      message: "Application deleted successfully",
+      deletedApplicationId: applicationId,
     });
   } catch (error) {
     console.error("❌ Error withdrawing application:", error);
