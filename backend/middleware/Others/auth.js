@@ -194,11 +194,10 @@ export const authenticateToken = async (req, res, next) => {
     
     // Find user in database with additional checks
     const UserModel = getUserModel(decoded.role);
-    const user = await UserModel.findById(decoded.userId || decoded.id);
-    console.log('🔍 getUserModel lookup result:', user ? 'Found' : 'Not found');
+    const user = await UserModel.findById(decoded.userId);
     
     if (!user) {
-      securityLogger.warn('USER_NOT_FOUND', { ip: req.ip, userId: decoded.userId || decoded.id, role: decoded.role });
+      securityLogger.warn('USER_NOT_FOUND', { ip: req.ip, userId: decoded.userId });
       return res.status(404).json({
         success: false,
         message: 'User not found',
@@ -619,43 +618,30 @@ export const requireApplicant = requireRole('applicant');
 export const requireAdmin = requireRole('admin');
 
 // Session management functions
-export const createUserSession = async (userId, deviceInfo, ipAddress, role = null) => {
+export const createUserSession = async (userId, deviceInfo, ipAddress) => {
   try {
     const sessionId = crypto.randomUUID();
-    
-    // Try SimpleUser first for admin role
-    let user = null;
-    if (role === 'admin') {
-      user = await SimpleUser.findById(userId);
-    }
-    
-    // Fallback to BaseUser if not found
-    if (!user) {
-      user = await BaseUser.findById(userId);
-    }
+    // Note: We need role to get the right model, but it's not available here
+    // Using BaseUser as fallback for session management
+    const user = await BaseUser.findById(userId);
     
     if (!user) {
       throw new Error('User not found');
     }
     
-    // Initialize activeSessions if it doesn't exist
-    if (!user.activeSessions) {
-      user.activeSessions = [];
-    }
-    
     // Clear existing sessions (single session enforcement)
-    user.activeSessions = [];
+    user.active_sessions = [];
     
     // Add new session
     const newSession = {
-      sessionId: sessionId,
-      deviceInfo: deviceInfo,
-      ipAddress: ipAddress,
-      createdAt: new Date(),
-      lastActivity: new Date()
+      session_id: sessionId,
+      device_info: deviceInfo,
+      ip_address: ipAddress,
+      created_at: new Date(),
+      last_activity: new Date()
     };
     
-    user.activeSessions.push(newSession);
+    user.active_sessions.push(newSession);
     await user.save();
     
     console.log(`✅ Session created for user ${userId}: ${sessionId}`);

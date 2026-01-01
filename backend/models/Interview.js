@@ -5,12 +5,12 @@ const interviewSchema = new mongoose.Schema({
   // Basic interview information
   candidateId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'BaseUser',
     required: true
   },
   recruiterId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'BaseUser',
     required: true
   },
   jobId: {
@@ -75,15 +75,6 @@ const interviewSchema = new mongoose.Schema({
     default: 'scheduled'
   },
   
-  cancellation: {
-    reason: String,
-    cancelledBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-    },
-    cancelledAt: Date
-  },
-  
   // Interview rounds
   round: {
     type: Number,
@@ -99,7 +90,7 @@ const interviewSchema = new mongoose.Schema({
   interviewers: [{
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
+      ref: 'BaseUser'
     },
     name: String,
     role: String,
@@ -163,12 +154,12 @@ const interviewSchema = new mongoose.Schema({
   // Metadata
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'BaseUser',
     required: true
   },
   updatedBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'BaseUser'
   }
 }, {
   timestamps: true,
@@ -185,7 +176,7 @@ interviewSchema.index({ createdAt: -1 });
 
 // Virtual for candidate details
 interviewSchema.virtual('candidateDetails', {
-  ref: 'User',
+  ref: 'BaseUser',
   localField: 'candidateId',
   foreignField: '_id',
   justOne: true
@@ -193,7 +184,7 @@ interviewSchema.virtual('candidateDetails', {
 
 // Virtual for recruiter details
 interviewSchema.virtual('recruiterDetails', {
-  ref: 'User',
+  ref: 'BaseUser',
   localField: 'recruiterId',
   foreignField: '_id',
   justOne: true

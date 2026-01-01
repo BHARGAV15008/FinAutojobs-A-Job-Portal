@@ -540,7 +540,6 @@ router.get('/jobs', async (req, res) => {
     
     // Transform jobs for frontend
     const transformedJobs = jobsWithApplications.map(job => ({
-      ...job, // Include full original job data
       id: job._id,
       title: job.jobTitle,
       company: job.companyName,
@@ -568,14 +567,11 @@ router.get('/jobs', async (req, res) => {
         name: `${job.postedBy.firstName || ''} ${job.postedBy.lastName || ''}`.trim() || job.postedBy.username,
         email: job.postedBy.email
       } : null,
-      displaySalary: job.salaryRange?.min && job.salaryRange?.max ? 
+      salary: job.salaryRange?.min && job.salaryRange?.max ? 
         `₹${(job.salaryRange.min / 100000).toFixed(1)}L - ₹${(job.salaryRange.max / 100000).toFixed(1)}L ${job.salaryRange.period || 'Yearly'}` :
         job.salaryRange?.min ? 
         `₹${(job.salaryRange.min / 100000).toFixed(1)}L+ ${job.salaryRange.period || 'Yearly'}` : 
         'Negotiable',
-      salary: job.salaryRange?.min && job.salaryRange?.max ? 
-        `₹${(job.salaryRange.min / 100000).toFixed(1)}L - ₹${(job.salaryRange.max / 100000).toFixed(1)}L` :
-        job.salaryRange?.min ? `₹${(job.salaryRange.min / 100000).toFixed(1)}L+` : 'Negotiable',
       urgency: job.jobUrgency || 'Normal Priority',
       industry: job.industry,
       category: job.jobCategory

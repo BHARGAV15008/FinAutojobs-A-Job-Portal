@@ -1,34 +1,30 @@
-import express from "express";
-import { body, validationResult } from "express-validator";
-import Job from "../models/Job.js";
-import Application from "../models/unified/Application.js";
-import { BaseUser, Recruiter } from "../models/UserModels.js";
-import Notification from "../models/Notification.js";
-import jwt from "jsonwebtoken";
-import crypto from "crypto";
-import { sendJobMatchEmail } from "../services/notifications.js";
-import cacheService, { CacheKeys } from "../services/Others/cacheService.js";
+import express from 'express';
+import { body, validationResult } from 'express-validator';
+import Job from '../models/Job.js';
+import Application from '../models/unified/Application.js';
+import ApplicationInformation from '../models/ApplicationInformation.js';
+import { BaseUser, Recruiter } from '../models/UserModels.js';
+import Notification from '../models/Notification.js';
+import jwt from 'jsonwebtoken';
+import { sendJobMatchEmail } from '../services/notifications.js';
 
 const router = express.Router();
 
 // Notify matching applicants
 const notifyMatchingApplicants = async (job) => {
   try {
-    const applicants = await BaseUser.find({ role: "applicant" });
+    const applicants = await BaseUser.find({ role: 'applicant' });
     for (const applicant of applicants) {
-      const skills = [
-        ...(applicant.skills?.primary || []),
-        ...(applicant.skills?.technical || []),
-      ];
-      const matches = (job.requiredSkills || []).filter((skill) =>
-        skills.some((s) => s.toLowerCase().includes(skill.toLowerCase()))
+      const skills = [...(applicant.skills?.primary || [])];
+      const matches = (job.requiredSkills || []).filter(skill => 
+        skills.some(s => s.toLowerCase().includes(skill.toLowerCase()))
       );
       if (matches.length > 0) {
         await sendJobMatchEmail(applicant.email, job.title, job.companyName);
       }
     }
   } catch (error) {
-    console.error("Notification error:", error);
+    console.error('Notification error:', error);
   }
 };
 
@@ -37,53 +33,50 @@ const notifyMatchingApplicants = async (job) => {
 // Helper function to determine job status based on application deadline
 const determineJobStatus = (applicationDeadline) => {
   if (!applicationDeadline) {
-    return "active"; // No deadline means active
+    return 'active'; // No deadline means active
   }
-
+  
   const deadline = new Date(applicationDeadline);
   const now = new Date();
   const daysUntilDeadline = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
-
+  
   if (daysUntilDeadline < 0) {
-    return "closed"; // Past deadline
+    return 'closed'; // Past deadline
   } else if (daysUntilDeadline <= 7) {
-    return "active"; // Within 7 days - active
+    return 'active'; // Within 7 days - active
   } else {
-    return "active"; // Future deadline - active
+    return 'active'; // Future deadline - active
   }
 };
 
 // Enhanced authentication middleware for jobs routes
 const authenticateToken = async (req, res, next) => {
   try {
-    const authHeader = req.headers["authorization"];
-    const token = authHeader && authHeader.split(" ")[1];
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: "Access token is required",
-        code: "TOKEN_REQUIRED",
+        message: 'Access token is required',
+        code: 'TOKEN_REQUIRED'
       });
     }
-
-    const jwt = await import("jsonwebtoken");
-    const decoded = jwt.default.verify(
-      token,
-      process.env.JWT_SECRET || "your-jwt-secret-key-change-this-in-production"
-    );
-
+    
+    const jwt = await import('jsonwebtoken');
+    const decoded = jwt.default.verify(token, process.env.JWT_SECRET || 'your-jwt-secret-key-change-this-in-production');
+    
     // Find user using BaseUser model
     const user = await BaseUser.findById(decoded.id || decoded.userId);
-
+    
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found",
-        code: "USER_NOT_FOUND",
+        message: 'User not found',
+        code: 'USER_NOT_FOUND'
       });
     }
-
+    
     // Set user data for request
     req.user = {
       id: user._id,
@@ -92,25 +85,25 @@ const authenticateToken = async (req, res, next) => {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      ...decoded,
+      ...decoded
     };
-
+    
     next();
   } catch (error) {
     return res.status(401).json({
       success: false,
-      message: "Invalid token",
-      code: "INVALID_TOKEN",
+      message: 'Invalid token',
+      code: 'INVALID_TOKEN'
     });
   }
 };
 
 // GET /api/jobs - Get all jobs with comprehensive filtering
-router.get("/", async (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const {
-      search,
-      location,
+    const { 
+      search, 
+      location, 
       jobType,
       industry,
       jobCategory,
@@ -120,261 +113,218 @@ router.get("/", async (req, res) => {
       experienceMin,
       experienceMax,
       skills,
-      company,
+      company, 
       status,
       postedBy,
       companyName,
       recruiterAndCompany,
-      page = 1,
+      page = 1, 
       limit = 20,
-      sort = "createdAt",
-      order = "desc",
+      sort = 'createdAt',
+      order = 'desc'
     } = req.query;
 
-    // Generate cache key based on query parameters
-    const cacheKey = CacheKeys.jobs(req.query);
-
-    // Disable cache for now to ensure immediate updates
-    // const cachedResult = await cacheService.getOrSet(
-    //   cacheKey,
-    //   async () => {
+    // Build query - if postedBy is provided, include all statuses for recruiter's dashboard
+    const query = {};
     
-    // Direct fetch without cache
-    const fetchJobsFromDB = async () => {
-        // Cache miss - fetch from database
-        // Build query - if postedBy is provided, include all statuses for recruiter's dashboard
-        const query = {};
-
-        // Filter by recruiter ID AND company (for recruiter's own jobs + company jobs)
-        if (recruiterAndCompany) {
-          const [currentRecruiterId, currentCompanyName] =
-            recruiterAndCompany.split("|");
-          if (currentRecruiterId && currentCompanyName) {
-            query.$or = [
-              { postedBy: currentRecruiterId }, // Jobs posted by the recruiter themselves
-              { companyName: currentCompanyName }, // Jobs posted by anyone from the same company
-            ];
-            // For recruiter dashboard, include all statuses unless specifically filtered
-            if (status) {
-              query.status = status;
-            }
-          }
-        } else if (postedBy) {
-          // Filter by recruiter ID only (for recruiter's own jobs)
-          query.postedBy = postedBy;
-          // For recruiters viewing their own jobs, include all statuses unless specifically filtered
-          if (status) {
-            query.status = status;
-          }
-          // Don't filter by status if recruiter wants to see all their jobs
-        } else if (companyName) {
-          // Filter by company name only (for company-specific jobs)
-          query.companyName = companyName;
-          // For company-based filtering, include all statuses unless specifically filtered
-          if (status) {
-            query.status = status;
-          }
-        } else {
-          // For public job listings, only show active jobs
-          query.status = status || "active";
+    // Filter by recruiter ID AND company (for recruiter's own jobs + company jobs)
+    if (recruiterAndCompany) {
+      const [currentRecruiterId, currentCompanyName] = recruiterAndCompany.split('|');
+      if (currentRecruiterId && currentCompanyName) {
+        query.$or = [
+          { postedBy: currentRecruiterId }, // Jobs posted by the recruiter themselves
+          { 'companyInfo.companyName': currentCompanyName } // Jobs posted by anyone from the same company
+        ];
+        // For recruiter dashboard, include all statuses unless specifically filtered
+        if (status) {
+          query.status = status;
         }
+      }
+    } else if (postedBy) {
+      // Filter by recruiter ID only (for recruiter's own jobs)
+      query.postedBy = postedBy;
+      // For recruiters viewing their own jobs, include all statuses unless specifically filtered
+      if (status) {
+        query.status = status;
+      }
+      // Don't filter by status if recruiter wants to see all their jobs
+    } else if (companyName) {
+      // Filter by company name only (for company-specific jobs)
+      query.companyName = companyName;
+      // For company-based filtering, include all statuses unless specifically filtered
+      if (status) {
+        query.status = status;
+      }
+    } else {
+      // For public job listings, only show active jobs
+      query.status = status || 'active';
+    }
 
-        // Text search across multiple fields
-        if (search) {
-          query.$text = { $search: search };
-        }
+    // Text search across multiple fields
+    if (search) {
+      query.$text = { $search: search };
+    }
 
-        // Filter by location
-        if (location) {
-          query.location = { $regex: location, $options: "i" };
-        }
+    // Filter by location
+    if (location) {
+      query.location = { $regex: location, $options: 'i' };
+    }
 
-        // Filter by job type
-        if (jobType) {
-          query.jobType = jobType;
-        }
+    // Filter by job type
+    if (jobType) {
+      query.jobType = jobType;
+    }
 
-        // Filter by industry
-        if (industry) {
-          query.industry = industry;
-        }
+    // Filter by industry
+    if (industry) {
+      query.industry = industry;
+    }
 
-        // Filter by job category
-        if (jobCategory) {
-          query.jobCategory = jobCategory;
-        }
+    // Filter by job category
+    if (jobCategory) {
+      query.jobCategory = jobCategory;
+    }
 
-        // Filter by work arrangement
-        if (workArrangement) {
-          query.workArrangement = workArrangement;
-        }
+    // Filter by work arrangement
+    if (workArrangement) {
+      query.workArrangement = workArrangement;
+    }
 
-        // Filter by company
-        if (company) {
-          query.companyName = { $regex: company, $options: "i" };
-        }
+    // Filter by company
+    if (company) {
+      query.companyName = { $regex: company, $options: 'i' };
+    }
 
-        // Salary range filter
-        if (salaryMin || salaryMax) {
-          query.$and = query.$and || [];
-          if (salaryMin) {
-            query.$and.push({
-              $or: [
-                { "salary.minimum": { $gte: parseInt(salaryMin) } },
-                { "salary.type": "Negotiable" },
-              ],
-            });
-          }
-          if (salaryMax) {
-            query.$and.push({
-              $or: [
-                { "salary.maximum": { $lte: parseInt(salaryMax) } },
-                { "salary.type": "Negotiable" },
-              ],
-            });
-          }
-        }
-
-        // Experience range filter
-        if (experienceMin || experienceMax) {
-          if (experienceMin) {
-            query["experience.minimum"] = { $gte: parseInt(experienceMin) };
-          }
-          if (experienceMax) {
-            query["experience.maximum"] = { $lte: parseInt(experienceMax) };
-          }
-        }
-
-        // Skills filter
-        if (skills) {
-          const skillsArray = Array.isArray(skills) ? skills : [skills];
-          query.requiredSkills = { $in: skillsArray };
-        }
-
-        // Only show jobs with future deadlines for public job listings
-        // For recruiter dashboards (when postedBy is provided), show all jobs regardless of deadline
-        if (!postedBy && !recruiterAndCompany && !companyName) {
-          query.applicationDeadline = { $gt: new Date() };
-        }
-
-        // Calculate pagination
-        const pageNum = parseInt(page);
-        const limitNum = parseInt(limit);
-        const skip = (pageNum - 1) * limitNum;
-
-        // Build sort object
-        const sortObj = {};
-        sortObj[sort] = order === "desc" ? -1 : 1;
-
-        // Execute query with population
-        const [jobs, totalCount] = await Promise.all([
-          Job.find(query)
-            .populate("postedBy", "firstName lastName email companyInfo")
-            .sort(sortObj)
-            .skip(skip)
-            .limit(limitNum)
-            .lean(),
-          Job.countDocuments(query),
-        ]);
-
-        // Transform jobs for frontend
-        const transformedJobs = jobs.map((job) => {
-          // Manual calculation of formattedSalary since .lean() excludes virtuals
-          const getFormattedSalary = (s) => {
-            if (!s) return "Negotiable";
-            const type = s.type?.toLowerCase();
-            if (type === "negotiable") return "Negotiable";
-            
-            const currency = s.currency || "INR";
-            const period = s.period || "Yearly";
-            const min = s.minimum !== undefined ? s.minimum : s.min;
-            const max = s.maximum !== undefined ? s.maximum : s.max;
-
-            if (type === "fixed" && min !== undefined) {
-              return `${currency} ${min.toLocaleString()} ${period}`;
-            }
-            if (type === "range" && min !== undefined && max !== undefined) {
-              return `${currency} ${min.toLocaleString()} - ${max.toLocaleString()} ${period}`;
-            }
-            return "Not disclosed";
-          };
-
-          return {
-            id: job._id,
-            _id: job._id,
-            jobId: job.jobId,
-            jobTitle: job.jobTitle,
-            companyName: job.companyName,
-            location: job.location,
-            industry: job.industry,
-            jobCategory: job.jobCategory,
-            jobType: job.jobType,
-            workArrangement: job.workArrangement,
-            vacancy: job.vacancy || 1,
-            salary: job.salary || { type: 'Negotiable' },
-            experience: job.experience || { minimum: 0, maximum: 0 },
-            formattedSalary: getFormattedSalary(job.salary),
-            requiredSkills: job.requiredSkills || [],
-            jobDescription: job.jobDescription || job.description,
-            keyResponsibilities: job.keyResponsibilities || [],
-            requirements: job.requirements || [],
-            status: job.status,
-            jobUrgency: job.jobUrgency,
-            views: job.views || 0,
-            applicationsCount: job.applicationsCount || 0,
-            createdAt: job.createdAt,
-            applicationDeadline: job.applicationDeadline,
-            slug: job.slug,
-            postedBy: job.postedBy,
-            recruiterInfo: job.recruiterInfo,
-            contactEmail: job.contactEmail,
-          };
+    // Salary range filter
+    if (salaryMin || salaryMax) {
+      query.$and = query.$and || [];
+      if (salaryMin) {
+        query.$and.push({
+          $or: [
+            { 'salary.minimum': { $gte: parseInt(salaryMin) } },
+            { 'salary.type': 'Negotiable' }
+          ]
         });
+      }
+      if (salaryMax) {
+        query.$and.push({
+          $or: [
+            { 'salary.maximum': { $lte: parseInt(salaryMax) } },
+            { 'salary.type': 'Negotiable' }
+          ]
+        });
+      }
+    }
 
-        // Return data structure for caching
-        return {
-          jobs: transformedJobs,
-          total: totalCount,
-          page: pageNum,
-          limit: limitNum,
-          totalPages: Math.ceil(totalCount / limitNum),
-          filters: {
-            industries: ["Finance & Banking", "Automobile & Manufacturing"],
-            jobTypes: [
-              "Full Time",
-              "Part Time",
-              "Internship",
-              "Contract",
-              "Freelance",
-            ],
-            workArrangements: ["On-site", "Remote", "Hybrid"],
-            urgencyLevels: ["Normal Priority", "Urgent", "High Priority"],
-          },
-        };
-      };
-      
-    // Execute the fetch
-    const cachedResult = await fetchJobsFromDB();
-      // 300000 // Cache for 5 minutes
-    // );
+    // Experience range filter
+    if (experienceMin || experienceMax) {
+      if (experienceMin) {
+        query['experience.minimum'] = { $gte: parseInt(experienceMin) };
+      }
+      if (experienceMax) {
+        query['experience.maximum'] = { $lte: parseInt(experienceMax) };
+      }
+    }
 
-    // Send cached or fresh data
+    // Skills filter
+    if (skills) {
+      const skillsArray = Array.isArray(skills) ? skills : [skills];
+      query.requiredSkills = { $in: skillsArray };
+    }
+
+    // Only show jobs with future deadlines for active jobs (not for draft jobs)
+    if (!postedBy || (status && status !== 'draft')) {
+      query.applicationDeadline = { $gt: new Date() };
+    }
+
+    // Calculate pagination
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Build sort object
+    const sortObj = {};
+    sortObj[sort] = order === 'desc' ? -1 : 1;
+
+    // Execute query with population
+    const [jobs, totalCount] = await Promise.all([
+      Job.find(query)
+        .populate('postedBy', 'firstName lastName email companyInfo')
+        .sort(sortObj)
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
+      Job.countDocuments(query)
+    ]);
+
+    // Transform jobs for frontend
+    const transformedJobs = jobs.map(job => ({
+      id: job._id,
+      jobTitle: job.jobTitle,
+      companyName: job.companyName,
+      location: job.location,
+      industry: job.industry,
+      jobCategory: job.jobCategory,
+      jobType: job.jobType,
+      workArrangement: job.workArrangement,
+      salary: job.formattedSalary,
+      salaryRange: {
+        min: job.salary?.minimum,
+        max: job.salary?.maximum,
+        type: job.salary?.type,
+        period: job.salary?.period,
+        currency: job.salary?.currency
+      },
+      experience: {
+        min: job.experience?.minimum,
+        max: job.experience?.maximum
+      },
+      requiredSkills: job.requiredSkills,
+      jobDescription: job.jobDescription.substring(0, 200) + '...', // Truncated for listing
+      keyResponsibilities: job.keyResponsibilities,
+      requirements: job.requirements,
+      status: job.status,
+      jobUrgency: job.jobUrgency,
+      views: job.views,
+      applicationsCount: job.applicationsCount,
+      createdAt: job.createdAt,
+      applicationDeadline: job.applicationDeadline,
+      daysSincePosted: job.daysSincePosted,
+      daysUntilDeadline: job.daysUntilDeadline,
+      slug: job.slug,
+      postedBy: job.postedBy,
+      recruiterInfo: job.recruiterInfo,
+      contactEmail: job.contactEmail
+    }));
+
     res.json({
       success: true,
-      data: cachedResult,
+      data: {
+        jobs: transformedJobs,
+        total: totalCount,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(totalCount / limitNum),
+        filters: {
+          industries: ['Finance & Banking', 'Automobile & Manufacturing'],
+          jobTypes: ['Full Time', 'Part Time', 'Internship', 'Contract', 'Freelance'],
+          workArrangements: ['On-site', 'Remote', 'Hybrid'],
+          urgencyLevels: ['Normal Priority', 'Urgent', 'High Priority']
+        }
+      }
     });
   } catch (error) {
-    console.error("Error fetching jobs:", error);
+    console.error('Error fetching jobs:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to fetch jobs",
-      error: error.message,
+      message: 'Failed to fetch jobs',
+      error: error.message
     });
   }
 });
 
 // GET /api/jobs/search/advanced - Advanced job search
-router.get("/search/advanced", async (req, res) => {
+router.get('/search/advanced', async (req, res) => {
   try {
     const {
       keywords,
@@ -390,26 +340,26 @@ router.get("/search/advanced", async (req, res) => {
       skills,
       urgency,
       page = 1,
-      limit = 20,
+      limit = 20
     } = req.query;
 
     const searchFilters = {
-      status: "active",
-      applicationDeadline: { $gt: new Date() },
+      status: 'Active',
+      applicationDeadline: { $gt: new Date() }
     };
 
     // Keyword search
     if (keywords) {
       searchFilters.$or = [
-        { jobTitle: { $regex: keywords, $options: "i" } },
-        { jobDescription: { $regex: keywords, $options: "i" } },
-        { companyName: { $regex: keywords, $options: "i" } },
-        { requiredSkills: { $in: [new RegExp(keywords, "i")] } },
+        { jobTitle: { $regex: keywords, $options: 'i' } },
+        { jobDescription: { $regex: keywords, $options: 'i' } },
+        { companyName: { $regex: keywords, $options: 'i' } },
+        { requiredSkills: { $in: [new RegExp(keywords, 'i')] } }
       ];
     }
 
     // Apply other filters
-    if (location) searchFilters.location = { $regex: location, $options: "i" };
+    if (location) searchFilters.location = { $regex: location, $options: 'i' };
     if (industry) searchFilters.industry = industry;
     if (jobCategory) searchFilters.jobCategory = jobCategory;
     if (jobType) searchFilters.jobType = jobType;
@@ -418,21 +368,17 @@ router.get("/search/advanced", async (req, res) => {
 
     // Salary and experience filters
     if (salaryMin || salaryMax) {
-      if (salaryMin)
-        searchFilters["salary.minimum"] = { $gte: parseInt(salaryMin) };
-      if (salaryMax)
-        searchFilters["salary.maximum"] = { $lte: parseInt(salaryMax) };
+      if (salaryMin) searchFilters['salary.minimum'] = { $gte: parseInt(salaryMin) };
+      if (salaryMax) searchFilters['salary.maximum'] = { $lte: parseInt(salaryMax) };
     }
 
     if (experienceMin || experienceMax) {
-      if (experienceMin)
-        searchFilters["experience.minimum"] = { $gte: parseInt(experienceMin) };
-      if (experienceMax)
-        searchFilters["experience.maximum"] = { $lte: parseInt(experienceMax) };
+      if (experienceMin) searchFilters['experience.minimum'] = { $gte: parseInt(experienceMin) };
+      if (experienceMax) searchFilters['experience.maximum'] = { $lte: parseInt(experienceMax) };
     }
 
     if (skills) {
-      const skillsArray = Array.isArray(skills) ? skills : skills.split(",");
+      const skillsArray = Array.isArray(skills) ? skills : skills.split(',');
       searchFilters.requiredSkills = { $in: skillsArray };
     }
 
@@ -442,15 +388,15 @@ router.get("/search/advanced", async (req, res) => {
 
     const [jobs, totalCount] = await Promise.all([
       Job.find(searchFilters)
-        .populate("postedBy", "firstName lastName")
+        .populate('postedBy', 'firstName lastName')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limitNum)
         .lean(),
-      Job.countDocuments(searchFilters),
+      Job.countDocuments(searchFilters)
     ]);
 
-    const transformedJobs = jobs.map((job) => ({
+    const transformedJobs = jobs.map(job => ({
       id: job._id,
       jobTitle: job.jobTitle,
       companyName: job.companyName,
@@ -464,7 +410,7 @@ router.get("/search/advanced", async (req, res) => {
       jobUrgency: job.jobUrgency,
       createdAt: job.createdAt,
       applicationDeadline: job.applicationDeadline,
-      slug: job.slug,
+      slug: job.slug
     }));
 
     res.json({
@@ -474,21 +420,21 @@ router.get("/search/advanced", async (req, res) => {
         total: totalCount,
         page: pageNum,
         limit: limitNum,
-        totalPages: Math.ceil(totalCount / limitNum),
-      },
+        totalPages: Math.ceil(totalCount / limitNum)
+      }
     });
   } catch (error) {
-    console.error("Error in advanced search:", error);
+    console.error('Error in advanced search:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to perform advanced search",
-      error: error.message,
+      message: 'Failed to perform advanced search',
+      error: error.message
     });
   }
 });
 
 // GET /api/jobs/filters/options - Get filter options for job search
-router.get("/filters/options", async (req, res) => {
+router.get('/filters/options', async (req, res) => {
   try {
     const [
       industries,
@@ -497,15 +443,15 @@ router.get("/filters/options", async (req, res) => {
       workArrangements,
       locations,
       companies,
-      skills,
+      skills
     ] = await Promise.all([
-      Job.distinct("industry"),
-      Job.distinct("jobCategory"),
-      Job.distinct("jobType"),
-      Job.distinct("workArrangement"),
-      Job.distinct("location"),
-      Job.distinct("companyName"),
-      Job.distinct("requiredSkills"),
+      Job.distinct('industry'),
+      Job.distinct('jobCategory'),
+      Job.distinct('jobType'),
+      Job.distinct('workArrangement'),
+      Job.distinct('location'),
+      Job.distinct('companyName'),
+      Job.distinct('requiredSkills')
     ]);
 
     res.json({
@@ -517,21 +463,21 @@ router.get("/filters/options", async (req, res) => {
         workArrangements: workArrangements.filter(Boolean),
         locations: locations.filter(Boolean).slice(0, 50), // Limit locations
         companies: companies.filter(Boolean).slice(0, 100), // Limit companies
-        skills: skills.filter(Boolean).slice(0, 200), // Limit skills
-      },
+        skills: skills.filter(Boolean).slice(0, 200) // Limit skills
+      }
     });
   } catch (error) {
-    console.error("Error fetching filter options:", error);
+    console.error('Error fetching filter options:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to fetch filter options",
-      error: error.message,
+      message: 'Failed to fetch filter options',
+      error: error.message
     });
   }
 });
 
 // GET /api/jobs/stats/overview - Get job statistics overview
-router.get("/stats/overview", async (req, res) => {
+router.get('/stats/overview', async (req, res) => {
   try {
     const [
       totalJobs,
@@ -539,29 +485,26 @@ router.get("/stats/overview", async (req, res) => {
       totalCompanies,
       jobsByIndustry,
       jobsByType,
-      recentJobs,
+      recentJobs
     ] = await Promise.all([
       Job.countDocuments(),
-      Job.countDocuments({
-        status: "active",
-        applicationDeadline: { $gt: new Date() },
-      }),
-      Job.distinct("companyName").then((companies) => companies.length),
+      Job.countDocuments({ status: 'Active', applicationDeadline: { $gt: new Date() } }),
+      Job.distinct('companyName').then(companies => companies.length),
       Job.aggregate([
-        { $match: { status: "active" } },
-        { $group: { _id: "$industry", count: { $sum: 1 } } },
-        { $sort: { count: -1 } },
+        { $match: { status: 'Active' } },
+        { $group: { _id: '$industry', count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
       ]),
       Job.aggregate([
-        { $match: { status: "active" } },
-        { $group: { _id: "$jobType", count: { $sum: 1 } } },
-        { $sort: { count: -1 } },
+        { $match: { status: 'Active' } },
+        { $group: { _id: '$jobType', count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
       ]),
-      Job.find({ status: "active" })
+      Job.find({ status: 'Active' })
         .sort({ createdAt: -1 })
         .limit(5)
-        .select("jobTitle companyName location createdAt")
-        .lean(),
+        .select('jobTitle companyName location createdAt')
+        .lean()
     ]);
 
     res.json({
@@ -570,56 +513,56 @@ router.get("/stats/overview", async (req, res) => {
         overview: {
           totalJobs,
           activeJobs,
-          totalCompanies,
+          totalCompanies
         },
         distribution: {
           byIndustry: jobsByIndustry,
-          byType: jobsByType,
+          byType: jobsByType
         },
-        recentJobs: recentJobs.map((job) => ({
+        recentJobs: recentJobs.map(job => ({
           id: job._id,
           jobTitle: job.jobTitle,
           companyName: job.companyName,
           location: job.location,
-          createdAt: job.createdAt,
-        })),
-      },
+          createdAt: job.createdAt
+        }))
+      }
     });
   } catch (error) {
-    console.error("Error fetching job stats:", error);
+    console.error('Error fetching job stats:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to fetch job statistics",
-      error: error.message,
+      message: 'Failed to fetch job statistics',
+      error: error.message
     });
   }
 });
 
 // GET /api/jobs/search - Search jobs by query
-router.get("/search", async (req, res) => {
+router.get('/search', async (req, res) => {
   try {
     const { q, location, page = 1, limit = 20 } = req.query;
-
+    
     if (!q) {
       return res.status(400).json({
         success: false,
-        message: "Search query is required",
+        message: 'Search query is required'
       });
     }
 
     const query = {
-      status: "active",
+      status: 'active',
       applicationDeadline: { $gt: new Date() },
       $or: [
-        { jobTitle: { $regex: q, $options: "i" } },
-        { jobDescription: { $regex: q, $options: "i" } },
-        { companyName: { $regex: q, $options: "i" } },
-        { requiredSkills: { $in: [new RegExp(q, "i")] } },
-      ],
+        { jobTitle: { $regex: q, $options: 'i' } },
+        { jobDescription: { $regex: q, $options: 'i' } },
+        { companyName: { $regex: q, $options: 'i' } },
+        { requiredSkills: { $in: [new RegExp(q, 'i')] } }
+      ]
     };
 
     if (location) {
-      query.location = { $regex: location, $options: "i" };
+      query.location = { $regex: location, $options: 'i' };
     }
 
     const pageNum = parseInt(page);
@@ -628,15 +571,15 @@ router.get("/search", async (req, res) => {
 
     const [jobs, totalCount] = await Promise.all([
       Job.find(query)
-        .populate("postedBy", "firstName lastName")
+        .populate('postedBy', 'firstName lastName')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limitNum)
         .lean(),
-      Job.countDocuments(query),
+      Job.countDocuments(query)
     ]);
 
-    const transformedJobs = jobs.map((job) => ({
+    const transformedJobs = jobs.map(job => ({
       id: job._id,
       jobTitle: job.jobTitle,
       companyName: job.companyName,
@@ -649,7 +592,7 @@ router.get("/search", async (req, res) => {
       requiredSkills: job.requiredSkills,
       createdAt: job.createdAt,
       applicationDeadline: job.applicationDeadline,
-      slug: job.slug,
+      slug: job.slug
     }));
 
     res.json({
@@ -659,107 +602,59 @@ router.get("/search", async (req, res) => {
         total: totalCount,
         page: pageNum,
         limit: limitNum,
-        totalPages: Math.ceil(totalCount / limitNum),
-      },
+        totalPages: Math.ceil(totalCount / limitNum)
+      }
     });
   } catch (error) {
-    console.error("Error searching jobs:", error);
+    console.error('Error searching jobs:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to search jobs",
-      error: error.message,
-    });
-  }
-});
-
-// GET /api/jobs/debug - Debug endpoint to check job fetching
-router.get("/debug", authenticateToken, async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const userRole = req.user.role;
-
-    console.log("🔍 Debug request from user:", { userId, userRole });
-
-    // Count total jobs
-    const totalJobs = await Job.countDocuments();
-    console.log(`📊 Total jobs in database: ${totalJobs}`);
-
-    // Count user's jobs if they're a recruiter
-    let userJobs = [];
-    if (userRole === 'recruiter') {
-      userJobs = await Job.find({ postedBy: userId }).select('jobTitle status applicationDeadline').lean();
-      console.log(`📊 Jobs for recruiter ${userId}: ${userJobs.length}`);
-    }
-
-    // Count jobs by status
-    const activeJobs = await Job.countDocuments({ status: 'active' });
-    const draftJobs = await Job.countDocuments({ status: 'draft' });
-    const closedJobs = await Job.countDocuments({ status: 'closed' });
-
-    res.json({
-      success: true,
-      data: {
-        user: { id: userId, role: userRole },
-        stats: {
-          totalJobs,
-          activeJobs,
-          draftJobs,
-          closedJobs,
-        },
-        userJobs: userRole === 'recruiter' ? userJobs : null,
-        sampleJobs: await Job.find().limit(3).select('jobTitle status postedBy').lean(),
-      },
-    });
-  } catch (error) {
-    console.error("Error in debug endpoint:", error);
-    res.status(500).json({
-      success: false,
-      message: "Debug endpoint failed",
-      error: error.message,
+      message: 'Failed to search jobs',
+      error: error.message
     });
   }
 });
 
 // GET /api/jobs/categories - Get job categories
-router.get("/categories", async (req, res) => {
+router.get('/categories', async (req, res) => {
   try {
-    const categories = await Job.distinct("jobCategory");
-
+    const categories = await Job.distinct('jobCategory');
+    
     res.json({
       success: true,
-      data: categories.filter(Boolean),
+      data: categories.filter(Boolean)
     });
   } catch (error) {
-    console.error("Error fetching job categories:", error);
+    console.error('Error fetching job categories:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to fetch job categories",
-      error: error.message,
+      message: 'Failed to fetch job categories',
+      error: error.message
     });
   }
 });
 
 // GET /api/jobs/locations - Get job locations
-router.get("/locations", async (req, res) => {
+router.get('/locations', async (req, res) => {
   try {
-    const locations = await Job.distinct("location");
-
+    const locations = await Job.distinct('location');
+    
     res.json({
       success: true,
-      data: locations.filter(Boolean),
+      data: locations.filter(Boolean)
     });
   } catch (error) {
-    console.error("Error fetching job locations:", error);
+    console.error('Error fetching job locations:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to fetch job locations",
-      error: error.message,
+      message: 'Failed to fetch job locations',
+      error: error.message
     });
   }
 });
 
 // GET /api/jobs/:id - Get job by ID with full details
-router.get("/:id", async (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
     const jobId = req.params.id;
 
@@ -767,26 +662,26 @@ router.get("/:id", async (req, res) => {
     if (!jobId.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid job ID format",
+        message: 'Invalid job ID format'
       });
     }
 
     // Find job by ID or slug
     let job = await Job.findById(jobId)
-      .populate("postedBy", "firstName lastName email")
+      .populate('postedBy', 'firstName lastName email')
       .lean();
 
     // If not found by ID, try finding by slug
     if (!job) {
       job = await Job.findOne({ slug: jobId })
-        .populate("postedBy", "firstName lastName email")
+        .populate('postedBy', 'firstName lastName email')
         .lean();
     }
 
     if (!job) {
       return res.status(404).json({
         success: false,
-        message: "Job not found",
+        message: 'Job not found'
       });
     }
 
@@ -806,7 +701,7 @@ router.get("/:id", async (req, res) => {
       applicationDeadline: job.applicationDeadline,
       experience: {
         minimum: job.experience?.minimum,
-        maximum: job.experience?.maximum,
+        maximum: job.experience?.maximum
       },
       requiredSkills: job.requiredSkills,
       salary: {
@@ -815,7 +710,7 @@ router.get("/:id", async (req, res) => {
         maximum: job.salary?.maximum,
         period: job.salary?.period,
         currency: job.salary?.currency,
-        formatted: job.formattedSalary,
+        formatted: job.formattedSalary
       },
       jobDescription: job.jobDescription,
       keyResponsibilities: job.keyResponsibilities,
@@ -835,81 +730,59 @@ router.get("/:id", async (req, res) => {
       tags: job.tags,
       postedBy: job.postedBy,
       recruiterInfo: job.recruiterInfo,
-      canApply: job.applicationDeadline > new Date() && job.status === "active",
-      isExpired: job.applicationDeadline < new Date(),
+      canApply: job.applicationDeadline > new Date() && job.status === 'Active',
+      isExpired: job.applicationDeadline < new Date()
     };
 
     res.json({
       success: true,
-      data: { job: transformedJob },
+      data: { job: transformedJob }
     });
   } catch (error) {
-    console.error("Error fetching job:", error);
+    console.error('Error fetching job:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to fetch job",
-      error: error.message,
+      message: 'Failed to fetch job',
+      error: error.message
     });
   }
 });
 
 // Validation rules for job posting
 const jobValidation = [
-  body("jobTitle")
-    .trim()
-    .isLength({ min: 5, max: 200 })
-    .withMessage("Job title must be between 5-200 characters"),
-  body("companyName")
-    .trim()
-    .isLength({ min: 2, max: 100 })
-    .withMessage("Company name must be between 2-100 characters"),
-  body("location").trim().notEmpty().withMessage("Location is required"),
-  body("industry")
-    .isIn(["Finance & Banking", "Automobile & Manufacturing"])
-    .withMessage("Invalid industry"),
-  body("jobCategory").notEmpty().withMessage("Job category is required"),
-  body("jobType")
-    .isIn(["Full Time", "Part Time", "Internship", "Contract", "Freelance"])
-    .withMessage("Invalid job type"),
-  body("workArrangement")
-    .isIn(["On-site", "Remote", "Hybrid"])
-    .withMessage("Invalid work arrangement"),
-  body("applicationDeadline")
-    .isISO8601()
-    .withMessage("Invalid application deadline"),
-  body("experience.minimum")
-    .isInt({ min: 0, max: 50 })
-    .withMessage("Invalid minimum experience"),
-  body("experience.maximum")
-    .isInt({ min: 0, max: 50 })
-    .withMessage("Invalid maximum experience"),
-  body("jobDescription")
-    .isLength({ min: 50, max: 5000 })
-    .withMessage("Job description must be between 50-5000 characters"),
-  body("contactEmail").isEmail().withMessage("Valid contact email is required"),
-  body("jobUrgency")
-    .isIn(["Normal Priority", "Urgent", "High Priority"])
-    .withMessage("Invalid job urgency"),
+  body('jobTitle').trim().isLength({ min: 5, max: 200 }).withMessage('Job title must be between 5-200 characters'),
+  body('companyName').trim().isLength({ min: 2, max: 100 }).withMessage('Company name must be between 2-100 characters'),
+  body('location').trim().notEmpty().withMessage('Location is required'),
+  body('industry').isIn(['Finance & Banking', 'Automobile & Manufacturing']).withMessage('Invalid industry'),
+  body('jobCategory').notEmpty().withMessage('Job category is required'),
+  body('jobType').isIn(['Full Time', 'Part Time', 'Internship', 'Contract', 'Freelance']).withMessage('Invalid job type'),
+  body('workArrangement').isIn(['On-site', 'Remote', 'Hybrid']).withMessage('Invalid work arrangement'),
+  body('applicationDeadline').isISO8601().withMessage('Invalid application deadline'),
+  body('experience.minimum').isInt({ min: 0, max: 50 }).withMessage('Invalid minimum experience'),
+  body('experience.maximum').isInt({ min: 0, max: 50 }).withMessage('Invalid maximum experience'),
+  body('jobDescription').isLength({ min: 50, max: 5000 }).withMessage('Job description must be between 50-5000 characters'),
+  body('contactEmail').isEmail().withMessage('Valid contact email is required'),
+  body('jobUrgency').isIn(['Normal Priority', 'Urgent', 'High Priority']).withMessage('Invalid job urgency')
 ];
 
 // POST /api/jobs - Create new job (Recruiters only)
-router.post("/", jobValidation, authenticateToken, async (req, res) => {
+router.post('/', jobValidation, authenticateToken, async (req, res) => {
   try {
     // Check validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        message: "Validation failed",
-        errors: errors.array(),
+        message: 'Validation failed',
+        errors: errors.array()
       });
     }
 
     // Check if user is recruiter
-    if (req.user.role !== "recruiter") {
+    if (req.user.role !== 'recruiter') {
       return res.status(403).json({
         success: false,
-        message: "Only recruiters can post jobs",
+        message: 'Only recruiters can post jobs'
       });
     }
 
@@ -918,7 +791,7 @@ router.post("/", jobValidation, authenticateToken, async (req, res) => {
     if (!recruiter) {
       return res.status(404).json({
         success: false,
-        message: "Recruiter profile not found",
+        message: 'Recruiter profile not found'
       });
     }
 
@@ -941,18 +814,11 @@ router.post("/", jobValidation, authenticateToken, async (req, res) => {
       aiKeywords,
       isAiEnhanced,
       contactEmail,
-      jobUrgency,
-      status,
-      vacancy,
+      jobUrgency
     } = req.body;
-
-    // Debug: Log the status received from frontend
-    console.log("🔍 Status received from frontend:", status);
-    console.log("🔍 Full request body status field:", req.body.status);
 
     // Create job data with comprehensive schema
     const jobData = {
-      jobId: crypto.randomUUID(),
       jobTitle,
       companyName: companyName || recruiter.companyInfo?.companyName,
       location,
@@ -962,137 +828,112 @@ router.post("/", jobValidation, authenticateToken, async (req, res) => {
       workArrangement,
       applicationDeadline: new Date(applicationDeadline),
       experience: {
-        minimum: experience.minimum !== undefined ? parseInt(experience.minimum) : 0,
-        maximum: experience.maximum !== undefined ? parseInt(experience.maximum) : 0,
+        minimum: parseInt(experience.minimum),
+        maximum: parseInt(experience.maximum)
       },
       requiredSkills: Array.isArray(requiredSkills) ? requiredSkills : [],
       // Handle both old salary and new salaryRange formats
-      salary: salaryRange
-        ? {
-            type:
-              salaryRange.min !== undefined && salaryRange.max !== undefined
-                ? "Range"
-                : salaryRange.min !== undefined
-                ? "Fixed"
-                : "Negotiable",
-            minimum: salaryRange.min !== undefined ? parseInt(salaryRange.min) : null,
-            maximum: salaryRange.max !== undefined ? parseInt(salaryRange.max) : null,
-            period: salaryRange.period || "Yearly",
-            currency: salaryRange.currency || "INR",
-          }
-        : {
-            type: salary?.type || "Negotiable",
-            minimum: salary?.minimum !== undefined ? parseInt(salary.minimum) : undefined,
-            maximum: salary?.maximum !== undefined ? parseInt(salary.maximum) : undefined,
-            period: salary?.period || "Yearly",
-            currency: salary?.currency || "INR",
-          },
-
+      salary: salaryRange ? {
+        type: salaryRange.min && salaryRange.max ? 'Range' : 
+              salaryRange.min ? 'Fixed' : 'Negotiable',
+        minimum: salaryRange.min || null,
+        maximum: salaryRange.max || null,
+        period: salaryRange.period || 'Yearly',
+        currency: salaryRange.currency || 'INR'
+      } : {
+        type: salary?.type || 'Negotiable',
+        minimum: salary?.minimum ? parseInt(salary.minimum) : undefined,
+        maximum: salary?.maximum ? parseInt(salary.maximum) : undefined,
+        period: salary?.period || 'Yearly',
+        currency: salary?.currency || 'INR'
+      },
+      
       // Also save to new salaryRange field if provided
       salaryRange: salaryRange || null,
       jobDescription,
-      keyResponsibilities: Array.isArray(keyResponsibilities)
-        ? keyResponsibilities
-        : [],
+      keyResponsibilities: Array.isArray(keyResponsibilities) ? keyResponsibilities : [],
       requirements: Array.isArray(requirements) ? requirements : [],
       aiKeywords: Array.isArray(aiKeywords) ? aiKeywords : [],
       isAiEnhanced: isAiEnhanced || false,
       contactEmail,
-      jobUrgency: jobUrgency || "Normal Priority",
+      jobUrgency: jobUrgency || 'Normal Priority',
       postedBy: req.user.id,
       recruiterInfo: {
         recruiterId: req.user.id,
         companyInfo: {
           companyName: recruiter.companyInfo?.companyName,
           department: recruiter.companyInfo?.department,
-          designation: recruiter.companyInfo?.designation,
-        },
+          designation: recruiter.companyInfo?.designation
+        }
       },
-      status: status || "active",
-      vacancy: parseInt(vacancy) || 1,
+      status: 'active'
     };
 
     // Create and save job
     const newJob = new Job(jobData);
     const savedJob = await newJob.save();
 
-    // Debug: Log the final saved job status
-    console.log("✅ Job saved with status:", savedJob.status);
-    console.log("🔍 Expected status was:", status || "active");
-
     // Create notifications for relevant applicants
-    console.log("🔔 Creating job alert notifications for applicants...");
+    console.log('🔔 Creating job alert notifications for applicants...');
     try {
       // Find applicants with matching skills or location
-      const applicants = await BaseUser.find({
-        role: "applicant",
+      const applicants = await BaseUser.find({ 
+        role: 'applicant',
         $or: [
-          { "skills.primary": { $in: savedJob.requiredSkills } },
-          { "skills.technical": { $in: savedJob.requiredSkills } },
-          {
-            "currentLocation.city": {
-              $regex: savedJob.location,
-              $options: "i",
-            },
-          },
-          { location: { $regex: savedJob.location, $options: "i" } },
-        ],
+          { 'skills.primary': { $in: savedJob.requiredSkills } },
+          { 'skills.technical': { $in: savedJob.requiredSkills } },
+          { 'currentLocation.city': { $regex: savedJob.location, $options: 'i' } },
+          { 'location': { $regex: savedJob.location, $options: 'i' } }
+        ]
       }).limit(50); // Limit to prevent spam
 
       // Create notifications for matching applicants
-      const notifications = applicants.map((applicant) => ({
+      const notifications = applicants.map(applicant => ({
         userId: applicant._id,
-        type: "new_job_posted",
-        title: "New Job Opportunity Available!",
+        type: 'new_job_posted',
+        title: 'New Job Opportunity Available!',
         message: `A new ${savedJob.jobTitle} position has been posted at ${savedJob.companyName}.`,
         data: {
           jobId: savedJob._id,
           jobTitle: savedJob.jobTitle,
           companyName: savedJob.companyName,
           location: savedJob.location,
-          requiredSkills: savedJob.requiredSkills,
+          requiredSkills: savedJob.requiredSkills
         },
-        priority: "medium",
-        actionUrl: `/jobs/${savedJob._id}`,
+        priority: 'medium',
+        actionUrl: `/jobs/${savedJob._id}`
       }));
 
       if (notifications.length > 0) {
         await Notification.insertMany(notifications);
-        console.log(
-          `✅ Created ${notifications.length} job alert notifications`
-        );
+        console.log(`✅ Created ${notifications.length} job alert notifications`);
 
         // Emit real-time notifications
-        const io = req.app.get("io");
+        const io = req.app.get('io');
         if (io) {
-          applicants.forEach((applicant) => {
-            io.to(`user-${applicant._id}`).emit("new-job-posted", {
+          applicants.forEach(applicant => {
+            io.to(`user-${applicant._id}`).emit('new-job-posted', {
               message: `New ${savedJob.jobTitle} position available at ${savedJob.companyName}`,
               job: {
                 id: savedJob._id,
                 title: savedJob.jobTitle,
                 company: savedJob.companyName,
-                location: savedJob.location,
+                location: savedJob.location
               },
-              timestamp: new Date(),
+              timestamp: new Date()
             });
           });
-          console.log("✅ Real-time job alerts sent");
+          console.log('✅ Real-time job alerts sent');
         }
       }
     } catch (notificationError) {
-      console.error(
-        "❌ Failed to create job notifications:",
-        notificationError
-      );
+      console.error('❌ Failed to create job notifications:', notificationError);
       // Don't fail the job creation if notifications fail
     }
 
     // Transform response
     const responseJob = {
       id: savedJob._id,
-      _id: savedJob._id,
-      jobId: savedJob.jobId,
       jobTitle: savedJob.jobTitle,
       companyName: savedJob.companyName,
       location: savedJob.location,
@@ -1103,62 +944,47 @@ router.post("/", jobValidation, authenticateToken, async (req, res) => {
       formattedSalary: savedJob.formattedSalary,
       jobDescription: savedJob.jobDescription,
       status: savedJob.status,
-      vacancy: savedJob.vacancy,
     };
 
     // Notify matching applicants about new job
     await notifyMatchingApplicants(savedJob);
-
-    // Invalidate job list cache since new job is added
-    await cacheService.deletePattern("jobs:list:*");
-
-    // Send WebSocket notification for real-time updates
-    const websocketService = req.app.get("websocketService");
-    if (websocketService) {
-      websocketService.notifyJobUpdate(
-        "created",
-        savedJob.toObject(),
-        req.user.id
-      );
-      console.log("✅ WebSocket notification sent for job creation");
-    }
-
+    
     res.status(201).json({
       success: true,
-      message: "Job created successfully",
-      data: responseJob,
+      message: 'Job created successfully',
+      data: responseJob
     });
   } catch (error) {
-    console.error("❌ Error creating job:", error);
-
+    console.error('❌ Error creating job:', error);
+    
     // Handle validation errors
-    if (error.name === "ValidationError") {
+    if (error.name === 'ValidationError') {
       return res.status(400).json({
         success: false,
-        message: "Job validation failed",
-        errors: Object.keys(error.errors).map((key) => ({
+        message: 'Job validation failed',
+        errors: Object.keys(error.errors).map(key => ({
           field: key,
-          message: error.errors[key].message,
-        })),
+          message: error.errors[key].message
+        }))
       });
     }
-
+    
     res.status(500).json({
       success: false,
-      message: "Failed to create job",
-      error: error.message,
+      message: 'Failed to create job',
+      error: error.message
     });
   }
 });
 
 // PUT /api/jobs/:id - Update job (Recruiters only)
-router.put("/:id", authenticateToken, async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     // Check if user is recruiter
-    if (req.user.role !== "recruiter") {
+    if (req.user.role !== 'recruiter') {
       return res.status(403).json({
         success: false,
-        message: "Only recruiters can update jobs",
+        message: 'Only recruiters can update jobs'
       });
     }
 
@@ -1168,28 +994,28 @@ router.put("/:id", authenticateToken, async (req, res) => {
     if (!jobId.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid job ID format",
+        message: 'Invalid job ID format'
       });
     }
 
     // Find the job and verify ownership
     const existingJob = await Job.findById(jobId);
-
+    
     if (!existingJob) {
       return res.status(404).json({
         success: false,
-        message: "Job not found",
+        message: 'Job not found'
       });
     }
 
     // Check if the recruiter owns this job
     const jobOwnerId = existingJob.postedBy.toString();
     const currentUserId = req.user.id; // Use req.user.id to match job creation
-
+    
     if (jobOwnerId !== currentUserId) {
       return res.status(403).json({
         success: false,
-        message: "You can only update your own job postings",
+        message: 'You can only update your own job postings'
       });
     }
 
@@ -1201,43 +1027,35 @@ router.put("/:id", authenticateToken, async (req, res) => {
     // Transform experience field if provided
     if (updateData.experience) {
       updateData.experience = {
-        minimum: updateData.experience.minimum !== undefined
-          ? parseInt(updateData.experience.minimum)
-          : 0,
-        maximum: updateData.experience.maximum !== undefined
-          ? parseInt(updateData.experience.maximum)
-          : 0,
+        minimum: updateData.experience.minimum ? parseInt(updateData.experience.minimum) : 0,
+        maximum: updateData.experience.maximum ? parseInt(updateData.experience.maximum) : 0
       };
     }
 
     // Transform salaryRange to both new and old salary fields for compatibility
     if (updateData.salaryRange) {
       const { salaryRange } = updateData;
-
+      
       // Save to new salaryRange field (as-is)
       updateData.salaryRange = salaryRange;
-
+      
       // Also save to old salary field for backward compatibility
       updateData.salary = {
-        type:
-          salaryRange.min !== undefined && salaryRange.max !== undefined
-            ? "Range"
-            : salaryRange.min !== undefined
-            ? "Fixed"
-            : "Negotiable",
-        minimum: salaryRange.min !== undefined ? parseInt(salaryRange.min) : null,
-        maximum: salaryRange.max !== undefined ? parseInt(salaryRange.max) : null,
-        period: salaryRange.period || "Yearly",
-        currency: salaryRange.currency || "INR",
+        type: salaryRange.min && salaryRange.max ? 'Range' : 
+              salaryRange.min ? 'Fixed' : 'Negotiable',
+        minimum: salaryRange.min || null,
+        maximum: salaryRange.max || null,
+        period: salaryRange.period || 'Yearly',
+        currency: salaryRange.currency || 'INR'
       };
     }
 
-    console.log("🔍 Job update data transformation:", {
+    console.log('🔍 Job update data transformation:', {
       originalExperience: req.body.experience,
       transformedExperience: updateData.experience,
       originalSalaryRange: req.body.salaryRange,
       transformedSalary: updateData.salary,
-      transformedSalaryRange: updateData.salaryRange,
+      transformedSalaryRange: updateData.salaryRange
     });
 
     let updatedJob;
@@ -1248,70 +1066,54 @@ router.put("/:id", authenticateToken, async (req, res) => {
         { new: true, runValidators: true }
       ).lean();
     } catch (validationError) {
-      console.error("❌ Job update validation error:", validationError);
+      console.error('❌ Job update validation error:', validationError);
       return res.status(400).json({
         success: false,
-        message: "Job validation failed",
+        message: 'Job validation failed',
         error: validationError.message,
-        details: validationError.errors,
+        details: validationError.errors
       });
     }
 
     // Transform for response
     const responseJob = {
       id: updatedJob._id,
-      _id: updatedJob._id,
-      jobId: updatedJob.jobId,
-      jobTitle: updatedJob.jobTitle,
-      companyName: updatedJob.companyName,
+      title: updatedJob.title,
+      company: updatedJob.company,
       location: updatedJob.location,
-      jobType: updatedJob.jobType,
-      workArrangement: updatedJob.workArrangement,
+      type: updatedJob.type,
       salary: updatedJob.salary,
-      salaryRange: updatedJob.salaryRange,
-      experience: updatedJob.experience,
-      jobDescription: updatedJob.jobDescription,
-      keyResponsibilities: updatedJob.keyResponsibilities,
+      description: updatedJob.description,
       requirements: updatedJob.requirements,
       status: updatedJob.status,
-      createdAt: updatedJob.createdAt,
-      updatedAt: updatedJob.updatedAt,
-      postedBy: updatedJob.postedBy,
-      vacancy: updatedJob.vacancy,
+      postedDate: updatedJob.postedDate,
+      updatedDate: updatedJob.updatedDate,
+      postedBy: updatedJob.postedBy
     };
-
-    // Send WebSocket notification for real-time updates
-    const websocketService = req.app.get("websocketService");
-    if (websocketService) {
-      const action =
-        existingJob.status !== updatedJob.status ? "status_changed" : "updated";
-      websocketService.notifyJobUpdate(action, updatedJob, req.user.id);
-      console.log(`✅ WebSocket notification sent for job ${action}`);
-    }
 
     res.json({
       success: true,
-      message: "Job updated successfully",
-      data: { job: responseJob },
+      message: 'Job updated successfully',
+      data: { job: responseJob }
     });
   } catch (error) {
-    console.error("❌ Error updating job:", error);
+    console.error('❌ Error updating job:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to update job",
-      error: error.message,
+      message: 'Failed to update job',
+      error: error.message
     });
   }
 });
 
 // DELETE /api/jobs/:id - Delete job (Recruiters only)
-router.delete("/:id", authenticateToken, async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     // Check if user is recruiter
-    if (req.user.role !== "recruiter") {
+    if (req.user.role !== 'recruiter') {
       return res.status(403).json({
         success: false,
-        message: "Only recruiters can delete jobs",
+        message: 'Only recruiters can delete jobs'
       });
     }
 
@@ -1321,17 +1123,17 @@ router.delete("/:id", authenticateToken, async (req, res) => {
     if (!jobId.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid job ID format",
+        message: 'Invalid job ID format'
       });
     }
 
     // Find the job and verify ownership
     const existingJob = await Job.findById(jobId);
-
+    
     if (!existingJob) {
       return res.status(404).json({
         success: false,
-        message: "Job not found",
+        message: 'Job not found'
       });
     }
 
@@ -1339,7 +1141,7 @@ router.delete("/:id", authenticateToken, async (req, res) => {
     if (existingJob.postedBy.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
-        message: "You can only delete your own job postings",
+        message: 'You can only delete your own job postings'
       });
     }
 
@@ -1348,26 +1150,26 @@ router.delete("/:id", authenticateToken, async (req, res) => {
 
     res.json({
       success: true,
-      message: "Job deleted successfully",
-      data: { job: { id: jobId } },
+      message: 'Job deleted successfully',
+      data: { job: { id: jobId } }
     });
   } catch (error) {
-    console.error("❌ Error deleting job:", error);
+    console.error('❌ Error deleting job:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to delete job",
-      error: error.message,
+      message: 'Failed to delete job',
+      error: error.message
     });
   }
 });
 
 // GET /api/jobs/stats - Get job statistics (Recruiters only)
-router.get("/stats", authenticateToken, async (req, res) => {
+router.get('/stats', authenticateToken, async (req, res) => {
   try {
-    if (req.user.role !== "recruiter") {
+    if (req.user.role !== 'recruiter') {
       return res.status(403).json({
         success: false,
-        message: "Only recruiters can view job stats",
+        message: 'Only recruiters can view job stats'
       });
     }
 
@@ -1376,9 +1178,9 @@ router.get("/stats", authenticateToken, async (req, res) => {
     // Get stats for this recruiter's jobs
     const [totalJobs, activeJobs, draftJobs, closedJobs] = await Promise.all([
       Job.countDocuments({ postedBy: postedBy }),
-      Job.countDocuments({ postedBy: postedBy, status: "active" }),
-      Job.countDocuments({ postedBy: postedBy, status: "draft" }),
-      Job.countDocuments({ postedBy: postedBy, status: "closed" }),
+      Job.countDocuments({ postedBy: postedBy, status: 'active' }),
+      Job.countDocuments({ postedBy: postedBy, status: 'draft' }),
+      Job.countDocuments({ postedBy: postedBy, status: 'closed' })
     ]);
 
     // Get recent jobs
@@ -1387,364 +1189,126 @@ router.get("/stats", authenticateToken, async (req, res) => {
       .limit(5)
       .lean();
 
-    // Get application and interview stats
-    const [totalApplications, newApplications, scheduledInterviews] =
-      await Promise.all([
-        Application.countDocuments({ recruiterId: postedBy }),
-        Application.countDocuments({
-          recruiterId: postedBy,
-          applicationStatus: "pending",
-        }),
-        Interview.countDocuments({
-          recruiterId: postedBy,
-          status: { $in: ["scheduled", "confirmed"] },
-        }),
-      ]);
-
     const stats = {
       totalJobs,
       activeJobs,
       draftJobs,
       closedJobs,
-      totalApplications,
-      newApplications,
-      scheduledInterviews,
-      recentJobs: recentJobs.map((job) => ({
+      totalApplications: 0, // TODO: Implement when applications model is ready
+      newApplications: 0, // TODO: Implement when applications model is ready
+      scheduledInterviews: 0, // TODO: Implement when interviews model is ready
+      recentJobs: recentJobs.map(job => ({
         id: job._id,
         title: job.title,
         company: job.company,
         status: job.status,
         postedDate: job.postedDate,
-        applications: job.applications,
-      })),
+        applications: job.applications
+      }))
     };
 
     res.json({
       success: true,
-      data: { stats },
+      data: { stats }
     });
   } catch (error) {
-    console.error("❌ Error fetching job stats:", error);
+    console.error('❌ Error fetching job stats:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to fetch job stats",
-      error: error.message,
+      message: 'Failed to fetch job stats',
+      error: error.message
     });
   }
 });
 
 // GET /api/jobs/:jobId/applications -// Get applications for a specific job
-router.get("/:jobId/applications", authenticateToken, async (req, res) => {
+router.get('/:jobId/applications', authenticateToken, async (req, res) => {
   try {
     const { jobId } = req.params;
     const userId = req.user.id;
-    console.log("🔍 Getting applications for job:", jobId, "by user:", userId);
-
+    console.log('🔍 Getting applications for job:', jobId, 'by user:', userId);
+    
     // Verify job exists and user has permission to view applications
     const job = await Job.findById(jobId);
     if (!job) {
       return res.status(404).json({
         success: false,
-        message: "Job not found",
+        message: 'Job not found'
       });
     }
-
+    
     // Check if user is the recruiter who posted this job
     if (job.postedBy.toString() !== userId) {
       return res.status(403).json({
         success: false,
-        message:
-          "Access denied. You can only view applications for jobs you posted.",
+        message: 'Access denied. You can only view applications for jobs you posted.'
       });
     }
-
+    
     // Fetch real applications with populated data
-    const applications = await Application.find({ jobId: jobId })
-      .populate("applicantId", "firstName lastName email phone profileImage")
-      .populate("applicationInfo") // Populate the ApplicationInformation
+    const applications = await Application.find({ job: jobId })
+      .populate('applicant', 'firstName lastName email phone profileImage')
+      .populate('applicationInfo') // Populate the ApplicationInformation
       .sort({ appliedAt: -1 });
-
-    console.log("🔍 Found applications:", applications.length);
-
+    
+    console.log('🔍 Found applications:', applications.length);
+    
     // Transform applications to include all necessary data
-    const transformedApplications = applications.map((app) => {
-      const applicant = app.applicantId || {};
+    const transformedApplications = applications.map(app => {
+      const applicant = app.applicant || {};
       const appInfo = app.applicationInfo || {};
-
+      
       return {
         id: app._id,
-        applicantId: app.applicantId?._id,
-        applicantName:
-          `${applicant.firstName || ""} ${applicant.lastName || ""}`.trim() ||
-          "Unknown Applicant",
-        email: applicant.email || "No email provided",
-        phone: applicant.phone || "No phone provided",
+        applicantId: app.applicant?._id,
+        applicantName: `${applicant.firstName || ''} ${applicant.lastName || ''}`.trim() || 'Unknown Applicant',
+        email: applicant.email || 'No email provided',
+        phone: applicant.phone || 'No phone provided',
         status: app.status,
         appliedDate: app.appliedAt,
         appliedAt: app.appliedAt,
-        coverLetter: app.coverLetter || "No cover letter provided",
+        coverLetter: app.coverLetter || 'No cover letter provided',
         resume: app.resume,
-
+        
         // Include full application info for detailed profile view
         applicationInfo: appInfo,
         applicationData: appInfo, // Alias for compatibility
-
+        
         // Include applicant snapshot for easy access
         applicantSnapshot: {
-          fullName: `${applicant.firstName || ""} ${
-            applicant.lastName || ""
-          }`.trim(),
+          fullName: `${applicant.firstName || ''} ${applicant.lastName || ''}`.trim(),
           email: applicant.email,
           phone: applicant.phone,
-          profileImage: applicant.profileImage,
+          profileImage: applicant.profileImage
         },
-
+        
         // Include applicant reference for compatibility
-        applicant: applicant,
+        applicant: applicant
       };
     });
+    
+    console.log('✅ Returning applications for job:', jobId, 'Count:', transformedApplications.length);
+    console.log('🔍 Sample application data:', transformedApplications[0] ? {
+      id: transformedApplications[0].id,
+      applicantName: transformedApplications[0].applicantName,
+      hasApplicationInfo: !!transformedApplications[0].applicationInfo,
+      applicationInfoKeys: transformedApplications[0].applicationInfo ? Object.keys(transformedApplications[0].applicationInfo) : []
+    } : 'No applications');
 
-    console.log(
-      "✅ Returning applications for job:",
-      jobId,
-      "Count:",
-      transformedApplications.length
-    );
-    console.log(
-      "🔍 Sample application data:",
-      transformedApplications[0]
-        ? {
-            id: transformedApplications[0].id,
-            applicantName: transformedApplications[0].applicantName,
-            hasApplicationInfo: !!transformedApplications[0].applicationInfo,
-            applicationInfoKeys: transformedApplications[0].applicationInfo
-              ? Object.keys(transformedApplications[0].applicationInfo)
-              : [],
-          }
-        : "No applications"
-    );
-
-    res.json({
-      success: true,
-      message: `Applications for job ${jobId}`,
+    res.json({ 
+      success: true, 
+      message: `Applications for job ${jobId}`, 
       data: {
         applications: transformedApplications,
-        total: transformedApplications.length,
-      },
-    });
-  } catch (error) {
-    console.error("❌ Error fetching applications:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch applications",
-      error: error.message,
-    });
-  }
-});
-
-// Check and update jobs past deadline
-router.post("/check-deadlines", authenticateToken, async (req, res) => {
-  try {
-    console.log("🕐 Checking jobs past deadline...");
-
-    const now = new Date();
-
-    // Find and update jobs that are active but past their deadline
-    const result = await Job.updateMany(
-      {
-        status: "active",
-        applicationDeadline: { $lt: now },
-        autoStatusManagement: true,
-      },
-      {
-        $set: { status: "closed" },
+        total: transformedApplications.length
       }
-    );
-
-    console.log(`✅ Updated ${result.modifiedCount} jobs to closed status`);
-
-    res.json({
-      success: true,
-      message: `${result.modifiedCount} jobs updated to closed status`,
-      updatedCount: result.modifiedCount,
     });
   } catch (error) {
-    console.error("❌ Error checking job deadlines:", error);
+    console.error('❌ Error fetching applications:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to check job deadlines",
-      error: error.message,
-    });
-  }
-});
-
-// PUT /api/jobs/:id/publish - Publish a job (change status from draft to active)
-router.put("/:id/publish", authenticateToken, async (req, res) => {
-  try {
-    // Check if user is recruiter
-    if (req.user.role !== "recruiter") {
-      return res.status(403).json({
-        success: false,
-        message: "Only recruiters can publish jobs",
-      });
-    }
-
-    const jobId = req.params.id;
-
-    // Validate MongoDB ObjectId
-    if (!jobId.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid job ID format",
-      });
-    }
-
-    // Find the job and verify ownership
-    const existingJob = await Job.findById(jobId);
-
-    if (!existingJob) {
-      return res.status(404).json({
-        success: false,
-        message: "Job not found",
-      });
-    }
-
-    // Check if the recruiter owns this job
-    if (existingJob.postedBy.toString() !== req.user.id) {
-      return res.status(403).json({
-        success: false,
-        message: "You can only publish your own job postings",
-      });
-    }
-
-    // Check if application deadline is in the future
-    if (existingJob.applicationDeadline < new Date()) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Cannot publish job with past application deadline. Please update the deadline first.",
-      });
-    }
-
-    // Update job status to active and set publishedAt
-    const updatedJob = await Job.findByIdAndUpdate(
-      jobId,
-      {
-        status: "active",
-        publishedAt: new Date(),
-        updatedAt: new Date(),
-      },
-      { new: true, runValidators: true }
-    ).lean();
-
-    // Invalidate cache
-    await cacheService.deletePattern("jobs:list:*");
-
-    // Send WebSocket notification for real-time updates
-    const websocketService = req.app.get("websocketService");
-    if (websocketService) {
-      websocketService.notifyJobUpdate("published", updatedJob, req.user.id);
-      console.log("✅ WebSocket notification sent for job publication");
-    }
-
-    res.json({
-      success: true,
-      message: "Job published successfully",
-      data: {
-        job: {
-          id: updatedJob._id,
-          jobTitle: updatedJob.jobTitle,
-          status: updatedJob.status,
-          publishedAt: updatedJob.publishedAt,
-        },
-      },
-    });
-  } catch (error) {
-    console.error("❌ Error publishing job:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to publish job",
-      error: error.message,
-    });
-  }
-});
-
-// PUT /api/jobs/:id/unpublish - Unpublish a job (change status to draft or closed)
-router.put("/:id/unpublish", authenticateToken, async (req, res) => {
-  try {
-    // Check if user is recruiter
-    if (req.user.role !== "recruiter") {
-      return res.status(403).json({
-        success: false,
-        message: "Only recruiters can unpublish jobs",
-      });
-    }
-
-    const jobId = req.params.id;
-
-    // Validate MongoDB ObjectId
-    if (!jobId.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid job ID format",
-      });
-    }
-
-    // Find the job and verify ownership
-    const existingJob = await Job.findById(jobId);
-
-    if (!existingJob) {
-      return res.status(404).json({
-        success: false,
-        message: "Job not found",
-      });
-    }
-
-    // Check if the recruiter owns this job
-    if (existingJob.postedBy.toString() !== req.user.id) {
-      return res.status(403).json({
-        success: false,
-        message: "You can only unpublish your own job postings",
-      });
-    }
-
-    // Update job status to draft
-    const updatedJob = await Job.findByIdAndUpdate(
-      jobId,
-      {
-        status: "draft",
-        updatedAt: new Date(),
-      },
-      { new: true, runValidators: true }
-    ).lean();
-
-    // Invalidate cache
-    await cacheService.deletePattern("jobs:list:*");
-
-    // Send WebSocket notification for real-time updates
-    const websocketService = req.app.get("websocketService");
-    if (websocketService) {
-      websocketService.notifyJobUpdate("unpublished", updatedJob, req.user.id);
-      console.log("✅ WebSocket notification sent for job unpublication");
-    }
-
-    res.json({
-      success: true,
-      message: "Job unpublished successfully and moved to drafts",
-      data: {
-        job: {
-          id: updatedJob._id,
-          jobTitle: updatedJob.jobTitle,
-          status: updatedJob.status,
-        },
-      },
-    });
-  } catch (error) {
-    console.error("❌ Error unpublishing job:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to unpublish job",
-      error: error.message,
+      message: 'Failed to fetch applications',
+      error: error.message
     });
   }
 });

@@ -1,6 +1,6 @@
-import { BaseUser } from '../../models/UserModels.js';
-import Application from '../../models/Application.js';
-import Job from '../../models/Job.js';
+import { db } from '../../config/database.js';
+import { users, applications, jobs, companies } from '../../schema.js';
+import { eq, and, desc, asc, sql, or, like, inArray } from 'drizzle-orm';
 import nodemailer from 'nodemailer';
 import path from 'path';
 import fs from 'fs';
@@ -13,7 +13,7 @@ export const getCandidates = async (req, res) => {
       limit = 10,
       status,
       search,
-      sort_by = 'createdAt',
+      sort_by = 'created_at',
       sort_order = 'desc',
       experience_min,
       experience_max,
@@ -21,63 +21,94 @@ export const getCandidates = async (req, res) => {
       location
     } = req.query;
 
-    const pageNumber = parseInt(page);
-    const limitNumber = parseInt(limit);
-    const skip = (pageNumber - 1) * limitNumber;
-
-    let query = { role: 'applicant' };
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    
+    // Build where conditions
+    let whereConditions = [eq(users.role, 'applicant')];
 
     if (status) {
-      query.status = status;
+      whereConditions.push(eq(users.status, status));
     }
 
     if (search) {
-      const searchRegex = { $regex: search, $options: 'i' };
-      query.$or = [
-        { firstName: searchRegex },
-        { lastName: searchRegex },
-        { email: searchRegex },
-        { bio: searchRegex },
-        { 'skills.primary': searchRegex }
-      ];
+      whereConditions.push(
+        or(
+          like(users.full_name, `%${search}%`),
+          like(users.email, `%${search}%`),
+          like(users.bio, `%${search}%`),
+          like(users.skills, `%${search}%`)
+        )
+      );
     }
 
     if (experience_min) {
-      query.yearsOfExperience = { ...query.yearsOfExperience, $gte: parseInt(experience_min) };
+      whereConditions.push(sql`${users.experience_years} >= ${parseInt(experience_min)}`);
     }
 
     if (experience_max) {
-      query.yearsOfExperience = { ...query.yearsOfExperience, $lte: parseInt(experience_max) };
+      whereConditions.push(sql`${users.experience_years} <= ${parseInt(experience_max)}`);
     }
 
     if (location) {
-      query.city = { $regex: location, $options: 'i' };
+      whereConditions.push(like(users.location, `%${location}%`));
     }
 
     if (skills) {
-      const skillsArray = skills.split(',').map(skill => skill.trim());
-      query['skills.primary'] = { $in: skillsArray.map(skill => new RegExp(skill, 'i')) };
+      const skillsArray = skills.split(',');
+      const skillConditions = skillsArray.map(skill => 
+        like(users.skills, `%${skill.trim()}%`)
+      );
+      whereConditions.push(or(...skillConditions));
     }
 
-    const sortOptions = { [sort_by]: sort_order === 'asc' ? 1 : -1 };
+    // Build order by
+    const orderBy = sort_order === 'asc' ? asc(users[sort_by]) : desc(users[sort_by]);
 
-    const candidates = await BaseUser.find(query)
-      .sort(sortOptions)
-      .skip(skip)
-      .limit(limitNumber);
+    // Get candidates
+    const candidatesResult = await db.select({
+      id: users.id,
+      name: users.full_name,
+      email: users.email,
+      phone: users.phone,
+      location: users.location,
+      bio: users.bio,
+      skills: users.skills,
+      experience: users.experience_years,
+      qualification: users.qualification,
+      status: users.status,
+      created_at: users.created_at,
+      updated_at: users.updated_at,
+      linkedin_url: users.linkedin_url,
+      github_url: users.github_url,
+      portfolio_url: users.portfolio_url,
+      resume_url: users.resume_url,
+      profile_picture: users.profile_picture,
+      expected_salary: users.expected_salary,
+      availability: users.availability
+    })
+    .from(users)
+    .where(and(...whereConditions))
+    .orderBy(orderBy)
+    .limit(parseInt(limit))
+    .offset(offset);
 
-    const total = await BaseUser.countDocuments(query);
-    const totalPages = Math.ceil(total / limitNumber);
+    // Get total count for pagination
+    const totalResult = await db.select({ count: sql`COUNT(*)` })
+      .from(users)
+      .where(and(...whereConditions));
+    
+    const total = totalResult[0].count;
+    const totalPages = Math.ceil(total / parseInt(limit));
 
     res.json({
-      candidates,
+      candidates: candidatesResult,
       pagination: {
-        current_page: pageNumber,
+        current_page: parseInt(page),
         total_pages: totalPages,
         total_items: total,
-        items_per_page: limitNumber,
-        has_next: pageNumber < totalPages,
-        has_prev: pageNumber > 1
+        items_per_page: parseInt(limit),
+        has_next: parseInt(page) < totalPages,
+        has_prev: parseInt(page) > 1
       }
     });
 
@@ -94,40 +125,61 @@ export const getCandidateById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const candidate = await BaseUser.findOne({ _id: id, role: 'applicant' });
+    const candidateResult = await db.select({
+      id: users.id,
+      name: users.full_name,
+      email: users.email,
+      phone: users.phone,
+      location: users.location,
+      bio: users.bio,
+      skills: users.skills,
+      experience: users.experience_years,
+      qualification: users.qualification,
+      status: users.status,
+      created_at: users.created_at,
+      updated_at: users.updated_at,
+      linkedin_url: users.linkedin_url,
+      github_url: users.github_url,
+      portfolio_url: users.portfolio_url,
+      resume_url: users.resume_url,
+      profile_picture: users.profile_picture,
+      expected_salary: users.expected_salary,
+      availability: users.availability,
+      date_of_birth: users.date_of_birth,
+      gender: users.gender,
+      address: users.address
+    })
+    .from(users)
+    .where(and(eq(users.id, parseInt(id)), eq(users.role, 'applicant')))
+    .limit(1);
 
-    if (!candidate) {
+    if (candidateResult.length === 0) {
       return res.status(404).json({ 
         message: 'Candidate not found' 
       });
     }
 
+    const candidate = candidateResult[0];
+
     // Get candidate's applications
-    const applications = await Application.find({ applicant: id })
-        .populate({
-            path: 'job',
-            select: 'title companyId',
-            populate: {
-                path: 'companyId',
-                model: 'Company',
-                select: 'name'
-            }
-        })
-        .sort({ appliedAt: -1 });
-        
-    const transformedApplications = applications.map(app => ({
-        id: app._id,
-        job_title: app.job.title,
-        company_name: app.job.companyId.name,
-        status: app.status,
-        applied_at: app.appliedAt,
-        cover_letter: app.coverLetter
-    }));
+    const applicationsResult = await db.select({
+      id: applications.id,
+      job_title: jobs.title,
+      company_name: companies.name,
+      status: applications.status,
+      applied_at: applications.applied_at,
+      cover_letter: applications.cover_letter
+    })
+    .from(applications)
+    .leftJoin(jobs, eq(applications.job_id, jobs.id))
+    .leftJoin(companies, eq(jobs.company_id, companies.id))
+    .where(eq(applications.user_id, parseInt(id)))
+    .orderBy(desc(applications.applied_at));
 
     res.json({
       candidate: {
-        ...candidate.toObject(),
-        applications: transformedApplications
+        ...candidate,
+        applications: applicationsResult
       }
     });
 
@@ -153,27 +205,35 @@ export const updateCandidateStatus = async (req, res) => {
       });
     }
 
+    // Check if candidate exists
+    const existingCandidate = await db.select()
+      .from(users)
+      .where(and(eq(users.id, parseInt(id)), eq(users.role, 'applicant')))
+      .limit(1);
+
+    if (existingCandidate.length === 0) {
+      return res.status(404).json({ 
+        message: 'Candidate not found' 
+      });
+    }
+
     // Prepare update data
-    const updateData = {};
+    const updateData = {
+      updated_at: new Date().toISOString()
+    };
+
     if (status) updateData.status = status;
     if (notes !== undefined) updateData.notes = notes;
 
     // Update candidate
-    const updatedCandidate = await BaseUser.findOneAndUpdate(
-        { _id: id, role: 'applicant' },
-        { $set: updateData },
-        { new: true }
-    );
-
-    if (!updatedCandidate) {
-        return res.status(404).json({ 
-            message: 'Candidate not found' 
-        });
-    }
+    const updatedCandidate = await db.update(users)
+      .set(updateData)
+      .where(eq(users.id, parseInt(id)))
+      .returning();
 
     res.json({
       message: 'Candidate status updated successfully',
-      candidate: updatedCandidate
+      candidate: updatedCandidate[0]
     });
 
   } catch (error) {
@@ -198,13 +258,22 @@ export const sendEmailToCandidate = async (req, res) => {
     }
 
     // Get candidate details
-    const candidate = await BaseUser.findOne({ _id: id, role: 'applicant' });
+    const candidateResult = await db.select({
+      id: users.id,
+      name: users.full_name,
+      email: users.email
+    })
+    .from(users)
+    .where(and(eq(users.id, parseInt(id)), eq(users.role, 'applicant')))
+    .limit(1);
 
-    if (!candidate) {
+    if (candidateResult.length === 0) {
       return res.status(404).json({ 
         message: 'Candidate not found' 
       });
     }
+
+    const candidate = candidateResult[0];
 
     // Configure email transporter (you'll need to set up your email service)
     const transporter = nodemailer.createTransport({
@@ -224,7 +293,7 @@ export const sendEmailToCandidate = async (req, res) => {
       subject: subject,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #333;">Hello ${candidate.firstName},</h2>
+          <h2 style="color: #333;">Hello ${candidate.name},</h2>
           <div style="line-height: 1.6; color: #666;">
             ${message.replace(/\n/g, '<br>')}
           </div>
@@ -272,126 +341,90 @@ export const downloadCandidateResume = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Get candidate details from MongoDB
-    const candidate = await BaseUser.findById(id);
-    
-    if (!candidate || candidate.role !== 'applicant') {
+    // Get candidate details
+    const candidateResult = await db.select({
+      id: users.id,
+      name: users.full_name,
+      resume_url: users.resume_url
+    })
+    .from(users)
+    .where(and(eq(users.id, parseInt(id)), eq(users.role, 'applicant')))
+    .limit(1);
+
+    if (candidateResult.length === 0) {
       return res.status(404).json({ 
         message: 'Candidate not found' 
       });
     }
 
-    const username = candidate.username;
-    const candidateName = candidate.fullName || candidate.firstName + ' ' + candidate.lastName;
-    const projectRoot = path.join(process.cwd(), '..');
-    
-    // Try different possible resume file extensions and locations with new username format
-    const possiblePaths = [
-      // New username-based format
-      path.join(projectRoot, 'uploads', 'documents', `resume_${username}.pdf`),
-      path.join(projectRoot, 'uploads', 'documents', `resume_${username}.doc`),
-      path.join(projectRoot, 'uploads', 'documents', `resume_${username}.docx`),
-      path.join(projectRoot, 'uploads', 'applications', `resume_${username}.pdf`),
-      path.join(projectRoot, 'uploads', 'applications', `resume_${username}.doc`),
-      path.join(projectRoot, 'uploads', 'applications', `resume_${username}.docx`),
-    ];
-    
-    // Also check if there's a resume URL in the profile
-    const existingResumeUrl = candidate.documents?.resumeUrl;
-    if (existingResumeUrl) {
-      if (existingResumeUrl.startsWith('http')) {
-        // External URL - redirect to the URL
-        return res.redirect(existingResumeUrl);
-      } else if (existingResumeUrl.startsWith('/uploads/')) {
-        // Relative path from uploads
-        possiblePaths.unshift(path.join(projectRoot, existingResumeUrl.substring(1)));
-      } else if (existingResumeUrl.includes('uploads/')) {
-        // Path includes uploads
-        possiblePaths.unshift(path.join(projectRoot, existingResumeUrl));
-      }
+    const candidate = candidateResult[0];
+
+    if (!candidate.resume_url) {
+      return res.status(404).json({ 
+        message: 'Resume not found for this candidate' 
+      });
+    }
+
+    // Handle different resume URL formats
+    let resumePath;
+    if (candidate.resume_url.startsWith('http')) {
+      // External URL - redirect to the URL
+      return res.redirect(candidate.resume_url);
+    } else if (candidate.resume_url.startsWith('/uploads/')) {
+      // Relative path from uploads
+      resumePath = path.join(process.cwd(), candidate.resume_url.substring(1));
+    } else if (candidate.resume_url.includes('uploads/')) {
+      // Path includes uploads
+      resumePath = path.join(process.cwd(), candidate.resume_url);
+    } else {
+      // Assume it's just a filename in resumes folder
+      resumePath = path.join(process.cwd(), 'uploads', 'resumes', candidate.resume_url);
     }
     
-    let resumePath = null;
-    let filename = `resume_${username}.pdf`;
-    
-    // Check each possible path
-    for (const filePath of possiblePaths) {
-      if (fs.existsSync(filePath)) {
-        resumePath = filePath;
-        filename = path.basename(filePath);
-        break;
-      }
-    }
-    
-    // If no file found with new format, try old format patterns
-    if (!resumePath) {
-      const oldFormatDirs = [
-        path.join(projectRoot, 'uploads', 'documents'),
-        path.join(projectRoot, 'uploads', 'applications')
-      ];
+    // Check if file exists and serve it
+    if (fs.existsSync(resumePath)) {
+      const fileExtension = path.extname(resumePath).toLowerCase();
+      const fileName = `${candidate.name.replace(/[^a-zA-Z0-9]/g, '_')}_Resume${fileExtension}`;
       
-      for (const dir of oldFormatDirs) {
-        if (fs.existsSync(dir)) {
-          const files = fs.readdirSync(dir);
-          const matchingFile = files.find(file => 
-            (file.startsWith(`resume-${id}-`) || file.startsWith(`resume_${id}_`)) && 
-            (file.endsWith('.pdf') || file.endsWith('.doc') || file.endsWith('.docx'))
-          );
-          if (matchingFile) {
-            resumePath = path.join(dir, matchingFile);
-            filename = matchingFile;
-            break;
-          }
-        }
+      // Set appropriate headers
+      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+      res.setHeader('Content-Type', fileExtension === '.pdf' ? 'application/pdf' : 'application/octet-stream');
+      
+      // Stream the file
+      const fileStream = fs.createReadStream(resumePath);
+      fileStream.pipe(res);
+      
+      fileStream.on('error', (error) => {
+        console.error('File stream error:', error);
+        res.status(500).json({ 
+          message: 'Error reading resume file' 
+        });
+      });
+    } else {
+      // Check in applications folder as backup
+      const backupPath = path.join(process.cwd(), 'uploads', 'applications', candidate.resume_url);
+      if (fs.existsSync(backupPath)) {
+        const fileExtension = path.extname(backupPath).toLowerCase();
+        const fileName = `${candidate.name.replace(/[^a-zA-Z0-9]/g, '_')}_Resume${fileExtension}`;
+        
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+        res.setHeader('Content-Type', fileExtension === '.pdf' ? 'application/pdf' : 'application/octet-stream');
+        
+        const fileStream = fs.createReadStream(backupPath);
+        fileStream.pipe(res);
+      } else {
+        return res.status(404).json({
+          message: 'Resume file not found on server',
+          resume_url: candidate.resume_url,
+          candidate_name: candidate.name
+        });
       }
     }
-    
-    if (!resumePath) {
-      return res.status(404).json({
-        message: `Resume not found for candidate ${candidateName}`,
-        candidate_id: id,
-        username: username,
-        searched_locations: possiblePaths
-      });
-    }
-    
-    // Set appropriate headers for file download
-    const ext = path.extname(resumePath).toLowerCase();
-    let contentType = 'application/octet-stream';
-    
-    if (ext === '.pdf') {
-      contentType = 'application/pdf';
-    } else if (ext === '.doc') {
-      contentType = 'application/msword';
-    } else if (ext === '.docx') {
-      contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-    }
-    
-    // Use clean filename for download
-    const cleanName = candidateName.replace(/[^a-zA-Z0-9]/g, '_');
-    const downloadFilename = `${cleanName}_Resume${ext}`;
-    
-    res.setHeader('Content-Type', contentType);
-    res.setHeader('Content-Disposition', `attachment; filename="${downloadFilename}"`);
-    
-    // Stream the file
-    const fileStream = fs.createReadStream(resumePath);
-    fileStream.pipe(res);
-    
-    fileStream.on('error', (error) => {
-      console.error('File stream error:', error);
-      res.status(500).json({ 
-        message: 'Error reading resume file' 
-      });
-    });
-    
-    console.log(`✅ Resume downloaded: ${filename} for candidate ${candidateName} (${username})`);
 
   } catch (error) {
     console.error('Download resume error:', error);
     res.status(500).json({ 
-      message: 'Internal server error while downloading resume',
-      error: error.message
+      message: 'Internal server error while downloading resume' 
     });
   }
 };
@@ -399,46 +432,58 @@ export const downloadCandidateResume = async (req, res) => {
 // Get candidate statistics
 export const getCandidateStats = async (req, res) => {
   try {
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    // Total candidates
+    const totalCandidatesResult = await db.select({ count: sql`COUNT(*)` })
+      .from(users)
+      .where(eq(users.role, 'applicant'));
 
-    const stats = await BaseUser.aggregate([
-      { $match: { role: 'applicant' } },
-      {
-        $facet: {
-          totalCandidates: [{ $count: 'count' }],
-          candidatesByStatus: [{ $group: { _id: '$status', count: { $sum: 1 } } }],
-          recentCandidates: [
-            { $match: { createdAt: { $gte: sevenDaysAgo } } },
-            { $count: 'count' }
-          ],
-          candidatesByExperience: [
-            {
-              $group: {
-                _id: {
-                  $switch: {
-                    branches: [
-                      { case: { $lte: ['$yearsOfExperience', 2] }, then: 'Entry Level (0-2 years)' },
-                      { case: { $lte: ['$yearsOfExperience', 5] }, then: 'Mid Level (3-5 years)' },
-                      { case: { $lte: ['$yearsOfExperience', 10] }, then: 'Senior Level (6-10 years)' }
-                    ],
-                    default: 'Expert Level (10+ years)'
-                  }
-                },
-                count: { $sum: 1 }
-              }
-            }
-          ]
-        }
-      }
-    ]);
+    // Candidates by status
+    const candidatesByStatusResult = await db.select({
+      status: users.status,
+      count: sql`COUNT(*)`
+    })
+    .from(users)
+    .where(eq(users.role, 'applicant'))
+    .groupBy(users.status);
 
-    const getCount = (arr) => arr[0] ? arr[0].count : 0;
+    // Recent candidates (last 7 days)
+    const recentCandidatesResult = await db.select({ count: sql`COUNT(*)` })
+      .from(users)
+      .where(
+        and(
+          eq(users.role, 'applicant'),
+          sql`${users.created_at} >= datetime('now', '-7 days')`
+        )
+      );
+
+    // Candidates by experience level
+    const candidatesByExperienceResult = await db.select({
+      experience_range: sql`
+        CASE 
+          WHEN ${users.experience_years} <= 2 THEN 'Entry Level (0-2 years)'
+          WHEN ${users.experience_years} <= 5 THEN 'Mid Level (3-5 years)'
+          WHEN ${users.experience_years} <= 10 THEN 'Senior Level (6-10 years)'
+          ELSE 'Expert Level (10+ years)'
+        END
+      `,
+      count: sql`COUNT(*)`
+    })
+    .from(users)
+    .where(eq(users.role, 'applicant'))
+    .groupBy(sql`
+      CASE 
+        WHEN ${users.experience_years} <= 2 THEN 'Entry Level (0-2 years)'
+        WHEN ${users.experience_years} <= 5 THEN 'Mid Level (3-5 years)'
+        WHEN ${users.experience_years} <= 10 THEN 'Senior Level (6-10 years)'
+        ELSE 'Expert Level (10+ years)'
+      END
+    `);
 
     res.json({
-      total_candidates: getCount(stats[0].totalCandidates),
-      recent_candidates: getCount(stats[0].recentCandidates),
-      candidates_by_status: stats[0].candidatesByStatus.map(item => ({ status: item._id, count: item.count })),
-      candidates_by_experience: stats[0].candidatesByExperience.map(item => ({ experience_range: item._id, count: item.count }))
+      total_candidates: totalCandidatesResult[0].count,
+      recent_candidates: recentCandidatesResult[0].count,
+      candidates_by_status: candidatesByStatusResult,
+      candidates_by_experience: candidatesByExperienceResult
     });
 
   } catch (error) {
@@ -478,19 +523,25 @@ export const bulkUpdateCandidates = async (req, res) => {
     // Prepare update data
     const updateData = {
       status,
+      updated_at: new Date().toISOString()
     };
 
     if (notes) updateData.notes = notes;
 
     // Update candidates
-    const result = await BaseUser.updateMany(
-      { _id: { $in: candidate_ids }, role: 'applicant' },
-      { $set: updateData }
-    );
+    const updatedCandidates = await db.update(users)
+      .set(updateData)
+      .where(
+        and(
+          inArray(users.id, candidate_ids.map(id => parseInt(id))),
+          eq(users.role, 'applicant')
+        )
+      )
+      .returning();
 
     res.json({
-      message: `${result.nModified} candidates updated successfully`,
-      updated_count: result.nModified
+      message: `${updatedCandidates.length} candidates updated successfully`,
+      updated_count: updatedCandidates.length
     });
 
   } catch (error) {

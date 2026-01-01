@@ -21,25 +21,27 @@ const baseUserSchema = new mongoose.Schema({
   bio: { type: String, maxlength: 500 },
   
   // Location (Enhanced for both roles)
-  city: { type: String },
-  state: { type: String },
-  country: { type: String, default: 'India' },
-  postalCode: { type: String },
+  location: { type: String }, // Current location/city
+  address: {
+    city: { type: String },
+    state: { type: String },
+    country: { type: String, default: 'India' },
+    postalCode: { type: String }
+  },
   
   // Social Links (Enhanced with all URLs)
   linkedin_url: { type: String },
   github_url: { type: String },
   portfolio_url: { type: String },
-  otherUrls: [{ type: String }],
+  socialLinks: {
+    linkedinUrl: { type: String },
+    githubUrl: { type: String },
+    portfolioUrl: { type: String },
+    otherUrls: [{ type: String }]
+  },
   
   // Experience (Common field)
   yearsOfExperience: { type: Number, default: 0 },
-  experience_years: { type: Number }, // Compatibility field
-  
-  // Compatibility fields for frontend
-  full_name: { type: String },
-  location: { type: String },
-  current_location: { type: String },
   
   // Status & Admin Actions
   status: { type: String, enum: ['active', 'inactive', 'suspended'], default: 'active' },

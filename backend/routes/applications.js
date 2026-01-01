@@ -7,6 +7,7 @@ import ApplicationInformation from '../models/ApplicationInformation.js';
 import Job from '../models/Job.js';
 // Import the correct user model that other routes use
 import { BaseUser } from '../models/UserModels.js';
+import CleanUser from '../models/CleanUser.js';
 import Notification from '../models/Notification.js';
 import { sendInterviewUpdate, NotificationService } from '../services/notifications.js';
 import joi from 'joi';
@@ -22,23 +23,9 @@ const storage = multer.diskStorage({
     }
     cb(null, uploadDir);
   },
-  filename: async function (req, file, cb) {
-    try {
-      // Get user data to access username
-      const user = await BaseUser.findById(req.user.userId);
-      const username = user?.username || req.user.userId;
-      
-      // Create readable filename
-      const extension = path.extname(file.originalname);
-      const filename = `resume_${username}${extension}`;
-      
-      cb(null, filename);
-    } catch (error) {
-      console.error('❌ Error generating filename:', error);
-      // Fallback to original naming if user lookup fails
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      cb(null, 'resume-' + req.user.userId + '-' + uniqueSuffix + path.extname(file.originalname));
-    }
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'resume-' + uniqueSuffix + path.extname(file.originalname));
   }
 });
 
@@ -129,10 +116,24 @@ const authenticateToken = async (req, res, next) => {
       }
     }
     
+    // Method 5: Fallback to CleanUser (legacy)
+    if (!user) {
+      try {
+        user = await CleanUser.findById(decoded.userId);
+        console.log('🔍 CleanUser fallback lookup result:', user ? 'Found' : 'Not found');
+        if (!user && decoded.email) {
+          user = await CleanUser.findOne({ email: decoded.email });
+          console.log('🔍 CleanUser fallback by email result:', user ? 'Found' : 'Not found');
+        }
+      } catch (error) {
+        console.log('⚠️ CleanUser fallback lookup failed:', error.message);
+      }
+    }
+    
     if (!user) {
       console.log('❌ Auth failed: User not found with any method');
       console.log('🔍 Available decoded fields:', Object.keys(decoded));
-      console.log('🔍 Tried user models: BaseUser');
+      console.log('🔍 Tried user models: BaseUser, CleanUser');
       return res.status(401).json({
         success: false,
         message: 'Invalid token - user not found'
@@ -169,28 +170,6 @@ router.post('/', upload.single('resume'), authenticateToken, async (req, res) =>
     console.log('🔍 User:', req.user);
     console.log('🔍 Body fields:', Object.keys(req.body));
     console.log('🔍 File:', req.file ? 'Uploaded' : 'No file');
-    
-    // Log applicantSnapshot if present
-    if (req.body.applicantSnapshot) {
-      console.log('📦 Received applicantSnapshot from frontend');
-      try {
-        const snapshot = typeof req.body.applicantSnapshot === 'string' 
-          ? JSON.parse(req.body.applicantSnapshot) 
-          : req.body.applicantSnapshot;
-        console.log('📊 Snapshot fields:', Object.keys(snapshot));
-        console.log('📚 Education entries:', snapshot.education?.length || 0);
-        console.log('💼 Work experience entries:', snapshot.workExperience?.length || 0);
-        console.log('🎯 Skills:', {
-          primary: snapshot.primarySkills?.length || 0,
-          technical: snapshot.technicalSkills?.length || 0,
-          soft: snapshot.softSkills?.length || 0
-        });
-      } catch (e) {
-        console.error('❌ Failed to parse applicantSnapshot:', e.message);
-      }
-    } else {
-      console.warn('⚠️ No applicantSnapshot received from frontend');
-    }
 
     // Validate required fields
     const { jobId, jobTitle, companyName } = req.body;
@@ -285,22 +264,17 @@ router.post('/', upload.single('resume'), authenticateToken, async (req, res) =>
         notes: 'Application submitted'
       }],
 
-      // Applicant Snapshot - Use complete snapshot from frontend if available
-      applicantSnapshot: req.body.applicantSnapshot ? 
-        (typeof req.body.applicantSnapshot === 'string' ? JSON.parse(req.body.applicantSnapshot) : req.body.applicantSnapshot) :
-        {
-          // Fallback to individual fields if snapshot not provided
-          fullName: `${req.body.firstName} ${req.body.lastName}`,
-          email: req.body.email,
-          phone: req.body.phone,
-          location: req.body.location,
-          currentJobTitle: req.body.currentJobTitle,
-          currentCompany: req.body.currentCompany,
-          experience: req.body.experience,
-          skills: req.body.primarySkills ? req.body.primarySkills.split(',').map(s => s.trim()) : [],
-          education: [],
-          workExperience: []
-        },
+      // Applicant Snapshot (required fields)
+      applicantSnapshot: {
+        fullName: `${req.body.firstName} ${req.body.lastName}`,
+        email: req.body.email,
+        phone: req.body.phone,
+        location: req.body.location,
+        currentJobTitle: req.body.currentJobTitle,
+        currentCompany: req.body.currentCompany,
+        experience: req.body.experience,
+        skills: req.body.primarySkills ? req.body.primarySkills.split(',').map(s => s.trim()) : []
+      },
 
       // Job Snapshot (required fields)
       jobSnapshot: {
@@ -337,24 +311,6 @@ router.post('/', upload.single('resume'), authenticateToken, async (req, res) =>
     await application.save();
 
     console.log('✅ Application created successfully:', application._id);
-    
-    // Verify what was actually saved to database
-    console.log('🔍 VERIFICATION - What was saved to database:');
-    console.log('📊 applicantSnapshot fields in DB:', Object.keys(application.applicantSnapshot || {}));
-    console.log('📚 Education in DB:', application.applicantSnapshot?.education?.length || 0, 'entries');
-    console.log('💼 Work experience in DB:', application.applicantSnapshot?.workExperience?.length || 0, 'entries');
-    console.log('🎯 Skills in DB:', {
-      primarySkills: application.applicantSnapshot?.primarySkills?.length || 0,
-      technicalSkills: application.applicantSnapshot?.technicalSkills?.length || 0,
-      softSkills: application.applicantSnapshot?.softSkills?.length || 0,
-      skills: Array.isArray(application.applicantSnapshot?.skills) ? application.applicantSnapshot.skills.length : 'Not array'
-    });
-    console.log('📝 Bio in DB:', application.applicantSnapshot?.bio ? 'Present' : 'Missing');
-    console.log('🔗 Social links in DB:', {
-      linkedin: application.applicantSnapshot?.linkedinUrl ? 'Present' : 'Missing',
-      github: application.applicantSnapshot?.githubUrl ? 'Present' : 'Missing',
-      portfolio: application.applicantSnapshot?.portfolioUrl ? 'Present' : 'Missing'
-    });
 
     // Create notification for recruiter
     try {
@@ -373,18 +329,6 @@ router.post('/', upload.single('resume'), authenticateToken, async (req, res) =>
       console.log('✅ Notification created for recruiter');
     } catch (notifError) {
       console.warn('⚠️ Failed to create notification:', notifError.message);
-    }
-
-    // Send WebSocket notification for real-time updates
-    const websocketService = req.app.get('websocketService');
-    if (websocketService) {
-      websocketService.notifyApplicationUpdate(
-        'created',
-        application.toObject(),
-        req.user.userId,
-        job.postedBy
-      );
-      console.log('✅ WebSocket notification sent for new application');
     }
 
     res.status(201).json({
@@ -452,18 +396,7 @@ router.get('/', authenticateToken, async (req, res) => {
     console.log('🔍 Sample application:', applications[0] ? {
       id: applications[0]._id,
       status: applications[0].applicationStatus,
-      hasApplicantSnapshot: !!applications[0].applicantSnapshot,
-      applicantSnapshotKeys: applications[0].applicantSnapshot ? Object.keys(applications[0].applicantSnapshot) : [],
-      applicantSnapshotEducation: applications[0].applicantSnapshot?.education?.length || 0,
-      applicantSnapshotWorkExp: applications[0].applicantSnapshot?.workExperience?.length || 0,
-      applicantSnapshotBio: applications[0].applicantSnapshot?.bio ? 'Present' : 'Missing',
-      applicantId: applications[0].applicantId ? {
-        _id: applications[0].applicantId._id,
-        firstName: applications[0].applicantId.firstName,
-        hasEducation: applications[0].applicantId.education?.length || 0,
-        hasWorkExp: applications[0].applicantId.workExperience?.length || 0,
-        hasBio: applications[0].applicantId.bio ? 'Present' : 'Missing'
-      } : 'Not populated',
+      applicantId: applications[0].applicantId,
       jobId: applications[0].jobId,
       hasApplicationInfo: !!applications[0].applicationInfo,
       applicationInfoKeys: applications[0].applicationInfo ? Object.keys(applications[0].applicationInfo) : []
@@ -483,21 +416,15 @@ router.get('/', authenticateToken, async (req, res) => {
         type: application.jobId?.type || application.jobSnapshot?.jobType || 'Unknown Type'
       },
       
-      // Applicant snapshot - use stored snapshot first (has complete data), then populate from applicantId as fallback
-      applicantSnapshot: application.applicantSnapshot || (application.applicantId ? {
+      // Applicant snapshot - use populated data first, then snapshot as fallback
+      applicantSnapshot: application.applicantId ? {
         firstName: application.applicantId.firstName,
         lastName: application.applicantId.lastName,
         fullName: `${application.applicantId.firstName} ${application.applicantId.lastName}`,
         email: application.applicantId.email,
-        phone: application.applicantId.phone || '',
-        location: application.applicantId.location || '',
-        bio: application.applicantId.bio || '',
-        education: application.applicantId.education || [],
-        workExperience: application.applicantId.workExperience || [],
-        skills: application.applicantId.skills || {},
-        socialLinks: application.applicantId.socialLinks || {},
-        documents: application.applicantId.documents || {}
-      } : null),
+        phone: application.applicantSnapshot?.phone || application.applicationData?.phone || '',
+        location: application.applicantSnapshot?.location || application.applicationData?.location || ''
+      } : (application.applicantSnapshot || null),
       
       // Application data
       applicationData: application.applicationData || {},
@@ -517,13 +444,7 @@ router.get('/', authenticateToken, async (req, res) => {
     console.log('🔍 Transformed applications sample:', transformedApplications[0] ? {
       id: transformedApplications[0].id,
       status: transformedApplications[0].status,
-      applicantSnapshot: {
-        ...transformedApplications[0].applicantSnapshot,
-        educationCount: transformedApplications[0].applicantSnapshot?.education?.length || 0,
-        workExperienceCount: transformedApplications[0].applicantSnapshot?.workExperience?.length || 0,
-        hasBio: !!transformedApplications[0].applicantSnapshot?.bio,
-        hasSkills: !!transformedApplications[0].applicantSnapshot?.skills
-      },
+      applicantSnapshot: transformedApplications[0].applicantSnapshot,
       jobSnapshot: transformedApplications[0].jobSnapshot,
       hasApplicationInfo: !!transformedApplications[0].applicationInfo,
       applicationInfoKeys: transformedApplications[0].applicationInfo ? Object.keys(transformedApplications[0].applicationInfo) : []
@@ -729,93 +650,41 @@ router.post('/', (req, res, next) => {
     
     if (!applicantUser) {
       console.log('❌ Applicant user not found in BaseUser for ID:', req.user.userId);
-      return res.status(400).json({
-        success: false,
-        message: 'Applicant user not found'
-      });
+      
+      // Try CleanUser as fallback
+      console.log('🔄 Trying CleanUser fallback lookup...');
+      applicantUser = await CleanUser.findById(req.user.userId);
+      console.log('🔍 CleanUser fallback result:', applicantUser ? 'Found' : 'Not found');
+      
+      if (!applicantUser) {
+        return res.status(400).json({
+          success: false,
+          message: 'Applicant user not found'
+        });
+      }
     }
 
-    // Create comprehensive applicant snapshot with ALL profile details
+    // Create comprehensive applicant snapshot
     const applicantSnapshot = {
-      // Personal Information
-      fullName: `${req.body.firstName || applicantUser.firstName || ''} ${req.body.lastName || applicantUser.lastName || ''}`.trim(),
-      firstName: req.body.firstName || applicantUser.firstName || '',
-      lastName: req.body.lastName || applicantUser.lastName || '',
+      fullName: `${req.body.firstName || applicantUser.firstName || ''} ${req.body.lastName || applicantUser.lastName || ''}`,
       email: req.body.email || applicantUser.email,
       phone: req.body.phone || applicantUser.phone || '',
       location: req.body.location || applicantUser.currentLocation?.city || applicantUser.location || '',
-      bio: applicantUser.bio || '',
-      
-      // Professional Information
       currentJobTitle: req.body.currentJobTitle || applicantUser.careerInfo?.currentJobTitle || '',
       currentCompany: req.body.currentCompany || applicantUser.careerInfo?.currentCompany || '',
-      experience: req.body.experience || applicantUser.yearsOfExperience || applicantUser.experience_years || '',
-      yearsOfExperience: applicantUser.yearsOfExperience || applicantUser.experience_years || 0,
-      
-      // Skills
-      skills: Array.isArray(applicantUser.skills?.primary) 
-        ? applicantUser.skills.primary 
-        : (Array.isArray(applicantUser.skills) ? applicantUser.skills : []),
-      technicalSkills: applicantUser.skills?.technical || [],
-      softSkills: applicantUser.skills?.soft || [],
-      
-      // Education - Complete details
+      experience: req.body.experience || applicantUser.yearsOfExperience || '',
+      skills: Array.isArray(applicantUser.skills?.primary) ? applicantUser.skills.primary : (applicantUser.skills || []),
       education: Array.isArray(applicantUser.education) ? applicantUser.education.map(edu => ({
-        institution: edu.institution || '',
         degree: edu.degree || '',
-        fieldOfStudy: edu.fieldOfStudy || '',
-        startDate: edu.startDate || null,
-        endDate: edu.endDate || null,
-        grade: edu.grade || '',
-        isCurrentlyStudying: edu.isCurrentlyStudying || false,
-        achievements: edu.achievements || []
+        institution: edu.institution || '',
+        fieldOfStudy: edu.fieldOfStudy || ''
       })) : [],
-      
-      // Work Experience - Complete details
       workExperience: Array.isArray(applicantUser.workExperience) ? applicantUser.workExperience.map(exp => ({
-        companyName: exp.companyName || exp.company || '',
-        jobTitle: exp.jobTitle || exp.position || '',
-        location: exp.location || '',
-        startDate: exp.startDate || null,
-        endDate: exp.endDate || null,
-        isCurrentJob: exp.isCurrentJob || exp.isCurrentlyWorking || false,
-        description: exp.description || '',
-        achievements: exp.achievements || [],
-        technologies: exp.technologies || []
-      })) : [],
-      
-      // Professional Links
-      linkedinUrl: req.body.linkedinUrl || applicantUser.linkedin_url || applicantUser.professionalLinks?.linkedin || '',
-      githubUrl: req.body.githubUrl || applicantUser.github_url || applicantUser.professionalLinks?.github || '',
-      portfolioUrl: req.body.portfolioUrl || applicantUser.portfolio_url || applicantUser.professionalLinks?.personalWebsite || applicantUser.documents?.portfolioUrl || '',
-      
-      // Documents
-      resumeUrl: req.file ? `/uploads/applications/${req.file.filename}` : (applicantUser.resume_url || applicantUser.documents?.resumeUrl || ''),
-      
-      // Additional Profile Data
-      languages: applicantUser.languages || [],
-      certifications: applicantUser.certifications || [],
-      projects: applicantUser.projects || [],
-      
-      // Job Preferences
-      jobPreferences: {
-        willingToRelocate: req.body.willingToRelocate === 'true' || applicantUser.jobPreferences?.willingToRelocate || false,
-        remoteWorkPreference: req.body.remoteWorkPreference === 'true' || applicantUser.jobPreferences?.remoteWorkPreference || false,
-        preferredLocations: applicantUser.jobPreferences?.preferredLocations || [],
-        preferredJobTypes: applicantUser.jobPreferences?.preferredJobTypes || []
-      }
+        jobTitle: exp.jobTitle || '',
+        companyName: exp.companyName || '',
+        description: exp.description || ''
+      })) : []
     };
-
-    // Log the comprehensive snapshot for debugging
-    console.log('📋 Comprehensive Applicant Snapshot Created:');
-    console.log('  - Education entries:', applicantSnapshot.education.length);
-    console.log('  - Work Experience entries:', applicantSnapshot.workExperience.length);
-    console.log('  - LinkedIn:', applicantSnapshot.linkedinUrl ? '✓' : '✗');
-    console.log('  - GitHub:', applicantSnapshot.githubUrl ? '✓' : '✗');
-    console.log('  - Portfolio:', applicantSnapshot.portfolioUrl ? '✓' : '✗');
-    console.log('  - Skills:', applicantSnapshot.skills.length);
-    console.log('  - Languages:', applicantSnapshot.languages.length);
-    console.log('  - Certifications:', applicantSnapshot.certifications.length);
 
     // Create application
     console.log('🔍 Creating new application...');
@@ -1060,6 +929,70 @@ router.put('/:id/status', authenticateToken, async (req, res) => {
   }
 });
 
+// GET /api/applications/job/:jobId - Get applications for specific job
+router.get('/job/:jobId', authenticateToken, async (req, res) => {
+  try {
+    const { jobId } = req.params;
+
+    if (!jobId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid job ID format'
+      });
+    }
+
+    // Verify job ownership for recruiters
+    if (req.user.role === 'recruiter') {
+      const job = await Job.findById(jobId);
+      if (!job || job.postedBy.toString() !== req.user.userId) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied'
+        });
+      }
+    }
+
+    const applications = await Application.find({ jobId })
+      .populate({
+        path: 'applicantId',
+        select: 'firstName lastName email phone resume_url',
+        model: 'BaseUser'
+      })
+      .sort({ appliedAt: -1 })
+      .lean();
+
+    const transformedApplications = applications.map(application => ({
+      id: application._id,
+      applicant: {
+        id: application.applicantId._id,
+        name: `${application.applicantId.firstName} ${application.applicantId.lastName}`,
+        email: application.applicantId.email,
+        phone: application.applicantId.phone,
+        resumeUrl: application.applicantId.resume_url
+      },
+      status: application.applicationStatus,
+      coverLetter: application.applicationData?.coverLetter,
+      appliedAt: application.appliedAt,
+      timeline: application.timeline
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        applications: transformedApplications,
+        total: applications.length
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error fetching job applications:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch job applications',
+      error: error.message
+    });
+  }
+});
+
 // GET /api/applications/job/:jobId - Get all applications for a specific job (recruiter only)
 router.get('/job/:jobId', authenticateToken, async (req, res) => {
   try {
@@ -1086,7 +1019,6 @@ router.get('/job/:jobId', authenticateToken, async (req, res) => {
 
     // Fetch applications for this job
     const applications = await Application.find({ jobId: jobId })
-      .select('+applicantSnapshot')  // Explicitly include applicantSnapshot
       .populate({
         path: 'applicantId',
         select: 'firstName lastName email phone profileImage'
@@ -1094,47 +1026,7 @@ router.get('/job/:jobId', authenticateToken, async (req, res) => {
       .sort({ appliedAt: -1 });
 
     console.log(`🔍 Found ${applications.length} applications for job ${jobId}`);
-    
-    // Log applicantSnapshot from first application
-    if (applications[0]) {
-      console.log('🔍 First application applicantSnapshot:', {
-        hasSnapshot: !!applications[0].applicantSnapshot,
-        snapshotKeys: applications[0].applicantSnapshot ? Object.keys(applications[0].applicantSnapshot) : [],
-        educationCount: applications[0].applicantSnapshot?.education?.length || 0,
-        workExpCount: applications[0].applicantSnapshot?.workExperience?.length || 0,
-        hasBio: !!applications[0].applicantSnapshot?.bio
-      });
-    }
 
-    // 🚨 DEBUG: Log what we're about to send
-    console.log('🚨🚨🚨 ABOUT TO SEND TO FRONTEND:');
-    console.log('🚨 First app has applicantSnapshot?', !!applications[0]?.applicantSnapshot);
-    console.log('🚨 applicantSnapshot type:', typeof applications[0]?.applicantSnapshot);
-    console.log('🚨 applicantSnapshot keys:', applications[0]?.applicantSnapshot ? Object.keys(applications[0].applicantSnapshot).slice(0, 10) : 'NONE');
-    
-    // 📝 SAVE TO FILE FOR DEBUGGING
-    if (applications[0]) {
-      const debugData = {
-        timestamp: new Date().toISOString(),
-        jobId: jobId,
-        totalApplications: applications.length,
-        firstApplication: {
-          _id: applications[0]._id,
-          applicantId: applications[0].applicantId,
-          applicationStatus: applications[0].applicationStatus,
-          appliedAt: applications[0].appliedAt,
-          hasApplicantSnapshot: !!applications[0].applicantSnapshot,
-          applicantSnapshot: applications[0].applicantSnapshot,
-          applicationData: applications[0].applicationData,
-          allFields: Object.keys(applications[0].toObject())
-        }
-      };
-      
-      const debugFilePath = path.join(process.cwd(), `application-debug-${Date.now()}.txt`);
-      fs.writeFileSync(debugFilePath, JSON.stringify(debugData, null, 2), 'utf8');
-      console.log('📝 DEBUG DATA SAVED TO:', debugFilePath);
-    }
-    
     // Transform applications for frontend
     const transformedApplications = applications.map(app => ({
       _id: app._id,

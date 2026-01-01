@@ -189,7 +189,7 @@ router.post('/send-email', authenticateToken, async (req, res) => {
           body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
           .header { background-color: #2563eb; color: white; padding: 20px; text-align: center; }
           .content { padding: 20px; background-color: #f9fafb; }
-          .message-box { background-color: white; padding: 20px; border-radius: 6px; margin: 20px 0; }
+          .message-box { background-color: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
           .footer { background-color: #374151; color: white; padding: 15px; text-align: center; font-size: 12px; }
           .sender-info { background-color: #e5e7eb; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
         </style>

@@ -7,7 +7,7 @@ if (!process.env.MONGODB_URI && !process.env.DATABASE_URL) {
   dotenv.config({ path: './.env' });
 }
 
-// MongoDB connection string - prioritize environment variables
+// MongoDB connection string with cloud-first fallback
 const MONGODB_URI = process.env.MONGODB_URI || 
                    process.env.DATABASE_URL || 
                    process.env.MONGO_URL ||
@@ -29,23 +29,14 @@ const initializeDatabase = async () => {
     console.log('🔄 Connecting to MongoDB...');
     console.log('📍 MongoDB URI:', MONGODB_URI.replace(/\/\/.*:.*@/, '//***:***@'));
     
-    // MongoDB connection options optimized for Node.js compatibility
+    // Minimal connection options for Render compatibility
     const connectionOptions = {
       serverSelectionTimeoutMS: 30000,
       socketTimeoutMS: 45000,
-      connectTimeoutMS: 30000,
       bufferCommands: false,
       maxPoolSize: 10,
-      minPoolSize: 2,
       retryWrites: true,
-      w: 'majority',
-      // TLS/SSL configuration
-      tls: true,
-      // For development, allow invalid certificates if needed
-      ...(process.env.NODE_ENV === 'development' && {
-        tlsAllowInvalidCertificates: true,
-        tlsAllowInvalidHostnames: true,
-      })
+      w: 'majority'
     };
 
     await mongoose.connect(MONGODB_URI, connectionOptions);

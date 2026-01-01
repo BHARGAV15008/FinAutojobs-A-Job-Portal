@@ -5,7 +5,7 @@ dotenv.config();
 async function checkJobs() {
   try {
     console.log('🔄 Connecting to MongoDB...');
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://192.168.41.134:27017/finauto-jobs');
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/finauto-jobs');
     console.log('✅ Connected to MongoDB');
     
     // Find all jobs and group by status

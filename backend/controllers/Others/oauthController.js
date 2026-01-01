@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
-import { BaseUser } from '../../models/UserModels.js';
-import UserSession from '../models/UserSession.js';
+import { db } from '../config/database.js';
+import { users, userSessions } from '../schema.js';
+import { eq } from 'drizzle-orm';
 import { generateToken, generateRefreshToken } from './authController.js';
 import { z } from 'zod';
 
@@ -55,44 +56,59 @@ const createOrUpdateOAuthUser = async (oauthData, provider) => {
     const { email, name, picture, providerId } = oauthData;
     
     // Check if user already exists
-    let user = await BaseUser.findOne({ email: email });
+    const existingUser = await db.select()
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
 
-    if (user) {
+    let user;
+    
+    if (existingUser.length > 0) {
       // Update existing user
-      let updateData = {};
+      user = existingUser[0];
       
-      if (!user.profileImage && picture) {
-        updateData['profileImage'] = picture;
+      // Update OAuth provider info if not already set
+      const updateData = {
+        updated_at: new Date().toISOString()
+      };
+      
+      if (!user.profile_picture && picture) {
+        updateData.profile_picture = picture;
       }
       
-      if (!user.firstName && !user.lastName && name) {
-        const [firstName, ...lastName] = name.split(' ');
-        updateData['firstName'] = firstName;
-        updateData['lastName'] = lastName.join(' ');
+      if (!user.full_name && name) {
+        updateData.full_name = name;
       }
       
       // Update OAuth provider field
-      updateData[`oauthProviders.${provider}`] = providerId;
-      updateData['isEmailVerified'] = true; // OAuth providers verify emails
+      updateData[`${provider}_id`] = providerId;
+      updateData.email_verified = true; // OAuth providers verify emails
       
-      user = await BaseUser.findByIdAndUpdate(user._id, { $set: updateData }, { new: true });
+      await db.update(users)
+        .set(updateData)
+        .where(eq(users.id, user.id));
+        
+      user = { ...user, ...updateData };
     } else {
       // Create new user
-      const [firstName, ...lastName] = name.split(' ');
+      const username = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
       
       const newUserData = {
+        username: username,
         email: email,
-        firstName: firstName,
-        lastName: lastName.join(' '),
-        profileImage: picture,
+        password: 'oauth_user', // OAuth users don't have passwords
+        full_name: name || '',
         role: 'jobseeker', // Default role
         status: 'active',
-        isEmailVerified: true,
-        oauthProviders: { [provider]: providerId },
+        email_verified: true,
+        profile_picture: picture || null,
+        [`${provider}_id`]: providerId,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
       
-      user = new BaseUser(newUserData);
-      await user.save();
+      const newUser = await db.insert(users).values(newUserData).returning();
+      user = newUser[0];
     }
     
     return user;
@@ -168,8 +184,10 @@ export const googleOAuth = async (req, res) => {
     
     // Update role if specified and different from current
     if (role && role !== user.role) {
+      await db.update(users)
+        .set({ role: role })
+        .where(eq(users.id, user.id));
       user.role = role;
-      await user.save();
     }
     
     // Generate JWT tokens
@@ -177,21 +195,19 @@ export const googleOAuth = async (req, res) => {
     const refreshToken = generateRefreshToken(user);
     
     // Store session
-    const newSession = new UserSession({
-      userId: user._id,
-      sessionToken: jwtToken,
-      refreshToken: refreshToken,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    await db.insert(userSessions).values({
+      user_id: user.id,
+      token: jwtToken,
+      refresh_token: refreshToken,
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
     });
-    await newSession.save();
     
-    // The user object is a Mongoose document, so we can use toObject() to get a plain object
-    const userObject = user.toObject();
-    delete userObject.password;
-
+    // Remove sensitive data
+    const { password, ...userWithoutPassword } = user;
+    
     res.json({
       message: 'Google OAuth login successful',
-      user: userObject,
+      user: userWithoutPassword,
       token: jwtToken,
       refreshToken,
       provider: 'google'
@@ -267,8 +283,10 @@ export const microsoftOAuth = async (req, res) => {
     
     // Update role if specified and different from current
     if (role && role !== user.role) {
+      await db.update(users)
+        .set({ role: role })
+        .where(eq(users.id, user.id));
       user.role = role;
-      await user.save();
     }
     
     // Generate JWT tokens
@@ -276,21 +294,19 @@ export const microsoftOAuth = async (req, res) => {
     const refreshToken = generateRefreshToken(user);
     
     // Store session
-    const newSession = new UserSession({
-      userId: user._id,
-      sessionToken: jwtToken,
-      refreshToken: refreshToken,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    await db.insert(userSessions).values({
+      user_id: user.id,
+      token: jwtToken,
+      refresh_token: refreshToken,
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
     });
-    await newSession.save();
     
-    // The user object is a Mongoose document, so we can use toObject() to get a plain object
-    const userObject = user.toObject();
-    delete userObject.password;
-
+    // Remove sensitive data
+    const { password, ...userWithoutPassword } = user;
+    
     res.json({
       message: 'Microsoft OAuth login successful',
-      user: userObject,
+      user: userWithoutPassword,
       token: jwtToken,
       refreshToken,
       provider: 'microsoft'
@@ -399,8 +415,10 @@ export const appleOAuth = async (req, res) => {
     
     // Update role if specified and different from current
     if (role && role !== user.role) {
+      await db.update(users)
+        .set({ role: role })
+        .where(eq(users.id, user.id));
       user.role = role;
-      await user.save();
     }
     
     // Generate JWT tokens
@@ -408,21 +426,19 @@ export const appleOAuth = async (req, res) => {
     const refreshToken = generateRefreshToken(user);
     
     // Store session
-    const newSession = new UserSession({
-      userId: user._id,
-      sessionToken: jwtToken,
-      refreshToken: refreshToken,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    await db.insert(userSessions).values({
+      user_id: user.id,
+      token: jwtToken,
+      refresh_token: refreshToken,
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
     });
-    await newSession.save();
     
-    // The user object is a Mongoose document, so we can use toObject() to get a plain object
-    const userObject = user.toObject();
-    delete userObject.password;
-
+    // Remove sensitive data
+    const { password, ...userWithoutPassword } = user;
+    
     res.json({
       message: 'Apple OAuth login successful',
-      user: userObject,
+      user: userWithoutPassword,
       token: jwtToken,
       refreshToken,
       provider: 'apple'

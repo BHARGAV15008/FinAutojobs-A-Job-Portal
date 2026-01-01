@@ -1,15 +1,17 @@
-import { BaseUser } from '../../models/UserModels.js';
-import Application from '../models/Application.js';
-import Job from '../models/Job.js';
-import Company from '../models/Company.js';
-import SavedJob from '../models/SavedJob.js';
-import Notification from '../models/Notification.js';
-import Interview from '../models/Interview.js';
-import CompanyAnalytic from '../models/CompanyAnalytic.js';
-import UserActivityLog from '../models/UserActivityLog.js';
+import { db } from '../config/database.js';
+import * as schema from '../schema.js';
+import { eq, and, desc, asc, count, sum, avg, sql } from 'drizzle-orm';
 import { format, subDays } from 'date-fns';
 
-
+// Mock schema references for new tables (will be replaced with actual schema)
+const mockSchema = {
+  user_preferences: 'user_preferences',
+  job_alerts: 'job_alerts', 
+  interviews: 'interviews',
+  notifications: 'notifications',
+  company_analytics: 'company_analytics',
+  user_activity_logs: 'user_activity_logs'
+};
 
 // Get applicant dashboard data
 export const getApplicantDashboard = async (req, res) => {
@@ -17,69 +19,90 @@ export const getApplicantDashboard = async (req, res) => {
     const userId = req.user.id;
     
     // Get user profile with all details
-    const user = await BaseUser.findById(userId);
+    const userProfile = await db.select().from(schema.users).where(eq(schema.users.id, userId)).limit(1);
     
-    if (!user) {
+    if (!userProfile.length) {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    const user = userProfile[0];
+
     // Get application statistics
-    const applicationStatsResult = await Application.aggregate([
-      { $match: { applicant: userId } },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: 1 },
-          pending: { $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] } },
-          reviewed: { $sum: { $cond: [{ $eq: ['$status', 'reviewed'] }, 1, 0] } },
-          shortlisted: { $sum: { $cond: [{ $eq: ['$status', 'shortlisted'] }, 1, 0] } },
-          rejected: { $sum: { $cond: [{ $eq: ['$status', 'rejected'] }, 1, 0] } },
-          hired: { $sum: { $cond: [{ $eq: ['$status', 'hired'] }, 1, 0] } }
-        }
-      }
-    ]);
-    const applicationStats = applicationStatsResult[0] || { total: 0, pending: 0, reviewed: 0, shortlisted: 0, rejected: 0, hired: 0 };
+    const applicationStats = await db
+      .select({
+        total: count(),
+        pending: sum(sql`CASE WHEN status = 'pending' THEN 1 ELSE 0 END`),
+        reviewed: sum(sql`CASE WHEN status = 'reviewed' THEN 1 ELSE 0 END`),
+        shortlisted: sum(sql`CASE WHEN status = 'shortlisted' THEN 1 ELSE 0 END`),
+        rejected: sum(sql`CASE WHEN status = 'rejected' THEN 1 ELSE 0 END`),
+        hired: sum(sql`CASE WHEN status = 'hired' THEN 1 ELSE 0 END`)
+      })
+      .from(schema.applications)
+      .where(eq(schema.applications.user_id, userId));
 
     // Get recent applications with job details
-    const recentApplications = await Application.find({ applicant: userId })
-        .populate({
-            path: 'job',
-            select: 'title location salaryMin salaryMax jobType companyId',
-            populate: {
-                path: 'companyId',
-                model: 'Company',
-                select: 'name'
-            }
-        })
-        .sort({ appliedAt: -1 })
-        .limit(10);
+    const recentApplications = await db
+      .select({
+        id: schema.applications.id,
+        status: schema.applications.status,
+        appliedAt: schema.applications.applied_at,
+        jobTitle: schema.jobs.title,
+        companyName: schema.companies.name,
+        location: schema.jobs.location,
+        salaryMin: schema.jobs.salary_min,
+        salaryMax: schema.jobs.salary_max,
+        jobType: schema.jobs.job_type
+      })
+      .from(schema.applications)
+      .leftJoin(schema.jobs, eq(schema.applications.job_id, schema.jobs.id))
+      .leftJoin(schema.companies, eq(schema.jobs.company_id, schema.companies.id))
+      .where(eq(schema.applications.user_id, userId))
+      .orderBy(desc(schema.applications.applied_at))
+      .limit(10);
 
     // Get saved jobs
-    const savedJobs = await SavedJob.find({ userId: userId })
-      .populate({
-        path: 'jobId',
-        select: 'title location salaryMin salaryMax jobType workMode companyId',
-        populate: {
-          path: 'companyId',
-          model: 'Company',
-          select: 'name'
-        }
+    const savedJobs = await db
+      .select({
+        id: schema.saved_jobs.id,
+        savedAt: schema.saved_jobs.saved_at,
+        jobId: schema.jobs.id,
+        jobTitle: schema.jobs.title,
+        companyName: schema.companies.name,
+        location: schema.jobs.location,
+        salaryMin: schema.jobs.salary_min,
+        salaryMax: schema.jobs.salary_max,
+        jobType: schema.jobs.job_type,
+        workMode: schema.jobs.work_mode
       })
-      .sort({ createdAt: -1 })
+      .from(schema.saved_jobs)
+      .leftJoin(schema.jobs, eq(schema.saved_jobs.job_id, schema.jobs.id))
+      .leftJoin(schema.companies, eq(schema.jobs.company_id, schema.companies.id))
+      .where(eq(schema.saved_jobs.user_id, userId))
+      .orderBy(desc(schema.saved_jobs.saved_at))
       .limit(10);
 
     // Get recommended jobs based on user skills and preferences
-    const userSkills = user.skills.primary || [];
+    const userSkills = user.skills ? JSON.parse(user.skills) : [];
     let recommendedJobs = [];
     
     if (userSkills.length > 0) {
-        recommendedJobs = await Job.find({
-            status: 'active',
-            // A simple recommendation logic: find jobs that require at least one of the user's skills
-            skillsRequired: { $in: userSkills.map(skill => new RegExp(skill, 'i')) }
+      recommendedJobs = await db
+        .select({
+          id: schema.jobs.id,
+          title: schema.jobs.title,
+          companyName: schema.companies.name,
+          location: schema.jobs.location,
+          salaryMin: schema.jobs.salary_min,
+          salaryMax: schema.jobs.salary_max,
+          jobType: schema.jobs.job_type,
+          workMode: schema.jobs.work_mode,
+          skillsRequired: schema.jobs.skills_required,
+          postedAt: schema.jobs.created_at
         })
-        .populate('companyId', 'name')
-        .sort({ createdAt: -1 })
+        .from(schema.jobs)
+        .leftJoin(schema.companies, eq(schema.jobs.company_id, schema.companies.id))
+        .where(eq(schema.jobs.status, 'active'))
+        .orderBy(desc(schema.jobs.created_at))
         .limit(10);
     }
 
@@ -89,74 +112,36 @@ export const getApplicantDashboard = async (req, res) => {
     // Get notifications (mock data for now)
     const notifications = [];
 
-    const transformedRecentApplications = recentApplications.map(app => ({
-        id: app._id,
-        status: app.status,
-        appliedAt: app.appliedAt,
-        jobTitle: app.job.title,
-        companyName: app.job.companyId.name,
-        location: app.job.location,
-        salaryMin: app.job.salaryMin,
-        salaryMax: app.job.salaryMax,
-        jobType: app.job.jobType
-    }));
-
-    const transformedSavedJobs = savedJobs.map(saved => ({
-        id: saved._id,
-        savedAt: saved.createdAt,
-        jobId: saved.jobId._id,
-        jobTitle: saved.jobId.title,
-        companyName: saved.jobId.companyId.name,
-        location: saved.jobId.location,
-        salaryMin: saved.jobId.salaryMin,
-        salaryMax: saved.jobId.salaryMax,
-        jobType: saved.jobId.jobType,
-        workMode: saved.jobId.workMode
-    }));
-    
-    const transformedRecommendedJobs = recommendedJobs.map(job => ({
-        id: job._id,
-        title: job.title,
-        companyName: job.companyId.name,
-        location: job.location,
-        salaryMin: job.salaryMin,
-        salaryMax: job.salaryMax,
-        jobType: job.jobType,
-        workMode: job.workMode,
-        skillsRequired: job.skillsRequired,
-        postedAt: job.createdAt
-    }));
-
     res.json({
       user: {
-        id: user._id,
-        fullName: `${user.firstName} ${user.lastName}`,
+        id: user.id,
+        fullName: user.full_name,
         email: user.email,
         phone: user.phone,
         location: user.location,
         bio: user.bio,
-        skills: user.skills,
-        qualification: user.education,
-        experienceYears: user.yearsOfExperience,
-        resumeUrl: user.documents?.resumeUrl,
-        profilePicture: user.profileImage,
+        skills: user.skills ? JSON.parse(user.skills) : [],
+        qualification: user.qualification,
+        experienceYears: user.experience_years,
+        resumeUrl: user.resume_url,
+        profilePicture: user.profile_picture,
         linkedinUrl: user.linkedin_url,
         githubUrl: user.github_url,
         portfolioUrl: user.portfolio_url
       },
       stats: {
-        applications: applicationStats,
+        applications: applicationStats[0],
         savedJobs: savedJobs.length,
         profileViews: 0, // TODO: Implement profile views tracking
         profileCompletion: calculateProfileCompletion(user)
       },
-      recentApplications: transformedRecentApplications,
-      savedJobs: transformedSavedJobs,
-      recommendedJobs: transformedRecommendedJobs,
+      recentApplications,
+      savedJobs,
+      recommendedJobs,
       upcomingInterviews,
       notifications: notifications.map(n => ({
         ...n,
-        isRead: Boolean(n.read)
+        isRead: Boolean(n.is_read)
       }))
     });
 
@@ -172,115 +157,137 @@ export const getRecruiterDashboard = async (req, res) => {
     const userId = req.user.id;
     
     // Get user profile
-    const user = await BaseUser.findById(userId).populate('companyId');
+    const userProfile = await db.select().from(schema.users).where(eq(schema.users.id, userId)).limit(1);
     
-    if (!user) {
+    if (!userProfile.length) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const company = user.companyId;
+    const user = userProfile[0];
+
+    // Get company details if user has company_id
+    let company = null;
+    if (user.company_id) {
+      const companyResult = await db.select().from(schema.companies).where(eq(schema.companies.id, user.company_id)).limit(1);
+      company = companyResult.length ? companyResult[0] : null;
+    }
 
     // Get job statistics
-    const jobStatsResult = await Job.aggregate([
-        { $match: { postedBy: userId } },
-        {
-            $group: {
-                _id: null,
-                total: { $sum: 1 },
-                active: { $sum: { $cond: [{ $eq: ['$status', 'active'] }, 1, 0] } },
-                draft: { $sum: { $cond: [{ $eq: ['$status', 'draft'] }, 1, 0] } },
-                closed: { $sum: { $cond: [{ $eq: ['$status', 'closed'] }, 1, 0] } }
-            }
-        }
-    ]);
-    const jobStats = jobStatsResult[0] || { total: 0, active: 0, draft: 0, closed: 0 };
+    const jobStats = await db
+      .select({
+        total: count(),
+        active: sum(sql`CASE WHEN status = 'active' THEN 1 ELSE 0 END`),
+        draft: sum(sql`CASE WHEN status = 'draft' THEN 1 ELSE 0 END`),
+        closed: sum(sql`CASE WHEN status = 'closed' THEN 1 ELSE 0 END`)
+      })
+      .from(schema.jobs)
+      .where(eq(schema.jobs.posted_by, userId));
 
     // Get application statistics for recruiter's jobs
-    const recruiterJobs = await Job.find({ postedBy: userId }).select('_id');
-    const recruiterJobIds = recruiterJobs.map(job => job._id);
-
-    const applicationStatsResult = await Application.aggregate([
-        { $match: { job: { $in: recruiterJobIds } } },
-        {
-            $group: {
-                _id: null,
-                total: { $sum: 1 },
-                pending: { $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] } },
-                reviewed: { $sum: { $cond: [{ $eq: ['$status', 'reviewed'] }, 1, 0] } },
-                shortlisted: { $sum: { $cond: [{ $eq: ['$status', 'shortlisted'] }, 1, 0] } },
-                rejected: { $sum: { $cond: [{ $eq: ['$status', 'rejected'] }, 1, 0] } },
-                hired: { $sum: { $cond: [{ $eq: ['$status', 'hired'] }, 1, 0] } }
-            }
-        }
-    ]);
-    const applicationStats = applicationStatsResult[0] || { total: 0, pending: 0, reviewed: 0, shortlisted: 0, rejected: 0, hired: 0 };
+    const applicationStats = await db
+      .select({
+        total: count(),
+        pending: sum(sql`CASE WHEN applications.status = 'pending' THEN 1 ELSE 0 END`),
+        reviewed: sum(sql`CASE WHEN applications.status = 'reviewed' THEN 1 ELSE 0 END`),
+        shortlisted: sum(sql`CASE WHEN applications.status = 'shortlisted' THEN 1 ELSE 0 END`),
+        rejected: sum(sql`CASE WHEN applications.status = 'rejected' THEN 1 ELSE 0 END`),
+        hired: sum(sql`CASE WHEN applications.status = 'hired' THEN 1 ELSE 0 END`)
+      })
+      .from(schema.applications)
+      .leftJoin(schema.jobs, eq(schema.applications.job_id, schema.jobs.id))
+      .where(eq(schema.jobs.posted_by, userId));
 
     // Get recent applications
-    const recentApplications = await Application.find({ job: { $in: recruiterJobIds } })
-        .populate('job', 'title')
-        .populate('applicant', 'firstName lastName email')
-        .sort({ appliedAt: -1 })
-        .limit(10);
+    const recentApplications = await db
+      .select({
+        id: schema.applications.id,
+        status: schema.applications.status,
+        appliedAt: schema.applications.applied_at,
+        jobTitle: schema.jobs.title,
+        applicantName: schema.users.full_name,
+        applicantEmail: schema.users.email,
+        resumeUrl: schema.applications.resume_url
+      })
+      .from(schema.applications)
+      .leftJoin(schema.jobs, eq(schema.applications.job_id, schema.jobs.id))
+      .leftJoin(schema.users, eq(schema.applications.user_id, schema.users.id))
+      .where(eq(schema.jobs.posted_by, userId))
+      .orderBy(desc(schema.applications.applied_at))
+      .limit(10);
 
     // Get active jobs
-    const activeJobs = await Job.find({ postedBy: userId })
-        .sort({ createdAt: -1 })
-        .limit(10);
+    const activeJobs = await db
+      .select({
+        id: schema.jobs.id,
+        title: schema.jobs.title,
+        location: schema.jobs.location,
+        jobType: schema.jobs.job_type,
+        applicationsCount: schema.jobs.applications_count,
+        createdAt: schema.jobs.created_at,
+        status: schema.jobs.status
+      })
+      .from(schema.jobs)
+      .where(eq(schema.jobs.posted_by, userId))
+      .orderBy(desc(schema.jobs.created_at))
+      .limit(10);
 
     // Get upcoming interviews
-    const upcomingInterviews = await Interview.find({ recruiterId: userId, status: 'scheduled' })
-        .populate('jobId', 'title')
-        .populate('candidateId', 'firstName lastName')
-        .sort({ scheduledDate: 1 })
-        .limit(5);
+    const upcomingInterviews = await db
+      .select({
+        id: schema.interviews.id,
+        title: schema.interviews.title,
+        scheduledAt: schema.interviews.scheduled_at,
+        duration: schema.interviews.duration,
+        type: schema.interviews.type,
+        jobTitle: schema.jobs.title,
+        applicantName: schema.users.full_name
+      })
+      .from(schema.interviews)
+      .leftJoin(schema.jobs, eq(schema.interviews.job_id, schema.jobs.id))
+      .leftJoin(schema.users, eq(schema.interviews.applicant_id, schema.users.id))
+      .where(and(
+        eq(schema.interviews.recruiter_id, userId),
+        eq(schema.interviews.status, 'scheduled')
+      ))
+      .orderBy(asc(schema.interviews.scheduled_at))
+      .limit(5);
 
     // Get company analytics (last 30 days)
-    const thirtyDaysAgo = subDays(new Date(), 30);
-    const companyAnalytics = company ? await CompanyAnalytic.find({
-        companyId: company._id,
-        date: { $gte: thirtyDaysAgo }
-    }).sort({ date: 1 }) : [];
-
-    const transformedRecentApplications = recentApplications.map(app => ({
-        id: app._id,
-        status: app.status,
-        appliedAt: app.appliedAt,
-        jobTitle: app.job.title,
-        applicantName: `${app.applicant.firstName} ${app.applicant.lastName}`,
-        applicantEmail: app.applicant.email,
-        resumeUrl: app.resume // Assuming resume is a field in Application model
-    }));
-    
-    const transformedUpcomingInterviews = upcomingInterviews.map(interview => ({
-        id: interview._id,
-        title: interview.title,
-        scheduledAt: interview.scheduledDate,
-        duration: interview.duration,
-        type: interview.type,
-        jobTitle: interview.jobId.title,
-        applicantName: `${interview.candidateId.firstName} ${interview.candidateId.lastName}`
-    }));
+    const thirtyDaysAgo = format(subDays(new Date(), 30), 'yyyy-MM-dd');
+    const companyAnalytics = company ? await db
+      .select({
+        date: schema.company_analytics.date,
+        jobsPosted: schema.company_analytics.jobs_posted,
+        applicationsReceived: schema.company_analytics.applications_received,
+        profileViews: schema.company_analytics.profile_views
+      })
+      .from(schema.company_analytics)
+      .where(and(
+        eq(schema.company_analytics.company_id, company.id),
+        sql`date >= ${thirtyDaysAgo}`
+      ))
+      .orderBy(asc(schema.company_analytics.date)) : [];
 
     res.json({
       user: {
-        id: user._id,
-        fullName: `${user.firstName} ${user.lastName}`,
+        id: user.id,
+        fullName: user.full_name,
         email: user.email,
         phone: user.phone,
         location: user.location,
-        companyName: user.companyInfo?.companyName,
-        position: user.companyInfo?.designation,
+        companyName: user.company_name,
+        position: user.position,
         linkedinUrl: user.linkedin_url
       },
-      company: company,
+      company,
       stats: {
-        jobs: jobStats,
-        applications: applicationStats,
+        jobs: jobStats[0],
+        applications: applicationStats[0],
         interviews: upcomingInterviews.length
       },
-      recentApplications: transformedRecentApplications,
+      recentApplications,
       activeJobs,
-      upcomingInterviews: transformedUpcomingInterviews,
+      upcomingInterviews,
       analytics: companyAnalytics
     });
 
@@ -294,110 +301,93 @@ export const getRecruiterDashboard = async (req, res) => {
 export const getAdminDashboard = async (req, res) => {
   try {
     // Get overall system statistics
-    const userStatsResult = await BaseUser.aggregate([
-        {
-            $group: {
-                _id: null,
-                total: { $sum: 1 },
-                jobseekers: { $sum: { $cond: [{ $eq: ['$role', 'jobseeker'] }, 1, 0] } },
-                employers: { $sum: { $cond: [{ $eq: ['$role', 'employer'] }, 1, 0] } },
-                active: { $sum: { $cond: [{ $eq: ['$status', 'active'] }, 1, 0] } },
-                inactive: { $sum: { $cond: [{ $eq: ['$status', 'inactive'] }, 1, 0] } }
-            }
-        }
-    ]);
-    const userStats = userStatsResult[0] || { total: 0, jobseekers: 0, employers: 0, active: 0, inactive: 0 };
+    const userStats = await db
+      .select({
+        total: count(),
+        jobseekers: sum(sql`CASE WHEN role = 'jobseeker' THEN 1 ELSE 0 END`),
+        employers: sum(sql`CASE WHEN role = 'employer' THEN 1 ELSE 0 END`),
+        active: sum(sql`CASE WHEN status = 'active' THEN 1 ELSE 0 END`),
+        inactive: sum(sql`CASE WHEN status = 'inactive' THEN 1 ELSE 0 END`)
+      })
+      .from(schema.users);
 
-    const jobStatsResult = await Job.aggregate([
-        {
-            $group: {
-                _id: null,
-                total: { $sum: 1 },
-                active: { $sum: { $cond: [{ $eq: ['$status', 'active'] }, 1, 0] } },
-                closed: { $sum: { $cond: [{ $eq: ['$status', 'closed'] }, 1, 0] } },
-                draft: { $sum: { $cond: [{ $eq: ['$status', 'draft'] }, 1, 0] } }
-            }
-        }
-    ]);
-    const jobStats = jobStatsResult[0] || { total: 0, active: 0, closed: 0, draft: 0 };
+    const jobStats = await db
+      .select({
+        total: count(),
+        active: sum(sql`CASE WHEN status = 'active' THEN 1 ELSE 0 END`),
+        closed: sum(sql`CASE WHEN status = 'closed' THEN 1 ELSE 0 END`),
+        draft: sum(sql`CASE WHEN status = 'draft' THEN 1 ELSE 0 END`)
+      })
+      .from(schema.jobs);
 
-    const applicationStatsResult = await Application.aggregate([
-        {
-            $group: {
-                _id: null,
-                total: { $sum: 1 },
-                pending: { $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] } },
-                hired: { $sum: { $cond: [{ $eq: ['$status', 'hired'] }, 1, 0] } }
-            }
-        }
-    ]);
-    const applicationStats = applicationStatsResult[0] || { total: 0, pending: 0, hired: 0 };
+    const applicationStats = await db
+      .select({
+        total: count(),
+        pending: sum(sql`CASE WHEN status = 'pending' THEN 1 ELSE 0 END`),
+        hired: sum(sql`CASE WHEN status = 'hired' THEN 1 ELSE 0 END`)
+      })
+      .from(schema.applications);
 
-    const companyStatsResult = await Company.aggregate([
-        {
-            $group: {
-                _id: null,
-                total: { $sum: 1 },
-                verified: { $sum: { $cond: [{ $eq: ['$verified', true] }, 1, 0] } }
-            }
-        }
-    ]);
-    const companyStats = companyStatsResult[0] || { total: 0, verified: 0 };
+    const companyStats = await db
+      .select({
+        total: count(),
+        verified: sum(sql`CASE WHEN verified = true THEN 1 ELSE 0 END`)
+      })
+      .from(schema.companies);
 
     // Get recent users
-    const recentUsers = await BaseUser.find()
-        .sort({ createdAt: -1 })
-        .limit(10)
-        .select('firstName lastName email role status createdAt');
+    const recentUsers = await db
+      .select({
+        id: schema.users.id,
+        fullName: schema.users.full_name,
+        email: schema.users.email,
+        role: schema.users.role,
+        status: schema.users.status,
+        createdAt: schema.users.created_at
+      })
+      .from(schema.users)
+      .orderBy(desc(schema.users.created_at))
+      .limit(10);
 
     // Get recent jobs
-    const recentJobs = await Job.find()
-        .populate('companyId', 'name')
-        .sort({ createdAt: -1 })
-        .limit(10);
+    const recentJobs = await db
+      .select({
+        id: schema.jobs.id,
+        title: schema.jobs.title,
+        companyName: schema.companies.name,
+        location: schema.jobs.location,
+        status: schema.jobs.status,
+        applicationsCount: schema.jobs.applications_count,
+        createdAt: schema.jobs.created_at
+      })
+      .from(schema.jobs)
+      .leftJoin(schema.companies, eq(schema.jobs.company_id, schema.companies.id))
+      .orderBy(desc(schema.jobs.created_at))
+      .limit(10);
 
     // Get system activity logs
-    const recentActivity = await UserActivityLog.find()
-        .populate('userId', 'firstName lastName')
-        .sort({ createdAt: -1 })
-        .limit(20);
-
-    const transformedRecentUsers = recentUsers.map(user => ({
-        id: user._id,
-        fullName: `${user.firstName} ${user.lastName}`,
-        email: user.email,
-        role: user.role,
-        status: user.status,
-        createdAt: user.createdAt
-    }));
-
-    const transformedRecentJobs = recentJobs.map(job => ({
-        id: job._id,
-        title: job.title,
-        companyName: job.companyId.name,
-        location: job.location,
-        status: job.status,
-        applicationsCount: job.applicationsCount,
-        createdAt: job.createdAt
-    }));
-
-    const transformedRecentActivity = recentActivity.map(activity => ({
-        id: activity._id,
-        action: activity.action,
-        userName: activity.userId ? `${activity.userId.firstName} ${activity.userId.lastName}` : 'System',
-        createdAt: activity.createdAt
-    }));
+    const recentActivity = await db
+      .select({
+        id: schema.user_activity_logs.id,
+        action: schema.user_activity_logs.action,
+        userName: schema.users.full_name,
+        createdAt: schema.user_activity_logs.created_at
+      })
+      .from(schema.user_activity_logs)
+      .leftJoin(schema.users, eq(schema.user_activity_logs.user_id, schema.users.id))
+      .orderBy(desc(schema.user_activity_logs.created_at))
+      .limit(20);
 
     res.json({
       stats: {
-        users: userStats,
-        jobs: jobStats,
-        applications: applicationStats,
-        companies: companyStats
+        users: userStats[0],
+        jobs: jobStats[0],
+        applications: applicationStats[0],
+        companies: companyStats[0]
       },
-      recentUsers: transformedRecentUsers,
-      recentJobs: transformedRecentJobs,
-      recentActivity: transformedRecentActivity
+      recentUsers,
+      recentJobs,
+      recentActivity
     });
 
   } catch (error) {
@@ -409,20 +399,13 @@ export const getAdminDashboard = async (req, res) => {
 // Helper function to calculate profile completion percentage
 const calculateProfileCompletion = (user) => {
   const fields = [
-    user.firstName,
-    user.email,
-    user.phone,
-    user.location,
-    user.bio,
-    user.skills,
-    user.education,
-    user.documents?.resumeUrl,
-    user.linkedin_url
+    'full_name', 'email', 'phone', 'location', 'bio', 
+    'skills', 'qualification', 'resume_url', 'linkedin_url'
   ];
   
   let completedFields = 0;
   fields.forEach(field => {
-    if (field && (typeof field === 'string' ? field.trim() !== '' : true)) {
+    if (user[field] && user[field].trim() !== '') {
       completedFields++;
     }
   });
@@ -436,11 +419,31 @@ export const updateUserPreferences = async (req, res) => {
     const userId = req.user.id;
     const preferences = req.body;
 
-    await NotificationSetting.findOneAndUpdate(
-        { userId: userId },
-        preferences,
-        { upsert: true, new: true, runValidators: true }
-    );
+    // Check if preferences exist
+    const existingPrefs = await db
+      .select()
+      .from(schema.user_preferences)
+      .where(eq(schema.user_preferences.user_id, userId))
+      .limit(1);
+
+    if (existingPrefs.length > 0) {
+      // Update existing preferences
+      await db
+        .update(schema.user_preferences)
+        .set({
+          ...preferences,
+          updated_at: sql`CURRENT_TIMESTAMP`
+        })
+        .where(eq(schema.user_preferences.user_id, userId));
+    } else {
+      // Create new preferences
+      await db
+        .insert(schema.user_preferences)
+        .values({
+          user_id: userId,
+          ...preferences
+        });
+    }
 
     res.json({ message: 'Preferences updated successfully' });
 
@@ -455,9 +458,13 @@ export const getUserPreferences = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const preferences = await NotificationSetting.findOne({ userId: userId });
+    const preferences = await db
+      .select()
+      .from(schema.user_preferences)
+      .where(eq(schema.user_preferences.user_id, userId))
+      .limit(1);
 
-    if (!preferences) {
+    if (preferences.length === 0) {
       // Return default preferences
       return res.json({
         theme: 'light',
@@ -471,7 +478,7 @@ export const getUserPreferences = async (req, res) => {
       });
     }
 
-    res.json(preferences);
+    res.json(preferences[0]);
 
   } catch (error) {
     console.error('Error fetching user preferences:', error);

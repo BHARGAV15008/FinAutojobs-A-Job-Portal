@@ -9,7 +9,7 @@ dotenv.config({ path: './.env.development' });
 const MONGODB_URI = process.env.MONGODB_URI || 
                    process.env.DATABASE_URL || 
                    process.env.MONGO_URL ||
-                   'mongodb+srv://technogenius1500_db_user:ZnqBQD8wc4M6c1Fm@cluster0.slmyrux.mongodb.net/?appName=Cluster0';
+                   'mongodb://localhost:27017/finautojobs';
 
 async function fixUserData() {
   try {

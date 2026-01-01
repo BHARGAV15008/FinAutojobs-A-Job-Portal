@@ -21,6 +21,23 @@ const recruiterSchema = new mongoose.Schema({
     }
   },
   
+  // Office Location (for recruiters)
+  officeLocation: {
+    city: { type: String },
+    state: { type: String },
+    country: { type: String, default: 'India' },
+    address: { type: String }
+  },
+  
+  // Professional Links (Enhanced)
+  professionalLinks: {
+    linkedin: { type: String },
+    github: { type: String },
+    personalWebsite: { type: String },
+    companyWebsite: { type: String },
+    otherUrls: [{ type: String }]
+  },
+  
   // Professional Details
   specializations: [{ type: String }],
   industryExpertise: [{ type: String }],

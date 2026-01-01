@@ -6,48 +6,19 @@ class WebSocketService {
   constructor(server) {
     this.io = new Server(server, {
       cors: {
-        origin: function(origin, callback) {
-          // Allow requests with no origin (like mobile apps, curl, postman)
-          if (!origin) return callback(null, true);
-          
-          // List of allowed origins
-          const allowedOrigins = [
-            'http://192.168.41.134:3000',
-            'http://192.168.41.134:5173',
-            'http://192.168.41.134:4173',
-            'http://127.0.0.1:3000',
-            'http://127.0.0.1:5173',
-            'http://127.0.0.1:4173'
-          ];
-          
-          // Check if origin is in allowed list
-          if (allowedOrigins.includes(origin)) {
-            return callback(null, true);
-          }
-          
-          // Check if origin matches network IP patterns (192.168.x.x or 10.x.x.x)
-          const networkIPPattern = /^http:\/\/(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|127\.0\.0\.1):\d+$/;
-          if (networkIPPattern.test(origin)) {
-            return callback(null, true);
-          }
-          
-          // Allow any localhost or 127.0.0.1 with any port
-          if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-            return callback(null, true);
-          }
-          
-          callback(null, true); // Allow all origins in development
-        },
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        credentials: true,
-        allowedHeaders: ['Content-Type', 'Authorization']
-      },
-      transports: ['polling', 'websocket'],
-      allowEIO3: true,
-      pingTimeout: 60000,
-      pingInterval: 25000,
-      upgradeTimeout: 30000,
-      maxHttpBufferSize: 1e8
+        origin: [
+          'http://localhost:3000',
+          'http://localhost:3000',
+          'http://localhost:5173',
+          'http://localhost:4173',
+          'http://127.0.0.1:3000',
+          'http://127.0.0.1:3000',
+          'http://127.0.0.1:5173',
+          'http://127.0.0.1:4173'
+        ],
+        methods: ['GET', 'POST'],
+        credentials: true
+      }
     });
 
     // Store connected users with their socket IDs and user info
@@ -311,71 +282,6 @@ class WebSocketService {
     return Array.from(this.connectedUsers.values()).filter(
       user => user.user.role === role
     );
-  }
-
-  // Notify about job updates (create, update, delete)
-  notifyJobUpdate(action, jobData, recruiterId = null) {
-    const event = {
-      action, // 'created', 'updated', 'deleted', 'status_changed'
-      job: jobData,
-      timestamp: new Date().toISOString()
-    };
-
-    // Notify the recruiter who owns the job
-    if (recruiterId) {
-      this.io.to(`user_${recruiterId}`).emit('job_updated', event);
-    }
-
-    // Notify all recruiters
-    this.broadcastToRole('recruiter', 'job_updated', event);
-
-    // Notify applicants about new jobs
-    if (action === 'created' && jobData.status === 'active') {
-      this.broadcastToRole('applicant', 'new_job_posted', {
-        job: jobData,
-        timestamp: new Date().toISOString()
-      });
-    }
-  }
-
-  // Notify about application updates
-  notifyApplicationUpdate(action, applicationData, applicantId = null, recruiterId = null) {
-    const event = {
-      action, // 'created', 'updated', 'status_changed'
-      application: applicationData,
-      timestamp: new Date().toISOString()
-    };
-
-    // Notify the applicant
-    if (applicantId) {
-      this.io.to(`user_${applicantId}`).emit('application_updated', event);
-    }
-
-    // Notify the recruiter
-    if (recruiterId) {
-      this.io.to(`user_${recruiterId}`).emit('application_updated', event);
-    }
-
-    // Notify all recruiters about new applications
-    if (action === 'created') {
-      this.broadcastToRole('recruiter', 'new_application_received', event);
-    }
-  }
-
-  // Notify about data refresh needed
-  notifyDataRefresh(userId = null, role = null) {
-    const event = {
-      message: 'Data has been updated, please refresh',
-      timestamp: new Date().toISOString()
-    };
-
-    if (userId) {
-      this.io.to(`user_${userId}`).emit('data_refresh_needed', event);
-    } else if (role) {
-      this.broadcastToRole(role, 'data_refresh_needed', event);
-    } else {
-      this.broadcastToAll('data_refresh_needed', event);
-    }
   }
 }
 

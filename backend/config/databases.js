@@ -8,35 +8,35 @@ const DB_CONFIG = {
   // Main database for core system data
   MAIN: {
     name: 'finautojobs_main',
-    uri: process.env.MAIN_DB_URI || 'mongodb+srv://technogenius1500_db_user:ZnqBQD8wc4M6c1Fm@cluster0.slmyrux.mongodb.net/?appName=Cluster0_main',
+    uri: process.env.MAIN_DB_URI || 'mongodb://localhost:27017/finautojobs_main',
     connection: null
   },
   
   // Applicant-specific database
   APPLICANTS: {
     name: 'finautojobs_applicants',
-    uri: process.env.APPLICANTS_DB_URI || 'mongodb+srv://technogenius1500_db_user:ZnqBQD8wc4M6c1Fm@cluster0.slmyrux.mongodb.net/?appName=Cluster0_applicants',
+    uri: process.env.APPLICANTS_DB_URI || 'mongodb://localhost:27017/finautojobs_applicants',
     connection: null
   },
   
   // Recruiter-specific database
   RECRUITERS: {
     name: 'finautojobs_recruiters',
-    uri: process.env.RECRUITERS_DB_URI || 'mongodb+srv://technogenius1500_db_user:ZnqBQD8wc4M6c1Fm@cluster0.slmyrux.mongodb.net/?appName=Cluster0_recruiters',
+    uri: process.env.RECRUITERS_DB_URI || 'mongodb://localhost:27017/finautojobs_recruiters',
     connection: null
   },
   
   // Admin-specific database
   ADMINS: {
     name: 'finautojobs_admins',
-    uri: process.env.ADMINS_DB_URI || 'mongodb+srv://technogenius1500_db_user:ZnqBQD8wc4M6c1Fm@cluster0.slmyrux.mongodb.net/?appName=Cluster0_admins',
+    uri: process.env.ADMINS_DB_URI || 'mongodb://localhost:27017/finautojobs_admins',
     connection: null
   },
   
   // Analytics and reporting database
   ANALYTICS: {
     name: 'finautojobs_analytics',
-    uri: process.env.ANALYTICS_DB_URI || 'mongodb+srv://technogenius1500_db_user:ZnqBQD8wc4M6c1Fm@cluster0.slmyrux.mongodb.net/?appName=Cluster0_analytics',
+    uri: process.env.ANALYTICS_DB_URI || 'mongodb://localhost:27017/finautojobs_analytics',
     connection: null
   }
 };

@@ -837,11 +837,11 @@ router.get('/google/callback',
       const refreshToken = generateRefreshToken({ userId: user._id })
 
       // Redirect to frontend with tokens
-      const frontendUrl = process.env.FRONTEND_URL || 'http://192.168.41.134:3000'
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000'
       res.redirect(`${frontendUrl}/auth/callback?token=${token}&refreshToken=${refreshToken}`)
     } catch (error) {
       console.error('Google callback error:', error)
-      const frontendUrl = process.env.FRONTEND_URL || 'http://192.168.41.134:3000'
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000'
       res.redirect(`${frontendUrl}/auth/callback?error=oauth_error`)
     }
   }
@@ -860,11 +860,11 @@ router.get('/microsoft/callback',
       const token = generateToken({ userId: user._id, email: user.email })
       const refreshToken = generateRefreshToken({ userId: user._id })
 
-      const frontendUrl = process.env.FRONTEND_URL || 'http://192.168.41.134:3000'
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000'
       res.redirect(`${frontendUrl}/auth/callback?token=${token}&refreshToken=${refreshToken}`)
     } catch (error) {
       console.error('Microsoft callback error:', error)
-      const frontendUrl = process.env.FRONTEND_URL || 'http://192.168.41.134:3000'
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000'
       res.redirect(`${frontendUrl}/auth/callback?error=oauth_error`)
     }
   }

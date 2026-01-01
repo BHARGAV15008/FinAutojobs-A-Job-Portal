@@ -20,7 +20,7 @@ export const getNetworkConfig = () => {
   }
 
   return {
-    192.168.41.134: 'localhost',
+    localhost: 'localhost',
     localIP: addresses[0]?.address || 'localhost',
     allAddresses: addresses,
     port: process.env.PORT || 5000
@@ -35,8 +35,8 @@ export const corsOptions = {
 
     // Allow localhost and local network IPs
     const allowedOrigins = [
-      'http://192.168.41.134:3000',
-      'http://192.168.41.134:3000',
+      'http://localhost:3000',
+      'http://localhost:3000',
       'http://127.0.0.1:3000',
       'http://127.0.0.1:3000'
     ];
@@ -78,7 +78,7 @@ export const displayNetworkInfo = () => {
 
   console.log('\n🌐 Network Access Information:');
   console.log('================================');
-  console.log(`📱 Local Access: http://192.168.41.134:${config.port}`);
+  console.log(`📱 Local Access: http://localhost:${config.port}`);
   console.log(`🖥️  Local IP: http://${config.localIP}:${config.port}`);
 
   if (config.allAddresses.length > 0) {
@@ -89,7 +89,7 @@ export const displayNetworkInfo = () => {
   }
 
   console.log('\n📋 Frontend URLs:');
-  console.log(`   • Local: http://192.168.41.134:3000`);
+  console.log(`   • Local: http://localhost:3000`);
   console.log(`   • Network: http://${config.localIP}:3000`);
 
   console.log('\n💡 To access from other devices:');

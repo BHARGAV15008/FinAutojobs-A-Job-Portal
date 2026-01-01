@@ -137,44 +137,16 @@ const createMulterConfig = (fileType) => {
     destination: (req, file, cb) => {
       cb(null, config.destination);
     },
-    filename: async (req, file, cb) => {
-      try {
-        // Get user data to access username
-        const { BaseUser } = await import('../models/unified/BaseUser.js');
-        const user = await BaseUser.default.findById(req.user.userId);
-        const username = user?.username || req.user.userId;
-        
-        const extension = path.extname(file.originalname);
-        let filename;
-        
-        // Create readable filename based on file type
-        if (fileType === 'resume') {
-          filename = `resume_${username}${extension}`;
-        } else if (fileType === 'coverLetter') {
-          filename = `coverletter_${username}${extension}`;
-        } else if (fileType === 'portfolio') {
-          filename = `portfolio_${username}${extension}`;
-        } else {
-          // For other document types, include original name
-          const baseName = path.basename(file.originalname, extension)
-            .replace(/[^a-zA-Z0-9]/g, '_')
-            .substring(0, 30);
-          filename = `${fileType}_${username}_${baseName}${extension}`;
-        }
-        
-        cb(null, filename);
-      } catch (error) {
-        console.error('❌ Error generating filename:', error);
-        // Fallback to original naming if user lookup fails
-        const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(6).toString('hex');
-        const extension = path.extname(file.originalname);
-        const baseName = path.basename(file.originalname, extension)
-          .replace(/[^a-zA-Z0-9]/g, '_')
-          .substring(0, 50);
-        
-        const filename = `${req.user.userId}_${baseName}_${uniqueSuffix}${extension}`;
-        cb(null, filename);
-      }
+    filename: (req, file, cb) => {
+      // Generate unique filename
+      const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(6).toString('hex');
+      const extension = path.extname(file.originalname);
+      const baseName = path.basename(file.originalname, extension)
+        .replace(/[^a-zA-Z0-9]/g, '_')
+        .substring(0, 50);
+      
+      const filename = `${req.user.userId}_${baseName}_${uniqueSuffix}${extension}`;
+      cb(null, filename);
     }
   });
 

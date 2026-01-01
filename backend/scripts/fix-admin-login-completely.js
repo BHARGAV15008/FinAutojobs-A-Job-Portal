@@ -179,7 +179,7 @@ async function fixAdminLoginCompletely() {
     });
 
     console.log('\n🚀 Admin Login URLs:');
-    console.log('   Local: http://192.168.41.134:3000/admin-login');
+    console.log('   Local: http://localhost:3000/admin-login');
     console.log('   Deployed: https://finautojobs-a-job-portal-pivn.onrender.com/admin-login');
 
   } catch (error) {

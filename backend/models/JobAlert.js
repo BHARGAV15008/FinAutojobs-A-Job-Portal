@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const jobAlertSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'BaseUser',
     required: true
   },
   title: {

@@ -45,7 +45,7 @@ class EmailService {
 
     this.fromEmail = process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER || 'noreply@finautojobs.com';
     this.fromName = process.env.EMAIL_FROM_NAME || 'FinAutoJobs Team';
-    this.baseUrl = process.env.FRONTEND_URL || 'http://192.168.41.134:3000';
+    this.baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     
     // Initialize email templates
     this.templates = this.loadEmailTemplates();
@@ -151,7 +151,7 @@ class EmailService {
               <h2>Dear {{applicantName}},</h2>
               <p>Thank you for applying to the <strong>{{jobTitle}}</strong> position at <strong>{{companyName}}</strong>.</p>
               
-              <div style="background: white; padding: 15px; border-radius: 6px; margin: 20px 0;">
+              <div style="background: white; padding: 15px; border-radius: 8px; margin: 20px 0;">
                 <h3>Application Details:</h3>
                 <p><strong>Application ID:</strong> {{applicationId}}</p>
                 <p><strong>Position:</strong> {{jobTitle}}</p>
@@ -196,8 +196,8 @@ class EmailService {
             .content { padding: 20px; background: #f9f9f9; }
             .footer { padding: 20px; text-align: center; color: #666; }
             .button { display: inline-block; padding: 12px 24px; background: #2196F3; color: white; text-decoration: none; border-radius: 4px; }
-            .status-update { background: white; padding: 20px; border-radius: 6px; border-left: 4px solid #4CAF50; margin: 20px 0; }
-            .timeline { background: white; padding: 15px; border-radius: 6px; margin: 20px 0; }
+            .status-update { background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #4CAF50; margin: 20px 0; }
+            .timeline { background: white; padding: 15px; border-radius: 8px; margin: 20px 0; }
           </style>
         </head>
         <body>
@@ -256,8 +256,8 @@ class EmailService {
             .content { padding: 20px; background: #f9f9f9; }
             .footer { padding: 20px; text-align: center; color: #666; }
             .button { display: inline-block; padding: 12px 24px; background: #FF9800; color: white; text-decoration: none; border-radius: 4px; }
-            .applicant-info { background: white; padding: 15px; border-radius: 6px; margin: 20px 0; }
-            .highlight { background: #FFF3E0; padding: 15px; border-radius: 6px; border-left: 4px solid #FF9800; }
+            .applicant-info { background: white; padding: 15px; border-radius: 8px; margin: 20px 0; }
+            .highlight { background: #FFF3E0; padding: 15px; border-radius: 8px; border-left: 4px solid #FF9800; }
           </style>
         </head>
         <body>
@@ -314,7 +314,7 @@ class EmailService {
             .content { padding: 20px; background: #f9f9f9; }
             .footer { padding: 20px; text-align: center; color: #666; }
             .button { display: inline-block; padding: 12px 24px; background: #9C27B0; color: white; text-decoration: none; border-radius: 4px; }
-            .interview-details { background: white; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #9C27B0; }
+            .interview-details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #9C27B0; }
             .calendar-link { background: #E1BEE7; padding: 10px; border-radius: 4px; text-align: center; margin: 15px 0; }
           </style>
         </head>
@@ -382,7 +382,7 @@ class EmailService {
             .content { padding: 20px; background: #f9f9f9; }
             .footer { padding: 20px; text-align: center; color: #666; }
             .button { display: inline-block; padding: 12px 24px; background: #4CAF50; color: white; text-decoration: none; border-radius: 4px; margin: 5px; }
-            .offer-details { background: white; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #4CAF50; }
+            .offer-details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4CAF50; }
             .celebration { text-align: center; font-size: 48px; margin: 20px 0; }
           </style>
         </head>
@@ -904,7 +904,7 @@ class EmailService {
    */
   async sendPasswordResetEmail(userEmail, userName, resetToken) {
     try {
-      const resetLink = `${process.env.FRONTEND_URL || 'http://192.168.41.134:3000'}/reset-password?token=${resetToken}`;
+      const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
       const subject = 'Reset Your Password - FinAutoJobs';
       const html = this.getPasswordResetTemplate(userName, resetLink);
 
@@ -949,7 +949,7 @@ class EmailService {
           .container { max-width: 600px; margin: 0 auto; background-color: white; border-radius: 10px; overflow: hidden; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
           .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
           .content { padding: 30px; }
-          .credentials-box { background-color: #f8f9fa; border: 2px solid #e9ecef; border-radius: 6px; padding: 20px; margin: 20px 0; }
+          .credentials-box { background-color: #f8f9fa; border: 2px solid #e9ecef; border-radius: 8px; padding: 20px; margin: 20px 0; }
           .credential-item { margin: 10px 0; padding: 8px; background-color: white; border-radius: 4px; border-left: 4px solid #667eea; }
           .password-highlight { background-color: #fff3cd; border-color: #ffeaa7; font-weight: bold; font-size: 16px; }
           .cta-button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }
@@ -1052,7 +1052,7 @@ class EmailService {
             <p>Dear ${userName},</p>
             <p>Thank you for joining FinAutoJobs! We're excited to have you as part of our community.</p>
             <p>${roleMessages[role]}</p>
-            <a href="${process.env.FRONTEND_URL || 'http://192.168.41.134:3000'}/login" class="button">Login to Your Account</a>
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/login" class="button">Login to Your Account</a>
             <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
             <p>Best regards,<br>The FinAutoJobs Team</p>
           </div>
@@ -1136,7 +1136,7 @@ class EmailService {
               <p><strong>Applicant:</strong> ${applicantName}</p>
             </div>
             <p>Please log in to your dashboard to review the application and take appropriate action.</p>
-            <a href="${process.env.FRONTEND_URL || 'http://192.168.41.134:3000'}/recruiter/applications" class="button">Review Applications</a>
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/recruiter/applications" class="button">Review Applications</a>
             <p>Best regards,<br>The FinAutoJobs Team</p>
           </div>
           <div class="footer">
@@ -1187,7 +1187,7 @@ class EmailService {
               <p><strong>New Status:</strong> <span style="text-transform: capitalize; color: #667eea;">${newStatus}</span></p>
             </div>
             <p>${statusMessages[newStatus]}</p>
-            <a href="${process.env.FRONTEND_URL || 'http://192.168.41.134:3000'}/applicant/applications" class="button">View Application</a>
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/applicant/applications" class="button">View Application</a>
             <p>Best regards,<br>The FinAutoJobs Team</p>
           </div>
           <div class="footer">
@@ -1229,7 +1229,7 @@ class EmailService {
               <p><strong>Registered by:</strong> ${recruiterName}</p>
             </div>
             <p>Please review the company information and verify the company if it meets our guidelines.</p>
-            <a href="${process.env.FRONTEND_URL || 'http://192.168.41.134:3000'}/admin/companies" class="button">Review Companies</a>
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/admin/companies" class="button">Review Companies</a>
             <p>Best regards,<br>The FinAutoJobs Team</p>
           </div>
           <div class="footer">
@@ -1271,7 +1271,7 @@ class EmailService {
               <p><strong>Status:</strong> <span style="color: #28a745;">Verified</span></p>
             </div>
             <p>You can now post job openings and start receiving applications from qualified candidates.</p>
-            <a href="${process.env.FRONTEND_URL || 'http://192.168.41.134:3000'}/recruiter/dashboard" class="button">Go to Dashboard</a>
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/recruiter/dashboard" class="button">Go to Dashboard</a>
             <p>Best regards,<br>The FinAutoJobs Team</p>
           </div>
           <div class="footer">

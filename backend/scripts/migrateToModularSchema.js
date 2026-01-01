@@ -23,7 +23,7 @@ import {
 // Load environment variables
 dotenv.config();
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://technogenius1500_db_user:ZnqBQD8wc4M6c1Fm@cluster0.slmyrux.mongodb.net/?appName=Cluster0';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/finautojobs';
 
 console.log('🚀 Starting migration to modular schema...');
 console.log(`📍 Database URI: ${MONGODB_URI}`);

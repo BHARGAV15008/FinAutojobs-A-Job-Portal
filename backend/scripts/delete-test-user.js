@@ -4,7 +4,7 @@ import { BaseUser } from '../models/UserModels.js';
 // Connect to MongoDB
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://technogenius1500_db_user:ZnqBQD8wc4M6c1Fm@cluster0.slmyrux.mongodb.net/?appName=Cluster0');
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/finautojobs');
     console.log('✅ MongoDB connected');
   } catch (error) {
     console.error('❌ MongoDB connection error:', error);

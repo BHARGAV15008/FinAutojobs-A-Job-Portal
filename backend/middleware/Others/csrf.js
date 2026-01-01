@@ -1,5 +1,7 @@
 import csrf from 'csurf';
-import UserSession from '../models/UserSession.js';
+import { db } from '../config/database.js';
+import { userSessions } from '../schema.js';
+import { eq } from 'drizzle-orm';
 
 // Configure CSRF protection
 const csrfProtection = csrf({
@@ -25,9 +27,12 @@ export const validateCSRFToken = async (req, res, next) => {
 
   try {
     // Verify session exists
-    const session = await UserSession.findOne({ sessionToken: token });
+    const session = await db.select()
+      .from(userSessions)
+      .where(eq(userSessions.token, token))
+      .limit(1);
 
-    if (!session) {
+    if (session.length === 0) {
       return res.status(403).json({ message: 'Invalid session' });
     }
 

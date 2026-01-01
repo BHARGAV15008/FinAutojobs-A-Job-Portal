@@ -1,7 +1,6 @@
-import { BaseUser } from '../../models/UserModels.js';
-import Application from '../models/Application.js';
-import Job from '../models/Job.js';
-import Company from '../models/Company.js';
+import { db } from '../config/database.js';
+import { users, applications, jobs, companies } from '../schema.js';
+import { eq, and, desc, sql } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
 // Get user profile
@@ -9,16 +8,22 @@ export const getProfile = async (req, res) => {
   try {
     const userId = req.user.userId;
 
-    const user = await BaseUser.findById(userId).select('-password'); // Select everything but the password
+    const userResult = await db.select()
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
 
-    if (!user) {
+    if (userResult.length === 0) {
       return res.status(404).json({ 
         message: 'User not found' 
       });
     }
 
+    const user = userResult[0];
+    const { password: _, ...userWithoutPassword } = user;
+
     res.json({
-      user: user
+      user: userWithoutPassword
     });
 
   } catch (error) {
@@ -33,36 +38,41 @@ export const getProfile = async (req, res) => {
 export const updateProfile = async (req, res) => {
   try {
     const userId = req.user.userId;
-    let updateData = { ...req.body };
+    const updateData = req.body;
 
     // Remove sensitive fields that shouldn't be updated via this endpoint
     delete updateData.password;
     delete updateData.email;
     delete updateData.id;
-    delete updateData.createdAt;
-    delete updateData.updatedAt;
-    delete updateData._id;
+    delete updateData.created_at;
+    delete updateData.updated_at;
 
-    // Use findByIdAndUpdate to update user profile
-    const updatedUser = await BaseUser.findByIdAndUpdate(
-      userId,
-      { 
-          $set: updateData,
-          $currentDate: { updatedAt: true } // Update updatedAt timestamp
-      },
-      { new: true, runValidators: true } // Return the updated document and run schema validators
-    ).select('-password'); // Exclude password from the returned document
+    // Process skills array if provided
+    if (updateData.skills && Array.isArray(updateData.skills)) {
+      updateData.skills = JSON.stringify(updateData.skills);
+    }
 
+    // Update user profile
+    const updatedUser = await db.update(users)
+      .set({
+        ...updateData,
+        updated_at: new Date().toISOString()
+      })
+      .where(eq(users.id, userId))
+      .returning();
 
-    if (!updatedUser) {
+    if (updatedUser.length === 0) {
       return res.status(404).json({ 
         message: 'User not found' 
       });
     }
 
+    const user = updatedUser[0];
+    const { password: _, ...userWithoutPassword } = user;
+
     res.json({
       message: 'Profile updated successfully',
-      user: updatedUser
+      user: userWithoutPassword
     });
 
   } catch (error) {
@@ -87,16 +97,21 @@ export const changePassword = async (req, res) => {
     }
 
     // Get user with password
-    const user = await BaseUser.findById(userId);
+    const userResult = await db.select()
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
 
-    if (!user) {
+    if (userResult.length === 0) {
       return res.status(404).json({ 
         message: 'User not found' 
       });
     }
 
+    const user = userResult[0];
+
     // Verify current password
-    const isCurrentPasswordValid = await user.comparePassword(currentPassword);
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
     if (!isCurrentPasswordValid) {
       return res.status(400).json({ 
         message: 'Current password is incorrect' 
@@ -108,8 +123,12 @@ export const changePassword = async (req, res) => {
     const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
 
     // Update password
-    user.password = hashedNewPassword;
-    await user.save(); // Mongoose pre-save hook will update updatedAt
+    await db.update(users)
+      .set({
+        password: hashedNewPassword,
+        updated_at: new Date().toISOString()
+      })
+      .where(eq(users.id, userId));
 
     res.json({
       message: 'Password changed successfully'
@@ -131,74 +150,66 @@ export const getUserApplications = async (req, res) => {
       page = 1,
       limit = 10,
       status,
-      sort_by = 'appliedAt', // Changed to Mongoose field name
+      sort_by = 'applied_at',
       sort_order = 'desc'
     } = req.query;
 
-    const pageNumber = parseInt(page);
-    const limitNumber = parseInt(limit);
-    const skip = (pageNumber - 1) * limitNumber;
-
-    let query = { applicant: userId }; // Mongoose uses 'applicant' for userId
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    
+    // Build where conditions
+    let whereConditions = [eq(applications.user_id, userId)];
 
     if (status) {
-      query.status = status;
+      whereConditions.push(eq(applications.status, status));
     }
 
-    let sortOptions = {};
-    if (sort_by) {
-      sortOptions[sort_by] = sort_order === 'asc' ? 1 : -1;
-    }
+    // Build order by
+    const orderBy = sort_order === 'asc' ? asc(applications[sort_by]) : desc(applications[sort_by]);
 
-    const applicationsQuery = Application.find(query)
-      .populate({
-        path: 'job',
-        select: 'title location salaryMin salaryMax salaryCurrency jobType workMode companyId', // Select necessary fields from job
-        populate: {
-          path: 'companyId', // Populate company details through companyId
-          model: 'Company',
-          select: 'name logoUrl location' // Select necessary fields from company
-        }
-      })
-      .sort(sortOptions)
-      .skip(skip)
-      .limit(limitNumber);
-
-    const applicationsResult = await applicationsQuery.exec();
-
-    // Transform results to match the desired output structure
-    const transformedApplications = applicationsResult.map(app => ({
-      id: app._id,
-      status: app.status,
-      applied_at: app.appliedAt, // Mongoose field name
-      cover_letter: app.coverLetter,
-      resume_url: app.resume, // Mongoose field name
-      job_id: app.job?._id,
-      job_title: app.job?.title,
-      job_location: app.job?.location,
-      job_salary_min: app.job?.salaryMin,
-      job_salary_max: app.job?.salaryMax,
-      job_salary_currency: app.job?.salaryCurrency,
-      job_type: app.job?.jobType,
-      work_mode: app.job?.workMode,
-      company_name: app.job?.companyId?.name,
-      company_logo: app.job?.companyId?.logoUrl,
-      company_location: app.job?.companyId?.location?.city // Assuming city is the relevant location part
-    }));
+    // Get applications with job and company information
+    const applicationsResult = await db.select({
+      id: applications.id,
+      status: applications.status,
+      applied_at: applications.applied_at,
+      cover_letter: applications.cover_letter,
+      resume_url: applications.resume_url,
+      job_id: jobs.id,
+      job_title: jobs.title,
+      job_location: jobs.location,
+      job_salary_min: jobs.salary_min,
+      job_salary_max: jobs.salary_max,
+      job_salary_currency: jobs.salary_currency,
+      job_type: jobs.job_type,
+      work_mode: jobs.work_mode,
+      company_name: companies.name,
+      company_logo: companies.logo_url,
+      company_location: companies.location
+    })
+    .from(applications)
+    .leftJoin(jobs, eq(applications.job_id, jobs.id))
+    .leftJoin(companies, eq(jobs.company_id, companies.id))
+    .where(and(...whereConditions))
+    .orderBy(orderBy)
+    .limit(parseInt(limit))
+    .offset(offset);
 
     // Get total count for pagination
-    const total = await Application.countDocuments(query);
-    const totalPages = Math.ceil(total / limitNumber);
+    const totalResult = await db.select({ count: sql`COUNT(*)` })
+      .from(applications)
+      .where(and(...whereConditions));
+    
+    const total = totalResult[0].count;
+    const totalPages = Math.ceil(total / parseInt(limit));
 
     res.json({
-      applications: transformedApplications,
+      applications: applicationsResult,
       pagination: {
-        current_page: pageNumber,
+        current_page: parseInt(page),
         total_pages: totalPages,
         total_items: total,
-        items_per_page: limitNumber,
-        has_next: pageNumber < totalPages,
-        has_prev: pageNumber > 1
+        items_per_page: parseInt(limit),
+        has_next: parseInt(page) < totalPages,
+        has_prev: parseInt(page) > 1
       }
     });
 
@@ -216,39 +227,50 @@ export const getUserStats = async (req, res) => {
     const userId = req.user.userId;
 
     // Total applications
-    const totalApplications = await Application.countDocuments({ applicant: userId });
+    const totalApplicationsResult = await db.select({ count: sql`COUNT(*)` })
+      .from(applications)
+      .where(eq(applications.user_id, userId));
 
     // Applications by status
-    const applicationsByStatus = await Application.aggregate([
-      { $match: { applicant: userId } },
-      { $group: { _id: '$status', count: { $sum: 1 } } }
-    ]);
+    const applicationsByStatusResult = await db.select({
+      status: applications.status,
+      count: sql`COUNT(*)`
+    })
+    .from(applications)
+    .where(eq(applications.user_id, userId))
+    .groupBy(applications.status);
 
     // Recent applications (last 30 days)
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const recentApplications = await Application.countDocuments({
-      applicant: userId,
-      appliedAt: { $gte: thirtyDaysAgo }
-    });
+    const recentApplicationsResult = await db.select({ count: sql`COUNT(*)` })
+      .from(applications)
+      .where(
+        and(
+          eq(applications.user_id, userId),
+          sql`${applications.applied_at} >= datetime('now', '-30 days')`
+        )
+      );
 
     // Profile completion percentage
-    const user = await BaseUser.findById(userId);
+    const userResult = await db.select()
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
 
     let profileCompletion = 0;
-    if (user) {
+    if (userResult.length > 0) {
+      const user = userResult[0];
       const fields = [
-        user.firstName, user.lastName, user.phone, user.bio, user.location,
-        user.skills, user.education, user.documents?.resumeUrl
+        'full_name', 'phone', 'bio', 'location', 'skills', 
+        'qualification', 'experience_years', 'resume_url'
       ];
-      const completedFields = fields.filter(field => field !== null && field !== undefined && (typeof field === 'string' ? field.trim() !== '' : true));
+      const completedFields = fields.filter(field => user[field] && user[field].trim() !== '');
       profileCompletion = Math.round((completedFields.length / fields.length) * 100);
     }
 
     res.json({
-      total_applications: totalApplications,
-      recent_applications: recentApplications,
-      applications_by_status: applicationsByStatus.map(item => ({ status: item._id, count: item.count })),
+      total_applications: totalApplicationsResult[0].count,
+      recent_applications: recentApplicationsResult[0].count,
+      applications_by_status: applicationsByStatusResult,
       profile_completion: profileCompletion
     });
 
@@ -269,56 +291,73 @@ export const getAllUsers = async (req, res) => {
       role,
       status,
       search,
-      sort_by = 'createdAt',
+      sort_by = 'created_at',
       sort_order = 'desc'
     } = req.query;
 
-    const pageNumber = parseInt(page);
-    const limitNumber = parseInt(limit);
-    const skip = (pageNumber - 1) * limitNumber;
-
-    let query = {};
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    
+    // Build where conditions
+    let whereConditions = [];
 
     if (role) {
-      query.role = role;
+      whereConditions.push(eq(users.role, role));
     }
 
     if (status) {
-      query.status = status;
+      whereConditions.push(eq(users.status, status));
     }
 
     if (search) {
-      query.$or = [
-        { username: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
-        { firstName: { $regex: search, $options: 'i' } },
-        { lastName: { $regex: search, $options: 'i' } }
-      ];
+      whereConditions.push(
+        or(
+          like(users.username, `%${search}%`),
+          like(users.email, `%${search}%`),
+          like(users.full_name, `%${search}%`)
+        )
+      );
     }
 
-    let sortOptions = {};
-    if (sort_by) {
-      sortOptions[sort_by] = sort_order === 'asc' ? 1 : -1;
-    }
+    // Build order by
+    const orderBy = sort_order === 'asc' ? asc(users[sort_by]) : desc(users[sort_by]);
 
-    const usersResult = await BaseUser.find(query)
-      .select('-password') // Exclude password
-      .sort(sortOptions)
-      .skip(skip)
-      .limit(limitNumber);
+    // Get users without passwords
+    const usersResult = await db.select({
+      id: users.id,
+      username: users.username,
+      email: users.email,
+      full_name: users.full_name,
+      phone: users.phone,
+      role: users.role,
+      status: users.status,
+      email_verified: users.email_verified,
+      phone_verified: users.phone_verified,
+      created_at: users.created_at,
+      updated_at: users.updated_at
+    })
+    .from(users)
+    .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
+    .orderBy(orderBy)
+    .limit(parseInt(limit))
+    .offset(offset);
 
-    const total = await BaseUser.countDocuments(query);
-    const totalPages = Math.ceil(total / limitNumber);
+    // Get total count for pagination
+    const totalResult = await db.select({ count: sql`COUNT(*)` })
+      .from(users)
+      .where(whereConditions.length > 0 ? and(...whereConditions) : undefined);
+    
+    const total = totalResult[0].count;
+    const totalPages = Math.ceil(total / parseInt(limit));
 
     res.json({
       users: usersResult,
       pagination: {
-        current_page: pageNumber,
+        current_page: parseInt(page),
         total_pages: totalPages,
         total_items: total,
-        items_per_page: limitNumber,
-        has_next: pageNumber < totalPages,
-        has_prev: pageNumber > 1
+        items_per_page: parseInt(limit),
+        has_next: parseInt(page) < totalPages,
+        has_prev: parseInt(page) > 1
       }
     });
 
@@ -345,24 +384,26 @@ export const updateUserStatus = async (req, res) => {
     }
 
     // Update user status
-    const updatedUser = await BaseUser.findByIdAndUpdate(
-      id,
-      { 
-          $set: { status },
-          $currentDate: { updatedAt: true }
-      },
-      { new: true, runValidators: true }
-    ).select('-password');
+    const updatedUser = await db.update(users)
+      .set({
+        status,
+        updated_at: new Date().toISOString()
+      })
+      .where(eq(users.id, parseInt(id)))
+      .returning();
 
-    if (!updatedUser) {
+    if (updatedUser.length === 0) {
       return res.status(404).json({ 
         message: 'User not found' 
       });
     }
 
+    const user = updatedUser[0];
+    const { password: _, ...userWithoutPassword } = user;
+
     res.json({
       message: 'User status updated successfully',
-      user: updatedUser
+      user: userWithoutPassword
     });
 
   } catch (error) {
@@ -379,19 +420,27 @@ export const getProfileAnalytics = async (req, res) => {
     const userId = req.user.userId;
 
     // Get user applications count
-    const applicationsSent = await Application.countDocuments({ applicant: userId });
+    const applicationsResult = await db.select({ count: sql`count(*)` })
+      .from(applications)
+      .where(eq(applications.user_id, userId));
+
+    const applicationsSent = applicationsResult[0]?.count || 0;
 
     // Get shortlisted applications count
-    const shortlisted = await Application.countDocuments({
-      applicant: userId,
-      status: 'shortlisted'
-    });
+    const shortlistedResult = await db.select({ count: sql`count(*)` })
+      .from(applications)
+      .where(and(
+        eq(applications.user_id, userId),
+        eq(applications.status, 'shortlisted')
+      ));
+
+    const shortlisted = shortlistedResult[0]?.count || 0;
 
     // Mock data for profile views and other analytics
     const analytics = {
       profileViews: Math.floor(Math.random() * 300) + 50,
-      applicationsSent: applicationsSent,
-      shortlisted: shortlisted,
+      applicationsSent: parseInt(applicationsSent),
+      shortlisted: parseInt(shortlisted),
       profileCompleteness: 85,
       skillMatchRate: Math.floor(Math.random() * 30) + 70
     };
@@ -412,25 +461,26 @@ export const getProfileActivity = async (req, res) => {
     const userId = req.user.userId;
 
     // Get recent applications with job and company details
-    const recentApplications = await Application.find({ applicant: userId })
-      .populate({
-        path: 'job',
-        select: 'title companyId',
-        populate: {
-          path: 'companyId',
-          model: 'Company',
-          select: 'name'
-        }
-      })
-      .sort({ appliedAt: -1 })
-      .limit(10);
+    const recentApplications = await db.select({
+      id: applications.id,
+      status: applications.status,
+      applied_at: applications.applied_at,
+      job_title: jobs.title,
+      company_name: companies.name
+    })
+    .from(applications)
+    .leftJoin(jobs, eq(applications.job_id, jobs.id))
+    .leftJoin(companies, eq(jobs.company_id, companies.id))
+    .where(eq(applications.user_id, userId))
+    .orderBy(desc(applications.applied_at))
+    .limit(10);
 
     // Transform to activity format
     const activities = recentApplications.map(app => ({
-      id: app._id,
+      id: app.id,
       type: 'application_sent',
-      message: `Applied to ${app.job?.title} at ${app.job?.companyId?.name || 'N/A'}`,
-      time: app.appliedAt,
+      message: `Applied to ${app.job_title} at ${app.company_name}`,
+      time: app.applied_at,
       status: app.status
     }));
 
@@ -473,18 +523,12 @@ export const deleteUser = async (req, res) => {
     const { id } = req.params;
 
     // Soft delete by updating status
-    const deletedUser = await BaseUser.findByIdAndUpdate(
-      id,
-      {
-        $set: { status: 'deleted' },
-        $currentDate: { updatedAt: true }
-      },
-      { new: true }
-    );
-
-    if (!deletedUser) {
-      return res.status(404).json({ message: 'User not found' });
-    }
+    await db.update(users)
+      .set({ 
+        status: 'deleted',
+        updated_at: new Date().toISOString()
+      })
+      .where(eq(users.id, parseInt(id)));
 
     res.json({
       message: 'User deleted successfully'
