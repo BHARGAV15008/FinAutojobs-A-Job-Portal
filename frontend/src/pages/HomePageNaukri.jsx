@@ -325,56 +325,6 @@ const HomePageNaukri = () => {
     },
   ];
 
-  const topCompanies = [
-    {
-      name: "Google",
-      logo: "G",
-      color: "#4285f4",
-      rating: 4.5,
-      reviews: "12.5K",
-      openings: 234,
-    },
-    {
-      name: "Amazon",
-      logo: "A",
-      color: "#ff9900",
-      rating: 4.2,
-      reviews: "18.2K",
-      openings: 567,
-    },
-    {
-      name: "Microsoft",
-      logo: "M",
-      color: "#00a4ef",
-      rating: 4.4,
-      reviews: "15.8K",
-      openings: 345,
-    },
-    {
-      name: "Meta",
-      logo: "M",
-      color: "#0866ff",
-      rating: 4.1,
-      reviews: "8.9K",
-      openings: 189,
-    },
-    {
-      name: "Apple",
-      logo: "A",
-      color: "#000",
-      rating: 4.6,
-      reviews: "9.2K",
-      openings: 123,
-    },
-    {
-      name: "Netflix",
-      logo: "N",
-      color: "#e50914",
-      rating: 4.3,
-      reviews: "5.4K",
-      openings: 78,
-    },
-  ];
 
   const features = [
     {

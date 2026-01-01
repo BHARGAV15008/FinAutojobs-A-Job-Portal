@@ -68,29 +68,9 @@ const ApplicantDashboardContent = () => {
   // Applied jobs tracking
   const [appliedJobs, setAppliedJobs] = useState(new Set());
 
-  // Use real user data if authenticated, otherwise use demo data
-  const user = (authUser || currentUser) ? {
-    id: (authUser || currentUser)?._id || (authUser || currentUser)?.id,
-    name: (authUser || currentUser)?.name || 
-          (authUser || currentUser)?.fullName || 
-          `${(authUser || currentUser)?.firstName || ''} ${(authUser || currentUser)?.lastName || ''}`.trim() ||
-          'User',
-    firstName: (authUser || currentUser)?.firstName,
-    lastName: (authUser || currentUser)?.lastName,
-    email: (authUser || currentUser)?.email,
-    phone: (authUser || currentUser)?.phone,
-    location: (authUser || currentUser)?.location || (authUser || currentUser)?.currentLocation?.city || "Not specified",
-    bio: (authUser || currentUser)?.bio || "",
-    skills: (authUser || currentUser)?.skills || [],
-    qualification: (authUser || currentUser)?.qualification || 
-                  (Array.isArray((authUser || currentUser)?.education) && (authUser || currentUser)?.education.length > 0
-                    ? (authUser || currentUser)?.education[0]?.degree 
-                    : (authUser || currentUser)?.education) || "",
-    experience: (authUser || currentUser)?.experience || (authUser || currentUser)?.yearsOfExperience || 0,
-    role: (authUser || currentUser)?.role || "applicant",
-    profileCompletion: (authUser || currentUser)?.profileCompletion || { percentage: 0 },
-    profile_picture: (authUser || currentUser)?.profile_picture || (authUser || currentUser)?.profilePicture,
-  } : {
+  // The `currentUser` from `useDashboard` is now normalized at the context level.
+  // We can use it directly.
+  const user = currentUser || {
     id: 1,
     name: "Demo User",
     firstName: "Demo",
@@ -100,10 +80,14 @@ const ApplicantDashboardContent = () => {
     location: "Mumbai, India",
     bio: "Experienced software developer with 5+ years in full-stack development",
     skills: ["JavaScript", "React", "Node.js", "Python", "MongoDB"],
-    qualification: "B.Tech Computer Science",
-    experience: 5,
+    qualification: "B Tech Computer Science",
+    yearsOfExperience: 5, // Match normalized field
+    linkedin_url: "",
+    github_url: "",
+    portfolio_url: "",
     role: "applicant",
     profileCompletion: { percentage: 85 },
+    profile_picture: "",
   };
 
   // Get role-specific stats with null safety

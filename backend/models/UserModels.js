@@ -1,12 +1,12 @@
-import mongoose from 'mongoose';
-import BaseUser from './unified/BaseUser.js';
-import Applicant from './unified/Applicant.js';
-import Recruiter from './unified/Recruiter.js';
-import Admin from './unified/Admin.js';
+import mongoose from "mongoose";
+import BaseUser from "./unified/BaseUser.js";
+import Applicant from "./unified/Applicant.js";
+import Recruiter from "./unified/Recruiter.js";
+import Admin from "./unified/Admin.js";
 
 /**
  * Unified User Models with Role-Based Registration and Authentication
- * 
+ *
  * This module provides:
  * 1. Role-based user creation (Applicant/Recruiter)
  * 2. Authentication validation
@@ -26,72 +26,82 @@ export { BaseUser, Applicant, Recruiter, Admin };
 export const createUserByRole = async (userData) => {
   try {
     const { role, ...data } = userData;
-    
+
     // Validate role
-    if (!['applicant', 'recruiter', 'admin'].includes(role)) {
-      throw new Error('Invalid role. Must be "applicant", "recruiter", or "admin"');
+    if (!["applicant", "recruiter", "admin"].includes(role)) {
+      throw new Error(
+        'Invalid role. Must be "applicant", "recruiter", or "admin"'
+      );
     }
-    
+
     // Create user based on role
     let user;
-    if (role === 'applicant') {
+    if (role === "applicant") {
       user = new Applicant({
         ...data,
-        role: 'applicant'
+        role: "applicant",
       });
-    } else if (role === 'recruiter') {
+    } else if (role === "recruiter") {
       user = new Recruiter({
         ...data,
-        role: 'recruiter'
+        role: "recruiter",
       });
-    } else if (role === 'admin') {
+    } else if (role === "admin") {
       user = new Admin({
         ...data,
-        role: 'admin'
+        role: "admin",
       });
     }
-    
+
     // Save user
     await user.save();
-    
+
     // Return user without password
     const userObj = user.toObject();
     delete userObj.password;
-    
+
     // Fix malformed languages data if it exists
-    if (userObj.languages && typeof userObj.languages === 'string') {
+    if (userObj.languages && typeof userObj.languages === "string") {
       try {
         userObj.languages = JSON.parse(userObj.languages);
       } catch (e) {
-        if (userObj.languages.includes(',')) {
-          userObj.languages = userObj.languages.split(',').map(lang => lang.trim());
+        if (userObj.languages.includes(",")) {
+          userObj.languages = userObj.languages
+            .split(",")
+            .map((lang) => lang.trim());
         } else {
           userObj.languages = [userObj.languages];
         }
       }
     }
-    
+
     if (!Array.isArray(userObj.languages)) {
       userObj.languages = [];
     }
-    
+
     // Fix malformed skills.languages data if it exists
-    if (userObj.skills && userObj.skills.languages && typeof userObj.skills.languages === 'string') {
+    if (
+      userObj.skills &&
+      userObj.skills.languages &&
+      typeof userObj.skills.languages === "string"
+    ) {
       try {
         userObj.skills.languages = JSON.parse(userObj.skills.languages);
       } catch (e) {
-        if (userObj.skills.languages.includes(',')) {
-          userObj.skills.languages = userObj.skills.languages.split(',').map(lang => lang.trim());
+        if (userObj.skills.languages.includes(",")) {
+          userObj.skills.languages = userObj.skills.languages
+            .split(",")
+            .map((lang) => lang.trim());
         } else {
           userObj.skills.languages = [userObj.skills.languages];
         }
       }
     }
-    
+
     if (userObj.skills && !Array.isArray(userObj.skills.languages)) {
       userObj.skills.languages = [];
     }
-    
+
     return userObj;
   } catch (error) {
     throw error;
@@ -114,96 +124,109 @@ export const authenticateUser = async (identifier, password, role) => {
           $or: [
             { email: identifier.toLowerCase() },
             { username: identifier.toLowerCase() },
-            { phone: identifier }
-          ]
+            { phone: identifier },
+          ],
         },
-        { role: role.toLowerCase() }
-      ]
+        { role: role.toLowerCase() },
+      ],
     });
-    
+
     if (!user) {
       throw new Error(`No ${role} account found with these credentials`);
     }
-    
+
     // Check if account is locked
     if (user.lockUntil && user.lockUntil > Date.now()) {
-      throw new Error('Account is temporarily locked. Please try again later.');
+      throw new Error("Account is temporarily locked. Please try again later.");
     }
-    
+
     // Verify password
     const isPasswordValid = await user.comparePassword(password);
-    
+
     if (!isPasswordValid) {
       // Increment login attempts
       const updateData = {
-        loginAttempts: user.loginAttempts + 1
+        loginAttempts: user.loginAttempts + 1,
       };
-      
+
       // Lock account after 5 failed attempts
-      if (user.loginAttempts >= 4) { // >= 4 because we're incrementing by 1
+      if (user.loginAttempts >= 4) {
+        // >= 4 because we're incrementing by 1
         updateData.lockUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
       }
-      
-      await BaseUser.findByIdAndUpdate(user._id, updateData, { 
+
+      await BaseUser.findByIdAndUpdate(user._id, updateData, {
         validateBeforeSave: false,
-        runValidators: false 
+        runValidators: false,
       });
-      throw new Error('Invalid password');
+      throw new Error("Invalid password");
     }
-    
+
     // Reset login attempts and update lastLogin on successful login
-    await BaseUser.findByIdAndUpdate(user._id, {
-      loginAttempts: 0,
-      $unset: { lockUntil: 1 },
-      lastLogin: new Date(),
-      lastActivity: new Date()
-    }, { 
-      validateBeforeSave: false,
-      runValidators: false 
-    });
-    
+    await BaseUser.findByIdAndUpdate(
+      user._id,
+      {
+        loginAttempts: 0,
+        $unset: { lockUntil: 1 },
+        lastLogin: new Date(),
+        lastActivity: new Date(),
+      },
+      {
+        validateBeforeSave: false,
+        runValidators: false,
+      }
+    );
+
     // Return user without password
     const userObj = user.toObject();
     delete userObj.password;
-    
+
     // Fix malformed languages data if it exists
-    if (userObj.languages && typeof userObj.languages === 'string') {
+    if (userObj.languages && typeof userObj.languages === "string") {
       try {
         // Try to parse JSON string to array
         userObj.languages = JSON.parse(userObj.languages);
       } catch (e) {
         // If parsing fails, split by comma or set to empty array
-        if (userObj.languages.includes(',')) {
-          userObj.languages = userObj.languages.split(',').map(lang => lang.trim());
+        if (userObj.languages.includes(",")) {
+          userObj.languages = userObj.languages
+            .split(",")
+            .map((lang) => lang.trim());
         } else {
           userObj.languages = [userObj.languages];
         }
       }
     }
-    
+
     // Ensure languages is always an array
     if (!Array.isArray(userObj.languages)) {
       userObj.languages = [];
     }
-    
+
     // Fix malformed skills.languages data if it exists
-    if (userObj.skills && userObj.skills.languages && typeof userObj.skills.languages === 'string') {
+    if (
+      userObj.skills &&
+      userObj.skills.languages &&
+      typeof userObj.skills.languages === "string"
+    ) {
       try {
         userObj.skills.languages = JSON.parse(userObj.skills.languages);
       } catch (e) {
-        if (userObj.skills.languages.includes(',')) {
-          userObj.skills.languages = userObj.skills.languages.split(',').map(lang => lang.trim());
+        if (userObj.skills.languages.includes(",")) {
+          userObj.skills.languages = userObj.skills.languages
+            .split(",")
+            .map((lang) => lang.trim());
         } else {
           userObj.skills.languages = [userObj.skills.languages];
         }
       }
     }
-    
+
     // Ensure skills.languages is always an array
     if (userObj.skills && !Array.isArray(userObj.skills.languages)) {
       userObj.skills.languages = [];
     }
-    
+
     return userObj;
   } catch (error) {
     throw error;
@@ -218,52 +241,60 @@ export const authenticateUser = async (identifier, password, role) => {
  */
 export const findUserByIdAndRole = async (userId, role) => {
   try {
-    const user = await BaseUser.findOne({ 
+    const user = await BaseUser.findOne({
       $or: [{ _id: userId }, { userId: userId }],
-      role: role 
+      role: role,
     });
-    
+
     if (!user) {
       throw new Error(`${role} not found`);
     }
-    
+
     const userObj = user.toObject();
     delete userObj.password;
-    
+
     // Fix malformed languages data if it exists
-    if (userObj.languages && typeof userObj.languages === 'string') {
+    if (userObj.languages && typeof userObj.languages === "string") {
       try {
         userObj.languages = JSON.parse(userObj.languages);
       } catch (e) {
-        if (userObj.languages.includes(',')) {
-          userObj.languages = userObj.languages.split(',').map(lang => lang.trim());
+        if (userObj.languages.includes(",")) {
+          userObj.languages = userObj.languages
+            .split(",")
+            .map((lang) => lang.trim());
         } else {
           userObj.languages = [userObj.languages];
         }
       }
     }
-    
+
     if (!Array.isArray(userObj.languages)) {
       userObj.languages = [];
     }
-    
+
     // Fix malformed skills.languages data if it exists
-    if (userObj.skills && userObj.skills.languages && typeof userObj.skills.languages === 'string') {
+    if (
+      userObj.skills &&
+      userObj.skills.languages &&
+      typeof userObj.skills.languages === "string"
+    ) {
       try {
         userObj.skills.languages = JSON.parse(userObj.skills.languages);
       } catch (e) {
-        if (userObj.skills.languages.includes(',')) {
-          userObj.skills.languages = userObj.skills.languages.split(',').map(lang => lang.trim());
+        if (userObj.skills.languages.includes(",")) {
+          userObj.skills.languages = userObj.skills.languages
+            .split(",")
+            .map((lang) => lang.trim());
         } else {
           userObj.skills.languages = [userObj.skills.languages];
         }
       }
     }
-    
+
     if (userObj.skills && !Array.isArray(userObj.skills.languages)) {
       userObj.skills.languages = [];
     }
-    
+
     return userObj;
   } catch (error) {
     throw error;
@@ -279,126 +310,201 @@ export const findUserByIdAndRole = async (userId, role) => {
  */
 export const updateUserProfile = async (userId, updateData, role) => {
   try {
-    console.log('🔍 updateUserProfile called with:', {
+    console.log("🔍 updateUserProfile called with:", {
       userId,
       role,
       updateDataKeys: Object.keys(updateData),
-      updateData
+      updateData,
     });
-    
+
     // Remove sensitive fields that shouldn't be updated directly
-    const { password, role: userRole, _id, userId: uid, ...safeUpdateData } = updateData;
-    
-    console.log('🔍 Safe update data:', {
+    const {
+      password,
+      role: userRole,
+      _id,
+      userId: uid,
+      ...safeUpdateData
+    } = updateData;
+
+    console.log("🔍 Safe update data:", {
       safeUpdateDataKeys: Object.keys(safeUpdateData),
-      safeUpdateData
+      safeUpdateData,
     });
-    
+
     // For nested object updates, we need to use $set with dot notation
     const updateQuery = {};
-    
+
     // Handle nested objects properly
     for (const [key, value] of Object.entries(safeUpdateData)) {
-      if (key === 'companyInfo' && typeof value === 'object' && value !== null) {
+      if (
+        key === "companyInfo" &&
+        typeof value === "object" &&
+        value !== null
+      ) {
         // Handle companyInfo nested updates
         for (const [nestedKey, nestedValue] of Object.entries(value)) {
           updateQuery[`companyInfo.${nestedKey}`] = nestedValue;
         }
-      } else if (key === 'professionalLinks' && typeof value === 'object' && value !== null) {
+      } else if (
+        key === "professionalLinks" &&
+        typeof value === "object" &&
+        value !== null
+      ) {
         // Handle professionalLinks nested updates
         for (const [nestedKey, nestedValue] of Object.entries(value)) {
           updateQuery[`professionalLinks.${nestedKey}`] = nestedValue;
         }
-      } else if (key === 'officeLocation' && typeof value === 'object' && value !== null) {
+      } else if (
+        key === "officeLocation" &&
+        typeof value === "object" &&
+        value !== null
+      ) {
         // Handle officeLocation nested updates
         for (const [nestedKey, nestedValue] of Object.entries(value)) {
           updateQuery[`officeLocation.${nestedKey}`] = nestedValue;
         }
-      } else if (key === 'currentLocation' && typeof value === 'object' && value !== null) {
+      } else if (
+        key === "currentLocation" &&
+        typeof value === "object" &&
+        value !== null
+      ) {
         // Handle currentLocation nested updates for applicants
         for (const [nestedKey, nestedValue] of Object.entries(value)) {
           updateQuery[`currentLocation.${nestedKey}`] = nestedValue;
         }
-      } else if (key === 'skills' && typeof value === 'object' && value !== null) {
-        // Handle skills nested updates for applicants
+      } else if (
+        key === "address" &&
+        typeof value === "object" &&
+        value !== null
+      ) {
+        // Handle address nested updates for applicants
         for (const [nestedKey, nestedValue] of Object.entries(value)) {
-          updateQuery[`skills.${nestedKey}`] = nestedValue;
+          updateQuery[`address.${nestedKey}`] = nestedValue;
         }
-      } else if (key === 'careerInfo' && typeof value === 'object' && value !== null) {
-        // Handle careerInfo nested updates for applicants
+      } else if (
+        key === "socialLinks" &&
+        typeof value === "object" &&
+        value !== null
+      ) {
+        // Handle socialLinks nested updates
         for (const [nestedKey, nestedValue] of Object.entries(value)) {
-          updateQuery[`careerInfo.${nestedKey}`] = nestedValue;
+          updateQuery[`socialLinks.${nestedKey}`] = nestedValue;
         }
-      } else if (key === 'documents' && typeof value === 'object' && value !== null) {
-        // Handle documents nested updates for applicants
-        for (const [nestedKey, nestedValue] of Object.entries(value)) {
-          updateQuery[`documents.${nestedKey}`] = nestedValue;
-        }
-      } else if (key === 'jobPreferences' && typeof value === 'object' && value !== null) {
-        // Handle jobPreferences nested updates for applicants
-        for (const [nestedKey, nestedValue] of Object.entries(value)) {
-          updateQuery[`jobPreferences.${nestedKey}`] = nestedValue;
-        }
+      } else if (
+        key === "skills" &&
+        typeof value === "object" &&
+        value !== null
+      ) {
+        // Handle skills object directly
+        updateQuery[key] = value;
+      } else if (
+        key === "careerInfo" &&
+        typeof value === "object" &&
+        value !== null
+      ) {
+        // Handle careerInfo - replace the whole object to avoid string field issues
+        updateQuery[key] = value;
+      } else if (
+        key === "documents" &&
+        typeof value === "object" &&
+        value !== null
+      ) {
+        // Handle documents - replace the whole object instead of using dot notation
+        // This fixes the issue where documents might be stored as a string in the database
+        updateQuery[key] = value;
+      } else if (
+        key === "jobPreferences" &&
+        typeof value === "object" &&
+        value !== null
+      ) {
+        // Handle jobPreferences - replace the whole object to avoid string field issues
+        updateQuery[key] = value;
       } else {
         // Handle flat fields normally
         updateQuery[key] = value;
       }
     }
-    
-    console.log('🔍 Final update query:', updateQuery);
-    
+
+    console.log("🔍 Final update query:", updateQuery);
+
+    console.log("🔍 Looking for user with:", {
+      userId,
+      role,
+    });
+
     const user = await BaseUser.findOneAndUpdate(
-      { 
+      {
         $or: [{ _id: userId }, { userId: userId }],
-        role: role 
+        role: role,
       },
       { $set: updateQuery },
       { new: true, runValidators: true }
     );
-    
-    console.log('🔍 User found and updated:', user ? 'Yes' : 'No');
-    
+
+    console.log("🔍 User found and updated:", user ? "Yes" : "No");
+
+    if (user) {
+      console.log("✅ Updated user fields:", {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        fullName: user.fullName,
+        yearsOfExperience: user.yearsOfExperience,
+        linkedin_url: user.linkedin_url,
+        github_url: user.github_url,
+        portfolio_url: user.portfolio_url,
+        socialLinks: user.socialLinks,
+      });
+    }
+
     if (!user) {
       throw new Error(`${role} not found`);
     }
-    
+
     const userObj = user.toObject();
     delete userObj.password;
-    
+
     // Fix malformed languages data if it exists
-    if (userObj.languages && typeof userObj.languages === 'string') {
+    if (userObj.languages && typeof userObj.languages === "string") {
       try {
         userObj.languages = JSON.parse(userObj.languages);
       } catch (e) {
-        if (userObj.languages.includes(',')) {
-          userObj.languages = userObj.languages.split(',').map(lang => lang.trim());
+        if (userObj.languages.includes(",")) {
+          userObj.languages = userObj.languages
+            .split(",")
+            .map((lang) => lang.trim());
         } else {
           userObj.languages = [userObj.languages];
         }
       }
     }
-    
+
     if (!Array.isArray(userObj.languages)) {
       userObj.languages = [];
     }
-    
+
     // Fix malformed skills.languages data if it exists
-    if (userObj.skills && userObj.skills.languages && typeof userObj.skills.languages === 'string') {
+    if (
+      userObj.skills &&
+      userObj.skills.languages &&
+      typeof userObj.skills.languages === "string"
+    ) {
       try {
         userObj.skills.languages = JSON.parse(userObj.skills.languages);
       } catch (e) {
-        if (userObj.skills.languages.includes(',')) {
-          userObj.skills.languages = userObj.skills.languages.split(',').map(lang => lang.trim());
+        if (userObj.skills.languages.includes(",")) {
+          userObj.skills.languages = userObj.skills.languages
+            .split(",")
+            .map((lang) => lang.trim());
         } else {
           userObj.skills.languages = [userObj.skills.languages];
         }
       }
     }
-    
+
     if (userObj.skills && !Array.isArray(userObj.skills.languages)) {
       userObj.skills.languages = [];
     }
-    
+
     return userObj;
   } catch (error) {
     throw error;
@@ -413,20 +519,28 @@ export const updateUserProfile = async (userId, updateData, role) => {
  * @param {string} excludeUserId - User ID to exclude from check (for updates)
  * @returns {Promise<boolean>} True if available, false if taken
  */
-export const checkFieldAvailability = async (field, value, role, excludeUserId = null) => {
+export const checkFieldAvailability = async (
+  field,
+  value,
+  role,
+  excludeUserId = null
+) => {
   try {
-    const query = { [field]: field === 'email' || field === 'username' ? value.toLowerCase() : value };
-    
+    const query = {
+      [field]:
+        field === "email" || field === "username" ? value.toLowerCase() : value,
+    };
+
     // For email and phone, check within the same role
-    if (field === 'email' || field === 'phone') {
+    if (field === "email" || field === "phone") {
       query.role = role;
     }
-    
+
     // Exclude current user if updating
     if (excludeUserId) {
       query._id = { $ne: excludeUserId };
     }
-    
+
     const existingUser = await BaseUser.findOne(query);
     return !existingUser; // Return true if available (no existing user)
   } catch (error) {
@@ -442,14 +556,21 @@ export const checkFieldAvailability = async (field, value, role, excludeUserId =
 export const getUserStatsByRole = async (role) => {
   try {
     const totalUsers = await BaseUser.countDocuments({ role });
-    const activeUsers = await BaseUser.countDocuments({ role, status: 'active' });
-    const verifiedUsers = await BaseUser.countDocuments({ role, isEmailVerified: true });
-    
+    const activeUsers = await BaseUser.countDocuments({
+      role,
+      status: "active",
+    });
+    const verifiedUsers = await BaseUser.countDocuments({
+      role,
+      isEmailVerified: true,
+    });
+
     return {
       total: totalUsers,
       active: activeUsers,
       verified: verifiedUsers,
-      verificationRate: totalUsers > 0 ? (verifiedUsers / totalUsers * 100).toFixed(2) : 0
+      verificationRate:
+        totalUsers > 0 ? ((verifiedUsers / totalUsers) * 100).toFixed(2) : 0,
     };
   } catch (error) {
     throw error;
@@ -465,29 +586,34 @@ export const getUserStatsByRole = async (role) => {
  */
 export const searchUsersByRole = async (role, filters = {}, options = {}) => {
   try {
-    const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = -1 } = options;
+    const {
+      page = 1,
+      limit = 10,
+      sortBy = "createdAt",
+      sortOrder = -1,
+    } = options;
     const skip = (page - 1) * limit;
-    
+
     // Build query
     const query = { role, ...filters };
-    
+
     // Execute search
     const users = await BaseUser.find(query)
-      .select('-password')
+      .select("-password")
       .sort({ [sortBy]: sortOrder })
       .skip(skip)
       .limit(limit);
-    
+
     const total = await BaseUser.countDocuments(query);
-    
+
     return {
       users,
       pagination: {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit)
-      }
+        pages: Math.ceil(total / limit),
+      },
     };
   } catch (error) {
     throw error;
@@ -505,5 +631,5 @@ export default {
   updateUserProfile,
   checkFieldAvailability,
   getUserStatsByRole,
-  searchUsersByRole
+  searchUsersByRole,
 };

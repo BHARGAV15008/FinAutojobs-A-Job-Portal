@@ -134,7 +134,10 @@ const JobManagement = ({ jobs = [] }) => {
                 {job.type}
               </span>
               <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-sm">
-                {job.applications} applications
+                {typeof job.applicationsCount === "number"
+                  ? job.applicationsCount
+                  : 0}{" "}
+                applications
               </span>
               <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-sm">
                 Posted {job.posted}

@@ -133,7 +133,7 @@ router.get('/', async (req, res) => {
       if (currentRecruiterId && currentCompanyName) {
         query.$or = [
           { postedBy: currentRecruiterId }, // Jobs posted by the recruiter themselves
-          { 'companyInfo.companyName': currentCompanyName } // Jobs posted by anyone from the same company
+          { companyName: currentCompanyName } // Jobs posted by anyone from the same company
         ];
         // For recruiter dashboard, include all statuses unless specifically filtered
         if (status) {
@@ -247,18 +247,105 @@ router.get('/', async (req, res) => {
     sortObj[sort] = order === 'desc' ? -1 : 1;
 
     // Execute query with population
-    const [jobs, totalCount] = await Promise.all([
-      Job.find(query)
-        .populate('postedBy', 'firstName lastName email companyInfo')
-        .sort(sortObj)
-        .skip(skip)
-        .limit(limitNum)
-        .lean(),
-      Job.countDocuments(query)
+    const jobsAggregation = await Job.aggregate([
+      { $match: query },
+      {
+        $lookup: {
+          from: 'applications', // The collection name for the Application model
+          localField: '_id',
+          foreignField: 'jobId', // Corrected from 'job' to 'jobId'
+          as: 'applications'
+        }
+      },
+      {
+        $addFields: {
+          applicationsCount: { $size: '$applications' } // Count the applications
+        }
+      },
+      {
+        $lookup: {
+          from: 'baseusers', // Assuming BaseUser's collection name is 'baseusers'
+          localField: 'postedBy',
+          foreignField: '_id',
+          as: 'postedByInfo'
+        }
+      },
+      {
+        $unwind: { path: '$postedByInfo', preserveNullAndEmptyArrays: true } // Unwind the postedByInfo array
+      },
+      { $sort: sortObj }, // Apply sorting
+      { $skip: skip },     // Apply skip for pagination
+      { $limit: limitNum },  // Apply limit for pagination
+      {
+        $project: { // Project to match the existing transformedJobs structure and include applicationsCount
+          _id: 1,
+          jobTitle: 1,
+          companyName: 1,
+          location: 1,
+          industry: 1,
+          jobCategory: 1,
+          jobType: 1,
+          workArrangement: 1,
+          'salary.minimum': 1, // Explicitly project nested fields if needed
+          'salary.maximum': 1,
+          'salary.type': 1,
+          'salary.period': 1,
+          'salary.currency': 1,
+          'experience.minimum': 1,
+          'experience.maximum': 1,
+          requiredSkills: 1,
+          jobDescription: 1,
+          keyResponsibilities: 1,
+          requirements: 1,
+          status: 1,
+          jobUrgency: 1,
+          views: 1,
+          applicationsCount: 1, // Include the calculated count
+          createdAt: 1,
+          applicationDeadline: 1,
+          daysSincePosted: 1,
+          daysUntilDeadline: 1,
+          slug: 1,
+          postedBy: { // Reconstruct postedBy object
+            _id: '$postedByInfo._id',
+            firstName: '$postedByInfo.firstName',
+            lastName: '$postedByInfo.lastName',
+            email: '$postedByInfo.email',
+            companyInfo: '$postedByInfo.companyInfo'
+          },
+          recruiterInfo: 1,
+          contactEmail: 1
+        }
+      }
     ]);
+    
+    console.log('🔍 Aggregation result (first job sample):', jobsAggregation[0]);
+    console.log('🔍 Total jobs from aggregation:', jobsAggregation.length);
+    
+    // Total count query (independent of aggregation for jobs data)
+    const totalCount = await Job.countDocuments(query);
 
-    // Transform jobs for frontend
-    const transformedJobs = jobs.map(job => ({
+    // Use jobsAggregation directly for transformation
+    const transformedJobs = jobsAggregation.map(job => {
+      // Format salary explicitly as it's not a virtual on aggregated docs
+      const formattedSalary = (() => {
+        const salary = job.salary;
+        if (!salary || (!salary.minimum && !salary.maximum)) return 'Negotiable';
+        
+        let salaryString = '';
+        if (salary.minimum && salary.maximum) {
+          salaryString = `${salary.currency || '₹'}${salary.minimum.toLocaleString()} - ${salary.currency || '₹'}${salary.maximum.toLocaleString()}`;
+        } else if (salary.minimum) {
+          salaryString = `${salary.currency || '₹'}${salary.minimum.toLocaleString()}+`;
+        }
+        
+        if (salaryString && salary.period) {
+          salaryString += ` ${salary.period.charAt(0).toUpperCase() + salary.period.slice(1)}`;
+        }
+        return salaryString;
+      })();
+
+      return {
       id: job._id,
       jobTitle: job.jobTitle,
       companyName: job.companyName,
@@ -267,15 +354,15 @@ router.get('/', async (req, res) => {
       jobCategory: job.jobCategory,
       jobType: job.jobType,
       workArrangement: job.workArrangement,
-      salary: job.formattedSalary,
-      salaryRange: {
+      salary: formattedSalary, // Use the explicitly formatted salary
+      salaryRange: { // Reconstruct salaryRange object if needed by frontend
         min: job.salary?.minimum,
         max: job.salary?.maximum,
         type: job.salary?.type,
         period: job.salary?.period,
         currency: job.salary?.currency
       },
-      experience: {
+      experience: { // Reconstruct experience object
         min: job.experience?.minimum,
         max: job.experience?.maximum
       },
@@ -292,10 +379,11 @@ router.get('/', async (req, res) => {
       daysSincePosted: job.daysSincePosted,
       daysUntilDeadline: job.daysUntilDeadline,
       slug: job.slug,
-      postedBy: job.postedBy,
+      postedBy: job.postedBy, // This is already populated in aggregation as 'postedByInfo' and projected correctly
       recruiterInfo: job.recruiterInfo,
       contactEmail: job.contactEmail
-    }));
+    }
+  });
 
     res.json({
       success: true,

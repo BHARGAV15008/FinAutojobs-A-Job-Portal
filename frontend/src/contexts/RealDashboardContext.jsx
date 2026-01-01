@@ -8,6 +8,34 @@ import * as analyticsAPI from "../api/analytics";
 import { calculateProfileCompletion } from "../utils/profileCompletion";
 const DashboardContext = createContext();
 
+const normalizeUser = (user) => {
+  if (!user) return null;
+  
+  // Handle cases where user is nested in { data: { user: ... } } or just { data: ... }
+  const actualUser = user.data?.user || user.data || user;
+
+  return {
+    ...actualUser, // Keep all original properties
+    id: actualUser._id || actualUser.id,
+    _id: actualUser._id || actualUser.id,
+    name: actualUser.name || actualUser.fullName || `${actualUser.firstName || ''} ${actualUser.lastName || ''}`.trim() || 'User',
+    
+    // Normalize experience to a single field
+    yearsOfExperience: actualUser.experience || actualUser.yearsOfExperience || 0,
+    
+    // Flatten social links for easier access
+    linkedin_url: actualUser.socialLinks?.linkedinUrl || actualUser.linkedin_url || "",
+    github_url: actualUser.socialLinks?.githubUrl || actualUser.github_url || "",
+    portfolio_url: actualUser.socialLinks?.portfolioUrl || actualUser.portfolio_url || "",
+
+    // Normalize profile picture
+    profile_picture: actualUser.profile_picture || actualUser.profilePicture || "",
+
+    // Provide a default for qualification
+    qualification: actualUser.qualification || (Array.isArray(actualUser.education) && actualUser.education.length > 0 ? actualUser.education[0]?.degree : actualUser.education) || "",
+  };
+};
+
 export const useDashboard = () => {
   const context = useContext(DashboardContext);
   if (!context) {
@@ -141,7 +169,7 @@ export const DashboardProvider = ({ children }) => {
     if (token) {
       try {
         const response = await authAPI.getProfile();
-        const user = response.data.data?.user || response.data.user || response.data;
+        const user = normalizeUser(response.data);
         setCurrentUser(user);
         setUserRole(user.role);
         setIsAuthenticated(true);
@@ -168,19 +196,18 @@ export const DashboardProvider = ({ children }) => {
     if (authUser && authUser !== prevAuthUserRef.current) {
       console.log('🔍 RealDashboardContext syncing with AuthContext user:', authUser);
       
-      // Handle case where authUser might be API response object
-      const actualUser = authUser.data ? authUser.data : authUser;
-      console.log('🔍 Extracted actual user:', actualUser);
+      const normalizedUser = normalizeUser(authUser);
+      console.log('🔍 Normalized user from AuthContext:', normalizedUser);
       
       // Only update if user ID or role changed
-      if (!currentUser || currentUser._id !== actualUser._id || currentUser.role !== actualUser.role) {
-        setCurrentUser(actualUser);
-        setUserRole(actualUser.role);
+      if (!currentUser || currentUser._id !== normalizedUser._id || currentUser.role !== normalizedUser.role) {
+        setCurrentUser(normalizedUser);
+        setUserRole(normalizedUser.role);
         setIsAuthenticated(true);
         
         // Reload dashboard data with the new user
-        if (actualUser.role) {
-          loadDashboardData(actualUser.role, actualUser);
+        if (normalizedUser.role) {
+          loadDashboardData(normalizedUser.role, normalizedUser);
         }
       }
       

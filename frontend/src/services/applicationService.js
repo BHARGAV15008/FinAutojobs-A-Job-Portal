@@ -1,4 +1,4 @@
-import { apiClient } from '../api/apiClient';
+import { apiClient } from "../api/apiClient";
 
 // Application Service initialized
 
@@ -7,14 +7,14 @@ export const applicationService = {
   // Submit job application
   submitApplication: async (applicationData) => {
     try {
-      console.log('Submitting application', applicationData);
-      
-      const response = await apiClient.post('/applications', applicationData);
-      
-      console.log('Application submitted successfully', response.data);
+      console.log("Submitting application", applicationData);
+
+      const response = await apiClient.post("/applications", applicationData);
+
+      console.log("Application submitted successfully", response.data);
       return response.data;
     } catch (error) {
-      console.error('Error submitting application', error);
+      console.error("Error submitting application", error);
       throw error;
     }
   },
@@ -29,7 +29,7 @@ export const applicationService = {
       const response = await apiClient.get(url);
       return response.data;
     } catch (error) {
-      console.error('❌ Error fetching user applications:', error);
+      console.error("❌ Error fetching user applications:", error);
       throw error;
     }
   },
@@ -40,21 +40,24 @@ export const applicationService = {
       const response = await apiClient.get(`/applications/${applicationId}`);
       return response.data;
     } catch (error) {
-      console.error('❌ Error fetching application:', error);
+      console.error("❌ Error fetching application:", error);
       throw error;
     }
   },
 
   // Update application status (for recruiters)
-  updateApplicationStatus: async (applicationId, status, notes = '') => {
+  updateApplicationStatus: async (applicationId, status, notes = "") => {
     try {
-      const response = await apiClient.put(`/applications/${applicationId}/status`, {
-        status,
-        notes,
-      });
+      const response = await apiClient.put(
+        `/applications/${applicationId}/status`,
+        {
+          status,
+          notes,
+        }
+      );
       return response.data;
     } catch (error) {
-      console.error('❌ Error updating application status:', error);
+      console.error("❌ Error updating application status:", error);
       throw error;
     }
   },
@@ -65,7 +68,23 @@ export const applicationService = {
       const response = await apiClient.delete(`/applications/${applicationId}`);
       return response.data;
     } catch (error) {
-      console.error('❌ Error withdrawing application:', error);
+      console.error("❌ Error withdrawing application:", error);
+      throw error;
+    }
+  },
+
+  // Update application (for applicants)
+  updateApplication: async (applicationId, applicationData) => {
+    try {
+      console.log("Updating application", applicationId, applicationData);
+      const response = await apiClient.put(
+        `/applications/${applicationId}`,
+        applicationData
+      );
+      console.log("Application updated successfully", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("❌ Error updating application:", error);
       throw error;
     }
   },
@@ -73,10 +92,12 @@ export const applicationService = {
   // Check if user has already applied to a job
   checkApplicationStatus: async (jobId, userId) => {
     try {
-      const response = await apiClient.get(`/applications/check?jobId=${jobId}&userId=${userId}`);
+      const response = await apiClient.get(
+        `/applications/check?jobId=${jobId}&userId=${userId}`
+      );
       return response.data;
     } catch (error) {
-      console.error('❌ Error checking application status:', error);
+      console.error("❌ Error checking application status:", error);
       return { hasApplied: false };
     }
   },
@@ -87,7 +108,7 @@ export const applicationService = {
       const response = await apiClient.get(`/applications/job/${jobId}`);
       return response.data;
     } catch (error) {
-      console.error('❌ Error fetching job applications:', error);
+      console.error("❌ Error fetching job applications:", error);
       throw error;
     }
   },
@@ -95,10 +116,12 @@ export const applicationService = {
   // Get application statistics
   getApplicationStats: async (userId, userRole) => {
     try {
-      const response = await apiClient.get(`/applications/stats?userId=${userId}&role=${userRole}`);
+      const response = await apiClient.get(
+        `/applications/stats?userId=${userId}&role=${userRole}`
+      );
       return response.data;
     } catch (error) {
-      console.error('❌ Error fetching application stats:', error);
+      console.error("❌ Error fetching application stats:", error);
       throw error;
     }
   },

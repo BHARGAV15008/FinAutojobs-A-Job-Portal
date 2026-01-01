@@ -304,7 +304,7 @@ export const EnhancedProfileTab = ({
           value:
             userRole === "recruiter"
               ? user?.professionalLinks?.linkedin
-              : user?.linkedin_url,
+              : user?.linkedin_url || user?.linkedinUrl,
           icon: <Linkedin size={14} />,
         },
         {
@@ -312,7 +312,7 @@ export const EnhancedProfileTab = ({
           value:
             userRole === "recruiter"
               ? user?.professionalLinks?.github
-              : user?.github_url,
+              : user?.github_url || user?.githubUrl,
           icon: <Github size={14} />,
         },
         {
@@ -320,7 +320,7 @@ export const EnhancedProfileTab = ({
           value:
             userRole === "recruiter"
               ? user?.professionalLinks?.personalWebsite
-              : user?.portfolio_url,
+              : user?.portfolio_url || user?.portfolioUrl,
           icon: <LinkIcon size={14} />,
         },
       ],
@@ -343,7 +343,9 @@ export const EnhancedProfileTab = ({
         },
         {
           label: "Core Skills",
-          value: Array.isArray(user?.skills_array)
+          value: Array.isArray(user?.skills)
+            ? user.skills.join(", ")
+            : Array.isArray(user?.skills_array)
             ? user.skills_array.join(", ")
             : typeof user?.skills === "object" && user?.skills !== null
             ? [
@@ -354,7 +356,7 @@ export const EnhancedProfileTab = ({
               ]
                 .filter(Boolean)
                 .join(", ") || "Not specified"
-            : user?.skills || "Not specified",
+            : "Not specified",
           icon: <Zap size={14} />,
         },
         {
@@ -1176,6 +1178,7 @@ export const EnhancedJobsTab = ({
     currentUser?.companyInfo?.companyName,
     currentUser?.companyName,
     currentUser?.company,
+    dashboardData, // Add dashboardData to trigger refresh
   ]);
 
   // Handle view job details

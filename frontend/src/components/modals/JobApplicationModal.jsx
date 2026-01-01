@@ -44,6 +44,7 @@ import {
   Send,
   Edit,
   Refresh,
+  School,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { profileService } from '../../services/profileService';
@@ -964,18 +965,17 @@ to recruiters when they review your application.
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="xs"
-      fullWidth
-      PaperProps={{
-        sx: { 
-          maxWidth: { xs: '100%', sm: '460px', md: '490px', lg: '510px' },
-          maxHeight: { xs: '100vh', sm: '90vh' },
-          m: { xs: 0, sm: 2 },
-          borderRadius: { xs: 0, sm: 2 }
-        }
-      }}
-    >
-      <DialogTitle>
+            maxWidth="sm" // Changed from "xs"
+            fullWidth
+            PaperProps={{
+              sx: {
+                maxWidth: { xs: '100%', sm: '600px', md: '700px', lg: '800px' }, // Increased values
+                maxHeight: { xs: '100vh', sm: '90vh' },
+                m: { xs: 0, sm: 2 },
+                borderRadius: { xs: 0, sm: 2 }
+              }
+            }}
+          >      <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Box>
             <Typography variant="h6">Apply for {job.jobTitle || job.title || 'this position'}</Typography>
