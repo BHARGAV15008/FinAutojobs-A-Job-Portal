@@ -100,8 +100,7 @@ class S3Service {
           userId: userId,
           uploadDate: new Date().toISOString(),
         },
-        // Make files private by default
-        ACL: "private",
+        // Note: ACL removed - bucket policy or presigned URLs should be used for access control
       });
 
       await this.s3Client.send(command);

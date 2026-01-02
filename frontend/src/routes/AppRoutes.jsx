@@ -1,8 +1,8 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { Route, Switch, useLocation } from "wouter";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import { CircularProgress, Box } from "@mui/material";
-import Navigation from "../components/Navigation";
+import NaukriNavbar from "../components/layout/NaukriNavbar";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
 import ResponsiveLayout from "../components/layout/ResponsiveLayout";
 
@@ -15,7 +15,7 @@ import OTPLoginPage from "../pages/OTPLoginPage";
 import OTPSignupPage from "../pages/OTPSignupPage";
 import RegisterPage from "../pages/RegisterPage";
 import LoginPage from "../pages/LoginPage";
-import JobsPage from "../pages/JobsPage";
+import JobsPageNaukri from "../pages/JobsPageNaukri";
 import ForgotPasswordForm from "../components/auth/ForgotPasswordForm";
 import ResetPasswordForm from "../components/auth/ResetPasswordForm";
 import EmailVerificationPage from "../pages/EmailVerificationPage";
@@ -34,16 +34,16 @@ const SafeImport = ({ component: Component, fallback, ...props }) => {
 };
 
 // Lazy load components with error handling
-const HomePageNew = React.lazy(() =>
-  import("../pages/HomePageNew").catch(() => ({
+const HomePageNaukri = React.lazy(() =>
+  import("../pages/HomePageNaukri").catch(() => ({
     default: () => <div>Home Page Loading...</div>,
   }))
 );
 
-// JobsPage now imported directly above
+// JobsPageNaukri now imported directly above
 
-const CompaniesPage = React.lazy(() =>
-  import("../pages/CompaniesPage").catch(() => ({
+const CompaniesPageNaukri = React.lazy(() =>
+  import("../pages/CompaniesPageNaukri").catch(() => ({
     default: () => <div>Companies Page Loading...</div>,
   }))
 );
@@ -113,13 +113,13 @@ const AppRoutes = () => {
     <Box
       sx={{
         minHeight: "100vh",
-        backgroundColor: "#fafafa",
+        backgroundColor: "background.default",
         display: "flex",
         flexDirection: "column",
         width: "100%",
       }}
     >
-      {!isDashboard && !isAdminLogin && <Navigation />}
+      {!isDashboard && !isAdminLogin && <NaukriNavbar />}
 
       <Box
         component="main"
@@ -138,10 +138,10 @@ const AppRoutes = () => {
           }
         >
           <Switch>
-            {/* Public Routes */}
-            <Route path="/">{() => <HomePageNew />}</Route>
-            <Route path="/jobs">{() => <JobsPage />}</Route>
-            <Route path="/companies">{() => <CompaniesPage />}</Route>
+            {/* Public Routes - Naukri Style */}
+            <Route path="/">{() => <HomePageNaukri />}</Route>
+            <Route path="/jobs">{() => <JobsPageNaukri />}</Route>
+            <Route path="/companies">{() => <CompaniesPageNaukri />}</Route>
             <Route path="/salary-insights">
               {() => <SalaryInsightsPage />}
             </Route>

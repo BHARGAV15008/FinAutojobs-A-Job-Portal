@@ -410,20 +410,6 @@ export const AuthProvider = ({ children }) => {
         },
       });
       console.log("✅ Profile with file update response:", response.data);
-      console.log("📦 Response data object:", response.data);
-      console.log("👤 Updated user from response:", response.data.data);
-      console.log(
-        "📄 Documents object from response:",
-        response.data.data?.documents
-      );
-      console.log(
-        "📎 Resume URL from response:",
-        response.data.data?.documents?.resumeUrl
-      );
-      console.log(
-        "📎 resume_url from response:",
-        response.data.data?.resume_url
-      );
 
       // Update the user state with the new profile data
       const updatedUser = response.data.data;

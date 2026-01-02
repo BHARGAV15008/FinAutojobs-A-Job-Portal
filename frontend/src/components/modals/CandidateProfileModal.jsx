@@ -31,6 +31,49 @@ const CandidateProfileModal = ({
   const [loading, setLoading] = useState(false);
   const [detailedCandidate, setDetailedCandidate] = useState(null);
   const [fetchingDetails, setFetchingDetails] = useState(false);
+  const [presignedResumeUrl, setPresignedResumeUrl] = useState(null);
+
+  // Fetch presigned URL for resume if it's an S3 URL
+  useEffect(() => {
+    const fetchPresignedUrl = async () => {
+      const resumeUrl = candidate?.resumeUrl || candidate?.resume;
+
+      if (
+        resumeUrl &&
+        (resumeUrl.includes("amazonaws.com") || resumeUrl.includes("s3"))
+      ) {
+        const token = localStorage.getItem("token");
+        if (token) {
+          try {
+            const response = await fetch(
+              "http://localhost:5000/api/auth/file-url/resume",
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            );
+            if (response.ok) {
+              const data = await response.json();
+              setPresignedResumeUrl(data.url);
+            } else {
+              setPresignedResumeUrl(resumeUrl);
+            }
+          } catch (error) {
+            console.warn(
+              "Failed to fetch presigned URL, using direct URL:",
+              error
+            );
+            setPresignedResumeUrl(resumeUrl);
+          }
+        }
+      } else {
+        setPresignedResumeUrl(resumeUrl);
+      }
+    };
+
+    if (isOpen && candidate) {
+      fetchPresignedUrl();
+    }
+  }, [isOpen, candidate?.resumeUrl, candidate?.resume]);
 
   // Fetch detailed candidate data when modal opens
   useEffect(() => {

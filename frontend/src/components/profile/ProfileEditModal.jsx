@@ -512,7 +512,13 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
           transition={{ duration: 0.2 }}
         >
           {/* Header */}
-          <div className={`px-8 py-6 border-b ${darkMode ? 'border-gray-700 bg-gradient-to-r from-gray-800 to-gray-900' : 'border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50'}`}>
+          <div
+            className={`px-8 py-6 border-b ${
+              darkMode
+                ? "border-gray-700 bg-gradient-to-r from-gray-800 to-gray-900"
+                : "border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50"
+            }`}
+          >
             <div className="flex justify-between items-center">
               <div>
                 <h2
@@ -522,7 +528,11 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
                 >
                   Edit Profile
                 </h2>
-                <p className={`text-sm mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                <p
+                  className={`text-sm mt-1 ${
+                    darkMode ? "text-gray-400" : "text-gray-600"
+                  }`}
+                >
                   Update your personal information and settings
                 </p>
               </div>
@@ -534,8 +544,18 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
                     : "bg-white text-gray-600 hover:bg-gray-100 hover:text-gray-900 shadow-sm"
                 }`}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -543,107 +563,177 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
 
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto px-8 py-6">
-
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* Basic Information Section */}
-              <div className={`rounded-xl p-6 ${darkMode ? 'bg-gray-900/50 border border-gray-700' : 'bg-gray-50 border border-gray-200'}`}>
-                <h3 className={`text-lg font-semibold mb-4 flex items-center ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              <div
+                className={`rounded-xl p-6 ${
+                  darkMode
+                    ? "bg-gray-900/50 border border-gray-700"
+                    : "bg-gray-50 border border-gray-200"
+                }`}
+              >
+                <h3
+                  className={`text-lg font-semibold mb-4 flex items-center ${
+                    darkMode ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  <svg
+                    className="w-5 h-5 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
                   </svg>
                   Basic Information
                 </h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                <div>
-                  <label
-                    className={`block text-sm font-semibold mb-2 flex items-center ${
-                      darkMode ? "text-gray-200" : "text-gray-700"
-                    }`}
-                  >
-                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.name || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                      darkMode
-                        ? "bg-gray-800 border-gray-600 text-white placeholder-gray-400"
-                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
-                    }`}
-                    placeholder="Enter your full name"
-                    required
-                  />
+                  <div>
+                    <label
+                      className={`block text-sm font-semibold mb-2 flex items-center ${
+                        darkMode ? "text-gray-200" : "text-gray-700"
+                      }`}
+                    >
+                      <svg
+                        className="w-4 h-4 mr-1.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
+                      </svg>
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.name || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
+                      className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                        darkMode
+                          ? "bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                      }`}
+                      placeholder="Enter your full name"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className={`block text-sm font-semibold mb-2 flex items-center ${
+                        darkMode ? "text-gray-200" : "text-gray-700"
+                      }`}
+                    >
+                      <svg
+                        className="w-4 h-4 mr-1.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                        />
+                      </svg>
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      value={formData.phone || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, phone: e.target.value })
+                      }
+                      className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                        darkMode
+                          ? "bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                      }`}
+                      placeholder="+1 (555) 000-0000"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className={`block text-sm font-semibold mb-2 flex items-center ${
+                        darkMode ? "text-gray-200" : "text-gray-700"
+                      }`}
+                    >
+                      <svg
+                        className="w-4 h-4 mr-1.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                      </svg>
+                      Location
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.location || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, location: e.target.value })
+                      }
+                      className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                        darkMode
+                          ? "bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                      }`}
+                      placeholder="City, Country"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label
-                    className={`block text-sm font-semibold mb-2 flex items-center ${
-                      darkMode ? "text-gray-200" : "text-gray-700"
-                    }`}
-                  >
-                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                    </svg>
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    value={formData.phone || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
-                    }
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                      darkMode
-                        ? "bg-gray-800 border-gray-600 text-white placeholder-gray-400"
-                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
-                    }`}
-                    placeholder="+1 (555) 000-0000"
-                  />
-                </div>
-                <div>
-                  <label
-                    className={`block text-sm font-semibold mb-2 flex items-center ${
-                      darkMode ? "text-gray-200" : "text-gray-700"
-                    }`}
-                  >
-                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    Location
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.location || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, location: e.target.value })
-                    }
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                      darkMode
-                        ? "bg-gray-800 border-gray-600 text-white placeholder-gray-400"
-                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
-                    }`}
-                    placeholder="City, Country"
-                  />
-                </div>
-              </div>
               </div>
 
               {/* Bio Section */}
-              <div className={`rounded-xl p-6 ${darkMode ? 'bg-gray-900/50 border border-gray-700' : 'bg-gray-50 border border-gray-200'}`}>
+              <div
+                className={`rounded-xl p-6 ${
+                  darkMode
+                    ? "bg-gray-900/50 border border-gray-700"
+                    : "bg-gray-50 border border-gray-200"
+                }`}
+              >
                 <label
                   className={`block text-lg font-semibold mb-3 flex items-center ${
                     darkMode ? "text-white" : "text-gray-900"
                   }`}
                 >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+                  <svg
+                    className="w-5 h-5 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 12h16M4 18h7"
+                    />
                   </svg>
                   About Me
                 </label>
@@ -660,8 +750,13 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
                   }`}
                   placeholder="Tell us about yourself, your experience, and what you're passionate about..."
                 />
-                <p className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Write a brief description about yourself and your professional background
+                <p
+                  className={`text-xs mt-2 ${
+                    darkMode ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
+                  Write a brief description about yourself and your professional
+                  background
                 </p>
               </div>
 
@@ -669,14 +764,30 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
               {userRole === "applicant" && (
                 <div className="space-y-8">
                   {/* Location Section for Applicants */}
-                  <div className={`rounded-xl p-6 ${darkMode ? 'bg-gray-900/50 border border-gray-700' : 'bg-gray-50 border border-gray-200'}`}>
+                  <div
+                    className={`rounded-xl p-6 ${
+                      darkMode
+                        ? "bg-gray-900/50 border border-gray-700"
+                        : "bg-gray-50 border border-gray-200"
+                    }`}
+                  >
                     <h3
                       className={`text-lg font-semibold mb-4 flex items-center ${
                         darkMode ? "text-white" : "text-gray-900"
                       }`}
                     >
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <svg
+                        className="w-5 h-5 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        />
                       </svg>
                       Location Details
                     </h3>
@@ -979,7 +1090,13 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
                             <input
                               type="date"
                               placeholder="Start Date"
-                              value={edu.startDate ? new Date(edu.startDate).toISOString().slice(0, 10) : ""}
+                              value={
+                                edu.startDate
+                                  ? new Date(edu.startDate)
+                                      .toISOString()
+                                      .slice(0, 10)
+                                  : ""
+                              }
                               onChange={(e) => {
                                 const newEducation = [...formData.education];
                                 newEducation[index].startDate = e.target.value;
@@ -997,7 +1114,13 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
                             <input
                               type="date"
                               placeholder="End Date"
-                              value={edu.endDate ? new Date(edu.endDate).toISOString().slice(0, 10) : ""}
+                              value={
+                                edu.endDate
+                                  ? new Date(edu.endDate)
+                                      .toISOString()
+                                      .slice(0, 10)
+                                  : ""
+                              }
                               onChange={(e) => {
                                 const newEducation = [...formData.education];
                                 newEducation[index].endDate = e.target.value;
@@ -1182,7 +1305,13 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
                             <input
                               type="date"
                               placeholder="Start Date"
-                              value={exp.startDate ? new Date(exp.startDate).toISOString().slice(0, 10) : ""}
+                              value={
+                                exp.startDate
+                                  ? new Date(exp.startDate)
+                                      .toISOString()
+                                      .slice(0, 10)
+                                  : ""
+                              }
                               onChange={(e) => {
                                 const newWorkExperience = [
                                   ...formData.workExperience,
@@ -1203,7 +1332,13 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
                             <input
                               type="date"
                               placeholder="End Date"
-                              value={exp.endDate ? new Date(exp.endDate).toISOString().slice(0, 10) : ""}
+                              value={
+                                exp.endDate
+                                  ? new Date(exp.endDate)
+                                      .toISOString()
+                                      .slice(0, 10)
+                                  : ""
+                              }
                               onChange={(e) => {
                                 const newWorkExperience = [
                                   ...formData.workExperience,
@@ -1551,12 +1686,32 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
               </div>
 
               {errors.general && (
-                <div className={`rounded-xl p-4 ${darkMode ? 'bg-red-900/20 border border-red-800' : 'bg-red-50 border border-red-200'}`}>
+                <div
+                  className={`rounded-xl p-4 ${
+                    darkMode
+                      ? "bg-red-900/20 border border-red-800"
+                      : "bg-red-50 border border-red-200"
+                  }`}
+                >
                   <div className="flex items-start">
-                    <svg className={`w-5 h-5 mr-3 mt-0.5 ${darkMode ? 'text-red-400' : 'text-red-500'}`} fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    <svg
+                      className={`w-5 h-5 mr-3 mt-0.5 ${
+                        darkMode ? "text-red-400" : "text-red-500"
+                      }`}
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        clipRule="evenodd"
+                      />
                     </svg>
-                    <span className={`text-sm font-medium ${darkMode ? "text-red-400" : "text-red-800"}`}>
+                    <span
+                      className={`text-sm font-medium ${
+                        darkMode ? "text-red-400" : "text-red-800"
+                      }`}
+                    >
                       {errors.general}
                     </span>
                   </div>
@@ -1566,7 +1721,13 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
           </div>
 
           {/* Footer with Actions */}
-          <div className={`px-8 py-6 border-t ${darkMode ? 'border-gray-700 bg-gray-900/50' : 'border-gray-200 bg-gray-50'}`}>
+          <div
+            className={`px-8 py-6 border-t ${
+              darkMode
+                ? "border-gray-700 bg-gray-900/50"
+                : "border-gray-200 bg-gray-50"
+            }`}
+          >
             <div className="flex justify-end space-x-4">
               <button
                 type="button"
@@ -1585,22 +1746,48 @@ const ProfileEditModal = ({ isOpen, onClose, user, userRole, onSave }) => {
                 onClick={handleSubmit}
                 className={`px-8 py-3 rounded-xl font-semibold transition-all duration-200 flex items-center space-x-2 ${
                   loading
-                    ? 'bg-blue-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl'
+                    ? "bg-blue-400 cursor-not-allowed"
+                    : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl"
                 } text-white`}
               >
                 {loading ? (
                   <>
-                    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin h-5 w-5"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     <span>Saving...</span>
                   </>
                 ) : (
                   <>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                     <span>Save Changes</span>
                   </>

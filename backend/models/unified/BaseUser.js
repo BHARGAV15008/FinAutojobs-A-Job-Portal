@@ -41,8 +41,6 @@ const baseUserSchema = new mongoose.Schema(
     linkedin_url: { type: String },
     github_url: { type: String },
     portfolio_url: { type: String },
-    resume_url: { type: String }, // Resume URL for quick access
-    cover_letter_url: { type: String }, // Cover letter URL for quick access
     socialLinks: {
       linkedinUrl: { type: String },
       githubUrl: { type: String },

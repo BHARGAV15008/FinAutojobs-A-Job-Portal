@@ -126,19 +126,20 @@ const RealApplicationsTab = () => {
     }
   };
 
-  // Handle resume download
+  // Handle resume download with presigned URL support
   const handleDownloadResume = async (application) => {
     try {
       console.log(
         "📥 Downloading resume for:",
         application.applicantSnapshot?.fullName
       );
-      console.log("📁 Application documents field:", application.documents);
-      console.log("📄 Application resumeUrl field:", application.resumeUrl);
 
       // Get resume URL from application
-      const resumeUrl =
-        application.documents?.resumeUrl || application.resumeUrl;
+      let resumeUrl =
+        application.documents?.resumeUrl ||
+        application.resumeUrl ||
+        application.applicantSnapshot?.resume_url ||
+        application.applicantSnapshot?.documents?.resumeUrl;
 
       if (!resumeUrl || resumeUrl === "") {
         console.warn("⚠️ No resume URL found in application:", application._id);
@@ -149,6 +150,31 @@ const RealApplicationsTab = () => {
             "The applicant may not have uploaded a resume during application submission."
         );
         return;
+      }
+
+      // If S3 URL, get presigned URL for secure access
+      if (resumeUrl.includes("amazonaws.com") || resumeUrl.includes("s3")) {
+        const token = localStorage.getItem("token");
+        if (token) {
+          try {
+            const response = await fetch(
+              "http://localhost:5000/api/auth/file-url/resume",
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            );
+            if (response.ok) {
+              const data = await response.json();
+              resumeUrl = data.url;
+              console.log("✅ Using presigned URL for secure access");
+            }
+          } catch (error) {
+            console.warn(
+              "Failed to get presigned URL, using direct URL:",
+              error
+            );
+          }
+        }
       }
 
       // Create full URL for download

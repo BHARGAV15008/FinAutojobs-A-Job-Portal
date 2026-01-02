@@ -7,6 +7,7 @@ import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
 import { body, validationResult } from "express-validator";
+import s3Service from "../services/s3Service.js";
 import UserModels, {
   createUserByRole,
   authenticateUser,
@@ -29,21 +30,8 @@ const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../../uploads/documents"));
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(
-      null,
-      `${file.fieldname}-${req.user.userId}-${uniqueSuffix}${path.extname(
-        file.originalname
-      )}`
-    );
-  },
-});
+// Configure multer for memory storage (for S3 uploads)
+const storage = multer.memoryStorage(); // Changed from diskStorage to memoryStorage
 
 const fileFilter = (req, file, cb) => {
   // Accept documents and images
@@ -1094,6 +1082,61 @@ router.get("/profile", authenticateToken, async (req, res) => {
   }
 });
 
+// Get presigned URL for S3 file (secure temporary access)
+router.get("/file-url/:type", authenticateToken, async (req, res) => {
+  try {
+    const user = req.user;
+    const fileType = req.params.type; // resume, coverLetter, portfolio, profileImage
+
+    let fileUrl;
+    switch (fileType) {
+      case "resume":
+        fileUrl = user.resume_url || user.documents?.resumeUrl;
+        break;
+      case "coverLetter":
+        fileUrl = user.cover_letter_url || user.documents?.coverLetterUrl;
+        break;
+      case "portfolio":
+        fileUrl = user.portfolio_url || user.documents?.portfolioUrl;
+        break;
+      case "profileImage":
+        fileUrl = user.profileImage;
+        break;
+      default:
+        return res.status(400).json({
+          success: false,
+          message: "Invalid file type",
+        });
+    }
+
+    if (!fileUrl) {
+      return res.status(404).json({
+        success: false,
+        message: "File not found",
+      });
+    }
+
+    // Extract S3 key from URL
+    const s3Key = fileUrl.split(".amazonaws.com/")[1] || fileUrl;
+
+    // Generate presigned URL (valid for 1 hour)
+    const signedUrl = await s3Service.getSignedUrl(s3Key, 3600);
+
+    res.json({
+      success: true,
+      url: signedUrl,
+      expiresIn: 3600,
+    });
+  } catch (error) {
+    console.error("File URL generation error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to generate file URL",
+      error: error.message,
+    });
+  }
+});
+
 // Update user profile with role-specific field mapping
 router.put(
   "/profile",
@@ -1118,66 +1161,134 @@ router.put(
       console.log("🔍 Files:", req.files);
       console.log("🔍 =====================================");
 
-      // CRITICAL FIX: Parse JSON strings from FormData BEFORE any processing
-      // When frontend sends nested objects via FormData, they come as JSON strings
-      const fieldsToParseFromJSON = [
-        'documents',
-        'careerInfo', 
-        'jobPreferences',
-        'skills',
-        'education',
-        'workExperience',
-        'address',
-        'currentLocation',
-        'socialLinks',
-        'companyInfo',
-        'professionalLinks',
-        'languages'
-      ];
+      // Get user info for S3 filename
+      const user = await BaseUser.findById(userId);
+      const userInfo = {
+        name:
+          user?.firstName && user?.lastName
+            ? `${user.firstName}_${user.lastName}`
+            : null,
+        username: user?.username,
+        fullname:
+          user?.firstName && user?.lastName
+            ? `${user.firstName}_${user.lastName}`
+            : user?.username,
+      };
 
-      fieldsToParseFromJSON.forEach(fieldName => {
-        if (updateData[fieldName] && typeof updateData[fieldName] === 'string') {
-          try {
-            console.log(`🔍 Parsing ${fieldName} from JSON string...`);
-            updateData[fieldName] = JSON.parse(updateData[fieldName]);
-            console.log(`✅ ${fieldName} parsed successfully:`, updateData[fieldName]);
-          } catch (e) {
-            console.error(`❌ Failed to parse ${fieldName}:`, e.message);
-            // Keep as string, will be handled later
-          }
-        }
-      });
-
-      // Handle file uploads
+      // Handle file uploads with S3
       if (req.files) {
-        console.log("🔍 Processing uploaded files...");
+        console.log("🔍 Processing uploaded files with S3...");
 
         // Process resume file
         if (req.files.resume && req.files.resume[0]) {
           const resumeFile = req.files.resume[0];
-          updateData.resume_url = `/uploads/documents/${resumeFile.filename}`;
-          console.log("📄 Resume uploaded:", updateData.resume_url);
+          console.log("📄 Uploading resume to S3...");
+          const s3Result = await s3Service.uploadResume(
+            resumeFile.buffer,
+            resumeFile.originalname,
+            resumeFile.mimetype,
+            userId,
+            userInfo
+          );
+          updateData.resume_url = s3Result.url;
+          console.log("✅ Resume uploaded to S3:", updateData.resume_url);
+
+          // Delete old resume if exists
+          if (user?.resume_url) {
+            try {
+              await s3Service.deleteFileByUrl(user.resume_url);
+              console.log("🗑️ Deleted old resume from S3");
+            } catch (deleteError) {
+              console.warn("⚠️ Failed to delete old resume:", deleteError);
+            }
+          }
         }
 
         // Process cover letter file
         if (req.files.coverLetter && req.files.coverLetter[0]) {
           const coverLetterFile = req.files.coverLetter[0];
-          updateData.cover_letter_url = `/uploads/documents/${coverLetterFile.filename}`;
-          console.log("📄 Cover letter uploaded:", updateData.cover_letter_url);
+          console.log("📄 Uploading cover letter to S3...");
+          const s3Result = await s3Service.uploadCoverLetter(
+            coverLetterFile.buffer,
+            coverLetterFile.originalname,
+            coverLetterFile.mimetype,
+            userId,
+            userInfo
+          );
+          updateData.cover_letter_url = s3Result.url;
+          console.log(
+            "✅ Cover letter uploaded to S3:",
+            updateData.cover_letter_url
+          );
+
+          // Delete old cover letter if exists
+          if (user?.cover_letter_url) {
+            try {
+              await s3Service.deleteFileByUrl(user.cover_letter_url);
+              console.log("🗑️ Deleted old cover letter from S3");
+            } catch (deleteError) {
+              console.warn(
+                "⚠️ Failed to delete old cover letter:",
+                deleteError
+              );
+            }
+          }
         }
 
         // Process portfolio file
         if (req.files.portfolio && req.files.portfolio[0]) {
           const portfolioFile = req.files.portfolio[0];
-          updateData.portfolio_url = `/uploads/documents/${portfolioFile.filename}`;
-          console.log("📄 Portfolio uploaded:", updateData.portfolio_url);
+          console.log("📄 Uploading portfolio to S3...");
+          const s3Result = await s3Service.uploadPortfolio(
+            portfolioFile.buffer,
+            portfolioFile.originalname,
+            portfolioFile.mimetype,
+            userId,
+            userInfo
+          );
+          updateData.portfolio_url = s3Result.url;
+          console.log("✅ Portfolio uploaded to S3:", updateData.portfolio_url);
+
+          // Delete old portfolio if exists
+          if (user?.portfolio_url) {
+            try {
+              await s3Service.deleteFileByUrl(user.portfolio_url);
+              console.log("🗑️ Deleted old portfolio from S3");
+            } catch (deleteError) {
+              console.warn("⚠️ Failed to delete old portfolio:", deleteError);
+            }
+          }
         }
 
         // Process profile picture
         if (req.files.profilePicture && req.files.profilePicture[0]) {
           const profilePictureFile = req.files.profilePicture[0];
-          updateData.profileImage = `/uploads/documents/${profilePictureFile.filename}`;
-          console.log("🖼️ Profile picture uploaded:", updateData.profileImage);
+          console.log("🖼️ Uploading profile picture to S3...");
+          const s3Result = await s3Service.uploadProfileImage(
+            profilePictureFile.buffer,
+            profilePictureFile.originalname,
+            profilePictureFile.mimetype,
+            userId,
+            userInfo
+          );
+          updateData.profileImage = s3Result.url;
+          console.log(
+            "✅ Profile picture uploaded to S3:",
+            updateData.profileImage
+          );
+
+          // Delete old profile image if exists
+          if (user?.profileImage) {
+            try {
+              await s3Service.deleteFileByUrl(user.profileImage);
+              console.log("🗑️ Deleted old profile image from S3");
+            } catch (deleteError) {
+              console.warn(
+                "⚠️ Failed to delete old profile image:",
+                deleteError
+              );
+            }
+          }
         }
       }
 
@@ -1743,29 +1854,6 @@ router.put(
 
       console.log("✅ Profile update successful!");
       console.log("✅ Updated user keys:", Object.keys(updatedUser));
-
-      // Parse documents if it's a JSON string (fix for legacy data)
-      if (updatedUser.documents && typeof updatedUser.documents === "string") {
-        try {
-          console.log(
-            "🔍 Backend: Parsing documents from JSON string:",
-            updatedUser.documents
-          );
-          updatedUser.documents = JSON.parse(updatedUser.documents);
-          console.log(
-            "✅ Backend: Documents parsed successfully:",
-            updatedUser.documents
-          );
-        } catch (e) {
-          console.error("❌ Backend: Failed to parse documents:", e.message);
-          updatedUser.documents = {
-            resumeUrl: "",
-            coverLetterUrl: "",
-            portfolioUrl: "",
-            certificates: [],
-          };
-        }
-      }
 
       // Return the same comprehensive data structure as GET /profile
       const profileData = {

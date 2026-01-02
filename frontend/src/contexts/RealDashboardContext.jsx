@@ -1,7 +1,14 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import API_BASE_URL from '../services/apiConfig';
-import { useAuth } from './AuthContext.jsx';
-import { applicationsAPI, authAPI } from '../services/api.js';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+} from "react";
+import API_BASE_URL from "../services/apiConfig";
+import { useAuth } from "./AuthContext.jsx";
+import { applicationsAPI, authAPI } from "../services/api.js";
 import * as jobsAPI from "../api/jobs";
 import * as notificationsAPI from "../api/notifications";
 import * as analyticsAPI from "../api/analytics";
@@ -10,30 +17,69 @@ const DashboardContext = createContext();
 
 const normalizeUser = (user) => {
   if (!user) return null;
-  
+
   // Handle cases where user is nested in { data: { user: ... } } or just { data: ... }
   const actualUser = user.data?.user || user.data || user;
 
-  return {
+  // CRITICAL: Preserve documents and resume URLs exactly as they come from backend
+  const normalizedUser = {
     ...actualUser, // Keep all original properties
     id: actualUser._id || actualUser.id,
     _id: actualUser._id || actualUser.id,
-    name: actualUser.name || actualUser.fullName || `${actualUser.firstName || ''} ${actualUser.lastName || ''}`.trim() || 'User',
-    
+    name:
+      actualUser.name ||
+      actualUser.fullName ||
+      `${actualUser.firstName || ""} ${actualUser.lastName || ""}`.trim() ||
+      "User",
+
     // Normalize experience to a single field
-    yearsOfExperience: actualUser.experience || actualUser.yearsOfExperience || 0,
-    
-    // Flatten social links for easier access
-    linkedin_url: actualUser.socialLinks?.linkedinUrl || actualUser.linkedin_url || "",
-    github_url: actualUser.socialLinks?.githubUrl || actualUser.github_url || "",
-    portfolio_url: actualUser.socialLinks?.portfolioUrl || actualUser.portfolio_url || "",
+    yearsOfExperience:
+      actualUser.experience || actualUser.yearsOfExperience || 0,
+
+    // Flatten social links for easier access (but don't override if flat versions exist)
+    linkedin_url:
+      actualUser.linkedin_url || actualUser.socialLinks?.linkedinUrl || "",
+    github_url:
+      actualUser.github_url || actualUser.socialLinks?.githubUrl || "",
+    portfolio_url:
+      actualUser.portfolio_url || actualUser.socialLinks?.portfolioUrl || "",
 
     // Normalize profile picture
-    profile_picture: actualUser.profile_picture || actualUser.profilePicture || "",
+    profile_picture:
+      actualUser.profile_picture || actualUser.profilePicture || "",
 
     // Provide a default for qualification
-    qualification: actualUser.qualification || (Array.isArray(actualUser.education) && actualUser.education.length > 0 ? actualUser.education[0]?.degree : actualUser.education) || "",
+    qualification:
+      actualUser.qualification ||
+      (Array.isArray(actualUser.education) && actualUser.education.length > 0
+        ? actualUser.education[0]?.degree
+        : actualUser.education) ||
+      "",
+
+    // CRITICAL: Explicitly preserve documents object and resume URLs
+    documents: actualUser.documents || {
+      resumeUrl: "",
+      coverLetterUrl: "",
+      certificates: [],
+    },
+    resume_url: actualUser.resume_url || actualUser.documents?.resumeUrl || "",
+    resumeUrl:
+      actualUser.resumeUrl ||
+      actualUser.documents?.resumeUrl ||
+      actualUser.resume_url ||
+      "",
   };
+
+  console.log("🔍 normalizeUser - Input:", {
+    resume_url: actualUser.resume_url,
+    documents: actualUser.documents,
+  });
+  console.log("🔍 normalizeUser - Output:", {
+    resume_url: normalizedUser.resume_url,
+    documents: normalizedUser.documents,
+  });
+
+  return normalizedUser;
 };
 
 export const useDashboard = () => {
@@ -61,14 +107,14 @@ export const DashboardProvider = ({ children }) => {
   const loadDashboardData = useCallback(async (role, user = null) => {
     // Prevent multiple simultaneous loads
     if (loadingRef.current) {
-      console.log('🔍 Dashboard load already in progress, skipping...');
+      console.log("🔍 Dashboard load already in progress, skipping...");
       return;
     }
 
     // Debounce rapid successive calls
     const now = Date.now();
     if (now - lastLoadTimeRef.current < DEBOUNCE_DELAY) {
-      console.log('🔍 Dashboard load debounced, too soon since last load');
+      console.log("🔍 Dashboard load debounced, too soon since last load");
       return;
     }
 
@@ -78,43 +124,74 @@ export const DashboardProvider = ({ children }) => {
       setLoading(true);
 
       // Fetch comprehensive analytics from the new analytics API
-      console.log('🔍 Loading dashboard data for:', role);
-      const analyticsResponse = await analyticsAPI.getDashboardAnalytics(role).catch((error) => {
-        console.error('🔍 Analytics API error:', error.response?.status, error.message);
-        return null;
-      });
+      console.log("🔍 Loading dashboard data for:", role);
+      const analyticsResponse = await analyticsAPI
+        .getDashboardAnalytics(role)
+        .catch((error) => {
+          console.error(
+            "🔍 Analytics API error:",
+            error.response?.status,
+            error.message
+          );
+          return null;
+        });
 
       // Prepare jobs API parameters - include recruiterId for recruiters to see all their jobs (including drafts)
       const jobsParams = { limit: 50 };
       const userToUse = user || currentUser;
-      if (role === 'recruiter' && userToUse?._id) {
+      if (role === "recruiter" && userToUse?._id) {
         jobsParams.recruiterId = userToUse._id;
-        console.log('🔍 Adding recruiterId to jobs query:', userToUse._id);
+        console.log("🔍 Adding recruiterId to jobs query:", userToUse._id);
       }
 
       // Fetch basic data for display (jobs, applications, notifications)
-      const [jobsResponse, applicationsResponse, notificationsResponse] = await Promise.all([
-        jobsAPI.getJobs(jobsParams).catch((error) => {
-          console.error('🔍 Jobs API error:', error.response?.status, error.message);
-          return { data: { data: [] } };
-        }),
-        applicationsAPI.getApplications({ limit: 10 }).catch(() => ({ data: { data: [] } })),
-        notificationsAPI.getNotifications({ limit: 5 }).catch(() => ({ data: { data: [] } }))
-      ]);
+      const [jobsResponse, applicationsResponse, notificationsResponse] =
+        await Promise.all([
+          jobsAPI.getJobs(jobsParams).catch((error) => {
+            console.error(
+              "🔍 Jobs API error:",
+              error.response?.status,
+              error.message
+            );
+            return { data: { data: [] } };
+          }),
+          applicationsAPI
+            .getApplications({ limit: 10 })
+            .catch(() => ({ data: { data: [] } })),
+          notificationsAPI
+            .getNotifications({ limit: 5 })
+            .catch(() => ({ data: { data: [] } })),
+        ]);
 
       // Extract data from responses
-      const extractedJobs = jobsResponse.data?.jobs || jobsResponse.data?.data?.jobs || jobsResponse.data?.data || [];
-      const extractedApplications = applicationsResponse.data?.applications || applicationsResponse.data?.data?.applications || applicationsResponse.data?.data || [];
-      const extractedNotifications = notificationsResponse.data?.notifications || notificationsResponse.data?.data?.notifications || notificationsResponse.data?.data || [];
+      const extractedJobs =
+        jobsResponse.data?.jobs ||
+        jobsResponse.data?.data?.jobs ||
+        jobsResponse.data?.data ||
+        [];
+      const extractedApplications =
+        applicationsResponse.data?.applications ||
+        applicationsResponse.data?.data?.applications ||
+        applicationsResponse.data?.data ||
+        [];
+      const extractedNotifications =
+        notificationsResponse.data?.notifications ||
+        notificationsResponse.data?.data?.notifications ||
+        notificationsResponse.data?.data ||
+        [];
 
       // Use analytics data if available, otherwise fall back to calculated stats
       let stats;
       if (analyticsResponse && analyticsResponse.success) {
-        console.log('📊 Using analytics API data:', analyticsResponse.data);
-        const analyticsData = analyticsResponse.data.analytics || analyticsResponse.data;
+        console.log("📊 Using analytics API data:", analyticsResponse.data);
+        const analyticsData =
+          analyticsResponse.data.analytics || analyticsResponse.data;
         stats = analyticsData.overview || analyticsData;
       } else {
-        console.log('📊 Falling back to calculated stats, analytics response was:', analyticsResponse);
+        console.log(
+          "📊 Falling back to calculated stats, analytics response was:",
+          analyticsResponse
+        );
         stats = calculateStats(role, {
           jobs: extractedJobs,
           applications: extractedApplications,
@@ -123,34 +200,39 @@ export const DashboardProvider = ({ children }) => {
       }
 
       // Debug logging
-      console.log('🔍 API Responses:', {
-        analytics: analyticsResponse?.success ? 'Success' : 'Failed',
+      console.log("🔍 API Responses:", {
+        analytics: analyticsResponse?.success ? "Success" : "Failed",
         jobs: jobsResponse.data,
         applications: applicationsResponse.data,
-        notifications: notificationsResponse.data
+        notifications: notificationsResponse.data,
       });
 
-      console.log('🔍 Extracted data:', {
+      console.log("🔍 Extracted data:", {
         jobs: extractedJobs.length,
         applications: extractedApplications.length,
-        notifications: extractedNotifications.length
+        notifications: extractedNotifications.length,
       });
-      
-      console.log('🔍 Sample application data structure:', extractedApplications.slice(0, 1));
+
+      console.log(
+        "🔍 Sample application data structure:",
+        extractedApplications.slice(0, 1)
+      );
 
       const dashboardDataToSet = {
         stats,
-        analytics: analyticsResponse?.success ? analyticsResponse.data.analytics : null,
+        analytics: analyticsResponse?.success
+          ? analyticsResponse.data.analytics
+          : null,
         recentJobs: extractedJobs,
         applications: extractedApplications,
         notifications: extractedNotifications,
         users: [],
       };
 
-      console.log('📊 Setting dashboard data:', dashboardDataToSet);
-      console.log('📊 Final stats being set:', stats);
+      console.log("📊 Setting dashboard data:", dashboardDataToSet);
+      console.log("📊 Final stats being set:", stats);
       setDashboardData(dashboardDataToSet);
-      
+
       // Removed forced refresh to prevent form resets
       // Components will re-render automatically when dashboardData changes
     } catch (error) {
@@ -165,7 +247,10 @@ export const DashboardProvider = ({ children }) => {
 
   const checkAuthStatus = async () => {
     const token = localStorage.getItem("token");
-    console.log('🔍 RealDashboardContext checkAuthStatus, token:', token ? 'exists' : 'not found');
+    console.log(
+      "🔍 RealDashboardContext checkAuthStatus, token:",
+      token ? "exists" : "not found"
+    );
     if (token) {
       try {
         const response = await authAPI.getProfile();
@@ -194,23 +279,30 @@ export const DashboardProvider = ({ children }) => {
   useEffect(() => {
     // Only process if authUser actually changed
     if (authUser && authUser !== prevAuthUserRef.current) {
-      console.log('🔍 RealDashboardContext syncing with AuthContext user:', authUser);
-      
+      console.log(
+        "🔍 RealDashboardContext syncing with AuthContext user:",
+        authUser
+      );
+
       const normalizedUser = normalizeUser(authUser);
-      console.log('🔍 Normalized user from AuthContext:', normalizedUser);
-      
+      console.log("🔍 Normalized user from AuthContext:", normalizedUser);
+
       // Only update if user ID or role changed
-      if (!currentUser || currentUser._id !== normalizedUser._id || currentUser.role !== normalizedUser.role) {
+      if (
+        !currentUser ||
+        currentUser._id !== normalizedUser._id ||
+        currentUser.role !== normalizedUser.role
+      ) {
         setCurrentUser(normalizedUser);
         setUserRole(normalizedUser.role);
         setIsAuthenticated(true);
-        
+
         // Reload dashboard data with the new user
         if (normalizedUser.role) {
           loadDashboardData(normalizedUser.role, normalizedUser);
         }
       }
-      
+
       prevAuthUserRef.current = authUser;
     } else if (!authUser && authIsAuthenticated === false) {
       // Only clear if we actually had a user before
@@ -224,56 +316,93 @@ export const DashboardProvider = ({ children }) => {
 
   const calculateStats = (role, data) => {
     const { jobs = [], applications = [], users = [] } = data;
-    
+
     // Ensure applications is an array
     const applicationsArray = Array.isArray(applications) ? applications : [];
 
     switch (role) {
       case "applicant":
         return {
-          profileCompletion: calculateProfileCompletion(currentUser, "applicant"),
-          appliedJobs: applicationsArray.filter((app) => (app.applicationStatus || app.status) === "applied" || (app.applicationStatus || app.status) === "pending")
-            .length,
+          profileCompletion: calculateProfileCompletion(
+            currentUser,
+            "applicant"
+          ),
+          appliedJobs: applicationsArray.filter(
+            (app) =>
+              (app.applicationStatus || app.status) === "applied" ||
+              (app.applicationStatus || app.status) === "pending"
+          ).length,
           shortlisted: applicationsArray.filter(
             (app) => (app.applicationStatus || app.status) === "shortlisted"
           ).length,
           interviews: applicationsArray.filter(
             (app) => (app.applicationStatus || app.status) === "interview"
           ).length,
-          hired: applicationsArray.filter((app) => (app.applicationStatus || app.status) === "hired").length,
+          hired: applicationsArray.filter(
+            (app) => (app.applicationStatus || app.status) === "hired"
+          ).length,
           totalApplications: applicationsArray.length,
           savedJobs: 0, // Will be fetched from API later
           viewedJobs: 0, // Will be fetched from API later
         };
 
       case "recruiter":
-        console.log('🔍 Calculating recruiter stats with jobs:', jobs.length, 'applications:', applicationsArray.length);
-        console.log('🔍 Sample applications data:', applicationsArray.slice(0, 2));
-        const activeJobs = jobs.filter((job) => job.status === "active" || job.status === "Active").length;
+        console.log(
+          "🔍 Calculating recruiter stats with jobs:",
+          jobs.length,
+          "applications:",
+          applicationsArray.length
+        );
+        console.log(
+          "🔍 Sample applications data:",
+          applicationsArray.slice(0, 2)
+        );
+        const activeJobs = jobs.filter(
+          (job) => job.status === "active" || job.status === "Active"
+        ).length;
         const totalJobs = jobs.length;
-        console.log('🔍 Active jobs:', activeJobs, 'Total jobs:', totalJobs);
-        
+        console.log("🔍 Active jobs:", activeJobs, "Total jobs:", totalJobs);
+
         // Debug hired count - only looking for "hired" status now
         const hiredApps = applicationsArray.filter((app) => {
-          const status = (app.applicationStatus || app.status || '').toLowerCase();
+          const status = (
+            app.applicationStatus ||
+            app.status ||
+            ""
+          ).toLowerCase();
           return status === "hired";
         });
         const underReviewApps = applicationsArray.filter((app) => {
-          const status = (app.applicationStatus || app.status || '').toLowerCase();
+          const status = (
+            app.applicationStatus ||
+            app.status ||
+            ""
+          ).toLowerCase();
           return status === "under_review" || status === "reviewing";
         });
-        
-        console.log('🔍 Hired applications:', hiredApps.length, 'Under Review applications:', underReviewApps.length);
-        console.log('🔍 Hired apps sample:', hiredApps.slice(0, 2));
-        console.log('🔍 All applications with status:', applicationsArray.map(app => ({ 
-          id: app.id, 
-          applicationStatus: app.applicationStatus,
-          status: app.status,
-          finalStatus: app.applicationStatus || app.status,
-          applicant: app.applicantSnapshot?.fullName 
-        })));
+
+        console.log(
+          "🔍 Hired applications:",
+          hiredApps.length,
+          "Under Review applications:",
+          underReviewApps.length
+        );
+        console.log("🔍 Hired apps sample:", hiredApps.slice(0, 2));
+        console.log(
+          "🔍 All applications with status:",
+          applicationsArray.map((app) => ({
+            id: app.id,
+            applicationStatus: app.applicationStatus,
+            status: app.status,
+            finalStatus: app.applicationStatus || app.status,
+            applicant: app.applicantSnapshot?.fullName,
+          }))
+        );
         return {
-          profileCompletion: calculateProfileCompletion(currentUser, "recruiter"),
+          profileCompletion: calculateProfileCompletion(
+            currentUser,
+            "recruiter"
+          ),
           activeJobs,
           totalJobs,
           totalApplications: applicationsArray.length,
@@ -281,15 +410,24 @@ export const DashboardProvider = ({ children }) => {
             (app) => (app.applicationStatus || app.status) === "shortlisted"
           ).length,
           hired: applicationsArray.filter((app) => {
-            const status = (app.applicationStatus || app.status || '').toLowerCase();
+            const status = (
+              app.applicationStatus ||
+              app.status ||
+              ""
+            ).toLowerCase();
             return status === "hired";
           }).length,
           underReview: applicationsArray.filter((app) => {
-            const status = (app.applicationStatus || app.status || '').toLowerCase();
+            const status = (
+              app.applicationStatus ||
+              app.status ||
+              ""
+            ).toLowerCase();
             return status === "under_review" || status === "reviewing";
           }).length,
-          pendingReview: applicationsArray.filter((app) => (app.applicationStatus || app.status) === "pending")
-            .length,
+          pendingReview: applicationsArray.filter(
+            (app) => (app.applicationStatus || app.status) === "pending"
+          ).length,
           interviewsScheduled: applicationsArray.filter(
             (app) => (app.applicationStatus || app.status) === "interview"
           ).length,
@@ -331,7 +469,7 @@ export const DashboardProvider = ({ children }) => {
           shortlisted: 0,
           hired: 0,
           pendingReview: 0,
-          interviewsScheduled: 0
+          interviewsScheduled: 0,
         },
         admin: {
           totalUsers: 0,
@@ -340,7 +478,7 @@ export const DashboardProvider = ({ children }) => {
           systemHealth: 0,
           newUsersToday: 0,
           jobsPostedToday: 0,
-        }
+        },
       },
       recentJobs: [],
       applications: [],
@@ -396,12 +534,15 @@ export const DashboardProvider = ({ children }) => {
     // Add null safety check for dashboardData.stats
     if (!dashboardData || !dashboardData.stats) {
       // Return role-specific default stats with dynamic profile completion
-      if (role === 'applicant') {
+      if (role === "applicant") {
         return {
-          profileCompletion: calculateProfileCompletion(currentUser, "applicant"),
+          profileCompletion: calculateProfileCompletion(
+            currentUser,
+            "applicant"
+          ),
           appliedJobs: 0,
           shortlisted: 0,
-          interviews: 0
+          interviews: 0,
         };
       }
       return {
@@ -409,18 +550,18 @@ export const DashboardProvider = ({ children }) => {
         activeJobs: 0,
         totalApplications: 0,
         shortlisted: 0,
-        hired: 0
+        hired: 0,
       };
     }
 
     // getStats Debug info available if needed
-    
+
     // Check if stats are nested by role or direct
     if (typeof dashboardData.stats === "object" && dashboardData.stats[role]) {
       // Returning nested stats for role
       return dashboardData.stats[role];
     }
-    
+
     // Returning direct stats
     return dashboardData.stats;
   };
@@ -438,12 +579,13 @@ export const DashboardProvider = ({ children }) => {
   const refreshCurrentUser = async () => {
     try {
       const response = await authAPI.getProfile();
-      const user = response.data.data?.user || response.data.user || response.data;
-      console.log('🔄 Refreshed current user:', user);
+      const user =
+        response.data.data?.user || response.data.user || response.data;
+      console.log("🔄 Refreshed current user:", user);
       setCurrentUser(user);
       return user;
     } catch (error) {
-      console.error('❌ Failed to refresh current user:', error);
+      console.error("❌ Failed to refresh current user:", error);
       throw error;
     }
   };
@@ -451,38 +593,38 @@ export const DashboardProvider = ({ children }) => {
   // Refresh real-time statistics without full data reload
   const refreshStats = async () => {
     if (!isAuthenticated || !currentUser?.role) {
-      console.log('🔍 Skipping stats refresh - not authenticated or no role');
+      console.log("🔍 Skipping stats refresh - not authenticated or no role");
       return;
     }
 
     try {
-      console.log('🔄 Refreshing stats for role:', currentUser.role);
-      
+      console.log("🔄 Refreshing stats for role:", currentUser.role);
+
       // Test network connectivity first
       try {
-        await fetch(`${API_BASE_URL}/health`, { method: 'HEAD' });
-        console.log('✅ Backend connectivity confirmed');
+        await fetch(`${API_BASE_URL}/health`, { method: "HEAD" });
+        console.log("✅ Backend connectivity confirmed");
       } catch (connectError) {
-        console.warn('⚠️ Backend connectivity issue:', connectError.message);
+        console.warn("⚠️ Backend connectivity issue:", connectError.message);
       }
-      
+
       const response = await analyticsAPI.getRealTimeStats(currentUser.role);
-      
+
       if (response.success && response.data?.stats) {
-        setDashboardData(prevData => ({
+        setDashboardData((prevData) => ({
           ...prevData,
           stats: response.data.stats,
-          lastUpdated: response.data.timestamp || new Date().toISOString()
+          lastUpdated: response.data.timestamp || new Date().toISOString(),
         }));
-        console.log('✅ Stats refreshed successfully:', response.data.stats);
+        console.log("✅ Stats refreshed successfully:", response.data.stats);
       } else {
-        console.warn('⚠️ Invalid stats response format:', response);
+        console.warn("⚠️ Invalid stats response format:", response);
       }
     } catch (error) {
-      console.error('❌ Failed to refresh stats:', error);
-      
+      console.error("❌ Failed to refresh stats:", error);
+
       // Set fallback stats to prevent UI from breaking
-      setDashboardData(prevData => ({
+      setDashboardData((prevData) => ({
         ...prevData,
         stats: {
           totalJobs: 0,
@@ -491,9 +633,9 @@ export const DashboardProvider = ({ children }) => {
           pending: 0,
           shortlisted: 0,
           interviewed: 0,
-          hired: 0
+          hired: 0,
         },
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
       }));
     }
   };
@@ -503,16 +645,17 @@ export const DashboardProvider = ({ children }) => {
     try {
       setLoading(true);
       const response = await jobsAPI.createJob(jobData);
-      
+
       // Immediately add the new job to local state for instant feedback
-      const newJob = response.data.data?.job || response.data.job || response.data;
+      const newJob =
+        response.data.data?.job || response.data.job || response.data;
       if (newJob) {
-        setDashboardData(prevData => ({
+        setDashboardData((prevData) => ({
           ...prevData,
-          recentJobs: [newJob, ...(prevData.recentJobs || [])]
+          recentJobs: [newJob, ...(prevData.recentJobs || [])],
         }));
       }
-      
+
       // Refresh full dashboard data to get the new job in the list
       await refreshData();
       return response.data;
@@ -528,15 +671,16 @@ export const DashboardProvider = ({ children }) => {
     try {
       setLoading(true);
       const response = await jobsAPI.updateJob(jobId, updateData);
-      
+
       // Update the job in local state immediately
-      setDashboardData(prevData => ({
+      setDashboardData((prevData) => ({
         ...prevData,
-        recentJobs: prevData.recentJobs?.map(job => 
-          job._id === jobId ? { ...job, ...updateData } : job
-        ) || []
+        recentJobs:
+          prevData.recentJobs?.map((job) =>
+            job._id === jobId ? { ...job, ...updateData } : job
+          ) || [],
       }));
-      
+
       // Refresh full dashboard data to reflect changes
       await refreshData();
       return response.data;
@@ -552,13 +696,14 @@ export const DashboardProvider = ({ children }) => {
     try {
       setLoading(true);
       const response = await jobsAPI.deleteJob(jobId);
-      
+
       // Remove the job from local state immediately
-      setDashboardData(prevData => ({
+      setDashboardData((prevData) => ({
         ...prevData,
-        recentJobs: prevData.recentJobs?.filter(job => job._id !== jobId) || []
+        recentJobs:
+          prevData.recentJobs?.filter((job) => job._id !== jobId) || [],
       }));
-      
+
       // Refresh stats to reflect deletion
       await refreshStats();
       return response.data;

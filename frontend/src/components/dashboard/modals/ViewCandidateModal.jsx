@@ -34,7 +34,17 @@ const ViewCandidateModal = ({ open, onClose, candidate }) => {
   if (!candidate) return null;
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" PaperProps={{ sx: { maxWidth: { xs: '95vw', sm: '460px', md: '510px' }, borderRadius: '6px' } }}>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      PaperProps={{
+        sx: {
+          maxWidth: { xs: "95vw", sm: "460px", md: "510px" },
+          borderRadius: "6px",
+        },
+      }}
+    >
       <DialogTitle>
         <Box
           sx={{
@@ -56,16 +66,40 @@ const ViewCandidateModal = ({ open, onClose, candidate }) => {
           </Box>
           <Tooltip title="Download Resume">
             <IconButton
-              onClick={() => {
-                // Try to construct the new filename format first
-                const username = candidate.username || candidate.candidateUsername;
-                if (username) {
-                  const newFormatUrl = `/uploads/documents/resume_${username}.pdf`;
-                  window.open(newFormatUrl, "_blank");
-                } else if (candidate.resumeUrl) {
-                  window.open(candidate.resumeUrl, "_blank");
+              onClick={async () => {
+                const resumeUrl = candidate.resumeUrl || candidate.resume;
+
+                // If S3 URL, get presigned URL
+                if (
+                  resumeUrl &&
+                  (resumeUrl.includes("amazonaws.com") ||
+                    resumeUrl.includes("s3"))
+                ) {
+                  const token = localStorage.getItem("token");
+                  if (token) {
+                    try {
+                      const response = await fetch(
+                        "http://localhost:5000/api/auth/file-url/resume",
+                        {
+                          headers: { Authorization: `Bearer ${token}` },
+                        }
+                      );
+                      if (response.ok) {
+                        const data = await response.json();
+                        window.open(data.url, "_blank");
+                        return;
+                      }
+                    } catch (error) {
+                      console.warn("Failed to get presigned URL:", error);
+                    }
+                  }
+                }
+
+                // Fallback to direct URL
+                if (resumeUrl) {
+                  window.open(resumeUrl, "_blank");
                 } else {
-                  alert('Resume not available for this candidate');
+                  alert("Resume not available for this candidate");
                 }
               }}
             >
@@ -159,16 +193,27 @@ const ViewCandidateModal = ({ open, onClose, candidate }) => {
                     <ListItemText
                       primary={
                         <Typography variant="subtitle1">
-                          {exp.jobTitle || exp.title || 'Position Not Specified'} at {exp.companyName || exp.company || 'Company Not Specified'}
+                          {exp.jobTitle ||
+                            exp.title ||
+                            "Position Not Specified"}{" "}
+                          at{" "}
+                          {exp.companyName ||
+                            exp.company ||
+                            "Company Not Specified"}
                         </Typography>
                       }
                       secondary={
                         <>
                           <Typography variant="body2" color="text.secondary">
-                            {exp.startDate ? new Date(exp.startDate).toLocaleDateString() : 'Start date not specified'} -
+                            {exp.startDate
+                              ? new Date(exp.startDate).toLocaleDateString()
+                              : "Start date not specified"}{" "}
+                            -
                             {exp.isCurrentJob || exp.isCurrentRole
                               ? "Present"
-                              : exp.endDate ? new Date(exp.endDate).toLocaleDateString() : 'End date not specified'}
+                              : exp.endDate
+                              ? new Date(exp.endDate).toLocaleDateString()
+                              : "End date not specified"}
                           </Typography>
                           {exp.description && (
                             <Typography variant="body2">

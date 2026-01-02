@@ -179,7 +179,8 @@ const JobsPageNaukri = () => {
   // Modal states
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [applicationModalOpen, setApplicationModalOpen] = useState(false);
-  const [selectedJobForApplication, setSelectedJobForApplication] = useState(null);
+  const [selectedJobForApplication, setSelectedJobForApplication] =
+    useState(null);
   const [appliedJobs, setAppliedJobs] = useState(new Set());
   const [applicationLoading, setApplicationLoading] = useState(false);
 
@@ -231,23 +232,36 @@ const JobsPageNaukri = () => {
       if (user && (user.id || user._id)) {
         try {
           const userId = user.id || user._id;
-          
+
           // Fetch Applications
-          const appsResponse = await applicationService.getUserApplications(50, 1);
+          const appsResponse = await applicationService.getUserApplications(
+            50,
+            1
+          );
           if (appsResponse.success) {
-            const appliedJobIds = new Set(appsResponse.data.applications.map(app => 
-              app.jobId?._id || app.jobId
-            ));
+            const appliedJobIds = new Set(
+              appsResponse.data.applications.map(
+                (app) => app.jobId?._id || app.jobId
+              )
+            );
             setAppliedJobs(appliedJobIds);
           }
 
           // Fetch Saved Jobs
           const savedResponse = await fetch(`${API_BASE_URL}/saved-jobs`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
           });
           const savedData = await savedResponse.json();
-          if (savedData.success) {
-            const savedIds = savedData.data.jobs.map(job => job.id || job._id);
+          if (
+            savedData.success &&
+            savedData.data &&
+            Array.isArray(savedData.data.jobs)
+          ) {
+            const savedIds = savedData.data.jobs.map(
+              (job) => job.id || job._id
+            );
             setSavedJobs(savedIds);
           }
         } catch (error) {
@@ -271,8 +285,9 @@ const JobsPageNaukri = () => {
       // Append filters to API request
       if (filters.experience.length > 0) {
         const exp = filters.experience[0];
-        if (exp === "Fresher") { params.append("experienceMax", "0"); }
-        else if (exp.includes("-")) {
+        if (exp === "Fresher") {
+          params.append("experienceMax", "0");
+        } else if (exp.includes("-")) {
           const parts = exp.split(" ")[0].split("-");
           params.append("experienceMin", parts[0]);
           params.append("experienceMax", parts[1]);
@@ -286,7 +301,9 @@ const JobsPageNaukri = () => {
       }
 
       if (filters.workMode.length > 0) {
-        const modes = filters.workMode.map(m => m === "Work from Office" ? "On-site" : m);
+        const modes = filters.workMode.map((m) =>
+          m === "Work from Office" ? "On-site" : m
+        );
         params.append("workArrangement", modes.join(","));
       }
 
@@ -298,23 +315,27 @@ const JobsPageNaukri = () => {
         params.append("industry", filters.industry.join(","));
       }
 
-      if (filters.salary[0] > 0) params.append("salaryMin", filters.salary[0] * 100000);
-      if (filters.salary[1] < 100) params.append("salaryMax", filters.salary[1] * 100000);
+      if (filters.salary[0] > 0)
+        params.append("salaryMin", filters.salary[0] * 100000);
+      if (filters.salary[1] < 100)
+        params.append("salaryMax", filters.salary[1] * 100000);
 
       const response = await fetch(`${API_BASE_URL}/jobs?${params.toString()}`);
       if (response.ok) {
         const result = await response.json();
         const jobsData = result.data?.jobs || [];
-        
-        console.log('🔍 Raw jobs from API:', jobsData);
-        
+
+        console.log("🔍 Raw jobs from API:", jobsData);
+
         // Transform backend data to frontend structure using centralized mapper
         const transformedJobs = jobsData.map(mapBackendJobToFrontend);
-        
-        console.log('🔍 Transformed jobs for UI:', transformedJobs);
+
+        console.log("🔍 Transformed jobs for UI:", transformedJobs);
 
         setJobs(transformedJobs);
-        setTotalPages(result.data?.totalPages || Math.ceil((result.data?.total || 0) / 12));
+        setTotalPages(
+          result.data?.totalPages || Math.ceil((result.data?.total || 0) / 12)
+        );
       }
     } catch (error) {
       console.error("Error fetching jobs:", error);
@@ -326,7 +347,7 @@ const JobsPageNaukri = () => {
 
   const toggleSaveJob = async (e, jobId) => {
     if (e) e.stopPropagation();
-    
+
     if (!user) {
       setAuthModalOpen(true);
       return;
@@ -334,23 +355,23 @@ const JobsPageNaukri = () => {
 
     const isSaved = savedJobs.includes(jobId);
     try {
-      const method = isSaved ? 'DELETE' : 'POST';
-      const url = isSaved ? `${API_BASE_URL}/saved-jobs/${jobId}` : `${API_BASE_URL}/saved-jobs`;
-      
+      const method = isSaved ? "DELETE" : "POST";
+      const url = isSaved
+        ? `${API_BASE_URL}/saved-jobs/${jobId}`
+        : `${API_BASE_URL}/saved-jobs`;
+
       const response = await fetch(url, {
         method,
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: isSaved ? null : JSON.stringify({ jobId })
+        body: isSaved ? null : JSON.stringify({ jobId }),
       });
 
       if (response.ok) {
         setSavedJobs((prev) =>
-          isSaved
-            ? prev.filter((id) => id !== jobId)
-            : [...prev, jobId]
+          isSaved ? prev.filter((id) => id !== jobId) : [...prev, jobId]
         );
         // Dispatch event to refresh dashboards
         window.dispatchEvent(new CustomEvent("refreshDashboard"));
@@ -366,14 +387,16 @@ const JobsPageNaukri = () => {
       return;
     }
 
-    if (user.role === 'recruiter') {
-      alert('Recruiters cannot apply to jobs. Please switch to an applicant account.');
+    if (user.role === "recruiter") {
+      alert(
+        "Recruiters cannot apply to jobs. Please switch to an applicant account."
+      );
       return;
     }
 
     const jobId = job.id || job._id;
     if (appliedJobs.has(jobId)) {
-      alert('You have already applied to this job!');
+      alert("You have already applied to this job!");
       return;
     }
 
@@ -384,21 +407,28 @@ const JobsPageNaukri = () => {
   const handleSubmitApplication = async (applicationData) => {
     try {
       setApplicationLoading(true);
-      const response = await applicationService.submitApplication(applicationData);
-      
-      const jobId = applicationData.get('jobId');
-      setAppliedJobs(prev => new Set([...prev, jobId]));
-      
-      alert(`Application submitted successfully for ${selectedJobForApplication?.jobTitle || selectedJobForApplication?.title}!`);
-      
+      const response = await applicationService.submitApplication(
+        applicationData
+      );
+
+      const jobId = applicationData.get("jobId");
+      setAppliedJobs((prev) => new Set([...prev, jobId]));
+
+      alert(
+        `Application submitted successfully for ${
+          selectedJobForApplication?.jobTitle ||
+          selectedJobForApplication?.title
+        }!`
+      );
+
       // Dispatch event to refresh dashboards
       window.dispatchEvent(new CustomEvent("refreshDashboard"));
-      
+
       setApplicationModalOpen(false);
       setSelectedJobForApplication(null);
     } catch (error) {
-      console.error('Error submitting application:', error);
-      alert('Error submitting application. Please try again.');
+      console.error("Error submitting application:", error);
+      alert("Error submitting application. Please try again.");
     } finally {
       setApplicationLoading(false);
     }
@@ -1206,23 +1236,17 @@ const JobsPageNaukri = () => {
               >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                   <WorkOutline sx={{ fontSize: 18, color: "#6b7280" }} />
-                  <Typography variant="body2">
-                    {job.experience}
-                  </Typography>
+                  <Typography variant="body2">{job.experience}</Typography>
                 </Box>
                 <Typography sx={{ color: "#d1d5db" }}>|</Typography>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                   <CurrencyRupee sx={{ fontSize: 18, color: "#6b7280" }} />
-                  <Typography variant="body2">
-                    {job.salary}
-                  </Typography>
+                  <Typography variant="body2">{job.salary}</Typography>
                 </Box>
                 <Typography sx={{ color: "#d1d5db" }}>|</Typography>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                   <LocationOn sx={{ fontSize: 18, color: "#6b7280" }} />
-                  <Typography variant="body2">
-                    {job.location}
-                  </Typography>
+                  <Typography variant="body2">{job.location}</Typography>
                 </Box>
                 <Typography sx={{ color: "#d1d5db" }}>|</Typography>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
@@ -1248,9 +1272,7 @@ const JobsPageNaukri = () => {
                   variant="body2"
                   sx={{ color: "#4b5563", fontSize: "0.85rem" }}
                 >
-                  {(job.skills || []).join(
-                    " • "
-                  )}
+                  {(job.skills || []).join(" • ")}
                 </Typography>
               </Box>
 
@@ -1279,7 +1301,7 @@ const JobsPageNaukri = () => {
                     ml: 2,
                     textTransform: "none",
                     borderRadius: "6px",
-                    fontWeight: 600
+                    fontWeight: 600,
                   }}
                 >
                   {appliedJobs.has(job._id) ? "Applied" : "Apply"}
@@ -1382,9 +1404,7 @@ const JobsPageNaukri = () => {
               }}
             >
               <LocationOn sx={{ fontSize: 16 }} />
-              <Typography variant="body2">
-                {job.location}
-              </Typography>
+              <Typography variant="body2">{job.location}</Typography>
             </Box>
             <Box
               sx={{
@@ -1396,22 +1416,18 @@ const JobsPageNaukri = () => {
               }}
             >
               <People sx={{ fontSize: 16 }} />
-              <Typography variant="body2">
-                {job.vacancy} Vacancies
-              </Typography>
+              <Typography variant="body2">{job.vacancy} Vacancies</Typography>
             </Box>
             <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2 }}>
-              {(job.skills || [])
-                .slice(0, 3)
-                .map((skill, i) => (
-                  <Chip
-                    key={i}
-                    label={skill}
-                    size="small"
-                    variant="outlined"
-                    sx={{ fontSize: "10px", height: 22 }}
-                  />
-                ))}
+              {(job.skills || []).slice(0, 3).map((skill, i) => (
+                <Chip
+                  key={i}
+                  label={skill}
+                  size="small"
+                  variant="outlined"
+                  sx={{ fontSize: "10px", height: 22 }}
+                />
+              ))}
             </Box>
             <Divider sx={{ my: 1.5 }} />
             <Box
@@ -1446,7 +1462,9 @@ const JobsPageNaukri = () => {
                   fontWeight: 600,
                   borderRadius: "6px",
                   color: appliedJobs.has(job._id) ? "success.main" : "white",
-                  borderColor: appliedJobs.has(job._id) ? "success.main" : "transparent"
+                  borderColor: appliedJobs.has(job._id)
+                    ? "success.main"
+                    : "transparent",
                 }}
               >
                 {appliedJobs.has(job._id) ? "Applied" : "Apply Now"}

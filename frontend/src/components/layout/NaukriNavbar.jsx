@@ -72,7 +72,9 @@ const float = keyframes`
 `;
 
 // Styled Components
-const NavbarWrapper = styled(Box)(({ theme, $scrolled }) => ({
+const NavbarWrapper = styled(Box, {
+  shouldForwardProp: (prop) => !prop.startsWith('$')
+})(({ theme, $scrolled }) => ({
   position: "sticky",
   top: 0,
   zIndex: 1100,
@@ -105,7 +107,9 @@ const MainNav = styled(Box)(({ theme }) => ({
   borderBottom: `1px solid ${theme.palette.divider}`,
 }));
 
-const SearchWrapper = styled(Paper)(({ theme, $focused }) => ({
+const SearchWrapper = styled(Paper, {
+  shouldForwardProp: (prop) => !prop.startsWith('$')
+})(({ theme, $focused }) => ({
   display: "flex",
   alignItems: "center",
   borderRadius: "6px",
@@ -149,7 +153,9 @@ const SearchSuggestionsBox = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
 }));
 
-const NavLink = styled(Button)(({ theme, $active }) => ({
+const NavLink = styled(Button, {
+  shouldForwardProp: (prop) => !prop.startsWith('$')
+})(({ theme, $active }) => ({
   textTransform: "none",
   fontWeight: $active ? 600 : 500,
   fontSize: "14px",
