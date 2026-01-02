@@ -144,6 +144,12 @@ export const AuthProvider = ({ children }) => {
           localStorage.setItem("user", JSON.stringify(user)); // Store user data for offline access
           setUser(user);
 
+          console.log("✅ Login successful, user set:", {
+            role: user?.role,
+            email: user?.email,
+            isAdmin: user?.role === "admin",
+          });
+
           return {
             success: true,
             user: user,

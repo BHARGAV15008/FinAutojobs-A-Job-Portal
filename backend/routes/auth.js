@@ -2942,4 +2942,249 @@ router.use((error, req, res, next) => {
   next(error);
 });
 
+// GET /api/auth/verify-token/:token - Validate verification token
+router.get("/verify-token/:token", async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    console.log(
+      `🔍 Validating verification token: ${token.substring(0, 8)}...`
+    );
+
+    // Find user with this token
+    const user = await BaseUser.findOne({
+      verificationToken: token,
+      verificationTokenExpiry: { $gt: new Date() },
+    }).select("-password");
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired verification link",
+      });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is already verified",
+      });
+    }
+
+    console.log(`✅ Token valid for user: ${user.email}`);
+
+    res.json({
+      success: true,
+      message: "Token is valid",
+      data: {
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error validating token:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to validate token",
+    });
+  }
+});
+
+// POST /api/auth/send-verification-otp - Send OTP for verification page
+router.post("/send-verification-otp", async (req, res) => {
+  try {
+    const { email, token } = req.body;
+
+    console.log(`🔍 Sending verification OTP to: ${email}`);
+
+    // Import rate limiting from admin routes (dynamic import to get shared settings)
+    const adminModule = await import("./admin.js");
+
+    // Check rate limit (get from shared settings)
+    // For now, implement basic rate limiting here
+    const rateLimitKey = `otp_${email.toLowerCase()}`;
+    const lastRequestTime = global.otpRequestTimes?.get(rateLimitKey) || 0;
+    const now = Date.now();
+    const cooldown = 60 * 1000; // 60 seconds cooldown
+
+    if (now - lastRequestTime < cooldown) {
+      const secondsLeft = Math.ceil(
+        (cooldown - (now - lastRequestTime)) / 1000
+      );
+      return res.status(429).json({
+        success: false,
+        message: `Please wait ${secondsLeft} second(s) before requesting another OTP`,
+        retryAfter: lastRequestTime + cooldown,
+      });
+    }
+
+    // Validate token first
+    const user = await BaseUser.findOne({
+      email: email.toLowerCase(),
+      verificationToken: token,
+      verificationTokenExpiry: { $gt: new Date() },
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid verification session",
+      });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is already verified",
+      });
+    }
+
+    // Initialize global rate limit tracker if not exists
+    if (!global.otpRequestTimes) {
+      global.otpRequestTimes = new Map();
+    }
+
+    // Record this request time
+    global.otpRequestTimes.set(rateLimitKey, now);
+
+    // Import OTP generator from admin route
+    const crypto = await import("crypto");
+
+    // Generate simple 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    // Store OTP in user document
+    user.verificationCode = otp;
+    user.verificationExpiry = otpExpiry;
+    await user.save();
+
+    // Send OTP email
+    const emailService = (await import("../services/emailService.js")).default;
+    await emailService.sendEmail(
+      user.email,
+      "Your Verification Code - FinAutoJobs",
+      `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="color: white; margin: 0;">🔐 Verification Code</h1>
+          </div>
+          <div style="padding: 30px; background-color: #f9fafb; border-radius: 0 0 10px 10px;">
+            <p style="color: #1f2937; font-size: 16px;">Hello ${user.firstName}!</p>
+            <p style="color: #4b5563;">Here is your verification code:</p>
+            <div style="background-color: white; border: 2px dashed #667eea; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
+              <p style="font-size: 36px; font-weight: bold; color: #667eea; margin: 0; letter-spacing: 8px; font-family: monospace;">${otp}</p>
+            </div>
+            <p style="color: #ef4444; font-size: 14px;">
+              <strong>⏰ This code expires in 10 minutes</strong>
+            </p>
+            <p style="color: #6b7280; font-size: 14px;">
+              If you didn't request this code, please ignore this email.
+            </p>
+          </div>
+        </div>
+      `
+    );
+
+    console.log(`✅ OTP sent to: ${user.email}`);
+
+    res.json({
+      success: true,
+      message: "OTP sent successfully",
+    });
+  } catch (error) {
+    console.error("❌ Error sending OTP:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to send OTP",
+    });
+  }
+});
+
+// POST /api/auth/verify-email-otp - Verify OTP and activate account
+router.post("/verify-email-otp", async (req, res) => {
+  try {
+    const { email, otp, token } = req.body;
+
+    console.log(`🔍 Verifying OTP for: ${email}`);
+
+    // Find user with matching email, token, and valid OTP
+    const user = await BaseUser.findOne({
+      email: email.toLowerCase(),
+      verificationToken: token,
+      verificationTokenExpiry: { $gt: new Date() },
+      verificationCode: otp,
+      verificationExpiry: { $gt: new Date() },
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired OTP code",
+      });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is already verified",
+      });
+    }
+
+    // Verify and activate account
+    user.isVerified = true;
+    user.isActive = true;
+    user.verificationCode = undefined;
+    user.verificationExpiry = undefined;
+    user.verificationToken = undefined;
+    user.verificationTokenExpiry = undefined;
+    await user.save();
+
+    console.log(`✅ Email verified successfully for: ${user.email}`);
+
+    // Send welcome email
+    try {
+      const emailService = (await import("../services/emailService.js"))
+        .default;
+      await emailService.sendEmail(
+        user.email,
+        "Welcome to FinAutoJobs! 🎉",
+        `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+              <h1 style="color: white; margin: 0;">🎉 Welcome to FinAutoJobs!</h1>
+            </div>
+            <div style="padding: 30px; background-color: #f0fdf4; border-radius: 0 0 10px 10px;">
+              <h2 style="color: #1f2937;">Hi ${user.firstName}!</h2>
+              <p style="color: #4b5563; font-size: 16px;">Your email has been verified successfully! Your account is now active.</p>
+              <p style="color: #4b5563;">You can now log in and start exploring opportunities on FinAutoJobs.</p>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${
+                  process.env.FRONTEND_URL || "http://192.168.41.134:3000"
+                }/login" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: bold;">Login Now</a>
+              </div>
+            </div>
+          </div>
+        `
+      );
+    } catch (emailError) {
+      console.error("❌ Failed to send welcome email:", emailError);
+      // Don't fail the verification if welcome email fails
+    }
+
+    res.json({
+      success: true,
+      message: "Email verified successfully",
+    });
+  } catch (error) {
+    console.error("❌ Error verifying OTP:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to verify OTP",
+    });
+  }
+});
+
 export default router;

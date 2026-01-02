@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import applicationService from "../../services/applicationService";
+import { interviewsAPI } from "../../services/api";
 import { useDashboard } from "../../contexts/RealDashboardContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/IntegratedThemeContext";
 import CandidateProfileModal from "../modals/CandidateProfileModal";
 import ContactModal from "../modals/ContactModal";
-
+import ScheduleModal from "../modals/ScheduleModal";
 const RealApplicationsTab = () => {
   const { user } = useAuth();
   const { refreshStats } = useDashboard();
@@ -27,6 +28,10 @@ const RealApplicationsTab = () => {
     candidate: null,
   });
   const [contactModal, setContactModal] = useState({
+    isOpen: false,
+    candidate: null,
+  });
+  const [scheduleModal, setScheduleModal] = useState({
     isOpen: false,
     candidate: null,
   });
@@ -54,7 +59,8 @@ const RealApplicationsTab = () => {
         console.log("✅ Applications fetched:", response);
 
         if (response.success) {
-          setApplications(response.data?.applications || []);
+          const apps = response.data?.applications || [];
+          setApplications(apps);
         } else {
           setError("Failed to fetch applications");
         }
@@ -184,6 +190,7 @@ const RealApplicationsTab = () => {
       id: application._id,
       applicationId: application._id,
       candidateId: application.applicantId,
+      jobId: application.jobId,
       name: application.applicantSnapshot?.fullName || "Unknown",
       email: application.applicantSnapshot?.email || "",
       phone: application.applicantSnapshot?.phone || "",
@@ -230,6 +237,144 @@ const RealApplicationsTab = () => {
     };
 
     setContactModal({ isOpen: true, candidate });
+  };
+
+  // Handle schedule interview - Open schedule modal
+  const handleScheduleInterview = (application) => {
+    console.log(
+      "📅 Opening schedule modal for:",
+      application.applicantSnapshot?.fullName
+    );
+
+    // Convert application to candidate format for modal
+    const candidate = {
+      id: application._id,
+      applicationId: application._id,
+      candidateId: application.applicantId,
+      jobId: application.jobId,
+      name: application.applicantSnapshot?.fullName || "Unknown",
+      email: application.applicantSnapshot?.email || "",
+      phone: application.applicantSnapshot?.phone || "",
+      appliedFor: application.jobSnapshot?.title || "Unknown Position",
+    };
+
+    setScheduleModal({ isOpen: true, candidate });
+  };
+
+  // Handle shortlist candidate - Toggle shortlist status
+  const handleShortlistCandidate = async (application) => {
+    try {
+      console.log(
+        "⭐ Toggling shortlist for:",
+        application.applicantSnapshot?.fullName
+      );
+
+      const currentStatus =
+        application.applicationStatus || application.status || "pending";
+      const isCurrentlyShortlisted = currentStatus === "shortlisted";
+      const newStatus = isCurrentlyShortlisted ? "pending" : "shortlisted";
+
+      await applicationService.updateApplicationStatus(
+        application._id,
+        newStatus,
+        `Shortlist status updated by recruiter`
+      );
+
+      // Update local state
+      setApplications((prev) =>
+        prev.map((app) =>
+          app._id === application._id
+            ? { ...app, applicationStatus: newStatus, status: newStatus }
+            : app
+        )
+      );
+
+      alert(
+        `✅ Candidate ${
+          newStatus === "shortlisted" ? "added to" : "removed from"
+        } shortlist!`
+      );
+    } catch (error) {
+      console.error("❌ Failed to update shortlist:", error);
+      alert("❌ Failed to update shortlist. Please try again.");
+    }
+  };
+
+  // Handle schedule new interview from modal
+  const handleScheduleNewInterview = async (interviewData) => {
+    try {
+      console.log("📅 Scheduling new interview:", interviewData);
+
+      const candidate = scheduleModal.candidate;
+      if (!candidate) throw new Error("No candidate selected");
+
+      // Validate required fields
+      if (!interviewData.date || !interviewData.time) {
+        alert("❌ Please select both date and time for the interview");
+        throw new Error("Date and time are required");
+      }
+
+      // Format the interview data with proper field names matching backend
+      const formattedData = {
+        candidateId: candidate.candidateId,
+        applicationId: candidate.applicationId,
+        jobId: candidate.jobId,
+        title:
+          interviewData.title ||
+          `Interview for ${candidate.appliedFor || "Position"}`,
+        description: interviewData.notes || interviewData.description || "",
+        scheduledDate: interviewData.date,
+        scheduledTime: interviewData.time,
+        duration: parseInt(interviewData.duration) || 60,
+        type: interviewData.type || "video",
+        location: interviewData.location || "",
+        meetingLink: interviewData.meetingLink || "",
+        interviewType: interviewData.interviewType || "screening",
+        round: parseInt(interviewData.round) || 1,
+        interviewer: interviewData.interviewer || "",
+        candidateName: candidate.name,
+        candidateEmail: candidate.email,
+      };
+
+      console.log("📤 Sending formatted data:", formattedData);
+
+      const response = await interviewsAPI.scheduleInterview(formattedData);
+
+      console.log("📥 Response from server:", response);
+
+      if (response?.data?.success || response?.success) {
+        alert(
+          "✅ Interview scheduled successfully!\n\n" +
+            "The applicant will receive:\n" +
+            "• Email notification with interview details\n" +
+            "• Dashboard notification\n" +
+            "• Calendar invite (if email is configured)"
+        );
+        setScheduleModal({ isOpen: false, candidate: null });
+
+        // Refresh applications to show updated status
+        fetchApplications();
+      } else {
+        throw new Error(
+          response?.data?.message ||
+            response?.message ||
+            "Failed to schedule interview"
+        );
+      }
+    } catch (error) {
+      console.error("❌ Failed to schedule interview:", error);
+      alert(
+        "❌ Failed to schedule interview\n\n" +
+          "Error: " +
+          (error.response?.data?.message || error.message || "Unknown error") +
+          "\n\nPlease check:\n" +
+          "• All required fields are filled\n" +
+          "• Date is in the future\n" +
+          "• Time is valid\n" +
+          "• Internet connection is stable"
+      );
+      throw error;
+    }
   };
 
   // Get status color
@@ -919,6 +1064,48 @@ const RealApplicationsTab = () => {
         candidate={profileModal.candidate}
         isOpen={profileModal.isOpen}
         onClose={() => setProfileModal({ isOpen: false, candidate: null })}
+        onContact={(candidate) => {
+          // Close profile modal and open contact modal
+          setProfileModal({ isOpen: false, candidate: null });
+          setContactModal({ isOpen: true, candidate });
+        }}
+        onSchedule={(candidate) => {
+          // Close profile modal and open schedule modal
+          setProfileModal({ isOpen: false, candidate: null });
+          setScheduleModal({ isOpen: true, candidate });
+        }}
+        onShortlist={async (candidate) => {
+          // Find the application for this candidate
+          const application = applications.find(
+            (app) => app._id === candidate.applicationId
+          );
+          if (application) {
+            await handleShortlistCandidate(application);
+            // Update the modal's candidate data
+            const updatedApp = applications.find(
+              (app) => app._id === candidate.applicationId
+            );
+            if (updatedApp) {
+              const updatedCandidate = {
+                ...candidate,
+                status: updatedApp.applicationStatus || updatedApp.status,
+                isShortlisted:
+                  (updatedApp.applicationStatus || updatedApp.status) ===
+                  "shortlisted",
+              };
+              setProfileModal({ isOpen: true, candidate: updatedCandidate });
+            }
+          }
+        }}
+        onDownloadResume={async (candidate) => {
+          // Find the application for this candidate
+          const application = applications.find(
+            (app) => app._id === candidate.applicationId
+          );
+          if (application) {
+            await handleDownloadResume(application);
+          }
+        }}
       />
 
       {/* Contact Modal */}
@@ -926,13 +1113,18 @@ const RealApplicationsTab = () => {
         candidate={contactModal.candidate}
         isOpen={contactModal.isOpen}
         onClose={() => setContactModal({ isOpen: false, candidate: null })}
+        currentUser={user}
         onSendEmail={async (emailData) => {
           try {
-            // Send email logic here if needed
-            console.log("Email data:", emailData);
+            const candidate = contactModal.candidate;
+            if (!candidate) throw new Error("No candidate selected");
+
+            console.log("📧 Sending email:", emailData);
+            // TODO: Implement actual email sending API
+            // await candidatesAPI.sendEmailToCandidate(candidate.candidateId, emailData);
             alert("✅ Email sent successfully!");
           } catch (error) {
-            console.error("Failed to send email:", error);
+            console.error("❌ Failed to send email:", error);
             throw error;
           }
         }}
@@ -940,6 +1132,14 @@ const RealApplicationsTab = () => {
           console.log("Opening messaging for:", candidate.name);
           alert(`Opening messaging with ${candidate.name}...`);
         }}
+      />
+
+      {/* Schedule Modal */}
+      <ScheduleModal
+        candidate={scheduleModal.candidate}
+        isOpen={scheduleModal.isOpen}
+        onClose={() => setScheduleModal({ isOpen: false, candidate: null })}
+        onScheduleInterview={handleScheduleNewInterview}
       />
     </motion.div>
   );

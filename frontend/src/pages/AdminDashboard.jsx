@@ -20,6 +20,7 @@ import DatabaseManagementTab from "../components/dashboard/DatabaseManagementTab
 import CompaniesManagementTab from "../components/dashboard/CompaniesManagementTab";
 import ReportsTab from "../components/dashboard/ReportsTab";
 import SecurityManagementTab from "../components/dashboard/SecurityManagementTab";
+import OTPManagementTab from "../components/dashboard/OTPManagementTab";
 import LoginStatusBanner from "../components/dashboard/LoginStatusBanner";
 
 const AdminDashboardContent = () => {
@@ -40,121 +41,165 @@ const AdminDashboardContent = () => {
     profileComplete: 100,
   };
 
-  console.log('🔍 AdminDashboard - Using user data:', user);
-  console.log('🔍 AdminDashboard - currentUser from context:', currentUser);
+  console.log("🔍 AdminDashboard - Using user data:", user);
+  console.log("🔍 AdminDashboard - currentUser from context:", currentUser);
 
   // Extract tab from URL params with improved parsing
   useEffect(() => {
     const pathParts = location.split("/");
-    const validTabs = ['dashboard', 'profile', 'users', 'jobs', 'analytics', 'moderation', 'settings', 'system-settings', 'logs', 'database', 'companies', 'reports', 'security'];
-    
-    console.log('🔍 AdminDashboard URL parsing:', { location, pathParts, params });
+    const validTabs = [
+      "dashboard",
+      "profile",
+      "users",
+      "jobs",
+      "analytics",
+      "moderation",
+      "settings",
+      "system-settings",
+      "logs",
+      "database",
+      "companies",
+      "reports",
+      "security",
+      "otp",
+    ];
+
+    console.log("🔍 AdminDashboard URL parsing:", {
+      location,
+      pathParts,
+      params,
+    });
 
     if (location === "/admin-dashboard" || location === "/dashboard") {
-      setActiveTab('dashboard');
-      console.log('✅ AdminDashboard: Set to dashboard tab');
+      setActiveTab("dashboard");
+      console.log("✅ AdminDashboard: Set to dashboard tab");
     } else if (pathParts.length >= 3) {
       const tab = pathParts[2]; // /admin-dashboard/[tab]
       if (validTabs.includes(tab)) {
         setActiveTab(tab);
-        console.log('✅ AdminDashboard: Set active tab to:', tab);
+        console.log("✅ AdminDashboard: Set active tab to:", tab);
       } else {
-        setActiveTab('dashboard');
-        console.log('✅ AdminDashboard: Invalid tab, defaulting to dashboard');
+        setActiveTab("dashboard");
+        console.log("✅ AdminDashboard: Invalid tab, defaulting to dashboard");
       }
     } else {
       // Fallback to params if available
-      const tab = params?.tab || 'dashboard';
+      const tab = params?.tab || "dashboard";
       if (validTabs.includes(tab)) {
         setActiveTab(tab);
       } else {
-        setActiveTab('dashboard');
+        setActiveTab("dashboard");
       }
     }
   }, [location, params]);
-  
+
   // Listen for navigation events from sidebar
   useEffect(() => {
     const handleNavigationEvent = (event) => {
       const { tabId } = event.detail;
-      const validTabs = ['dashboard', 'profile', 'users', 'jobs', 'analytics', 'moderation', 'settings', 'system-settings', 'logs', 'database', 'companies', 'reports', 'security'];
-      
+      const validTabs = [
+        "dashboard",
+        "profile",
+        "users",
+        "jobs",
+        "analytics",
+        "moderation",
+        "settings",
+        "system-settings",
+        "logs",
+        "database",
+        "companies",
+        "reports",
+        "security",
+      ];
+
       if (tabId && validTabs.includes(tabId)) {
         setActiveTab(tabId);
-        console.log('✅ AdminDashboard: Tab changed via event to:', tabId);
+        console.log("✅ AdminDashboard: Tab changed via event to:", tabId);
       }
     };
-    
-    window.addEventListener('dashboardTabChange', handleNavigationEvent);
-    return () => window.removeEventListener('dashboardTabChange', handleNavigationEvent);
+
+    window.addEventListener("dashboardTabChange", handleNavigationEvent);
+    return () =>
+      window.removeEventListener("dashboardTabChange", handleNavigationEvent);
   }, []);
 
   // Re-render when currentUser changes (for profile updates)
   useEffect(() => {
-    console.log('🔍 AdminDashboard - currentUser changed:', currentUser);
+    console.log("🔍 AdminDashboard - currentUser changed:", currentUser);
   }, [currentUser]);
 
   // Tab change handler (for programmatic navigation if needed)
   const handleTabChange = (tab) => {
     setActiveTab(tab);
-    const newPath = tab === "dashboard" ? "/admin-dashboard" : `/admin-dashboard/${tab}`;
+    const newPath =
+      tab === "dashboard" ? "/admin-dashboard" : `/admin-dashboard/${tab}`;
     setLocation(newPath);
   };
 
   // Render tab content
   const renderTabContent = () => {
-    console.log('🔍 AdminDashboard - Rendering tab content for:', activeTab);
-    
+    console.log("🔍 AdminDashboard - Rendering tab content for:", activeTab);
+
     try {
       switch (activeTab) {
-        case 'profile':
-          console.log('✅ AdminDashboard - Rendering EnhancedProfileTab');
+        case "profile":
+          console.log("✅ AdminDashboard - Rendering EnhancedProfileTab");
           return <EnhancedProfileTab user={user} userRole="admin" />;
-        case 'settings':
-          console.log('✅ AdminDashboard - Rendering EnhancedSettingsTab');
+        case "settings":
+          console.log("✅ AdminDashboard - Rendering EnhancedSettingsTab");
           return <EnhancedSettingsTab user={user} userRole="admin" />;
-        case 'users':
-          console.log('✅ AdminDashboard - Rendering UserManagementTab');
+        case "users":
+          console.log("✅ AdminDashboard - Rendering UserManagementTab");
           return <UserManagementTab />;
-        case 'jobs':
-          console.log('✅ AdminDashboard - Rendering JobManagementTab');
+        case "jobs":
+          console.log("✅ AdminDashboard - Rendering JobManagementTab");
           return <JobManagementTab />;
-        case 'analytics':
-          console.log('✅ AdminDashboard - Rendering AnalyticsTab');
+        case "analytics":
+          console.log("✅ AdminDashboard - Rendering AnalyticsTab");
           return <AnalyticsTab />;
-        case 'moderation':
-          console.log('✅ AdminDashboard - Rendering ModerationTab');
+        case "moderation":
+          console.log("✅ AdminDashboard - Rendering ModerationTab");
           return <ModerationTab />;
-        case 'system-settings':
-          console.log('✅ AdminDashboard - Rendering SystemSettingsTab');
+        case "system-settings":
+          console.log("✅ AdminDashboard - Rendering SystemSettingsTab");
           return <SystemSettingsTab />;
-        case 'logs':
-          console.log('✅ AdminDashboard - Rendering SystemLogsTab');
+        case "logs":
+          console.log("✅ AdminDashboard - Rendering SystemLogsTab");
           return <SystemLogsTab />;
-        case 'database':
-          console.log('✅ AdminDashboard - Rendering DatabaseManagementTab');
+        case "database":
+          console.log("✅ AdminDashboard - Rendering DatabaseManagementTab");
           return <DatabaseManagementTab />;
-        case 'companies':
-          console.log('✅ AdminDashboard - Rendering CompaniesManagementTab');
+        case "companies":
+          console.log("✅ AdminDashboard - Rendering CompaniesManagementTab");
           return <CompaniesManagementTab />;
-        case 'reports':
-          console.log('✅ AdminDashboard - Rendering ReportsTab');
+        case "reports":
+          console.log("✅ AdminDashboard - Rendering ReportsTab");
           return <ReportsTab />;
-        case 'security':
-          console.log('✅ AdminDashboard - Rendering SecurityManagementTab');
+        case "security":
+          console.log("✅ AdminDashboard - Rendering SecurityManagementTab");
           return <SecurityManagementTab />;
+        case "otp":
+          console.log("✅ AdminDashboard - Rendering OTPManagementTab");
+          return <OTPManagementTab />;
         default:
-          console.log('✅ AdminDashboard - Rendering AdminDashboardMain (default)');
+          console.log(
+            "✅ AdminDashboard - Rendering AdminDashboardMain (default)"
+          );
           return <AdminDashboardMain user={user} />;
       }
     } catch (error) {
-      console.error('❌ AdminDashboard - Error rendering tab content:', error);
+      console.error("❌ AdminDashboard - Error rendering tab content:", error);
       return (
         <div className="p-6 text-center">
-          <h2 className="text-xl font-semibold text-red-600 mb-2">Error Loading Tab</h2>
-          <p className="text-gray-600">There was an error loading the {activeTab} tab.</p>
-          <button 
-            onClick={() => setActiveTab('dashboard')}
+          <h2 className="text-xl font-semibold text-red-600 mb-2">
+            Error Loading Tab
+          </h2>
+          <p className="text-gray-600">
+            There was an error loading the {activeTab} tab.
+          </p>
+          <button
+            onClick={() => setActiveTab("dashboard")}
             className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
             Return to Dashboard
@@ -169,7 +214,7 @@ const AdminDashboardContent = () => {
     totalUsers: 150,
     totalJobs: 45,
     totalApplications: 320,
-    totalRecruiters: 25
+    totalRecruiters: 25,
   };
 
   // Dashboard overview cards
@@ -273,14 +318,14 @@ const AdminDashboardContent = () => {
       breadcrumbs={
         activeTab !== "dashboard"
           ? [
-            { name: "Dashboard", path: "/admin-dashboard" },
-            {
-              name:
-                activeTab.charAt(0).toUpperCase() +
-                activeTab.slice(1).replace("-", " "),
-              path: `/admin-dashboard/${activeTab}`,
-            },
-          ]
+              { name: "Dashboard", path: "/admin-dashboard" },
+              {
+                name:
+                  activeTab.charAt(0).toUpperCase() +
+                  activeTab.slice(1).replace("-", " "),
+                path: `/admin-dashboard/${activeTab}`,
+              },
+            ]
           : []
       }
     >

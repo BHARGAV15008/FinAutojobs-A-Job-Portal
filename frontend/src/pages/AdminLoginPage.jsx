@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext.jsx';
-import { useLocation } from 'wouter';
+import React, { useState } from "react";
+import { useAuth } from "../contexts/AuthContext.jsx";
+import { useLocation } from "wouter";
 import {
   Box,
   Typography,
@@ -14,7 +14,7 @@ import {
   Avatar,
   Paper,
   useTheme,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Visibility,
   VisibilityOff,
@@ -23,28 +23,28 @@ import {
   AdminPanelSettings,
   Security,
   Shield,
-} from '@mui/icons-material';
-import { styled } from '@mui/material/styles';
-import { motion } from 'framer-motion';
+} from "@mui/icons-material";
+import { styled } from "@mui/material/styles";
+import { motion } from "framer-motion";
 
 const StyledCard = styled(Card)(({ theme }) => ({
-  background: 'rgba(255, 255, 255, 0.95)',
-  backdropFilter: 'blur(20px)',
+  background: "rgba(255, 255, 255, 0.95)",
+  backdropFilter: "blur(20px)",
   borderRadius: theme.spacing(3),
-  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
-  border: '1px solid rgba(255, 255, 255, 0.2)',
+  boxShadow: "0 20px 40px rgba(0, 0, 0, 0.1)",
+  border: "1px solid rgba(255, 255, 255, 0.2)",
 }));
 
 const AdminLoginPage = () => {
   const theme = useTheme();
   const [formData, setFormData] = useState({
-    identifier: '',
-    password: '',
-    role: 'admin'
+    identifier: "",
+    password: "",
+    role: "admin",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const { login } = useAuth();
   const [, setLocation] = useLocation();
@@ -55,94 +55,103 @@ const AdminLoginPage = () => {
       [e.target.name]: e.target.value,
     });
     // Clear error when user starts typing
-    if (error) setError('');
+    if (error) setError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
-      console.log('Admin login attempt:', { ...formData, password: '***' });
+      console.log("Admin login attempt:", { ...formData, password: "***" });
       // Add admin role to login credentials
       const adminCredentials = {
         ...formData,
-        role: 'admin' // Lowercase to match standardized database role
+        role: "admin", // Lowercase to match standardized database role
         // identifier is already in formData, no need to override
       };
       const result = await login(adminCredentials);
-      
-      console.log('Admin login result:', result);
-      
+
+      console.log("Admin login result:", result);
+
       if (result.success) {
-        console.log('Admin login successful, redirecting to dashboard');
-        // Redirect to admin dashboard
-        setLocation('/admin-dashboard');
+        console.log("Admin login successful, user role:", result.user?.role);
+        // Small delay to ensure auth state is updated
+        setTimeout(() => {
+          console.log("Redirecting to admin dashboard...");
+          setLocation("/admin-dashboard");
+        }, 100);
       } else {
-        setError(result.message || 'Admin login failed');
+        setError(result.message || "Admin login failed");
       }
     } catch (error) {
-      console.error('Admin login error:', error);
-      setError('Invalid admin credentials. Please try again.');
+      console.error("Admin login error:", error);
+      setError("Invalid admin credentials. Please try again.");
     }
 
     setLoading(false);
   };
 
-
   return (
     <Box
       sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        position: 'relative',
-        overflow: 'hidden',
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        position: "relative",
+        overflow: "hidden",
       }}
     >
       {/* Background Elements */}
       <Box
         sx={{
-          position: 'absolute',
-          top: '10%',
-          left: '10%',
+          position: "absolute",
+          top: "10%",
+          left: "10%",
           width: 200,
           height: 200,
-          bgcolor: 'rgba(255, 255, 255, 0.1)',
-          borderRadius: '50%',
-          filter: 'blur(40px)',
+          bgcolor: "rgba(255, 255, 255, 0.1)",
+          borderRadius: "50%",
+          filter: "blur(40px)",
         }}
       />
       <Box
         sx={{
-          position: 'absolute',
-          bottom: '20%',
-          right: '15%',
+          position: "absolute",
+          bottom: "20%",
+          right: "15%",
           width: 150,
           height: 150,
-          bgcolor: 'rgba(255, 255, 255, 0.1)',
-          borderRadius: '50%',
-          filter: 'blur(30px)',
+          bgcolor: "rgba(255, 255, 255, 0.1)",
+          borderRadius: "50%",
+          filter: "blur(30px)",
         }}
       />
 
-      <Box sx={{ 
-        width: { xs: 'calc(100% - 16px)', sm: '400px', md: '500px', lg: '600px' }, 
-        mx: 'auto', 
-        px: { xs: 1, sm: 2, md: 3 }, 
-        py: 6,
-        maxWidth: '100vw'
-      }}>
+      <Box
+        sx={{
+          width: {
+            xs: "calc(100% - 16px)",
+            sm: "400px",
+            md: "500px",
+            lg: "600px",
+          },
+          mx: "auto",
+          px: { xs: 1, sm: 2, md: 3 },
+          py: 6,
+          maxWidth: "100vw",
+        }}
+      >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
           {/* Header */}
-          <Box sx={{ textAlign: 'center', mb: 6 }}>
+          <Box sx={{ textAlign: "center", mb: 6 }}>
             <motion.div
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
@@ -152,23 +161,38 @@ const AdminLoginPage = () => {
                 sx={{
                   width: 80,
                   height: 80,
-                  bgcolor: 'rgba(255, 255, 255, 0.2)',
-                  backdropFilter: 'blur(10px)',
-                  mx: 'auto',
+                  bgcolor: "rgba(255, 255, 255, 0.2)",
+                  backdropFilter: "blur(10px)",
+                  mx: "auto",
                   mb: 3,
                 }}
               >
-                <AdminPanelSettings sx={{ fontSize: 40, color: 'white' }} />
+                <AdminPanelSettings sx={{ fontSize: 40, color: "white" }} />
               </Avatar>
             </motion.div>
-            
-            <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ color: 'white', fontSize: { xs: '1.5rem', sm: '2rem' } }}>
+
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+              gutterBottom
+              sx={{ color: "white", fontSize: { xs: "1.5rem", sm: "2rem" } }}
+            >
               Admin Portal
             </Typography>
-            <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.8)', mb: 2, fontSize: { xs: '0.9rem', sm: '1rem' } }}>
+            <Typography
+              variant="body1"
+              sx={{
+                color: "rgba(255, 255, 255, 0.8)",
+                mb: 2,
+                fontSize: { xs: "0.9rem", sm: "1rem" },
+              }}
+            >
               FinAutoJobs Administration
             </Typography>
-            <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+            <Typography
+              variant="body2"
+              sx={{ color: "rgba(255, 255, 255, 0.7)" }}
+            >
               Secure access for system administrators only
             </Typography>
           </Box>
@@ -179,20 +203,31 @@ const AdminLoginPage = () => {
               <Paper
                 sx={{
                   p: 2,
-                  bgcolor: 'rgba(255, 193, 7, 0.1)',
-                  border: '1px solid rgba(255, 193, 7, 0.3)',
+                  bgcolor: "rgba(255, 193, 7, 0.1)",
+                  border: "1px solid rgba(255, 193, 7, 0.3)",
                   borderRadius: 2,
                   mb: 4,
                 }}
               >
-                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                  <Shield sx={{ color: 'warning.main' }} />
-                  <Typography variant="body2" color="warning.dark" fontWeight="500" sx={{ ml: 2 }}>
-                    This is a restricted area. Unauthorized access is prohibited.
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Shield sx={{ color: "warning.main" }} />
+                  <Typography
+                    variant="body2"
+                    color="warning.dark"
+                    fontWeight="500"
+                    sx={{ ml: 2 }}
+                  >
+                    This is a restricted area. Unauthorized access is
+                    prohibited.
                   </Typography>
                 </Box>
               </Paper>
-
 
               {error && (
                 <motion.div
@@ -229,7 +264,7 @@ const AdminLoginPage = () => {
                   fullWidth
                   name="password"
                   label="Admin Password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={handleChange}
                   required
@@ -262,26 +297,27 @@ const AdminLoginPage = () => {
                   sx={{
                     py: 2.5,
                     mb: 4,
-                    color: 'white',
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+                    color: "white",
+                    background:
+                      "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    "&:hover": {
+                      background:
+                        "linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)",
                     },
-                    '&:disabled': {
-                      background: 'rgba(0, 0, 0, 0.12)',
+                    "&:disabled": {
+                      background: "rgba(0, 0, 0, 0.12)",
                     },
                   }}
                 >
-                  {loading ? 'Authenticating...' : 'Access Admin Panel'}
+                  {loading ? "Authenticating..." : "Access Admin Panel"}
                 </Button>
 
-
                 {/* Back to Main Site */}
-                <Box sx={{ textAlign: 'center' }}>
+                <Box sx={{ textAlign: "center" }}>
                   <Button
                     variant="text"
-                    onClick={() => setLocation('/')}
-                    sx={{ color: 'text.secondary' }}
+                    onClick={() => setLocation("/")}
+                    sx={{ color: "text.secondary" }}
                   >
                     ← Back to Main Site
                   </Button>
@@ -291,8 +327,11 @@ const AdminLoginPage = () => {
           </StyledCard>
 
           {/* Footer */}
-          <Box sx={{ textAlign: 'center', mt: 6 }}>
-            <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+          <Box sx={{ textAlign: "center", mt: 6 }}>
+            <Typography
+              variant="body2"
+              sx={{ color: "rgba(255, 255, 255, 0.7)" }}
+            >
               © 2025 FinAutoJobs. All rights reserved.
             </Typography>
           </Box>

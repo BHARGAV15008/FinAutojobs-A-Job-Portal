@@ -1,45 +1,71 @@
-import express from 'express';
-import nodemailer from 'nodemailer';
+import express from "express";
+import nodemailer from "nodemailer";
+import { authenticateToken } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// Simple auth middleware
-const authenticateToken = (req, res, next) => {
-  const token = req.headers['authorization']?.split(' ')[1];
-  if (!token) {
-    return res.status(401).json({ success: false, message: 'Token required' });
-  }
-  req.user = { userId: 'user-id', role: 'recruiter' };
-  next();
-};
+// Email transporter configuration
+let transporter = null;
+let emailConfigured = false;
 
-// Email transporter
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: process.env.SMTP_PORT || 587,
-  secure: process.env.SMTP_SECURE === 'true' || false,
-  auth: {
-    user: process.env.EMAIL_USER || 'technogenius1500@gmail.com',
-    pass: process.env.EMAIL_PASS || 'iTGBJ@#@#158008'
+try {
+  if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST || "smtp.gmail.com",
+      port: parseInt(process.env.EMAIL_PORT) || 587,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+    emailConfigured = true;
+    console.log("✅ Communications email transporter configured");
+  } else {
+    console.warn("⚠️  Email not configured for communications route");
   }
-});
+} catch (error) {
+  console.error("❌ Failed to configure communications email:", error.message);
+}
 
 // Send email endpoint
-router.post('/send-email', authenticateToken, async (req, res) => {
+router.post("/send-email", authenticateToken, async (req, res) => {
   try {
+    console.log("📧 Received send-email request");
+    console.log("📧 User:", req.user?.userId, req.user?.role);
+
     const { to, subject, message, recruiterEmail, recruiterName } = req.body;
-    
+
     if (!to || !subject || !message) {
+      console.log("❌ Missing required fields");
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields'
+        message:
+          "Missing required fields: to, subject, and message are required",
+      });
+    }
+
+    if (!emailConfigured || !transporter) {
+      console.log("⚠️  Email not configured, returning mock success");
+      return res.json({
+        success: true,
+        message:
+          "Email system not configured. In production, email would be sent.",
+        mockMode: true,
+        data: {
+          to,
+          subject,
+          messagePreview: message.substring(0, 100),
+        },
       });
     }
 
     const mailOptions = {
-      from: process.env.FROM_EMAIL || process.env.EMAIL_USER || 'noreply@finautojobs.com',
-      to: to, // Applicant's email
-      cc: recruiterEmail, // CC the recruiter
+      from: `${process.env.EMAIL_FROM_NAME || "FinAutoJobs"} <${
+        process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER
+      }>`,
+      to: to,
+      replyTo: recruiterEmail || process.env.EMAIL_USER,
       subject: subject,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8f9fa;">
@@ -48,19 +74,25 @@ router.post('/send-email', authenticateToken, async (req, res) => {
             <p style="color: #e8e8e8; margin: 5px 0 0 0; font-size: 14px;">Connecting Talent with Opportunity</p>
           </div>
           <div style="background-color: white; padding: 30px; margin: 0;">
-            <h2 style="color: #333; margin-bottom: 20px; font-size: 20px;">Message from ${recruiterName || 'Recruiter'}</h2>
+            <h2 style="color: #333; margin-bottom: 20px; font-size: 20px;">Message from ${
+              recruiterName || "Recruiter"
+            }</h2>
             <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea; line-height: 1.6;">
-              ${message.replace(/\n/g, '<br>')}
+              ${message.replace(/\n/g, "<br>")}
             </div>
-            ${recruiterEmail ? `
+            ${
+              recruiterEmail
+                ? `
             <div style="margin-top: 20px; padding: 15px; background-color: #e8f4f8; border-radius: 8px; border-left: 4px solid #17a2b8;">
               <p style="margin: 0; font-size: 14px; color: #333;">
                 <strong>Recruiter Contact:</strong><br>
-                ${recruiterName || 'Recruiter'}<br>
+                ${recruiterName || "Recruiter"}<br>
                 <a href="mailto:${recruiterEmail}" style="color: #17a2b8; text-decoration: none;">${recruiterEmail}</a>
               </p>
             </div>
-            ` : ''}
+            `
+                : ""
+            }
             <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; color: #6c757d; font-size: 12px;">
               <p style="margin: 0;">This email was sent through the FinAutoJobs recruitment platform.</p>
               <p style="margin: 5px 0 0 0;">You can reply directly to this email to contact the recruiter.</p>
@@ -68,75 +100,95 @@ router.post('/send-email', authenticateToken, async (req, res) => {
           </div>
         </div>
       `,
-      text: message // Plain text version
+      text: message,
     };
 
+    console.log("📧 Sending email to:", to);
+    console.log("   Subject:", subject);
+
     const info = await transporter.sendMail(mailOptions);
-    
+
+    console.log("✅ Email sent successfully");
+    console.log("   Message ID:", info.messageId);
+
     res.json({
       success: true,
-      message: 'Email sent successfully',
-      data: { messageId: info.messageId }
+      message: "Email sent successfully",
+      data: {
+        messageId: info.messageId,
+        to,
+        subject,
+      },
     });
-
   } catch (error) {
-    console.error('Email error:', error);
+    console.error("❌ Email sending error:", error);
+    console.error("   Error message:", error.message);
     res.status(500).json({
       success: false,
-      message: 'Failed to send email'
+      message: "Failed to send email: " + error.message,
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 });
 
 // Send SMS endpoint
-router.post('/send-sms', authenticateToken, async (req, res) => {
+router.post("/send-sms", authenticateToken, async (req, res) => {
   try {
     const { to, message, recruiterPhone, recruiterName } = req.body;
-    
+
     if (!to || !message) {
       return res.status(400).json({
         success: false,
-        message: 'Phone number and message required'
+        message: "Phone number and message required",
       });
     }
 
     // Mock SMS sending (replace with actual SMS service like Twilio)
     console.log(`📱 SMS to ${to}: ${message}`);
-    
+
     res.json({
       success: true,
-      message: 'SMS sent successfully',
-      data: { to, sentAt: new Date().toISOString() }
+      message: "SMS sent successfully",
+      data: { to, sentAt: new Date().toISOString() },
     });
-
   } catch (error) {
-    console.error('SMS error:', error);
+    console.error("SMS error:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to send SMS'
+      message: "Failed to send SMS",
     });
   }
 });
 
 // Auto-notification for status changes
-router.post('/notify-status-change', authenticateToken, async (req, res) => {
+router.post("/notify-status-change", authenticateToken, async (req, res) => {
   try {
-    const { applicantEmail, applicantPhone, applicantName, newStatus, jobTitle, recruiterName, recruiterEmail } = req.body;
-    
+    const {
+      applicantEmail,
+      applicantPhone,
+      applicantName,
+      newStatus,
+      jobTitle,
+      recruiterName,
+      recruiterEmail,
+    } = req.body;
+
     // Send email
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: applicantEmail,
       cc: recruiterEmail,
       subject: `Application Update - ${newStatus}`,
-      html: `<h2>Status Update</h2><p>Dear ${applicantName}, your application for ${jobTitle} is now: <strong>${newStatus}</strong></p><p>- ${recruiterName}</p>`
+      html: `<h2>Status Update</h2><p>Dear ${applicantName}, your application for ${jobTitle} is now: <strong>${newStatus}</strong></p><p>- ${recruiterName}</p>`,
     });
-    
-    console.log(`📱 SMS to ${applicantPhone}: Your application for ${jobTitle} status: ${newStatus} - ${recruiterName}`);
-    
+
+    console.log(
+      `📱 SMS to ${applicantPhone}: Your application for ${jobTitle} status: ${newStatus} - ${recruiterName}`
+    );
+
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Notification failed' });
+    res.status(500).json({ success: false, message: "Notification failed" });
   }
 });
 

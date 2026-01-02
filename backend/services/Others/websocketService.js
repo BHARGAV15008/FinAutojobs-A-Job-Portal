@@ -1,24 +1,25 @@
-import { Server } from 'socket.io';
-import jwt from 'jsonwebtoken';
-import { BaseUser } from '../../models/UserModels.js';
+import { Server } from "socket.io";
+import jwt from "jsonwebtoken";
+import { BaseUser } from "../../models/UserModels.js";
 
 class WebSocketService {
   constructor(server) {
     this.io = new Server(server, {
       cors: {
         origin: [
-          'http://localhost:3000',
-          'http://localhost:3000',
-          'http://localhost:5173',
-          'http://localhost:4173',
-          'http://127.0.0.1:3000',
-          'http://127.0.0.1:3000',
-          'http://127.0.0.1:5173',
-          'http://127.0.0.1:4173'
-        ],
-        methods: ['GET', 'POST'],
-        credentials: true
-      }
+          "http://localhost:3000",
+          "http://localhost:5173",
+          "http://localhost:4173",
+          "http://127.0.0.1:3000",
+          "http://127.0.0.1:5173",
+          "http://127.0.0.1:4173",
+          "http://192.168.41.134:3000",
+          "http://192.168.41.134:5173",
+          process.env.FRONTEND_URL,
+        ].filter(Boolean),
+        methods: ["GET", "POST"],
+        credentials: true,
+      },
     });
 
     // Store connected users with their socket IDs and user info
@@ -32,23 +33,29 @@ class WebSocketService {
     this.io.use(async (socket, next) => {
       try {
         const token = socket.handshake.auth.token;
-        
+
         if (!token) {
           // Allow connection without authentication for now
-          socket.user = { username: 'anonymous', role: 'guest' };
-          socket.userId = 'anonymous';
+          socket.user = { username: "anonymous", role: "guest" };
+          socket.userId = "anonymous";
           return next();
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-        const user = await BaseUser.findOne({ 
-          $or: [{ _id: decoded.id || decoded.userId }, { userId: decoded.userId }]
+        const decoded = jwt.verify(
+          token,
+          process.env.JWT_SECRET || "your-secret-key"
+        );
+        const user = await BaseUser.findOne({
+          $or: [
+            { _id: decoded.id || decoded.userId },
+            { userId: decoded.userId },
+          ],
         });
 
         if (!user) {
           // Allow connection but mark as guest if user not found
-          socket.user = { username: 'guest', role: 'guest' };
-          socket.userId = 'guest';
+          socket.user = { username: "guest", role: "guest" };
+          socket.userId = "guest";
           return next();
         }
 
@@ -57,125 +64,135 @@ class WebSocketService {
         next();
       } catch (err) {
         // Allow connection but mark as guest on token error
-        socket.user = { username: 'guest', role: 'guest' };
-        socket.userId = 'guest';
+        socket.user = { username: "guest", role: "guest" };
+        socket.userId = "guest";
         next();
       }
     });
 
-    this.io.on('connection', (socket) => {
+    this.io.on("connection", (socket) => {
       console.log(`User connected: ${socket.user.username} (${socket.userId})`);
-      
+
       // Store connected user
       this.connectedUsers.set(socket.userId, {
         socketId: socket.id,
         user: socket.user,
-        connectedAt: new Date()
+        connectedAt: new Date(),
       });
 
       // Join user to their personal room
       socket.join(`user_${socket.userId}`);
-      
+
       // Join role-based rooms
       socket.join(`role_${socket.user.role}`);
-      
+
       // Handle joining company room if user is associated with a company
       if (socket.user.companyInfo?.companyName) {
         socket.join(`company_${socket.user.companyInfo.companyName}`);
       }
 
       // Send connection confirmation
-      socket.emit('connected', {
-        message: 'Successfully connected to real-time services',
+      socket.emit("connected", {
+        message: "Successfully connected to real-time services",
         userId: socket.userId,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       // Handle joining job-specific rooms
-      socket.on('join_job_room', (jobId) => {
+      socket.on("join_job_room", (jobId) => {
         socket.join(`job_${jobId}`);
         this.userRooms.get(socket.userId).add(`job_${jobId}`);
-        socket.emit('joined_job_room', { jobId, message: `Joined room for job ${jobId}` });
+        socket.emit("joined_job_room", {
+          jobId,
+          message: `Joined room for job ${jobId}`,
+        });
       });
 
       // Handle leaving job-specific rooms
-      socket.on('leave_job_room', (jobId) => {
+      socket.on("leave_job_room", (jobId) => {
         socket.leave(`job_${jobId}`);
         this.userRooms.get(socket.userId).delete(`job_${jobId}`);
-        socket.emit('left_job_room', { jobId, message: `Left room for job ${jobId}` });
+        socket.emit("left_job_room", {
+          jobId,
+          message: `Left room for job ${jobId}`,
+        });
       });
 
       // Handle real-time job application updates (simplified)
-      socket.on('application_update', async (data) => {
+      socket.on("application_update", async (data) => {
         try {
           const { applicationId, status, notes } = data;
-          
+
           // Basic permission check
-          if (!socket.user || !['admin', 'recruiter'].includes(socket.user.role)) {
-            socket.emit('error', { message: 'Permission denied' });
+          if (
+            !socket.user ||
+            !["admin", "recruiter"].includes(socket.user.role)
+          ) {
+            socket.emit("error", { message: "Permission denied" });
             return;
           }
 
           // Broadcast update to relevant users (simplified)
-          this.io.to(`role_applicant`).emit('application_status_updated', {
+          this.io.to(`role_applicant`).emit("application_status_updated", {
             applicationId,
             status,
             message: `Application status updated to ${status}`,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           });
 
-          socket.emit('application_update_success', {
+          socket.emit("application_update_success", {
             applicationId,
             status,
-            message: 'Application updated successfully'
+            message: "Application updated successfully",
           });
-
         } catch (error) {
-          console.error('Application update error:', error);
-          socket.emit('error', { message: 'Failed to update application' });
+          console.error("Application update error:", error);
+          socket.emit("error", { message: "Failed to update application" });
         }
       });
 
       // Handle new job posting notifications (simplified)
-      socket.on('new_job_posted', async (data) => {
+      socket.on("new_job_posted", async (data) => {
         try {
           const { jobId, jobTitle, companyName } = data;
-          
+
           // Basic permission check
-          if (!socket.user || !['admin', 'recruiter'].includes(socket.user.role)) {
-            socket.emit('error', { message: 'Permission denied' });
+          if (
+            !socket.user ||
+            !["admin", "recruiter"].includes(socket.user.role)
+          ) {
+            socket.emit("error", { message: "Permission denied" });
             return;
           }
 
           // Broadcast to all job seekers
-          this.io.to('role_applicant').emit('new_job_alert', {
+          this.io.to("role_applicant").emit("new_job_alert", {
             jobId,
             jobTitle,
             companyName,
             message: `New job posted: ${jobTitle} at ${companyName}`,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           });
 
           // Also broadcast to admin room
-          this.io.to('role_admin').emit('new_job_posted_admin', {
+          this.io.to("role_admin").emit("new_job_posted_admin", {
             jobId,
             jobTitle,
             companyName,
             postedBy: socket.user.username,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           });
-
         } catch (error) {
-          console.error('New job notification error:', error);
-          socket.emit('error', { message: 'Failed to send job notification' });
+          console.error("New job notification error:", error);
+          socket.emit("error", { message: "Failed to send job notification" });
         }
       });
 
       // Handle real-time messaging between applicants and recruiters (simplified)
-      socket.on('send_message', async (data) => {
+      socket.on("send_message", async (data) => {
         try {
           const { recipientId, message, jobId } = data;
-          
+
           const messageData = {
             id: Date.now(), // Simple ID for demo
             senderId: socket.userId,
@@ -183,63 +200,64 @@ class WebSocketService {
             recipientId,
             message,
             jobId,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           };
 
           // Send to recipient
-          this.io.to(`user_${recipientId}`).emit('new_message', messageData);
-          
-          // Send confirmation to sender
-          socket.emit('message_sent', {
-            ...messageData,
-            status: 'delivered'
-          });
+          this.io.to(`user_${recipientId}`).emit("new_message", messageData);
 
+          // Send confirmation to sender
+          socket.emit("message_sent", {
+            ...messageData,
+            status: "delivered",
+          });
         } catch (error) {
-          console.error('Message sending error:', error);
-          socket.emit('error', { message: 'Failed to send message' });
+          console.error("Message sending error:", error);
+          socket.emit("error", { message: "Failed to send message" });
         }
       });
 
       // Handle typing indicators
-      socket.on('typing_start', (data) => {
+      socket.on("typing_start", (data) => {
         const { recipientId } = data;
-        this.io.to(`user_${recipientId}`).emit('user_typing', {
+        this.io.to(`user_${recipientId}`).emit("user_typing", {
           userId: socket.userId,
           userName: socket.user.fullName || socket.user.username,
-          isTyping: true
+          isTyping: true,
         });
       });
 
-      socket.on('typing_stop', (data) => {
+      socket.on("typing_stop", (data) => {
         const { recipientId } = data;
-        this.io.to(`user_${recipientId}`).emit('user_typing', {
+        this.io.to(`user_${recipientId}`).emit("user_typing", {
           userId: socket.userId,
           userName: socket.user.fullName || socket.user.username,
-          isTyping: false
+          isTyping: false,
         });
       });
 
       // Handle disconnection
-      socket.on('disconnect', () => {
-        console.log(`User disconnected: ${socket.user.username} (${socket.userId})`);
-        
+      socket.on("disconnect", () => {
+        console.log(
+          `User disconnected: ${socket.user.username} (${socket.userId})`
+        );
+
         // Remove from connected users
         this.connectedUsers.delete(socket.userId);
-        
+
         // Clean up user rooms
         if (this.userRooms.has(socket.userId)) {
-          this.userRooms.get(socket.userId).forEach(room => {
+          this.userRooms.get(socket.userId).forEach((room) => {
             socket.leave(room);
           });
           this.userRooms.delete(socket.userId);
         }
 
         // Notify other users about disconnection
-        this.io.emit('user_disconnected', {
+        this.io.emit("user_disconnected", {
           userId: socket.userId,
           username: socket.user.username,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       });
 
@@ -250,9 +268,9 @@ class WebSocketService {
 
   // Utility method to send notifications to specific users
   sendNotificationToUser(userId, notification) {
-    this.io.to(`user_${userId}`).emit('notification', {
+    this.io.to(`user_${userId}`).emit("notification", {
       ...notification,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -260,7 +278,7 @@ class WebSocketService {
   broadcastToRole(role, event, data) {
     this.io.to(`role_${role}`).emit(event, {
       ...data,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -268,7 +286,7 @@ class WebSocketService {
   broadcastToAll(event, data) {
     this.io.emit(event, {
       ...data,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -280,7 +298,7 @@ class WebSocketService {
   // Get connected users by role
   getConnectedUsersByRole(role) {
     return Array.from(this.connectedUsers.values()).filter(
-      user => user.user.role === role
+      (user) => user.user.role === role
     );
   }
 }
