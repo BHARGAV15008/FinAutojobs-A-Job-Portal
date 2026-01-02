@@ -1,12 +1,7 @@
 import express from "express";
 import multer from "multer";
-import path from "path";
-import fs from "fs";
-import { fileURLToPath } from "url";
 import { BaseUser } from "../models/UserModels.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import s3Service from "../services/s3Service.js";
 
 const router = express.Router();
 
@@ -56,62 +51,14 @@ const authenticateToken = async (req, res, next) => {
   }
 };
 
-// Create uploads directory if it doesn't exist - use project root
-const projectRoot = path.join(__dirname, "..", "..");
-const uploadsDir = path.join(projectRoot, "uploads", "documents");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-// Configure multer for file uploads with username-based naming
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: async (req, file, cb) => {
-    try {
-      // Get user data to access username
-      const user = await BaseUser.findById(req.user.userId);
-      const username = user?.username || req.user.userId;
-
-      // Create readable filename based on file type
-      const extension = path.extname(file.originalname);
-      let filename;
-
-      if (file.fieldname === "resume") {
-        filename = `resume_${username}${extension}`;
-      } else if (file.fieldname === "profilePicture") {
-        filename = `profile_${username}${extension}`;
-      } else if (file.fieldname === "coverLetter") {
-        filename = `coverletter_${username}${extension}`;
-      } else if (file.fieldname === "portfolio") {
-        filename = `portfolio_${username}${extension}`;
-      } else {
-        // Fallback for other document types
-        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-        filename = `${file.fieldname}_${username}_${uniqueSuffix}${extension}`;
-      }
-
-      cb(null, filename);
-    } catch (error) {
-      console.error("❌ Error generating filename:", error);
-      // Fallback to original naming if user lookup fails
-      const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-      cb(
-        null,
-        `${file.fieldname}-${req.user.userId}-${uniqueSuffix}${path.extname(
-          file.originalname
-        )}`
-      );
-    }
-  },
-});
+// Configure multer to use memory storage for S3
+const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
   // Accept documents and images
   const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx|txt/;
   const extname = allowedTypes.test(
-    path.extname(file.originalname).toLowerCase()
+    file.originalname.toLowerCase().split(".").pop()
   );
   const mimetype = allowedTypes.test(file.mimetype);
 
@@ -144,23 +91,44 @@ router.post(
         });
       }
 
-      const resumeUrl = `/uploads/documents/${req.file.filename}`;
+      // Get user info for filename
+      const user = await BaseUser.findById(req.user.userId);
+      const userInfo = {
+        name:
+          user?.firstName && user?.lastName
+            ? `${user.firstName}_${user.lastName}`
+            : null,
+        username: user?.username,
+        fullname:
+          user?.firstName && user?.lastName
+            ? `${user.firstName}_${user.lastName}`
+            : user?.username,
+      };
+
+      // Upload to S3
+      const s3Result = await s3Service.uploadResume(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype,
+        req.user.userId,
+        userInfo
+      );
 
       // Update user profile with resume URL
-      const user = await BaseUser.findById(req.user.userId);
       if (user) {
-        user.resume_url = resumeUrl;
+        user.resume_url = s3Result.url;
         await user.save();
         console.log(
-          `✅ Resume uploaded and profile updated: ${req.file.filename} for user ${user.username}`
+          `✅ Resume uploaded to S3: ${s3Result.fileName} for user ${user.username}`
         );
       }
 
       res.json({
         success: true,
         message: "Resume uploaded successfully",
-        resumeUrl: resumeUrl,
-        filename: req.file.filename,
+        resumeUrl: s3Result.url,
+        s3Key: s3Result.key,
+        fileName: s3Result.fileName,
         originalName: req.file.originalname,
         size: req.file.size,
       });
@@ -189,23 +157,53 @@ router.post(
         });
       }
 
-      const profileImageUrl = `/uploads/documents/${req.file.filename}`;
+      // Get user info for filename
+      const user = await BaseUser.findById(req.user.userId);
+      const userInfo = {
+        name:
+          user?.firstName && user?.lastName
+            ? `${user.firstName}_${user.lastName}`
+            : null,
+        username: user?.username,
+        fullname:
+          user?.firstName && user?.lastName
+            ? `${user.firstName}_${user.lastName}`
+            : user?.username,
+      };
+
+      // Upload to S3 with user info
+      const s3Result = await s3Service.uploadProfileImage(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype,
+        req.user.userId,
+        userInfo
+      );
 
       // Update user profile with profile image URL
-      const user = await BaseUser.findById(req.user.userId);
       if (user) {
-        user.profileImage = profileImageUrl;
+        // Delete old profile image if exists
+        if (user.profileImage) {
+          try {
+            await s3Service.deleteFileByUrl(user.profileImage);
+          } catch (deleteError) {
+            console.warn("⚠️ Failed to delete old profile image:", deleteError);
+          }
+        }
+
+        user.profileImage = s3Result.url;
         await user.save();
         console.log(
-          `✅ Profile picture uploaded: ${req.file.filename} for user ${user.username}`
+          `✅ Profile picture uploaded to S3: ${s3Result.fileName} for user ${user.username}`
         );
       }
 
       res.json({
         success: true,
         message: "Profile picture uploaded successfully",
-        profileImageUrl: profileImageUrl,
-        filename: req.file.filename,
+        profileImageUrl: s3Result.url,
+        s3Key: s3Result.key,
+        fileName: s3Result.fileName,
         originalName: req.file.originalname,
         size: req.file.size,
       });
@@ -234,23 +232,44 @@ router.post(
         });
       }
 
-      const coverLetterUrl = `/uploads/documents/${req.file.filename}`;
+      // Get user info for filename
+      const user = await BaseUser.findById(req.user.userId);
+      const userInfo = {
+        name:
+          user?.firstName && user?.lastName
+            ? `${user.firstName}_${user.lastName}`
+            : null,
+        username: user?.username,
+        fullname:
+          user?.firstName && user?.lastName
+            ? `${user.firstName}_${user.lastName}`
+            : user?.username,
+      };
+
+      // Upload to S3
+      const s3Result = await s3Service.uploadCoverLetter(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype,
+        req.user.userId,
+        userInfo
+      );
 
       // Update user profile with cover letter URL
-      const user = await BaseUser.findById(req.user.userId);
       if (user) {
-        user.cover_letter_url = coverLetterUrl;
+        user.cover_letter_url = s3Result.url;
         await user.save();
         console.log(
-          `✅ Cover letter uploaded: ${req.file.filename} for user ${user.username}`
+          `✅ Cover letter uploaded to S3: ${s3Result.fileName} for user ${user.username}`
         );
       }
 
       res.json({
         success: true,
         message: "Cover letter uploaded successfully",
-        coverLetterUrl: coverLetterUrl,
-        filename: req.file.filename,
+        coverLetterUrl: s3Result.url,
+        s3Key: s3Result.key,
+        fileName: s3Result.fileName,
         originalName: req.file.originalname,
         size: req.file.size,
       });

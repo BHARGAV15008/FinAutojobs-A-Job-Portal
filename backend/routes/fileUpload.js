@@ -1,160 +1,139 @@
-import express from 'express';
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
-import crypto from 'crypto';
-import jwt from 'jsonwebtoken';
-import { BaseUser } from '../models/UserModels.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import express from "express";
+import multer from "multer";
+import path from "path";
+import jwt from "jsonwebtoken";
+import { BaseUser } from "../models/UserModels.js";
+import s3Service from "../services/s3Service.js";
 
 const router = express.Router();
 
 // Authentication middleware
 const authenticateToken = async (req, res, next) => {
   try {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
 
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: 'Access token is required'
+        message: "Access token is required",
       });
     }
-    
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-jwt-secret-key-change-this-in-production');
-    
+
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || "your-jwt-secret-key-change-this-in-production"
+    );
+
     const user = await BaseUser.findById(decoded.userId);
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: "User not found",
       });
     }
-    
+
     req.user = {
       ...decoded,
       ...user.toObject(),
       userId: decoded.userId || user._id,
-      _id: user._id
+      _id: user._id,
     };
     next();
   } catch (error) {
     return res.status(401).json({
       success: false,
-      message: 'Invalid token'
+      message: "Invalid token",
     });
   }
 };
-
-// Create upload directories if they don't exist
-const createUploadDirs = () => {
-  // Get the main project directory (parent of backend)
-  const projectRoot = path.join(__dirname, '..', '..');
-  
-  const dirs = [
-    'uploads/applications/resumes',
-    'uploads/applications/cover-letters',
-    'uploads/applications/portfolios',
-    'uploads/applications/documents',
-    'uploads/documents', // Direct documents folder
-    'uploads/temp'
-  ];
-
-  dirs.forEach(dir => {
-    const fullPath = path.join(projectRoot, dir);
-    if (!fs.existsSync(fullPath)) {
-      fs.mkdirSync(fullPath, { recursive: true });
-      console.log(`✅ Created directory: ${fullPath}`);
-    }
-  });
-};
-
-// Initialize upload directories
-createUploadDirs();
-
-// Get the main project directory (parent of backend)
-const projectRoot = path.join(__dirname, '..', '..');
 
 // File type configurations
 const fileConfigs = {
   resume: {
     allowedTypes: [
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ],
     maxSize: 5 * 1024 * 1024, // 5MB
-    destination: path.join(projectRoot, 'uploads', 'documents') // Direct to uploads/documents
+    uploadMethod: "uploadResume",
   },
   coverLetter: {
     allowedTypes: [
-      'application/pdf',
-      'text/plain',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      "application/pdf",
+      "text/plain",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ],
-    maxSize: 5 * 1024 * 1024, // 5MB
-    destination: path.join(projectRoot, 'uploads', 'documents')
+    maxSize: 3 * 1024 * 1024, // 3MB
+    uploadMethod: "uploadCoverLetter",
+  },
+  profile: {
+    allowedTypes: [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+    ],
+    maxSize: 2 * 1024 * 1024, // 2MB
+    uploadMethod: "uploadProfileImage",
   },
   portfolio: {
     allowedTypes: [
-      'application/pdf',
-      'image/jpeg',
-      'image/png',
-      'image/gif',
-      'image/webp'
+      "application/pdf",
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "application/zip",
+      "application/x-zip-compressed",
     ],
     maxSize: 10 * 1024 * 1024, // 10MB
-    destination: path.join(projectRoot, 'uploads', 'documents')
+    uploadMethod: "uploadPortfolio",
   },
-  additional: {
+  document: {
     allowedTypes: [
-      'application/pdf',
-      'image/jpeg',
-      'image/png',
-      'text/plain',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
     ],
     maxSize: 10 * 1024 * 1024, // 10MB
-    destination: path.join(projectRoot, 'uploads', 'documents')
-  }
+    uploadMethod: "uploadFile",
+  },
+  companyDocument: {
+    allowedTypes: ["application/pdf", "image/jpeg", "image/jpg", "image/png"],
+    maxSize: 5 * 1024 * 1024, // 5MB
+    uploadMethod: "uploadCompanyDocument",
+  },
 };
 
-// Dynamic multer configuration
+// Configure multer to use memory storage for S3
+const storage = multer.memoryStorage();
+
 const createMulterConfig = (fileType) => {
   const config = fileConfigs[fileType];
-  if (!config) {
-    throw new Error(`Unsupported file type: ${fileType}`);
-  }
 
-  const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      cb(null, config.destination);
-    },
-    filename: (req, file, cb) => {
-      // Generate unique filename
-      const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(6).toString('hex');
-      const extension = path.extname(file.originalname);
-      const baseName = path.basename(file.originalname, extension)
-        .replace(/[^a-zA-Z0-9]/g, '_')
-        .substring(0, 50);
-      
-      const filename = `${req.user.userId}_${baseName}_${uniqueSuffix}${extension}`;
-      cb(null, filename);
-    }
-  });
+  if (!config) {
+    throw new Error(`Invalid file type: ${fileType}`);
+  }
 
   const fileFilter = (req, file, cb) => {
     if (config.allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error(`Invalid file type. Allowed types: ${config.allowedTypes.join(', ')}`), false);
+      cb(
+        new Error(
+          `Invalid file type. Allowed types: ${config.allowedTypes.join(", ")}`
+        ),
+        false
+      );
     }
   };
 
@@ -163,409 +142,454 @@ const createMulterConfig = (fileType) => {
     fileFilter,
     limits: {
       fileSize: config.maxSize,
-      files: fileType === 'portfolio' ? 5 : 1 // Allow multiple portfolio files
-    }
+      files: fileType === "portfolio" ? 5 : 1,
+    },
   });
 };
 
 // File upload endpoint
-router.post('/application-document', authenticateToken, async (req, res) => {
+router.post("/application-document", authenticateToken, async (req, res) => {
   try {
     const { type } = req.body;
-    
+
     if (!type || !fileConfigs[type]) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid or missing file type',
-        allowedTypes: Object.keys(fileConfigs)
+        message: "Invalid or missing file type",
+        allowedTypes: Object.keys(fileConfigs),
       });
     }
 
     // Create multer instance for this file type
     const upload = createMulterConfig(type);
-    
+
     // Handle file upload
-    upload.single('file')(req, res, async (err) => {
+    upload.single("file")(req, res, async (err) => {
       if (err) {
-        console.error('❌ File upload error:', err);
-        
+        console.error("❌ File upload error:", err);
+
         if (err instanceof multer.MulterError) {
-          if (err.code === 'LIMIT_FILE_SIZE') {
+          if (err.code === "LIMIT_FILE_SIZE") {
             return res.status(400).json({
               success: false,
-              message: `File too large. Maximum size: ${fileConfigs[type].maxSize / (1024 * 1024)}MB`,
-              code: 'FILE_TOO_LARGE'
+              message: `File too large. Maximum size: ${
+                fileConfigs[type].maxSize / (1024 * 1024)
+              }MB`,
+              code: "FILE_TOO_LARGE",
             });
           }
-          if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+          if (err.code === "LIMIT_UNEXPECTED_FILE") {
             return res.status(400).json({
               success: false,
-              message: 'Unexpected file field',
-              code: 'UNEXPECTED_FILE'
+              message: "Unexpected file field",
+              code: "UNEXPECTED_FILE",
             });
           }
         }
-        
+
         return res.status(400).json({
           success: false,
-          message: err.message || 'File upload failed',
-          code: 'UPLOAD_ERROR'
+          message: err.message || "File upload failed",
+          code: "UPLOAD_ERROR",
         });
       }
 
       if (!req.file) {
         return res.status(400).json({
           success: false,
-          message: 'No file uploaded',
-          code: 'NO_FILE'
+          message: "No file uploaded",
+          code: "NO_FILE",
         });
       }
 
       try {
+        // Get user info for filename
+        const user = await BaseUser.findById(req.user.userId);
+        const userInfo = {
+          name:
+            user?.firstName && user?.lastName
+              ? `${user.firstName}_${user.lastName}`
+              : null,
+          username: user?.username,
+          fullname:
+            user?.firstName && user?.lastName
+              ? `${user.firstName}_${user.lastName}`
+              : user?.username,
+        };
+
+        // Upload to S3
+        const config = fileConfigs[type];
+        const uploadMethod = s3Service[config.uploadMethod];
+
+        if (!uploadMethod) {
+          throw new Error(`Upload method ${config.uploadMethod} not found`);
+        }
+
+        const s3Result = await uploadMethod.call(
+          s3Service,
+          req.file.buffer,
+          req.file.originalname,
+          req.file.mimetype,
+          req.user.userId,
+          userInfo
+        );
+
         // File upload successful
         const fileData = {
-          filename: req.file.filename,
+          filename: s3Result.fileName,
           originalName: req.file.originalname,
-          fileUrl: `/uploads/documents/${req.file.filename}`, // Simplified path
+          fileUrl: s3Result.url,
+          s3Key: s3Result.key,
           fileSize: req.file.size,
           mimeType: req.file.mimetype,
           uploadedAt: new Date(),
-          uploadedBy: req.user.userId
+          uploadedBy: req.user.userId,
         };
 
         // For resumes, extract text content for keyword matching
-        if (type === 'resume') {
+        if (type === "resume") {
           try {
             // You can implement PDF text extraction here using libraries like pdf-parse
             // For now, we'll store a placeholder
-            fileData.extractedText = 'Text extraction will be implemented';
+            fileData.extractedText = "Text extraction will be implemented";
             fileData.parsedData = {
               skills: [],
               experience: [],
               education: [],
-              extractionStatus: 'pending'
+              extractionStatus: "pending",
             };
           } catch (extractionError) {
-            console.warn('⚠️ Text extraction failed:', extractionError);
-            fileData.extractedText = '';
-            fileData.parsedData = { extractionStatus: 'failed' };
+            console.warn("⚠️ Text extraction failed:", extractionError);
+            fileData.extractedText = "";
+            fileData.parsedData = { extractionStatus: "failed" };
           }
         }
 
         // Virus scanning placeholder (implement with ClamAV or similar)
         fileData.virusScanned = false;
-        fileData.scanStatus = 'pending';
+        fileData.scanStatus = "pending";
 
         res.json({
           success: true,
-          message: 'File uploaded successfully',
-          data: fileData
+          message: "File uploaded successfully",
+          data: fileData,
         });
 
         // Log successful upload
-        console.log(`✅ File uploaded: ${req.file.filename} by user ${req.user.userId}`);
-
+        console.log(
+          `✅ File uploaded: ${req.file.filename} by user ${req.user.userId}`
+        );
       } catch (processingError) {
-        console.error('❌ File processing error:', processingError);
-        
+        console.error("❌ File processing error:", processingError);
+
         // Clean up uploaded file if processing fails
         try {
           fs.unlinkSync(req.file.path);
         } catch (cleanupError) {
-          console.error('❌ File cleanup error:', cleanupError);
+          console.error("❌ File cleanup error:", cleanupError);
         }
 
         res.status(500).json({
           success: false,
-          message: 'File processing failed',
-          code: 'PROCESSING_ERROR',
-          error: processingError.message
+          message: "File processing failed",
+          code: "PROCESSING_ERROR",
+          error: processingError.message,
         });
       }
     });
-
   } catch (error) {
-    console.error('❌ Upload endpoint error:', error);
+    console.error("❌ Upload endpoint error:", error);
     res.status(500).json({
       success: false,
-      message: 'Upload service error',
-      code: 'SERVICE_ERROR',
-      error: error.message
+      message: "Upload service error",
+      code: "SERVICE_ERROR",
+      error: error.message,
     });
   }
 });
 
 // Multiple file upload endpoint (for portfolios)
-router.post('/application-documents-multiple', authenticateToken, async (req, res) => {
-  try {
-    const { type } = req.body;
-    
-    if (!type || !fileConfigs[type]) {
-      return res.status(400).json({
+router.post(
+  "/application-documents-multiple",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const { type } = req.body;
+
+      if (!type || !fileConfigs[type]) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid or missing file type",
+          allowedTypes: Object.keys(fileConfigs),
+        });
+      }
+
+      const upload = createMulterConfig(type);
+
+      upload.array("files", 5)(req, res, async (err) => {
+        if (err) {
+          console.error("❌ Multiple file upload error:", err);
+          return res.status(400).json({
+            success: false,
+            message: err.message || "Multiple file upload failed",
+            code: "MULTI_UPLOAD_ERROR",
+          });
+        }
+
+        if (!req.files || req.files.length === 0) {
+          return res.status(400).json({
+            success: false,
+            message: "No files uploaded",
+            code: "NO_FILES",
+          });
+        }
+
+        try {
+          // Get user info for filename
+          const user = await BaseUser.findById(req.user.userId);
+          const userInfo = {
+            name:
+              user?.firstName && user?.lastName
+                ? `${user.firstName}_${user.lastName}`
+                : null,
+            username: user?.username,
+            fullname:
+              user?.firstName && user?.lastName
+                ? `${user.firstName}_${user.lastName}`
+                : user?.username,
+          };
+
+          // Upload each file to S3
+          const config = fileConfigs[type];
+          const uploadMethod = s3Service[config.uploadMethod];
+
+          const uploadPromises = req.files.map((file) =>
+            uploadMethod.call(
+              s3Service,
+              file.buffer,
+              file.originalname,
+              file.mimetype,
+              req.user.userId,
+              userInfo
+            )
+          );
+
+          const s3Results = await Promise.all(uploadPromises);
+
+          const uploadedFiles = s3Results.map((s3Result, index) => ({
+            filename: s3Result.fileName,
+            originalName: req.files[index].originalname,
+            fileUrl: s3Result.url,
+            s3Key: s3Result.key,
+            fileSize: req.files[index].size,
+            mimeType: req.files[index].mimetype,
+            uploadedAt: new Date(),
+            uploadedBy: req.user.userId,
+          }));
+
+          res.json({
+            success: true,
+            message: `${uploadedFiles.length} files uploaded successfully`,
+            data: uploadedFiles,
+          });
+
+          console.log(
+            `✅ Multiple files uploaded to S3: ${uploadedFiles.length} files by user ${req.user.userId}`
+          );
+        } catch (processingError) {
+          console.error("❌ Multiple file processing error:", processingError);
+
+          res.status(500).json({
+            success: false,
+            message: "File processing failed",
+            code: "PROCESSING_ERROR",
+            error: processingError.message,
+          });
+        }
+      });
+    } catch (error) {
+      console.error("❌ Multiple upload endpoint error:", error);
+      res.status(500).json({
         success: false,
-        message: 'Invalid or missing file type',
-        allowedTypes: Object.keys(fileConfigs)
+        message: "Upload service error",
+        code: "SERVICE_ERROR",
+        error: error.message,
       });
     }
-
-    const upload = createMulterConfig(type);
-    
-    upload.array('files', 5)(req, res, async (err) => {
-      if (err) {
-        console.error('❌ Multiple file upload error:', err);
-        return res.status(400).json({
-          success: false,
-          message: err.message || 'Multiple file upload failed',
-          code: 'MULTI_UPLOAD_ERROR'
-        });
-      }
-
-      if (!req.files || req.files.length === 0) {
-        return res.status(400).json({
-          success: false,
-          message: 'No files uploaded',
-          code: 'NO_FILES'
-        });
-      }
-
-      try {
-        const uploadedFiles = req.files.map(file => ({
-          filename: file.filename,
-          originalName: file.originalname,
-          fileUrl: `/uploads/documents/${file.filename}`, // Simplified path
-          fileSize: file.size,
-          mimeType: file.mimetype,
-          uploadedAt: new Date(),
-          uploadedBy: req.user.userId
-        }));
-
-        res.json({
-          success: true,
-          message: `${uploadedFiles.length} files uploaded successfully`,
-          data: uploadedFiles
-        });
-
-        console.log(`✅ Multiple files uploaded: ${uploadedFiles.length} files by user ${req.user.userId}`);
-
-      } catch (processingError) {
-        console.error('❌ Multiple file processing error:', processingError);
-        
-        // Clean up uploaded files if processing fails
-        req.files.forEach(file => {
-          try {
-            fs.unlinkSync(file.path);
-          } catch (cleanupError) {
-            console.error('❌ File cleanup error:', cleanupError);
-          }
-        });
-
-        res.status(500).json({
-          success: false,
-          message: 'File processing failed',
-          code: 'PROCESSING_ERROR',
-          error: processingError.message
-        });
-      }
-    });
-
-  } catch (error) {
-    console.error('❌ Multiple upload endpoint error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Upload service error',
-      code: 'SERVICE_ERROR',
-      error: error.message
-    });
   }
-});
+);
 
 // File deletion endpoint
-router.delete('/application-document/:filename', authenticateToken, async (req, res) => {
+router.delete(
+  "/application-document/:s3Key(*)",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const s3Key = req.params.s3Key;
+
+      if (!s3Key) {
+        return res.status(400).json({
+          success: false,
+          message: "S3 key is required",
+        });
+      }
+
+      // Verify file ownership (s3Key should contain user ID)
+      if (!s3Key.includes(req.user.userId)) {
+        return res.status(403).json({
+          success: false,
+          message: "Access denied",
+          code: "ACCESS_DENIED",
+        });
+      }
+
+      // Check if file exists
+      const exists = await s3Service.fileExists(s3Key);
+      if (!exists) {
+        return res.status(404).json({
+          success: false,
+          message: "File not found",
+          code: "FILE_NOT_FOUND",
+        });
+      }
+
+      // Delete file from S3
+      await s3Service.deleteFile(s3Key);
+
+      res.json({
+        success: true,
+        message: "File deleted successfully",
+      });
+
+      console.log(
+        `✅ File deleted from S3: ${s3Key} by user ${req.user.userId}`
+      );
+    } catch (error) {
+      console.error("❌ File deletion error:", error);
+      res.status(500).json({
+        success: false,
+        message: "File deletion failed",
+        code: "DELETION_ERROR",
+        error: error.message,
+      });
+    }
+  }
+);
+
+// File download/view endpoint - returns presigned URL for S3 access
+router.get(
+  "/application-document/:s3Key(*)",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const s3Key = req.params.s3Key;
+
+      if (!s3Key) {
+        return res.status(400).json({
+          success: false,
+          message: "S3 key is required",
+        });
+      }
+
+      // Basic ownership check
+      if (!s3Key.includes(req.user.userId)) {
+        return res.status(403).json({
+          success: false,
+          message: "Access denied",
+        });
+      }
+
+      // Check if file exists
+      const exists = await s3Service.fileExists(s3Key);
+      if (!exists) {
+        return res.status(404).json({
+          success: false,
+          message: "File not found",
+        });
+      }
+
+      // Generate presigned URL (valid for 1 hour)
+      const signedUrl = await s3Service.getSignedUrl(s3Key, 3600);
+
+      res.json({
+        success: true,
+        url: signedUrl,
+        expiresIn: 3600,
+      });
+
+      console.log(
+        `✅ File access granted: ${s3Key} by user ${req.user.userId}`
+      );
+    } catch (error) {
+      console.error("❌ File access error:", error);
+      res.status(500).json({
+        success: false,
+        message: "File access failed",
+        error: error.message,
+      });
+    }
+  }
+);
+
+// Public file serving endpoint - returns presigned URL for public access
+router.get("/documents/:type/:s3Key(*)", async (req, res) => {
   try {
-    const { filename } = req.params;
-    const { type } = req.query;
+    const { type, s3Key } = req.params;
 
     if (!type || !fileConfigs[type]) {
       return res.status(400).json({
         success: false,
-        message: 'File type is required',
-        allowedTypes: Object.keys(fileConfigs)
+        message: "Invalid file type",
       });
     }
 
-    // Verify file ownership (filename should contain user ID)
-    if (!filename.startsWith(req.user.userId)) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied',
-        code: 'ACCESS_DENIED'
-      });
-    }
+    const fullKey = `${type}/${s3Key}`;
 
-    const filePath = path.join(fileConfigs[type].destination, filename);
-
-    if (!fs.existsSync(filePath)) {
+    // Check if file exists
+    const exists = await s3Service.fileExists(fullKey);
+    if (!exists) {
       return res.status(404).json({
         success: false,
-        message: 'File not found',
-        code: 'FILE_NOT_FOUND'
+        message: "File not found",
       });
     }
 
-    // Delete file
-    fs.unlinkSync(filePath);
+    // Generate presigned URL (valid for 1 hour)
+    const signedUrl = await s3Service.getSignedUrl(fullKey, 3600);
 
     res.json({
       success: true,
-      message: 'File deleted successfully'
+      url: signedUrl,
+      expiresIn: 3600,
     });
 
-    console.log(`✅ File deleted: ${filename} by user ${req.user.userId}`);
-
+    console.log(`✅ Public file access granted: ${fullKey}`);
   } catch (error) {
-    console.error('❌ File deletion error:', error);
+    console.error("❌ Public file access error:", error);
     res.status(500).json({
       success: false,
-      message: 'File deletion failed',
-      code: 'DELETION_ERROR',
-      error: error.message
-    });
-  }
-});
-
-// File download/view endpoint for documents (with authentication)
-router.get('/application-document/:filename', authenticateToken, async (req, res) => {
-  try {
-    const { filename } = req.params;
-    const { type } = req.query;
-
-    if (!type || !fileConfigs[type]) {
-      return res.status(400).json({
-        success: false,
-        message: 'File type is required'
-      });
-    }
-
-    // Basic ownership check (can be enhanced with database lookup)
-    if (!filename.startsWith(req.user.userId)) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied'
-      });
-    }
-
-    const filePath = path.join(fileConfigs[type].destination, filename);
-
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({
-        success: false,
-        message: 'File not found'
-      });
-    }
-
-    // Set appropriate headers
-    const stat = fs.statSync(filePath);
-    const mimeType = getMimeType(path.extname(filename));
-    
-    res.setHeader('Content-Type', mimeType);
-    res.setHeader('Content-Length', stat.size);
-    res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
-
-    // Stream file
-    const fileStream = fs.createReadStream(filePath);
-    fileStream.pipe(res);
-
-    console.log(`✅ File accessed: ${filename} by user ${req.user.userId}`);
-
-  } catch (error) {
-    console.error('❌ File access error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'File access failed',
-      error: error.message
-    });
-  }
-});
-
-// Public file serving endpoint for documents (no authentication required)
-router.get('/documents/:type/:filename', async (req, res) => {
-  try {
-    const { type, filename } = req.params;
-
-    if (!type || !fileConfigs[type]) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid file type'
-      });
-    }
-
-    const filePath = path.join(fileConfigs[type].destination, filename);
-
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({
-        success: false,
-        message: 'File not found'
-      });
-    }
-
-    // Set appropriate headers
-    const stat = fs.statSync(filePath);
-    const mimeType = getMimeType(path.extname(filename));
-    
-    res.setHeader('Content-Type', mimeType);
-    res.setHeader('Content-Length', stat.size);
-    res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
-    res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
-
-    // Stream file
-    const fileStream = fs.createReadStream(filePath);
-    fileStream.pipe(res);
-
-    console.log(`✅ Public file served: ${filename}`);
-
-  } catch (error) {
-    console.error('❌ Public file access error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'File access failed',
-      error: error.message
+      message: "File access failed",
+      error: error.message,
     });
   }
 });
 
 // Get file upload limits and allowed types
-router.get('/upload-config', (req, res) => {
+router.get("/upload-config", (req, res) => {
   const config = {};
-  
-  Object.keys(fileConfigs).forEach(type => {
+
+  Object.keys(fileConfigs).forEach((type) => {
     config[type] = {
       allowedTypes: fileConfigs[type].allowedTypes,
       maxSize: fileConfigs[type].maxSize,
-      maxSizeMB: Math.round(fileConfigs[type].maxSize / (1024 * 1024))
+      maxSizeMB: Math.round(fileConfigs[type].maxSize / (1024 * 1024)),
     };
   });
 
   res.json({
     success: true,
-    data: config
+    data: config,
   });
 });
-
-// Helper function to get MIME type
-const getMimeType = (extension) => {
-  const mimeTypes = {
-    '.pdf': 'application/pdf',
-    '.doc': 'application/msword',
-    '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    '.txt': 'text/plain',
-    '.jpg': 'image/jpeg',
-    '.jpeg': 'image/jpeg',
-    '.png': 'image/png',
-    '.gif': 'image/gif',
-    '.webp': 'image/webp'
-  };
-  
-  return mimeTypes[extension.toLowerCase()] || 'application/octet-stream';
-};
 
 export default router;

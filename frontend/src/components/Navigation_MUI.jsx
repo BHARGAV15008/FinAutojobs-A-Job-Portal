@@ -160,7 +160,6 @@ const Navigation = () => {
             <Box sx={{ p: 2 }}>
                 <Paper
                     component="form"
-                <Paper
                     sx={{
                         p: '2px 4px',
                         display: 'flex',
