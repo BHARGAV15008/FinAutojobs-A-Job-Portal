@@ -259,6 +259,16 @@ export const EnhancedProfileTab = ({
   }, [user?._id]);
 
   const getProfileSections = () => {
+    // Debug logging to see what data we have
+    console.log("🔍 Profile Data Available:", {
+      resume_url: user,
+      "documents.resumeUrl": user?.documents,
+      resumeUrl: user?.resumeUrl,
+      profileImage: user?.profileImage,
+      education: user?.education?.length || 0,
+      workExperience: user?.workExperience?.length || 0,
+    });
+
     const personalInfo = {
       title: "Personal Information",
       color: "blue",
@@ -306,6 +316,7 @@ export const EnhancedProfileTab = ({
               ? user?.professionalLinks?.linkedin
               : user?.linkedin_url || user?.linkedinUrl,
           icon: <Linkedin size={14} />,
+          isUrl: true,
         },
         {
           label: "GitHub URL",
@@ -314,6 +325,7 @@ export const EnhancedProfileTab = ({
               ? user?.professionalLinks?.github
               : user?.github_url || user?.githubUrl,
           icon: <Github size={14} />,
+          isUrl: true,
         },
         {
           label: "Portfolio URL",
@@ -322,9 +334,48 @@ export const EnhancedProfileTab = ({
               ? user?.professionalLinks?.personalWebsite
               : user?.portfolio_url || user?.portfolioUrl,
           icon: <LinkIcon size={14} />,
+          isUrl: true,
         },
       ],
     };
+
+    const documentsSection =
+      userRole === "applicant"
+        ? {
+            title: "Documents & Files",
+            color: "green",
+            icon: <FileText size={20} />,
+            fields: [
+              {
+                label: "Resume",
+                value:
+                  user?.resume_url ||
+                  user?.documents?.resumeUrl ||
+                  user?.resumeUrl,
+                icon: <Download size={14} />,
+                isUrl: true,
+                isDocument: true,
+              },
+              {
+                label: "Cover Letter",
+                value:
+                  user?.cover_letter_url ||
+                  user?.documents?.coverLetterUrl ||
+                  user?.coverLetterUrl,
+                icon: <Download size={14} />,
+                isUrl: true,
+                isDocument: true,
+              },
+              {
+                label: "Profile Image",
+                value: user?.profileImage,
+                icon: <Camera size={14} />,
+                isUrl: true,
+                isImage: true,
+              },
+            ].filter((field) => field.value), // Only show fields that have values
+          }
+        : null;
 
     let professionalDetails = {
       title: "Professional Details",
@@ -390,7 +441,17 @@ export const EnhancedProfileTab = ({
       ];
     }
 
-    return [personalInfo, professionalDetails, linksSection];
+    // Filter out documentsSection if it has no fields with values
+    const sections = [personalInfo, professionalDetails, linksSection];
+    if (
+      documentsSection &&
+      documentsSection.fields &&
+      documentsSection.fields.length > 0
+    ) {
+      sections.push(documentsSection);
+    }
+
+    return sections;
   };
 
   const profileSections = getProfileSections();
@@ -506,7 +567,7 @@ export const EnhancedProfileTab = ({
       </motion.div>
 
       {/* Main Info Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {profileSections.map((section, idx) => (
           <motion.div
             key={section.title}
@@ -522,7 +583,11 @@ export const EnhancedProfileTab = ({
                     ? "bg-blue-500 text-white shadow-blue-200"
                     : section.color === "purple"
                     ? "bg-purple-500 text-white shadow-purple-200"
-                    : "bg-rose-500 text-white shadow-rose-200"
+                    : section.color === "rose"
+                    ? "bg-rose-500 text-white shadow-rose-200"
+                    : section.color === "green"
+                    ? "bg-green-500 text-white shadow-green-200"
+                    : "bg-gray-500 text-white shadow-gray-200"
                 }`}
               >
                 {React.cloneElement(section.icon, { size: 24 })}
@@ -541,6 +606,7 @@ export const EnhancedProfileTab = ({
                         ${section.color === "blue" ? "text-blue-600" : ""}
                         ${section.color === "purple" ? "text-purple-600" : ""}
                         ${section.color === "rose" ? "text-rose-600" : ""}
+                        ${section.color === "green" ? "text-green-600" : ""}
                         dark:text-blue-400
                     `}
                     >
@@ -557,7 +623,25 @@ export const EnhancedProfileTab = ({
                         : "text-slate-400 dark:text-slate-500 italic font-medium"
                     }`}
                   >
-                    {field.value || "Not provided yet"}
+                    {field.isUrl &&
+                    field.value &&
+                    field.value !== "Not provided yet" ? (
+                      <a
+                        href={field.value}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-2"
+                      >
+                        {field.isImage
+                          ? "View Image"
+                          : field.isDocument
+                          ? "Download File"
+                          : "Open Link"}
+                        <ExternalLink size={12} />
+                      </a>
+                    ) : (
+                      field.value || "Not provided yet"
+                    )}
                   </div>
                 </div>
               ))}
@@ -565,6 +649,116 @@ export const EnhancedProfileTab = ({
           </motion.div>
         ))}
       </div>
+
+      {/* Education Section - Only for applicants */}
+      {userRole === "applicant" &&
+        user?.education &&
+        Array.isArray(user.education) &&
+        user.education.length > 0 && (
+          <motion.div
+            className="bg-white dark:bg-gray-800/80 backdrop-blur-sm rounded-[2.5rem] border border-gray-100 dark:border-gray-700 shadow-xl shadow-blue-500/5 p-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-14 h-14 rounded-[1.2rem] bg-amber-500 text-white flex items-center justify-center shadow-lg border-2 border-white dark:border-gray-700 shadow-amber-200">
+                <GraduationCap size={24} />
+              </div>
+              <h3 className="text-md font-black text-slate-800 dark:text-white tracking-tight uppercase tracking-wider">
+                Education
+              </h3>
+            </div>
+
+            <div className="space-y-4">
+              {user.education.map((edu, idx) => (
+                <div
+                  key={idx}
+                  className="border-l-4 border-amber-500 pl-4 py-2"
+                >
+                  <h4 className="font-bold text-slate-800 dark:text-white">
+                    {edu.degree}{" "}
+                    {edu.fieldOfStudy ? `in ${edu.fieldOfStudy}` : ""}
+                  </h4>
+                  <p className="text-sm text-slate-600 dark:text-slate-300">
+                    {edu.institution}
+                  </p>
+                  <div className="flex gap-4 text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    {edu.startDate && (
+                      <span>{new Date(edu.startDate).getFullYear()}</span>
+                    )}
+                    {edu.endDate && (
+                      <span>
+                        -{" "}
+                        {edu.isCurrentlyStudying
+                          ? "Present"
+                          : new Date(edu.endDate).getFullYear()}
+                      </span>
+                    )}
+                    {edu.grade && <span>• Grade: {edu.grade}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+      {/* Work Experience Section - Only for applicants */}
+      {userRole === "applicant" &&
+        user?.workExperience &&
+        Array.isArray(user.workExperience) &&
+        user.workExperience.length > 0 && (
+          <motion.div
+            className="bg-white dark:bg-gray-800/80 backdrop-blur-sm rounded-[2.5rem] border border-gray-100 dark:border-gray-700 shadow-xl shadow-blue-500/5 p-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-14 h-14 rounded-[1.2rem] bg-emerald-500 text-white flex items-center justify-center shadow-lg border-2 border-white dark:border-gray-700 shadow-emerald-200">
+                <Briefcase size={24} />
+              </div>
+              <h3 className="text-md font-black text-slate-800 dark:text-white tracking-tight uppercase tracking-wider">
+                Work Experience
+              </h3>
+            </div>
+
+            <div className="space-y-4">
+              {user.workExperience.map((work, idx) => (
+                <div
+                  key={idx}
+                  className="border-l-4 border-emerald-500 pl-4 py-2"
+                >
+                  <h4 className="font-bold text-slate-800 dark:text-white">
+                    {work.position || work.jobTitle}
+                  </h4>
+                  <p className="text-sm text-slate-600 dark:text-slate-300">
+                    {work.company || work.companyName}
+                  </p>
+                  <div className="flex gap-4 text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    {work.startDate && (
+                      <span>{new Date(work.startDate).getFullYear()}</span>
+                    )}
+                    {work.endDate && (
+                      <span>
+                        -{" "}
+                        {work.isCurrentlyWorking
+                          ? "Present"
+                          : new Date(work.endDate).getFullYear()}
+                      </span>
+                    )}
+                    {work.location && <span>• {work.location}</span>}
+                  </div>
+                  {work.description && (
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">
+                      {work.description}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
       <ProfileEditModal
         isOpen={isEditModalOpen}

@@ -116,11 +116,20 @@ router.post(
 
       // Update user profile with resume URL
       if (user) {
+        // For applicants, save to documents.resumeUrl
+        if (user.role === "applicant") {
+          if (!user.documents) {
+            user.documents = {};
+          }
+          user.documents.resumeUrl = s3Result.url;
+        }
+        // Also save to resume_url for backward compatibility
         user.resume_url = s3Result.url;
         await user.save();
         console.log(
           `✅ Resume uploaded to S3: ${s3Result.fileName} for user ${user.username}`
         );
+        console.log(`✅ Resume URL saved: ${s3Result.url}`);
       }
 
       res.json({
@@ -257,11 +266,20 @@ router.post(
 
       // Update user profile with cover letter URL
       if (user) {
+        // For applicants, save to documents.coverLetterUrl
+        if (user.role === "applicant") {
+          if (!user.documents) {
+            user.documents = {};
+          }
+          user.documents.coverLetterUrl = s3Result.url;
+        }
+        // Also save to cover_letter_url for backward compatibility
         user.cover_letter_url = s3Result.url;
         await user.save();
         console.log(
           `✅ Cover letter uploaded to S3: ${s3Result.fileName} for user ${user.username}`
         );
+        console.log(`✅ Cover letter URL saved: ${s3Result.url}`);
       }
 
       res.json({

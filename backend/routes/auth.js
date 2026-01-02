@@ -1118,6 +1118,36 @@ router.put(
       console.log("🔍 Files:", req.files);
       console.log("🔍 =====================================");
 
+      // CRITICAL FIX: Parse JSON strings from FormData BEFORE any processing
+      // When frontend sends nested objects via FormData, they come as JSON strings
+      const fieldsToParseFromJSON = [
+        'documents',
+        'careerInfo', 
+        'jobPreferences',
+        'skills',
+        'education',
+        'workExperience',
+        'address',
+        'currentLocation',
+        'socialLinks',
+        'companyInfo',
+        'professionalLinks',
+        'languages'
+      ];
+
+      fieldsToParseFromJSON.forEach(fieldName => {
+        if (updateData[fieldName] && typeof updateData[fieldName] === 'string') {
+          try {
+            console.log(`🔍 Parsing ${fieldName} from JSON string...`);
+            updateData[fieldName] = JSON.parse(updateData[fieldName]);
+            console.log(`✅ ${fieldName} parsed successfully:`, updateData[fieldName]);
+          } catch (e) {
+            console.error(`❌ Failed to parse ${fieldName}:`, e.message);
+            // Keep as string, will be handled later
+          }
+        }
+      });
+
       // Handle file uploads
       if (req.files) {
         console.log("🔍 Processing uploaded files...");
@@ -1713,6 +1743,29 @@ router.put(
 
       console.log("✅ Profile update successful!");
       console.log("✅ Updated user keys:", Object.keys(updatedUser));
+
+      // Parse documents if it's a JSON string (fix for legacy data)
+      if (updatedUser.documents && typeof updatedUser.documents === "string") {
+        try {
+          console.log(
+            "🔍 Backend: Parsing documents from JSON string:",
+            updatedUser.documents
+          );
+          updatedUser.documents = JSON.parse(updatedUser.documents);
+          console.log(
+            "✅ Backend: Documents parsed successfully:",
+            updatedUser.documents
+          );
+        } catch (e) {
+          console.error("❌ Backend: Failed to parse documents:", e.message);
+          updatedUser.documents = {
+            resumeUrl: "",
+            coverLetterUrl: "",
+            portfolioUrl: "",
+            certificates: [],
+          };
+        }
+      }
 
       // Return the same comprehensive data structure as GET /profile
       const profileData = {
