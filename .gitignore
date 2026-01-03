@@ -68,3 +68,8 @@ dist/
 logs/
 *.log
 temp/
+# Environment files with secrets
+*.env
+main.env*
+.env.production
+.env.hostinger.production

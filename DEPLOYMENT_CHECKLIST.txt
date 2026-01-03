@@ -1,0 +1,268 @@
+╔════════════════════════════════════════════════════════════════╗
+║         FinAutoJobs - Deployment Checklist                     ║
+║                 Hostinger Ready Package                        ║
+╚════════════════════════════════════════════════════════════════╝
+
+📦 PACKAGE INFORMATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Zip File: FinAutojobs-Hostinger-Deploy.zip
+Size: 19MB (compressed) | 96MB (extracted)
+Created: 3 January 2026
+Ready for Hostinger deployment ✅
+
+📋 PRE-DEPLOYMENT CHECKLIST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+□ Step 1: MongoDB Atlas Setup
+  ├─ Create free cluster at cloud.mongodb.com
+  ├─ Create database user with read/write access
+  ├─ Add IP 0.0.0.0/0 to network access (required for Hostinger)
+  └─ Copy connection string (mongodb+srv://...)
+
+□ Step 2: Email Service Setup
+  ├─ Gmail: Enable 2FA and create app password
+  │   Visit: https://myaccount.google.com/apppasswords
+  ├─ OR use SendGrid/Mailgun for production
+  └─ Have SMTP credentials ready
+
+□ Step 3: Hostinger Account
+  ├─ Ensure Node.js 18+ is available
+  ├─ Check hosting plan supports Node.js apps
+  ├─ Have FTP/SSH credentials ready
+  └─ Domain configured (optional)
+
+□ Step 4: Security Credentials
+  ├─ Generate JWT_SECRET (64 characters)
+  │   Command: node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+  ├─ Generate SESSION_SECRET (64 characters)
+  └─ Keep these secure!
+
+🚀 DEPLOYMENT STEPS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+□ Step 1: Upload to Hostinger
+  Method A: File Manager
+  ├─ Login to hPanel
+  ├─ Navigate to File Manager
+  ├─ Upload FinAutojobs-Hostinger-Deploy.zip
+  └─ Extract the zip file
+
+  Method B: FTP (Recommended)
+  ├─ Connect via FileZilla
+  ├─ Upload extracted folder
+  └─ Ensure correct path: /public_html/FinAutojobs/
+
+□ Step 2: Configure Backend
+  ├─ Navigate to backend/ folder
+  ├─ Copy .env.production.example to .env
+  ├─ Edit .env with your credentials:
+  │   ├─ MONGODB_URI=your_connection_string
+  │   ├─ JWT_SECRET=your_generated_secret
+  │   ├─ EMAIL_USER=your_email@gmail.com
+  │   ├─ EMAIL_PASS=your_app_password
+  │   └─ FRONTEND_URL=https://yourdomain.com
+  └─ Save the file
+
+□ Step 3: Install Backend Dependencies
+  Via Hostinger Node.js Selector:
+  ├─ Go to Advanced → Node.js
+  ├─ Add application
+  ├─ Application root: /public_html/FinAutojobs/backend
+  ├─ Startup file: server.js
+  ├─ Click "Run NPM Install"
+  └─ Start application
+
+  Via SSH (Alternative):
+  ├─ ssh username@yourdomain.com
+  ├─ cd /public_html/FinAutojobs/backend
+  ├─ npm install --production
+  └─ npm start (or use PM2)
+
+□ Step 4: Configure Frontend
+  ├─ Navigate to frontend/ folder
+  ├─ Copy .env.production.example to .env.production
+  ├─ Edit: VITE_API_URL=https://yourdomain.com/api
+  └─ Save the file
+
+□ Step 5: Build Frontend
+  ├─ cd frontend
+  ├─ npm install
+  ├─ npm run build
+  └─ dist/ folder created
+
+□ Step 6: Deploy Frontend
+  ├─ Copy all files from frontend/dist/ to public_html/
+  ├─ Ensure index.html is in root
+  ├─ Copy .htaccess to public_html/
+  └─ Set permissions if needed
+
+□ Step 7: Configure File Uploads
+  ├─ Set uploads/ folder permissions to 755
+  │   chmod 755 uploads/
+  │   chmod 755 uploads/resumes/
+  │   chmod 755 uploads/documents/
+  └─ chmod 755 uploads/applications/
+
+□ Step 8: Verify Backend
+  ├─ Visit: https://yourdomain.com/api/health
+  ├─ Expected: {"status":"ok"}
+  └─ Check backend logs for errors
+
+□ Step 9: Verify Frontend
+  ├─ Visit: https://yourdomain.com
+  ├─ Homepage should load
+  ├─ Check browser console for errors
+  └─ Test navigation
+
+□ Step 10: Test Complete Flow
+  ├─ Register new account
+  ├─ Verify email delivery
+  ├─ Login to dashboard
+  ├─ Browse jobs
+  ├─ Apply to a job
+  └─ Upload resume
+
+⚙️ CONFIGURATION FILES REFERENCE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Backend .env (Required Variables):
+├─ MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/db
+├─ JWT_SECRET=your-64-char-secret
+├─ SESSION_SECRET=your-64-char-secret
+├─ PORT=5000
+├─ NODE_ENV=production
+├─ FRONTEND_URL=https://yourdomain.com
+├─ EMAIL_HOST=smtp.gmail.com
+├─ EMAIL_PORT=587
+├─ EMAIL_USER=your-email@gmail.com
+├─ EMAIL_PASS=your-app-password
+└─ EMAIL_FROM=your-email@gmail.com
+
+Frontend .env.production:
+└─ VITE_API_URL=https://yourdomain.com/api
+
+📁 FOLDER STRUCTURE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+After extraction:
+FinAutojobs-A-Job-Portal/
+├── backend/              → Node.js API (Port 5000)
+│   ├── .env             → Configure this!
+│   ├── server.js        → Main entry point
+│   └── [other files]
+├── frontend/            → React app
+│   ├── .env.production  → Configure this!
+│   ├── dist/           → Build output (after npm run build)
+│   └── [other files]
+├── uploads/            → File storage (set permissions)
+├── deploy.sh           → Deployment helper script
+├── DEPLOYMENT_GUIDE.txt → Complete instructions
+├── QUICKSTART.txt      → Quick reference
+└── README.txt          → Basic info
+
+🔍 TESTING ENDPOINTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Backend Health:
+curl https://yourdomain.com/api/health
+
+API Documentation:
+https://yourdomain.com/api/docs (if configured)
+
+Frontend:
+https://yourdomain.com
+
+Test Email:
+Register account → Check inbox
+
+Test File Upload:
+Apply to job → Upload resume
+
+⚠️ COMMON ISSUES & SOLUTIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Issue: "Cannot connect to MongoDB"
+Fix: Check .env has correct MONGODB_URI and MongoDB Atlas allows 0.0.0.0/0
+
+Issue: "CORS error"
+Fix: Update CORS_ORIGIN in backend/.env to your domain
+
+Issue: "502 Bad Gateway"
+Fix: Backend not running. Check Node.js application status in hPanel
+
+Issue: "Email not sending"
+Fix: Verify email credentials. For Gmail, use app password not regular password
+
+Issue: "Blank frontend page"
+Fix: Check browser console. Verify VITE_API_URL in frontend/.env.production
+
+Issue: "Upload fails"
+Fix: Set uploads/ folder permissions to 755: chmod -R 755 uploads/
+
+📞 SUPPORT RESOURCES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Documentation:
+├─ DEPLOYMENT_GUIDE.txt (Complete step-by-step guide)
+├─ QUICKSTART.txt (Quick reference)
+└─ README.txt (Basic information)
+
+External Resources:
+├─ MongoDB Atlas: https://docs.atlas.mongodb.com
+├─ Hostinger Support: https://support.hostinger.com
+├─ Node.js Docs: https://nodejs.org/docs
+└─ React Docs: https://react.dev
+
+🎯 SUCCESS CRITERIA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Your deployment is successful when:
+✓ Homepage loads without errors
+✓ User can register and receive verification email
+✓ Login works correctly
+✓ Dashboard displays properly
+✓ Jobs can be browsed and searched
+✓ Applications can be submitted
+✓ Resume upload works
+✓ Email notifications are delivered
+✓ Backend /api/health returns {"status":"ok"}
+
+📊 PERFORMANCE TIPS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Enable MongoDB indexes for better query performance
+2. Use PM2 for process management and auto-restart
+3. Enable gzip compression in Apache/Nginx
+4. Configure CDN for static assets (optional)
+5. Setup monitoring with UptimeRobot or similar
+6. Regular backups of MongoDB and uploads/ folder
+7. Monitor disk space for uploads/
+8. Update dependencies monthly: npm update
+
+🔒 SECURITY CHECKLIST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+□ .env files have permissions 600
+□ JWT secrets are randomly generated (not example values)
+□ HTTPS/SSL enabled on domain
+□ MongoDB network access configured
+□ File upload limits configured
+□ Rate limiting enabled in backend
+□ CORS properly configured
+□ Regular security updates applied
+□ Backups configured
+□ Monitoring setup
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Package prepared by: FinAutoJobs Team
+Date: 3 January 2026
+Version: 1.0.0
+
+Ready for deployment! 🚀
+
+For detailed instructions, read DEPLOYMENT_GUIDE.txt
+For quick start, read QUICKSTART.txt
+
+Good luck with your deployment!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

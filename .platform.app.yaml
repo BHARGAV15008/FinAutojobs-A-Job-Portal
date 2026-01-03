@@ -1,0 +1,36 @@
+# Platform.sh configuration for FinAutoJobs
+name: finautojobs
+type: nodejs:18
+
+hooks:
+  build: |
+    set -e
+    cd backend && npm install --production
+    cd ../frontend && npm install && npm run build
+
+  deploy: |
+    cd backend
+    npm start &
+
+web:
+  commands:
+    start: "cd backend && npm start"
+
+  locations:
+    "/":
+      root: "frontend/dist"
+      index: ["index.html"]
+      allow: true
+      rules:
+        \.(css|js|gif|jpe?g|png|svg|ico|woff2?)$:
+          allow: true
+    "/api":
+      passthru: true
+      root: "backend"
+
+mounts:
+  "uploads":
+    source: local
+    source_path: uploads
+
+disk: 2048

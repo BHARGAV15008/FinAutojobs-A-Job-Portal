@@ -1,0 +1,31 @@
+{
+  "name": "finautojobs",
+  "version": 1,
+  "framework": "monorepo",
+  "buildCommand": "npm run build",
+  "startCommand": "npm run start:production",
+  "installCommand": "npm install",
+  "outputDirectory": "frontend/dist",
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "backend/server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "frontend/dist/$1"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "PORT": "5000"
+  },
+  "regions": ["auto"],
+  "functions": {
+    "backend/server.js": {
+      "runtime": "nodejs18.x",
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  }
+}

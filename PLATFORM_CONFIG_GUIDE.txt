@@ -1,0 +1,503 @@
+===============================================================================
+FINAUTOJOBS - PLATFORM CONFIGURATION GUIDE
+===============================================================================
+
+VERSION: 2.0.0
+LAST UPDATED: January 2025
+PROJECT TYPE: Full-Stack Monorepo (MERN Stack)
+STATUS: Production Ready
+
+===============================================================================
+1. WHAT'S NEW IN VERSION 2.0.0
+===============================================================================
+
+✅ ROOT CONFIGURATION FILES ADDED
+- Root package.json with monorepo configuration
+- Platform-specific deployment configs for 7 hosting services
+- Proper npm scripts for full-stack orchestration
+- Workspaces configuration for backend + frontend
+
+✅ DEPLOYMENT AUTOMATION
+- Single command deployment for all platforms
+- Automated build process for frontend
+- Automated startup for backend
+- Environment variable management
+
+✅ HOSTINGER OPTIMIZATION
+- hostinger.json specifically designed for Hostinger auto-migration
+- Proper routing configuration for API + Frontend
+- Framework detection configuration
+- Memory and runtime optimization
+
+===============================================================================
+2. ROOT CONFIGURATION FILES EXPLAINED
+===============================================================================
+
+📄 package.json (ROOT MONOREPO CONFIG)
+--------------------------------------
+Location: /package.json
+Purpose: Main configuration file that tells hosting platforms:
+  - This is a monorepo with two apps (backend + frontend)
+  - How to install dependencies for both apps
+  - How to build the frontend (React + Vite)
+  - How to start the backend (Express.js)
+  - What Node.js version is required
+
+Key Scripts:
+  • npm install → Installs all dependencies (backend + frontend)
+  • npm run build → Builds frontend for production
+  • npm start → Starts the backend server
+  • npm run dev → Runs both apps in development mode
+  • npm run deploy → Full deployment (build + start)
+
+Node.js Requirements: >= 18.0.0
+
+📄 hostinger.json (HOSTINGER SPECIFIC)
+---------------------------------------
+Location: /hostinger.json
+Purpose: Tells Hostinger's auto-migration tool exactly how to handle this project
+
+Configuration:
+  • Framework: "monorepo" (identifies full-stack structure)
+  • Build Command: "npm run build" (builds React frontend)
+  • Start Command: "npm run start:production" (starts Express backend)
+  • Output Directory: "frontend/dist" (where built files go)
+  
+Routes:
+  • /api/* → backend/server.js (API requests)
+  • /* → frontend/dist (React app)
+
+Functions:
+  • Backend runs as serverless function
+  • Runtime: Node.js 18.x
+  • Memory: 1024 MB
+  • Auto-scaling enabled
+
+📄 vercel.json (VERCEL DEPLOYMENT)
+-----------------------------------
+Location: /vercel.json
+Purpose: Vercel-specific configuration for monorepo deployment
+
+Features:
+  • Uses @vercel/node for backend
+  • Uses @vercel/static-build for frontend
+  • Automatic route separation
+  • Environment variables pre-configured
+
+📄 railway.json (RAILWAY.APP)
+------------------------------
+Location: /railway.json
+Purpose: Railway deployment configuration
+
+Features:
+  • NIXPACKS builder
+  • Build command: npm run build
+  • Start command: npm run start:production
+  • Restart policy: ON_FAILURE (max 10 retries)
+
+📄 render.yaml (RENDER.COM)
+----------------------------
+Location: /render.yaml
+Purpose: Render multi-service deployment
+
+Services:
+  1. Backend (Web Service)
+     - Type: web
+     - Build: cd backend && npm install
+     - Start: npm start
+     - Environment: node
+  
+  2. Frontend (Static Site)
+     - Type: web
+     - Build: cd frontend && npm install && npm run build
+     - Publish: frontend/dist
+     - Route rewrites to backend API
+
+📄 Procfile (HEROKU)
+--------------------
+Location: /Procfile
+Purpose: Heroku deployment
+
+Commands:
+  • web: cd backend && npm start
+  • release: cd frontend && npm run build
+
+📄 .platform.app.yaml (PLATFORM.SH)
+------------------------------------
+Location: /.platform.app.yaml
+Purpose: Platform.sh configuration
+
+Features:
+  • Build hooks for both apps
+  • Web start command
+  • Location-based routing
+  • Persistent mounts for uploads
+
+📄 app.yaml (GOOGLE CLOUD)
+---------------------------
+Location: /app.yaml
+Purpose: Google Cloud Platform / App Engine
+
+Configuration:
+  • Runtime: nodejs18
+  • Handlers for static files and API
+  • Auto-scaling configuration
+  • Environment variables
+
+===============================================================================
+3. HOW HOSTINGER WILL RECOGNIZE YOUR PROJECT
+===============================================================================
+
+STEP 1: Auto-Detection
+----------------------
+When you upload FinAutojobs-Hostinger-Deploy-v2.0.0.zip:
+
+1. Hostinger finds package.json in root
+   ✓ Detects Node.js project
+   ✓ Reads required Node version (18.x)
+   ✓ Checks for npm scripts
+
+2. Hostinger finds hostinger.json
+   ✓ Reads framework: "monorepo"
+   ✓ Understands this is full-stack app
+   ✓ Configures routing for /api/* and /*
+
+3. Hostinger checks project structure
+   ✓ Finds backend/ directory with Express.js
+   ✓ Finds frontend/ directory with React + Vite
+   ✓ Validates package.json in both directories
+
+STEP 2: Installation
+---------------------
+Hostinger runs: npm install
+
+This triggers:
+  • npm install --prefix backend (installs Express dependencies)
+  • npm install --prefix frontend (installs React dependencies)
+
+STEP 3: Build Process
+----------------------
+Hostinger runs: npm run build
+
+This triggers:
+  • cd frontend && npm install && npm run build
+  • Creates optimized production build in frontend/dist/
+  • Bundles all React components, styles, assets
+  • Generates static HTML, CSS, JS files
+
+STEP 4: Deployment
+------------------
+Hostinger runs: npm run start:production
+
+This triggers:
+  • cd backend && NODE_ENV=production npm start
+  • Starts Express.js server on configured port
+  • Connects to MongoDB Atlas
+  • Serves API endpoints at /api/*
+  • Serves frontend build from frontend/dist/ at /*
+
+STEP 5: Routing Configuration
+------------------------------
+Based on hostinger.json:
+
+Request to: example.com/api/auth/login
+  → Routed to: backend/server.js (Express API)
+  → Response: JSON data
+
+Request to: example.com/ or example.com/jobs
+  → Routed to: frontend/dist/index.html (React App)
+  → Response: HTML page (React Router handles navigation)
+
+Request to: example.com/uploads/resume.pdf
+  → Routed to: backend/uploads/ (Static files)
+  → Response: PDF file
+
+===============================================================================
+4. BEFORE UPLOADING TO HOSTINGER
+===============================================================================
+
+⚠️ CRITICAL: Configure Environment Variables
+---------------------------------------------
+Before deployment, you MUST configure these environment variables in Hostinger:
+
+BACKEND (.env):
+  • NODE_ENV=production
+  • PORT=5000 (or Hostinger auto-assigned)
+  • MONGODB_URI=your_mongodb_atlas_connection_string
+  • JWT_SECRET=your_secure_jwt_secret_key
+  • JWT_REFRESH_SECRET=your_refresh_token_secret
+  • SESSION_SECRET=your_session_secret_key
+  • EMAIL_USER=your_smtp_email
+  • EMAIL_PASSWORD=your_smtp_password
+  • FRONTEND_URL=https://your-domain.com
+  • BACKEND_URL=https://your-domain.com/api
+
+FRONTEND (.env):
+  • VITE_API_URL=/api (relative path for same domain)
+  • VITE_APP_NAME=FinAutoJobs
+  • NODE_ENV=production
+
+📝 HOW TO SET IN HOSTINGER:
+1. Go to Hostinger control panel
+2. Navigate to your application
+3. Click on "Environment Variables" or "Settings"
+4. Add each variable with its value
+5. Save changes
+6. Restart application
+
+===============================================================================
+5. UPLOAD PROCESS
+===============================================================================
+
+METHOD 1: Auto-Migration Upload (Recommended)
+----------------------------------------------
+1. Log in to Hostinger control panel
+2. Go to "Website" or "Applications" section
+3. Click "Add New Application" or "Upload Application"
+4. Choose "Upload from Computer"
+5. Select: FinAutojobs-Hostinger-Deploy-v2.0.0.zip
+6. Wait for upload to complete
+7. Hostinger auto-detection should now recognize:
+   ✓ Node.js 18.x project
+   ✓ Monorepo structure
+   ✓ Express.js backend
+   ✓ React + Vite frontend
+8. Configure environment variables (see section 4)
+9. Deploy!
+
+METHOD 2: Git Repository
+-------------------------
+1. Push code to Git repository (GitHub, GitLab, Bitbucket)
+2. Connect Hostinger to your Git repository
+3. Configure auto-deployment on push
+4. Hostinger will read package.json and hostinger.json
+5. Automatic builds and deployments on commits
+
+METHOD 3: FTP/SFTP Upload
+--------------------------
+1. Extract FinAutojobs-Hostinger-Deploy-v2.0.0.zip locally
+2. Use FTP client (FileZilla, WinSCP, etc.)
+3. Upload all files to your web root directory
+4. SSH into server
+5. Run: npm install
+6. Run: npm run build
+7. Run: npm run start:production
+
+===============================================================================
+6. DEPLOYMENT VERIFICATION
+===============================================================================
+
+After deployment, verify everything works:
+
+✓ Backend Health Check
+----------------------
+URL: https://your-domain.com/api/health
+Expected Response: {"status":"ok","timestamp":"..."}
+
+✓ Frontend Loading
+------------------
+URL: https://your-domain.com/
+Expected: Homepage loads with navigation
+
+✓ API Endpoints
+---------------
+Test login: https://your-domain.com/api/auth/login
+Test jobs: https://your-domain.com/api/jobs
+
+✓ Database Connection
+----------------------
+Check backend logs for: "Connected to MongoDB Atlas successfully"
+
+✓ File Uploads
+--------------
+Try uploading resume in application form
+Verify file appears in backend/uploads/
+
+===============================================================================
+7. TROUBLESHOOTING
+===============================================================================
+
+Problem: "Unsupported framework or invalid project structure"
+Solution: Ensure hostinger.json is present in root directory
+          Check that package.json has proper scripts
+          Verify Node.js version is 18.x or higher
+
+Problem: "Build failed"
+Solution: Check frontend .env has VITE_API_URL=/api
+          Verify all dependencies in package.json
+          Check build logs for specific errors
+
+Problem: "Cannot connect to database"
+Solution: Verify MONGODB_URI is set in environment variables
+          Check MongoDB Atlas allows connections from Hostinger IPs
+          Test connection string locally first
+
+Problem: "API routes return 404"
+Solution: Verify hostinger.json has correct routes configuration
+          Check backend/server.js is running
+          Verify CORS settings allow frontend domain
+
+Problem: "Frontend shows blank page"
+Solution: Check browser console for errors
+          Verify frontend/dist/ was built correctly
+          Check VITE_API_URL environment variable
+          Ensure index.html exists in frontend/dist/
+
+===============================================================================
+8. POST-DEPLOYMENT CONFIGURATION
+===============================================================================
+
+⚙️ Domain Setup
+---------------
+1. Point domain to Hostinger servers
+2. Configure SSL certificate (Let's Encrypt)
+3. Update FRONTEND_URL and BACKEND_URL in environment variables
+4. Update CORS settings in backend/config/cors.js
+
+⚙️ Database Optimization
+------------------------
+1. Create indexes in MongoDB Atlas
+2. Set up database backups
+3. Configure connection pooling
+4. Monitor query performance
+
+⚙️ Email Configuration
+----------------------
+1. Verify SMTP credentials
+2. Test email sending (registration, password reset)
+3. Configure SPF and DKIM records for domain
+4. Set up email templates
+
+⚙️ File Upload Storage
+-----------------------
+Option 1: Use Hostinger disk space
+  • Limited by hosting plan
+  • Good for small files
+  • Automatic backups
+
+Option 2: Use cloud storage (S3, Cloudinary)
+  • Unlimited storage
+  • Better performance
+  • Configure in backend/services/s3Service.js
+
+===============================================================================
+9. MONITORING AND MAINTENANCE
+===============================================================================
+
+📊 Logs
+-------
+Backend logs: Check Hostinger control panel → Logs
+Application logs: backend/logs/ (if configured)
+Error logs: Check email alerts or monitoring service
+
+📈 Performance
+--------------
+Monitor:
+  • Response times (API endpoints)
+  • Memory usage
+  • CPU usage
+  • Database query times
+  • File upload sizes
+
+🔄 Updates
+----------
+Regular maintenance:
+  • npm audit (check security vulnerabilities)
+  • npm update (update dependencies)
+  • Database backups
+  • SSL certificate renewal
+  • Log rotation
+
+===============================================================================
+10. SUPPORT AND RESOURCES
+===============================================================================
+
+📚 Documentation Files
+----------------------
+  • DEPLOYMENT_GUIDE.txt - Comprehensive deployment guide
+  • DEPLOYMENT_CHECKLIST.txt - Step-by-step checklist
+  • QUICKSTART.txt - Quick reference
+  • README.txt - Project overview
+  • PACKAGE_INFO.txt - Package contents
+
+🔗 Helpful Links
+----------------
+  • Hostinger Documentation: https://support.hostinger.com
+  • Node.js Deployment Guide: https://nodejs.org/en/docs/
+  • Express.js Docs: https://expressjs.com/
+  • React Deployment: https://react.dev/learn/start-a-new-react-project
+  • Vite Deployment: https://vitejs.dev/guide/static-deploy.html
+
+📧 Technical Support
+--------------------
+  • Hostinger Support: support@hostinger.com
+  • Community Forums: https://www.hostinger.com/forum
+  • Live Chat: Available in control panel
+
+===============================================================================
+11. ALTERNATIVE DEPLOYMENT OPTIONS
+===============================================================================
+
+If Hostinger still has issues, try these platforms:
+
+🚀 Vercel (Easiest)
+-------------------
+  • Best for: React + Express monorepos
+  • Auto-detects: Yes (using vercel.json)
+  • Free tier: Yes
+  • Deploy: vercel --prod
+  • Config file: vercel.json ✓ Already created
+
+🚀 Railway.app
+--------------
+  • Best for: Full-stack apps with database
+  • Auto-detects: Yes (using railway.json)
+  • Free tier: Yes ($5 credit/month)
+  • Deploy: Push to GitHub + connect
+  • Config file: railway.json ✓ Already created
+
+🚀 Render.com
+-------------
+  • Best for: Multiple services (backend + frontend)
+  • Auto-detects: Yes (using render.yaml)
+  • Free tier: Yes (with limitations)
+  • Deploy: Connect GitHub repo
+  • Config file: render.yaml ✓ Already created
+
+🚀 Heroku
+---------
+  • Best for: Traditional Node.js apps
+  • Auto-detects: Yes (using Procfile)
+  • Free tier: No (paid only)
+  • Deploy: git push heroku main
+  • Config file: Procfile ✓ Already created
+
+===============================================================================
+12. VERSION HISTORY
+===============================================================================
+
+v2.0.0 (Current)
+  ✅ Added root package.json with monorepo configuration
+  ✅ Created 7 platform-specific config files
+  ✅ Optimized for Hostinger auto-migration
+  ✅ Added comprehensive documentation
+  ✅ Package size: 19MB (compressed)
+
+v1.0.0 (Previous)
+  ✅ Initial cleanup and basic configuration
+  ✅ Created deployment documentation
+  ✅ Production environment templates
+  ✅ Package size: 19MB (compressed)
+
+===============================================================================
+END OF PLATFORM CONFIGURATION GUIDE
+===============================================================================
+
+For more information, see:
+  • DEPLOYMENT_GUIDE.txt - Full deployment instructions
+  • QUICKSTART.txt - Quick start guide
+  • README.txt - Project overview
+
+Ready to deploy! Upload FinAutojobs-Hostinger-Deploy-v2.0.0.zip to Hostinger.
+
+===============================================================================

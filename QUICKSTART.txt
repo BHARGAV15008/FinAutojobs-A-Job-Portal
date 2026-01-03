@@ -1,0 +1,89 @@
+FinAutoJobs - Quick Start Guide
+================================
+
+IMPORTANT: Read DEPLOYMENT_GUIDE.txt for complete instructions
+
+QUICK DEPLOYMENT STEPS
+-----------------------
+
+1. PREPARE FOR UPLOAD
+   - Ensure all configurations are ready
+   - Run: chmod +x deploy.sh && ./deploy.sh
+   - This will check and prepare everything
+
+2. CONFIGURE ENVIRONMENT
+   Backend (.env):
+   - Copy backend/.env.production.example to backend/.env
+   - Update with your MongoDB URI
+   - Add secure JWT secrets
+   - Configure email settings
+
+   Frontend (.env.production):
+   - Copy frontend/.env.production.example to frontend/.env.production
+   - Update VITE_API_URL with your domain
+
+3. UPLOAD TO HOSTINGER
+   - Zip the entire project OR
+   - Use FTP to upload files
+   - Extract in your hosting directory
+
+4. INSTALL & BUILD
+   Backend:
+   cd backend && npm install --production
+
+   Frontend:
+   cd frontend && npm install && npm run build
+
+5. START SERVICES
+   Backend:
+   - Via Hostinger Node.js: Set startup file to server.js
+   - Via PM2: pm2 start server.js --name finautojobs
+   - Via screen: screen -S backend && npm start
+
+   Frontend:
+   - Copy frontend/dist/* to public_html/
+   - Configure web server (Apache/Nginx)
+
+6. VERIFY DEPLOYMENT
+   - Visit your domain
+   - Test user registration
+   - Verify email delivery
+   - Check API connectivity
+
+FOLDER STRUCTURE
+----------------
+/backend/          - API Server (Port 5000)
+/frontend/dist/    - Static files (after build)
+/uploads/          - User uploads (set permissions 755)
+
+REQUIRED SERVICES
+-----------------
+✓ MongoDB Atlas (Database)
+✓ SMTP Service (Email)
+✓ Node.js 18+ (Runtime)
+✓ Domain/Hosting (Hostinger)
+
+IMPORTANT FILES
+---------------
+- DEPLOYMENT_GUIDE.txt (Complete guide)
+- backend/.env (Backend config)
+- frontend/.env.production (Frontend config)
+- backend/server.js (Main server)
+
+TROUBLESHOOTING
+---------------
+If something doesn't work:
+1. Check backend logs
+2. Verify .env configuration
+3. Test MongoDB connection
+4. Check email settings
+5. Review DEPLOYMENT_GUIDE.txt section 9
+
+SUPPORT
+-------
+- MongoDB: https://docs.atlas.mongodb.com
+- Hostinger: https://support.hostinger.com
+- Check application logs for errors
+
+Generated: 3 January 2026
+Ready for deployment! 🚀

@@ -1,0 +1,423 @@
+FinAutoJobs - Complete Deployment Guide
+========================================
+
+TABLE OF CONTENTS
+-----------------
+1. Pre-Deployment Checklist
+2. Hostinger Setup
+3. Database Configuration
+4. Backend Deployment
+5. Frontend Deployment
+6. Email Configuration
+7. Testing & Verification
+8. Troubleshooting
+
+========================================
+1. PRE-DEPLOYMENT CHECKLIST
+========================================
+
+Before deploying, ensure you have:
+
+□ MongoDB Atlas account (free tier available)
+  → Sign up at: https://www.mongodb.com/cloud/atlas
+
+□ Email service (Gmail/SendGrid/Mailgun)
+  → For Gmail: Enable 2FA and create App Password
+  → Visit: https://myaccount.google.com/apppasswords
+
+□ Hostinger hosting account with:
+  → Node.js support (18+)
+  → File upload capability
+  → At least 500MB storage
+  → SSH access (recommended)
+
+□ Domain name configured (optional but recommended)
+
+========================================
+2. HOSTINGER SETUP
+========================================
+
+2.1 Access Hostinger Control Panel
+   - Log in to hPanel (Hostinger control panel)
+   - Navigate to your hosting account
+
+2.2 Enable Node.js
+   - Go to Advanced → Node.js
+   - Select Node.js version 18+ or 20+
+   - Note the application URL
+
+2.3 File Upload
+   Choose one method:
+
+   Method A: File Manager (Easy)
+   - Open File Manager in hPanel
+   - Navigate to public_html or your domain folder
+   - Upload the deployment zip file
+   - Extract the zip file
+
+   Method B: FTP (Recommended for large files)
+   - Use FileZilla or similar FTP client
+   - Connect using FTP credentials from hPanel
+   - Upload entire project folder
+   - Structure: /public_html/FinAutojobs/
+
+   Method C: SSH (Advanced, fastest)
+   - Enable SSH in hPanel
+   - Connect: ssh username@yourdomain.com
+   - Upload and extract files
+
+========================================
+3. DATABASE CONFIGURATION
+========================================
+
+3.1 Setup MongoDB Atlas
+
+   Step 1: Create Cluster
+   - Visit https://cloud.mongodb.com
+   - Create free cluster (M0 Sandbox)
+   - Choose region closest to your users
+   - Wait 5-10 minutes for deployment
+
+   Step 2: Create Database User
+   - Go to Database Access
+   - Add New Database User
+   - Username: finautojobs_user
+   - Password: Generate secure password
+   - Set privileges: Read and Write to any database
+
+   Step 3: Configure Network Access
+   - Go to Network Access
+   - Add IP Address
+   - For Hostinger: Add 0.0.0.0/0 (allow from anywhere)
+   - Note: This is required as Hostinger IPs can change
+
+   Step 4: Get Connection String
+   - Go to Database → Connect
+   - Choose: Connect your application
+   - Copy the connection string
+   - Format: mongodb+srv://<username>:<password>@cluster.xxxxx.mongodb.net/finautojobs?retryWrites=true&w=majority
+   - Replace <username> and <password> with your credentials
+
+========================================
+4. BACKEND DEPLOYMENT
+========================================
+
+4.1 Configure Environment Variables
+
+   Navigate to backend folder and create .env file:
+   
+   Required Variables:
+   -------------------
+   MONGODB_URI=mongodb+srv://username:password@cluster.xxxxx.mongodb.net/finautojobs
+   JWT_SECRET=your-secure-random-string-here
+   SESSION_SECRET=another-secure-random-string
+   PORT=5000
+   NODE_ENV=production
+   FRONTEND_URL=https://yourdomain.com
+   
+   Email Configuration:
+   --------------------
+   EMAIL_HOST=smtp.gmail.com
+   EMAIL_PORT=587
+   EMAIL_USER=your-email@gmail.com
+   EMAIL_PASS=your-app-specific-password
+   EMAIL_FROM=your-email@gmail.com
+
+   Security Note:
+   - Generate secrets using: node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+   - Never use example values in production
+
+4.2 Install Dependencies
+
+   Via SSH:
+   cd /path/to/FinAutojobs/backend
+   npm install --production
+
+   Via Hostinger Node.js Selector:
+   - Select your application
+   - Click "Run NPM Install"
+
+4.3 Start Backend Server
+
+   Method A: Hostinger Node.js App
+   - In hPanel → Node.js Selector
+   - Application Root: /public_html/FinAutojobs/backend
+   - Application Startup File: server.js
+   - Click "Start Application"
+
+   Method B: PM2 (Recommended for stability)
+   npm install -g pm2
+   pm2 start server.js --name finautojobs-backend
+   pm2 save
+   pm2 startup
+
+   Method C: Screen/Tmux (SSH)
+   screen -S backend
+   npm start
+   # Press Ctrl+A then D to detach
+
+4.4 Verify Backend
+
+   Test endpoint:
+   curl https://yourdomain.com:5000/api/health
+   
+   Or visit in browser:
+   https://yourdomain.com:5000/api/health
+   
+   Expected response: {"status": "ok", "message": "Server is running"}
+
+========================================
+5. FRONTEND DEPLOYMENT
+========================================
+
+5.1 Build Frontend
+
+   Navigate to frontend folder:
+   cd /path/to/FinAutojobs/frontend
+   
+   Create .env.production:
+   VITE_API_URL=https://yourdomain.com/api
+   
+   Build for production:
+   npm install
+   npm run build
+   
+   This creates: frontend/dist/
+
+5.2 Deploy Frontend Files
+
+   Method A: Direct to public_html
+   - Copy all files from frontend/dist/ to public_html/
+   - Ensure index.html is in root
+
+   Method B: Subdomain
+   - Create subdomain in hPanel
+   - Copy frontend/dist/ contents to subdomain folder
+
+   Method C: Nginx/Apache Configuration
+   - Point document root to frontend/dist/
+   - Configure reverse proxy for /api to backend
+
+5.3 Configure Web Server
+
+   For Apache (.htaccess in frontend/dist/):
+   ------------------------------------------
+   <IfModule mod_rewrite.c>
+     RewriteEngine On
+     RewriteBase /
+     RewriteRule ^index\.html$ - [L]
+     RewriteCond %{REQUEST_FILENAME} !-f
+     RewriteCond %{REQUEST_FILENAME} !-d
+     RewriteRule . /index.html [L]
+   </IfModule>
+
+   # API Proxy
+   <IfModule mod_proxy.c>
+     ProxyPass /api http://localhost:5000/api
+     ProxyPassReverse /api http://localhost:5000/api
+   </IfModule>
+
+   For Nginx:
+   ----------
+   location / {
+     root /path/to/frontend/dist;
+     try_files $uri $uri/ /index.html;
+   }
+
+   location /api {
+     proxy_pass http://localhost:5000;
+     proxy_http_version 1.1;
+     proxy_set_header Upgrade $http_upgrade;
+     proxy_set_header Connection 'upgrade';
+     proxy_set_header Host $host;
+     proxy_cache_bypass $http_upgrade;
+   }
+
+========================================
+6. EMAIL CONFIGURATION
+========================================
+
+6.1 Gmail Setup (Recommended for small scale)
+
+   Step 1: Enable 2-Factor Authentication
+   - Visit: https://myaccount.google.com/security
+   - Enable 2-Step Verification
+
+   Step 2: Create App Password
+   - Visit: https://myaccount.google.com/apppasswords
+   - Select app: Mail
+   - Select device: Other (Custom name)
+   - Enter: FinAutoJobs
+   - Copy the 16-character password
+
+   Step 3: Update .env
+   EMAIL_HOST=smtp.gmail.com
+   EMAIL_PORT=587
+   EMAIL_USER=your-email@gmail.com
+   EMAIL_PASS=xxxx-xxxx-xxxx-xxxx (app password)
+
+6.2 Alternative Email Services
+
+   SendGrid:
+   EMAIL_HOST=smtp.sendgrid.net
+   EMAIL_PORT=587
+   EMAIL_USER=apikey
+   EMAIL_PASS=your-sendgrid-api-key
+
+   Mailgun:
+   EMAIL_HOST=smtp.mailgun.org
+   EMAIL_PORT=587
+   EMAIL_USER=postmaster@yourdomain.com
+   EMAIL_PASS=your-mailgun-password
+
+========================================
+7. FILE PERMISSIONS & SECURITY
+========================================
+
+7.1 Set Correct Permissions
+
+   Via SSH:
+   chmod 755 uploads/
+   chmod 755 uploads/resumes/
+   chmod 755 uploads/documents/
+   chmod 755 uploads/applications/
+   chmod 600 backend/.env
+   chmod 600 backend/firebase-service-account.json
+
+7.2 Security Checklist
+
+   □ .env files are NOT in public folders
+   □ .gitignore includes .env files
+   □ HTTPS/SSL enabled on domain
+   □ MongoDB network access configured
+   □ Strong JWT secrets generated
+   □ File upload size limits configured
+   □ Rate limiting enabled
+   □ CORS properly configured
+
+========================================
+8. TESTING & VERIFICATION
+========================================
+
+8.1 Backend Tests
+
+   Test 1: Health Check
+   curl https://yourdomain.com/api/health
+   Expected: {"status": "ok"}
+
+   Test 2: Database Connection
+   Check backend logs for "MongoDB connected successfully"
+
+   Test 3: Email Service
+   Register a test account and verify email delivery
+
+8.2 Frontend Tests
+
+   Test 1: Homepage loads
+   Visit: https://yourdomain.com
+
+   Test 2: API Connection
+   Open browser console, check for API connection errors
+
+   Test 3: User Flow
+   - Register new account
+   - Verify email
+   - Login
+   - Browse jobs
+   - Apply to job
+
+8.3 Monitor Logs
+
+   Backend logs:
+   - Hostinger: Check application logs in hPanel
+   - PM2: pm2 logs finautojobs-backend
+   - File: Check backend/logs/ folder
+
+========================================
+9. TROUBLESHOOTING
+========================================
+
+Problem: "Cannot connect to MongoDB"
+Solution:
+- Verify connection string in .env
+- Check MongoDB Atlas network access allows 0.0.0.0/0
+- Test connection: use MongoDB Compass with same connection string
+
+Problem: "CORS error when calling API"
+Solution:
+- Update backend/.env: CORS_ORIGIN=https://yourdomain.com
+- Restart backend server
+- Clear browser cache
+
+Problem: "502 Bad Gateway"
+Solution:
+- Backend server not running - check process: pm2 status
+- Port conflict - ensure port 5000 available
+- Check backend logs for errors
+
+Problem: "Email not sending"
+Solution:
+- Verify email credentials in .env
+- For Gmail: ensure app password (not regular password)
+- Check EMAIL_PORT=587 and EMAIL_SECURE=false
+- Test with simple mail test script
+
+Problem: "File upload fails"
+Solution:
+- Check uploads/ folder permissions: chmod 755
+- Verify MAX_FILE_SIZE in .env
+- Check disk space on server
+- Review nginx/apache upload limits
+
+Problem: "Frontend shows blank page"
+Solution:
+- Check browser console for errors
+- Verify VITE_API_URL in frontend/.env.production
+- Rebuild frontend: npm run build
+- Check .htaccess for React Router rewrites
+
+Problem: "Database connection slow"
+Solution:
+- Choose MongoDB cluster region closer to Hostinger datacenter
+- Enable connection pooling in backend
+- Check MongoDB Atlas performance metrics
+
+========================================
+10. MAINTENANCE & MONITORING
+========================================
+
+10.1 Regular Backups
+   - MongoDB Atlas: Enable automated backups
+   - Files: Backup uploads/ folder weekly
+   - Code: Keep Git repository updated
+
+10.2 Updates
+   - Update dependencies monthly: npm update
+   - Check for security vulnerabilities: npm audit
+   - Update Node.js when new LTS version available
+
+10.3 Monitoring
+   - Setup uptime monitoring: UptimeRobot, Pingdom
+   - Monitor disk space for uploads/
+   - Check MongoDB Atlas metrics
+   - Review error logs weekly
+
+========================================
+11. SUPPORT & RESOURCES
+========================================
+
+MongoDB Atlas: https://docs.atlas.mongodb.com
+Hostinger Support: https://support.hostinger.com
+Node.js Docs: https://nodejs.org/docs
+Express.js: https://expressjs.com
+React: https://react.dev
+
+For technical issues with FinAutoJobs:
+- Check application logs
+- Review MongoDB Atlas logs
+- Test with reduced configuration
+
+========================================
+
+Deployment checklist completed!
+Good luck with your deployment! 🚀

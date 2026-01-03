@@ -1,57 +1,54 @@
 {
   "name": "finautojobs",
   "version": "1.0.0",
-  "description": "FinAutoJobs - Job Portal Application",
-  "type": "module",
-  "scripts": {
-    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
-    "backend": "cd backend && npm start",
-    "frontend": "cd frontend && npm run dev",
-    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
-    "build": "npm run install-frontend && cd frontend && npm run build",
-    "install-frontend": "cd frontend && npm ci",
-    "build:production": "npm run install-frontend && cd frontend && npm run build -- --mode production",
-    "build:staging": "npm run install-frontend && cd frontend && npm run build -- --mode staging",
-    "start": "npm run dev",
-    "start:production": "cd backend && NODE_ENV=production npm start",
-    "test-network": "./test-network-access.sh",
-    "network-info": "echo \"🌐 Network Access URLs:\" && LOCAL_IP=$(ip route get 8.8.8.8 2>/dev/null | awk '{print $7; exit}' || ifconfig 2>/dev/null | grep -Eo 'inet (addr:)?([0-9]*\\.){3}[0-9]*' | grep -Eo '([0-9]*\\.){3}[0-9]*' | grep -v '127.0.0.1' | head -1 || echo 'localhost') && echo \"Frontend: http://$LOCAL_IP:3000\" && echo \"Backend: http://$LOCAL_IP:5000\"",
-    "generate-secrets": "node generate-secrets.js",
-    "setup-env": "node setup-env.js",
-    "setup": "npm run setup-env && npm run install-all"
-  },
+  "description": "FinAutoJobs - Full Stack Job Portal Application",
+  "main": "backend/server.js",
+  "private": true,
   "engines": {
-    "node": ">=20.0.0",
-    "npm": ">=10.0.0"
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
   },
-  "dependencies": {
-    "@google/gemini-cli": "^0.22.2",
-    "bcryptjs": "^2.4.3",
-    "compression": "^1.8.1",
-    "connect-mongo": "^5.1.0",
-    "cors": "^2.8.5",
-    "dotenv": "^16.6.1",
-    "express": "^4.21.2",
-    "express-rate-limit": "^7.1.5",
-    "express-session": "^1.18.2",
-    "express-validator": "^7.0.1",
-    "helmet": "^7.2.0",
-    "joi": "^17.13.3",
-    "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.18.2",
-    "morgan": "^1.10.0",
-    "multer": "^2.0.2",
-    "node-fetch": "^3.3.2",
-    "nodemailer": "^7.0.6",
-    "nodemon": "^3.1.11",
-    "passport": "^0.7.0",
-    "passport-google-oauth20": "^2.0.0",
-    "passport-jwt": "^4.0.1",
-    "passport-local": "^1.0.0",
-    "puppeteer": "^24.22.3",
-    "socket.io": "^4.8.1"
+  "scripts": {
+    "install": "npm install --prefix backend && npm install --prefix frontend",
+    "install:backend": "cd backend && npm install",
+    "install:frontend": "cd frontend && npm install",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "npm run build:frontend",
+    "build:frontend": "cd frontend && npm install && npm run build",
+    "start": "npm run start:backend",
+    "start:backend": "cd backend && npm start",
+    "start:production": "cd backend && NODE_ENV=production npm start",
+    "deploy": "npm run build:frontend && npm run start:production",
+    "postinstall": "echo 'Dependencies installed for both frontend and backend'",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd frontend && npm test"
   },
-  "devDependencies": {
-    "concurrently": "^8.2.2"
-  }
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "keywords": [
+    "job-portal",
+    "mern-stack",
+    "express",
+    "react",
+    "vite",
+    "mongodb",
+    "careers",
+    "fintech",
+    "recruitment"
+  ],
+  "author": "FinAutoJobs Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/finautojobs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/finautojobs/issues"
+  },
+  "homepage": "https://github.com/yourusername/finautojobs#readme"
 }
