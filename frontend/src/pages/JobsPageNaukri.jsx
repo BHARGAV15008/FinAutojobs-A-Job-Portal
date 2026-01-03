@@ -257,9 +257,9 @@ const JobsPageNaukri = () => {
   // Apply company filter from URL on mount
   useEffect(() => {
     if (companyQuery && !filters.company.includes(companyQuery)) {
-      setFilters(prev => ({
+      setFilters((prev) => ({
         ...prev,
-        company: [companyQuery]
+        company: [companyQuery],
       }));
     }
   }, [companyQuery]);
@@ -1565,7 +1565,11 @@ const JobsPageNaukri = () => {
               letterSpacing: "-0.02em",
             }}
           >
-            {searchQuery ? `${searchQuery} Jobs` : companyQuery ? `${companyQuery} Jobs` : "All Jobs"}
+            {searchQuery
+              ? `${searchQuery} Jobs`
+              : companyQuery
+              ? `${companyQuery} Jobs`
+              : "All Jobs"}
             {locationQuery && ` in ${locationQuery}`}
           </Typography>
           <Typography

@@ -917,229 +917,229 @@ const CompaniesPageNaukri = () => {
       key={company.id}
     >
       <CompanyCard
-        onClick={() => window.location.href = `/companies/${company.id}`}
+        onClick={() => (window.location.href = `/companies/${company.id}`)}
       >
-          {company.isHiring && (
+        {company.isHiring && (
+          <Chip
+            icon={
+              <LocalFireDepartment
+                sx={{ fontSize: 14, color: "#fff !important" }}
+              />
+            }
+            label="Actively Hiring"
+            size="small"
+            sx={{
+              position: "absolute",
+              top: -10,
+              right: 16,
+              bgcolor: "#22c55e",
+              color: "#fff",
+              fontWeight: 600,
+              fontSize: "11px",
+            }}
+          />
+        )}
+        <CardContent sx={{ p: 3 }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+              mb: 2,
+            }}
+          >
+            <Avatar
+              className="company-logo"
+              sx={{
+                width: { xs: 56, sm: 64 },
+                height: { xs: 56, sm: 64 },
+                bgcolor: company.color,
+                fontSize: { xs: "20px", sm: "24px" },
+                fontWeight: 700,
+                transition: "transform 0.3s",
+                boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
+              }}
+            >
+              {company.logo}
+            </Avatar>
+            <IconButton
+              onClick={(e) => toggleSaveCompany(e, company.id)}
+              size="small"
+            >
+              {savedCompanies.includes(company.id) ? (
+                <Bookmark sx={{ color: colors.primary }} />
+              ) : (
+                <BookmarkBorder sx={{ color: "#9ca3af" }} />
+              )}
+            </IconButton>
+          </Box>
+
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 700,
+              mb: 0.5,
+              fontSize: { xs: "1rem", sm: "1.25rem" },
+            }}
+          >
+            {company.name}
+          </Typography>
+
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              mb: 1,
+              flexWrap: "wrap",
+            }}
+          >
+            <Rating
+              value={company.rating}
+              precision={0.1}
+              size="small"
+              readOnly
+              sx={{
+                "& .MuiRating-icon": {
+                  fontSize: { xs: "16px", sm: "18px" },
+                },
+              }}
+            />
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ fontSize: { xs: "12px", sm: "14px" } }}
+            >
+              {parseFloat(company.rating || 0).toFixed(1)} (
+              {company.reviews || 0} reviews)
+            </Typography>
+          </Box>
+
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 0.5,
+              mb: 1,
+              color: "#6b7280",
+            }}
+          >
+            <Business sx={{ fontSize: { xs: 14, sm: 16 } }} />
+            <Typography
+              variant="body2"
+              sx={{ fontSize: { xs: "12px", sm: "14px" } }}
+            >
+              {company.industry}
+            </Typography>
+          </Box>
+
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 0.5,
+              mb: 2,
+              color: "#6b7280",
+            }}
+          >
+            <LocationOn sx={{ fontSize: 16 }} />
+            <Typography variant="body2">{company.location}</Typography>
+            <Typography variant="body2" sx={{ mx: 0.5 }}>
+              •
+            </Typography>
+            <People sx={{ fontSize: 16 }} />
+            <Typography variant="body2">{company.size}</Typography>
+          </Box>
+
+          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2 }}>
             <Chip
-              icon={
-                <LocalFireDepartment
-                  sx={{ fontSize: 14, color: "#fff !important" }}
-                />
-              }
-              label="Actively Hiring"
+              label={company.companyType || "Company"}
               size="small"
               sx={{
-                position: "absolute",
-                top: -10,
-                right: 16,
-                bgcolor: "#22c55e",
-                color: "#fff",
+                bgcolor: "#ede9fe",
+                color: colors.primary,
                 fontWeight: 600,
                 fontSize: "11px",
               }}
             />
-          )}
-          <CardContent sx={{ p: 3 }}>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "flex-start",
-                mb: 2,
-              }}
-            >
-              <Avatar
-                className="company-logo"
-                sx={{
-                  width: { xs: 56, sm: 64 },
-                  height: { xs: 56, sm: 64 },
-                  bgcolor: company.color,
-                  fontSize: { xs: "20px", sm: "24px" },
-                  fontWeight: 700,
-                  transition: "transform 0.3s",
-                  boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
-                }}
-              >
-                {company.logo}
-              </Avatar>
-              <IconButton
-                onClick={(e) => toggleSaveCompany(e, company.id)}
-                size="small"
-              >
-                {savedCompanies.includes(company.id) ? (
-                  <Bookmark sx={{ color: colors.primary }} />
-                ) : (
-                  <BookmarkBorder sx={{ color: "#9ca3af" }} />
-                )}
-              </IconButton>
-            </Box>
-
-            <Typography
-              variant="h6"
-              sx={{
-                fontWeight: 700,
-                mb: 0.5,
-                fontSize: { xs: "1rem", sm: "1.25rem" },
-              }}
-            >
-              {company.name}
-            </Typography>
-
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-                mb: 1,
-                flexWrap: "wrap",
-              }}
-            >
-              <Rating
-                value={company.rating}
-                precision={0.1}
-                size="small"
-                readOnly
-                sx={{
-                  "& .MuiRating-icon": {
-                    fontSize: { xs: "16px", sm: "18px" },
-                  },
-                }}
-              />
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ fontSize: { xs: "12px", sm: "14px" } }}
-              >
-                {parseFloat(company.rating || 0).toFixed(1)} (
-                {company.reviews || 0} reviews)
-              </Typography>
-            </Box>
-
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 0.5,
-                mb: 1,
-                color: "#6b7280",
-              }}
-            >
-              <Business sx={{ fontSize: { xs: 14, sm: 16 } }} />
-              <Typography
-                variant="body2"
-                sx={{ fontSize: { xs: "12px", sm: "14px" } }}
-              >
-                {company.industry}
-              </Typography>
-            </Box>
-
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 0.5,
-                mb: 2,
-                color: "#6b7280",
-              }}
-            >
-              <LocationOn sx={{ fontSize: 16 }} />
-              <Typography variant="body2">{company.location}</Typography>
-              <Typography variant="body2" sx={{ mx: 0.5 }}>
-                •
-              </Typography>
-              <People sx={{ fontSize: 16 }} />
-              <Typography variant="body2">{company.size}</Typography>
-            </Box>
-
-            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2 }}>
+            {company.companyType === "Unicorn" && (
               <Chip
-                label={company.companyType || "Company"}
+                icon={
+                  <EmojiEvents
+                    sx={{ fontSize: 14, color: "#f59e0b !important" }}
+                  />
+                }
+                label="Unicorn"
                 size="small"
                 sx={{
-                  bgcolor: "#ede9fe",
-                  color: colors.primary,
+                  bgcolor: "#fef3c7",
+                  color: "#d97706",
                   fontWeight: 600,
                   fontSize: "11px",
                 }}
               />
-              {company.companyType === "Unicorn" && (
-                <Chip
-                  icon={
-                    <EmojiEvents
-                      sx={{ fontSize: 14, color: "#f59e0b !important" }}
-                    />
-                  }
-                  label="Unicorn"
-                  size="small"
-                  sx={{
-                    bgcolor: "#fef3c7",
-                    color: "#d97706",
-                    fontWeight: 600,
-                    fontSize: "11px",
-                  }}
-                />
-              )}
-              {company.isVerified && (
-                <Chip
-                  icon={
-                    <Verified
-                      sx={{ fontSize: 14, color: "#10b981 !important" }}
-                    />
-                  }
-                  label="Verified"
-                  size="small"
-                  sx={{
-                    bgcolor: "#d1fae5",
-                    color: "#059669",
-                    fontWeight: 600,
-                    fontSize: "11px",
-                  }}
-                />
-              )}
+            )}
+            {company.isVerified && (
+              <Chip
+                icon={
+                  <Verified
+                    sx={{ fontSize: 14, color: "#10b981 !important" }}
+                  />
+                }
+                label="Verified"
+                size="small"
+                sx={{
+                  bgcolor: "#d1fae5",
+                  color: "#059669",
+                  fontWeight: 600,
+                  fontSize: "11px",
+                }}
+              />
+            )}
+          </Box>
+
+          <Divider sx={{ my: 2 }} />
+
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Box>
+              <Typography
+                variant="h6"
+                sx={{ fontWeight: 700, color: colors.primary }}
+              >
+                {company.openings}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Open Positions
+              </Typography>
             </Box>
-
-            <Divider sx={{ my: 2 }} />
-
-            <Box
+            <Button
+              component={Link}
+              href={`/jobs?company=${encodeURIComponent(company.name)}`}
+              variant="contained"
+              size="small"
+              endIcon={<ArrowForward />}
+              onClick={(e) => e.stopPropagation()}
               sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
+                textTransform: "none",
+                fontWeight: 600,
+                borderRadius: "6px",
+                background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
+                "&:hover": {
+                  background: `linear-gradient(135deg, ${colors.primaryDark} 0%, ${colors.secondary} 100%)`,
+                },
               }}
             >
-              <Box>
-                <Typography
-                  variant="h6"
-                  sx={{ fontWeight: 700, color: colors.primary }}
-                >
-                  {company.openings}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Open Positions
-                </Typography>
-              </Box>
-              <Button
-                component={Link}
-                href={`/jobs?company=${encodeURIComponent(company.name)}`}
-                variant="contained"
-                size="small"
-                endIcon={<ArrowForward />}
-                onClick={(e) => e.stopPropagation()}
-                sx={{
-                  textTransform: "none",
-                  fontWeight: 600,
-                  borderRadius: "6px",
-                  background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
-                  "&:hover": {
-                    background: `linear-gradient(135deg, ${colors.primaryDark} 0%, ${colors.secondary} 100%)`,
-                  },
-                }}
-              >
-                View Jobs
-              </Button>
-            </Box>
-          </CardContent>
-        </CompanyCard>
+              View Jobs
+            </Button>
+          </Box>
+        </CardContent>
+      </CompanyCard>
     </Grid>
   );
 
