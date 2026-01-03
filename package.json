@@ -9,27 +9,45 @@
     "npm": ">=9.0.0"
   },
   "scripts": {
+    "preinstall": "echo '📦 Installing dependencies for FinAutoJobs monorepo...'",
     "install": "npm install --prefix backend && npm install --prefix frontend",
+    "install:all": "npm run install:backend && npm run install:frontend",
     "install:backend": "cd backend && npm install",
     "install:frontend": "cd frontend && npm install",
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "postinstall": "echo '✅ Dependencies installed successfully for both frontend and backend!'",
+    "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"blue,green\" \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
-    "build": "npm run build:frontend",
+    "build": "npm run build:frontend && echo '✅ Build complete!'",
     "build:frontend": "cd frontend && npm install && npm run build",
-    "start": "npm run start:backend",
+    "build:backend": "echo '⚠️  Backend does not require build (Node.js runtime)'",
+    "start": "npm run start:production",
     "start:backend": "cd backend && npm start",
+    "start:frontend": "echo '⚠️  Frontend is static - serve frontend/dist with backend'",
     "start:production": "cd backend && NODE_ENV=production npm start",
-    "deploy": "npm run build:frontend && npm run start:production",
-    "postinstall": "echo 'Dependencies installed for both frontend and backend'",
+    "deploy": "echo '🚀 Deploying FinAutoJobs...' && npm run install:all && npm run build && npm run start:production",
+    "deploy:build": "npm run install:all && npm run build",
+    "deploy:start": "npm run start:production",
+    "clean": "rm -rf backend/node_modules frontend/node_modules frontend/dist node_modules",
+    "clean:backend": "rm -rf backend/node_modules",
+    "clean:frontend": "rm -rf frontend/node_modules frontend/dist",
     "test": "npm run test:backend && npm run test:frontend",
     "test:backend": "cd backend && npm test",
-    "test:frontend": "cd frontend && npm test"
+    "test:frontend": "cd frontend && npm test",
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "lint:backend": "cd backend && npm run lint || echo 'Backend lint not configured'",
+    "lint:frontend": "cd frontend && npm run lint || echo 'Frontend lint not configured'",
+    "logs": "tail -f backend/logs/*.log",
+    "health": "curl http://localhost:5000/api/health || echo 'Backend not running'"
   },
   "workspaces": [
     "backend",
     "frontend"
   ],
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "devDependencies": {},
   "keywords": [
     "job-portal",
     "mern-stack",
@@ -45,10 +63,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/finautojobs.git"
+    "url": "https://github.com/BHARGAV15008/FinAutojobs-A-Job-Portal.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/finautojobs/issues"
+    "url": "https://github.com/BHARGAV15008/FinAutojobs-A-Job-Portal/issues"
   },
-  "homepage": "https://github.com/yourusername/finautojobs#readme"
+  "homepage": "https://github.com/BHARGAV15008/FinAutojobs-A-Job-Portal#readme"
 }
