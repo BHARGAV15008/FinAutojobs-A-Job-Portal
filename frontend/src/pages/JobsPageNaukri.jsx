@@ -252,6 +252,17 @@ const JobsPageNaukri = () => {
   const urlParams = new URLSearchParams(window.location.search);
   const searchQuery = urlParams.get("search") || "";
   const locationQuery = urlParams.get("location") || "";
+  const companyQuery = urlParams.get("company") || "";
+
+  // Apply company filter from URL on mount
+  useEffect(() => {
+    if (companyQuery && !filters.company.includes(companyQuery)) {
+      setFilters(prev => ({
+        ...prev,
+        company: [companyQuery]
+      }));
+    }
+  }, [companyQuery]);
 
   useEffect(() => {
     fetchJobs();
@@ -344,6 +355,10 @@ const JobsPageNaukri = () => {
 
       if (filters.industry.length > 0) {
         params.append("industry", filters.industry.join(","));
+      }
+
+      if (filters.company.length > 0) {
+        params.append("company", filters.company.join(","));
       }
 
       if (filters.salary[0] > 0)
@@ -1130,9 +1145,24 @@ const JobsPageNaukri = () => {
             mb: expandedSections.topCompanies ? 2 : 0,
           }}
         >
-          <Typography variant="subtitle2" fontWeight={600}>
-            Top Companies
-          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography variant="subtitle2" fontWeight={600}>
+              Company
+            </Typography>
+            {filters.company.length > 0 && (
+              <Chip
+                label={filters.company.length}
+                size="small"
+                sx={{
+                  bgcolor: colors.primary,
+                  color: "#fff",
+                  height: 20,
+                  fontSize: "11px",
+                  fontWeight: 600,
+                }}
+              />
+            )}
+          </Box>
           {expandedSections.topCompanies ? (
             <KeyboardArrowUp sx={{ color: "#6b7280" }} />
           ) : (
@@ -1147,8 +1177,8 @@ const JobsPageNaukri = () => {
                 control={
                   <Checkbox
                     size="small"
-                    checked={filters.topCompanies.includes(company)}
-                    onChange={() => handleFilterChange("topCompanies", company)}
+                    checked={filters.company.includes(company)}
+                    onChange={() => handleFilterChange("company", company)}
                     sx={{
                       color: "#d1d5db",
                       "&.Mui-checked": { color: colors.primary },
@@ -1535,7 +1565,7 @@ const JobsPageNaukri = () => {
               letterSpacing: "-0.02em",
             }}
           >
-            {searchQuery ? `${searchQuery} Jobs` : "All Jobs"}
+            {searchQuery ? `${searchQuery} Jobs` : companyQuery ? `${companyQuery} Jobs` : "All Jobs"}
             {locationQuery && ` in ${locationQuery}`}
           </Typography>
           <Typography
@@ -1548,6 +1578,7 @@ const JobsPageNaukri = () => {
             }}
           >
             {displayJobs.length.toLocaleString()}+ jobs found
+            {companyQuery && ` at ${companyQuery}`}
           </Typography>
 
           {/* Quick Filters */}

@@ -916,8 +916,9 @@ const CompaniesPageNaukri = () => {
       lg={viewMode === "grid" ? 4 : 12}
       key={company.id}
     >
-      <Link href={`/companies/${company.id}`}>
-        <CompanyCard>
+      <CompanyCard
+        onClick={() => window.location.href = `/companies/${company.id}`}
+      >
           {company.isHiring && (
             <Chip
               icon={
@@ -1118,9 +1119,12 @@ const CompaniesPageNaukri = () => {
                 </Typography>
               </Box>
               <Button
+                component={Link}
+                href={`/jobs?company=${encodeURIComponent(company.name)}`}
                 variant="contained"
                 size="small"
                 endIcon={<ArrowForward />}
+                onClick={(e) => e.stopPropagation()}
                 sx={{
                   textTransform: "none",
                   fontWeight: 600,
@@ -1136,7 +1140,6 @@ const CompaniesPageNaukri = () => {
             </Box>
           </CardContent>
         </CompanyCard>
-      </Link>
     </Grid>
   );
 
