@@ -24,6 +24,10 @@ import {
   Tooltip,
   Skeleton,
   Drawer,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   useTheme,
   useMediaQuery,
   Divider,
@@ -86,11 +90,17 @@ const pulse = keyframes`
 `;
 
 // Styled Components
-const PageHeader = styled(Box)(() => ({
+const PageHeader = styled(Box)(({ theme }) => ({
   background: `linear-gradient(135deg, ${colors.dark} 0%, ${colors.primary} 50%, ${colors.secondary} 100%)`,
-  padding: "48px 0 80px",
+  padding: "32px 0 48px",
   position: "relative",
   overflow: "hidden",
+  [theme.breakpoints.down("md")]: {
+    padding: "24px 0 40px",
+  },
+  [theme.breakpoints.down("sm")]: {
+    padding: "20px 0 36px",
+  },
   "&::before": {
     content: '""',
     position: "absolute",
@@ -114,49 +124,70 @@ const FilterCard = styled(Card)(() => ({
   "&::-webkit-scrollbar-thumb": { backgroundColor: "#e5e7eb", borderRadius: 3 },
 }));
 
-const FilterSection = styled(Box)(() => ({
+const FilterSection = styled(Box)(({ theme }) => ({
   padding: "16px 20px",
   borderBottom: "1px solid #f3f4f6",
+  [theme.breakpoints.down("sm")]: {
+    padding: "14px 16px",
+  },
 }));
 
-const JobCard = styled(Card)(({ viewMode }) => ({
+const JobCard = styled(Card)(({ $viewMode, theme }) => ({
   borderRadius: "6px",
   boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
   transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
   border: "1px solid transparent",
   cursor: "pointer",
   animation: `${fadeIn} 0.5s ease`,
-  display: viewMode === "grid" ? "block" : "flex",
+  display: $viewMode === "grid" ? "block" : "flex",
+  [theme.breakpoints.down("sm")]: {
+    boxShadow: "0 1px 6px rgba(0,0,0,0.08)",
+  },
   "&:hover": {
     transform: "translateY(-4px)",
     boxShadow: "0 12px 40px rgba(99, 102, 241, 0.15)",
     borderColor: colors.primary,
     "& .company-logo": { transform: "scale(1.1)" },
   },
+  "&:active": {
+    [theme.breakpoints.down("sm")]: {
+      transform: "scale(0.98)",
+    },
+  },
 }));
 
-const QuickFilterChip = styled(Chip)(({ selected }) => ({
+const QuickFilterChip = styled(Chip)(({ selected, theme }) => ({
   fontWeight: 500,
-  borderRadius: "6px",
+  borderRadius: "8px",
   transition: "all 0.2s",
   cursor: "pointer",
   backgroundColor: selected ? colors.primary : "#f3f4f6",
   color: selected ? "#fff" : "#374151",
   border: selected ? "none" : "1px solid transparent",
+  whiteSpace: "nowrap",
+  [theme.breakpoints.down("sm")]: {
+    fontSize: "12px",
+    height: "32px",
+  },
   "&:hover": {
     backgroundColor: selected ? colors.primaryDark : "#e5e7eb",
     transform: "translateY(-2px)",
+  },
+  "&:active": {
+    [theme.breakpoints.down("sm")]: {
+      transform: "scale(0.95)",
+    },
   },
 }));
 
 const ActiveFilterBadge = styled(Badge)(() => ({
   "& .MuiBadge-badge": {
-    backgroundColor: colors.danger,
+    backgroundColor: colors.primary,
     color: "#fff",
-    fontWeight: 700,
+    fontWeight: 600,
     fontSize: 10,
-    minWidth: 18,
-    height: 18,
+    minWidth: 16,
+    height: 16,
   },
 }));
 
@@ -1143,7 +1174,7 @@ const JobsPageNaukri = () => {
       key={job._id || index}
     >
       <JobCard
-        viewMode={viewMode}
+        $viewMode={viewMode}
         onClick={() => {
           setSelectedJob(job);
           setJobDetailOpen(true);
@@ -1493,9 +1524,14 @@ const JobsPageNaukri = () => {
             sx={{
               fontWeight: 800,
               color: "#fff",
-              mb: 1,
+              mb: 0.5,
               fontFamily: fonts.heading,
-              fontSize: { xs: "1.75rem", md: "2.5rem" },
+              fontSize: {
+                xs: "1.25rem",
+                sm: "1.5rem",
+                md: "1.75rem",
+                lg: "2rem",
+              },
               letterSpacing: "-0.02em",
             }}
           >
@@ -1506,16 +1542,26 @@ const JobsPageNaukri = () => {
             variant="body1"
             sx={{
               color: "rgba(255,255,255,0.9)",
-              mb: 3,
+              mb: { xs: 1.5, md: 2 },
               fontFamily: fonts.body,
-              fontSize: "1.1rem",
+              fontSize: { xs: "0.875rem", sm: "0.95rem", md: "1rem" },
             }}
           >
             {displayJobs.length.toLocaleString()}+ jobs found
           </Typography>
 
           {/* Quick Filters */}
-          <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
+          <Box
+            sx={{
+              display: "flex",
+              gap: 1.5,
+              flexWrap: { xs: "nowrap", md: "wrap" },
+              overflowX: { xs: "auto", md: "visible" },
+              pb: { xs: 1, md: 0 },
+              scrollbarWidth: "none",
+              "&::-webkit-scrollbar": { display: "none" },
+            }}
+          >
             {quickFilters.map((filter) => {
               // Determine category and correct value based on filter type
               let category = "jobType";
@@ -1552,7 +1598,11 @@ const JobsPageNaukri = () => {
       {/* Main Content */}
       <Container
         maxWidth="lg"
-        sx={{ py: 4, mt: -6, px: { xs: 2, sm: 4, md: 6 } }}
+        sx={{
+          py: { xs: 2, sm: 3, md: 4 },
+          mt: { xs: -4, sm: -5, md: -6 },
+          px: { xs: 1.5, sm: 2, md: 4, lg: 6 },
+        }}
       >
         <Grid container spacing={3}>
           {/* Filters - Desktop */}
@@ -1570,37 +1620,78 @@ const JobsPageNaukri = () => {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                mb: 3,
+                mb: { xs: 2, md: 3 },
                 flexWrap: "wrap",
-                gap: 2,
+                gap: { xs: 1.5, md: 2 },
               }}
             >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: { xs: 1, md: 2 },
+                }}
+              >
                 {isMobile && (
-                  <Button
-                    variant="outlined"
-                    startIcon={
-                      <ActiveFilterBadge badgeContent={activeFiltersCount}>
-                        <FilterList />
-                      </ActiveFilterBadge>
-                    }
-                    onClick={() => setMobileFiltersOpen(true)}
-                    sx={{
-                      textTransform: "none",
-                      fontWeight: 600,
-                      borderRadius: "6px",
-                    }}
-                  >
-                    Filters
-                  </Button>
+                  <Box sx={{ position: "relative" }}>
+                    <Button
+                      variant="outlined"
+                      startIcon={<FilterList />}
+                      onClick={() => setMobileFiltersOpen(true)}
+                      sx={{
+                        textTransform: "none",
+                        fontWeight: 600,
+                        borderRadius: "8px",
+                        fontSize: { xs: "14px", sm: "15px" },
+                        px: { xs: 2, sm: 2.5 },
+                        py: { xs: 1, sm: 1.25 },
+                        borderColor: "#d1d5db",
+                        color: "#374151",
+                        bgcolor: "white",
+                        "&:hover": {
+                          borderColor: colors.primary,
+                          bgcolor: "rgba(99, 102, 241, 0.04)",
+                        },
+                      }}
+                    >
+                      Filters
+                    </Button>
+                    {activeFiltersCount > 0 && (
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          top: -8,
+                          right: -8,
+                          backgroundColor: colors.primary,
+                          color: "#fff",
+                          borderRadius: "50%",
+                          width: 20,
+                          height: 20,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "11px",
+                          fontWeight: 700,
+                          border: "2px solid white",
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                        }}
+                      >
+                        {activeFiltersCount}
+                      </Box>
+                    )}
+                  </Box>
                 )}
-                <FormControl size="small" sx={{ minWidth: 140 }}>
+                <FormControl
+                  size="small"
+                  sx={{ minWidth: { xs: 120, sm: 140 } }}
+                >
                   <Select
                     defaultValue="relevance"
                     sx={{
-                      borderRadius: "6px",
-                      fontSize: "14px",
+                      borderRadius: "8px",
+                      fontSize: { xs: "13px", sm: "14px" },
                       bgcolor: "#fff",
+                      height: { xs: "40px", sm: "auto" },
                     }}
                   >
                     <MenuItem value="relevance">Relevance</MenuItem>
@@ -1616,8 +1707,9 @@ const JobsPageNaukri = () => {
                 size="small"
                 sx={{
                   bgcolor: "#fff",
-                  borderRadius: "6px",
+                  borderRadius: "8px",
                   border: "1px solid #e5e7eb",
+                  display: { xs: "none", sm: "flex" },
                   "& .MuiToggleButton-root": {
                     border: "none",
                     borderRadius: "6px",
@@ -1695,17 +1787,26 @@ const JobsPageNaukri = () => {
                 </Grid>
 
                 {/* Pagination */}
-                <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    mt: { xs: 3, md: 5 },
+                  }}
+                >
                   <Pagination
                     count={totalPages}
                     page={page}
                     onChange={(e, value) => setPage(value)}
                     color="primary"
-                    size="large"
+                    size={isMobile ? "medium" : "large"}
                     sx={{
                       "& .MuiPaginationItem-root": {
                         fontWeight: 600,
-                        borderRadius: "6px",
+                        borderRadius: "8px",
+                        fontSize: { xs: "13px", sm: "14px" },
+                        minWidth: { xs: "32px", sm: "36px" },
+                        height: { xs: "32px", sm: "36px" },
                         "&.Mui-selected": {
                           background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
                         },
@@ -1718,6 +1819,145 @@ const JobsPageNaukri = () => {
           </Grid>
         </Grid>
       </Container>
+
+      {/* Mobile Filters Drawer - Bottom Sheet */}
+      <Drawer
+        anchor="bottom"
+        open={mobileFiltersOpen}
+        onClose={() => setMobileFiltersOpen(false)}
+        PaperProps={{
+          sx: {
+            maxHeight: "85vh",
+            borderTopLeftRadius: 16,
+            borderTopRightRadius: 16,
+            bgcolor: "#f9fafb",
+          },
+        }}
+      >
+        <Box
+          sx={{
+            bgcolor: "white",
+            borderTopLeftRadius: 16,
+            borderTopRightRadius: 16,
+          }}
+        >
+          {/* Handle bar */}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              pt: 1.5,
+              pb: 1,
+            }}
+          >
+            <Box
+              sx={{
+                width: 40,
+                height: 4,
+                bgcolor: "#d1d5db",
+                borderRadius: 2,
+              }}
+            />
+          </Box>
+
+          {/* Header */}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              px: 3,
+              pb: 2,
+            }}
+          >
+            <Typography
+              variant="h6"
+              sx={{ fontWeight: 700, fontSize: "18px", color: "#111827" }}
+            >
+              Filter jobs
+            </Typography>
+            {activeFiltersCount > 0 && (
+              <Button
+                onClick={clearAllFilters}
+                sx={{
+                  textTransform: "none",
+                  color: colors.primary,
+                  fontWeight: 600,
+                  fontSize: "14px",
+                  p: 0,
+                  minWidth: "auto",
+                }}
+              >
+                Clear all
+              </Button>
+            )}
+          </Box>
+        </Box>
+
+        {/* Filter Content */}
+        <Box
+          sx={{
+            overflowY: "auto",
+            maxHeight: "calc(85vh - 140px)",
+            bgcolor: "white",
+          }}
+        >
+          {renderFilters()}
+        </Box>
+
+        {/* Bottom Actions */}
+        <Box
+          sx={{
+            p: 2.5,
+            bgcolor: "white",
+            borderTop: "1px solid #e5e7eb",
+            display: "flex",
+            gap: 2,
+          }}
+        >
+          <Button
+            variant="outlined"
+            fullWidth
+            onClick={() => setMobileFiltersOpen(false)}
+            sx={{
+              height: 48,
+              textTransform: "none",
+              fontWeight: 600,
+              borderRadius: "8px",
+              fontSize: "15px",
+              borderColor: "#d1d5db",
+              color: "#374151",
+              "&:hover": {
+                borderColor: "#9ca3af",
+                bgcolor: "#f9fafb",
+              },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            fullWidth
+            onClick={() => {
+              setMobileFiltersOpen(false);
+              fetchJobs();
+            }}
+            sx={{
+              height: 48,
+              textTransform: "none",
+              fontWeight: 600,
+              borderRadius: "8px",
+              fontSize: "15px",
+              bgcolor: colors.primary,
+              "&:hover": {
+                bgcolor: colors.primaryDark,
+              },
+            }}
+          >
+            Apply
+          </Button>
+        </Box>
+      </Drawer>
 
       <JobDetailsDrawer
         open={jobDetailOpen}

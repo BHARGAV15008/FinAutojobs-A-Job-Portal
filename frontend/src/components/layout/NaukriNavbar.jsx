@@ -73,7 +73,7 @@ const float = keyframes`
 
 // Styled Components
 const NavbarWrapper = styled(Box, {
-  shouldForwardProp: (prop) => !prop.startsWith('$')
+  shouldForwardProp: (prop) => !prop.startsWith("$"),
 })(({ theme, $scrolled }) => ({
   position: "sticky",
   top: 0,
@@ -108,12 +108,14 @@ const MainNav = styled(Box)(({ theme }) => ({
 }));
 
 const SearchWrapper = styled(Paper, {
-  shouldForwardProp: (prop) => !prop.startsWith('$')
+  shouldForwardProp: (prop) => !prop.startsWith("$"),
 })(({ theme, $focused }) => ({
   display: "flex",
   alignItems: "center",
   borderRadius: "6px",
-  border: $focused ? `2px solid ${colors.primary}` : `1px solid ${theme.palette.divider}`,
+  border: $focused
+    ? `2px solid ${colors.primary}`
+    : `1px solid ${theme.palette.divider}`,
   boxShadow: $focused ? `0 4px 20px ${colors.primary}33` : "none",
   transition: "all 0.3s ease",
   backgroundColor: $focused
@@ -129,8 +131,8 @@ const SearchWrapper = styled(Paper, {
 
 const SearchInput = styled(InputBase)(({ theme }) => ({
   flex: 1,
-  padding: "10px 14px",
-  fontSize: "14px",
+  padding: "8px 12px",
+  fontSize: "13px",
   color: theme.palette.text.primary,
   "& input::placeholder": {
     color: theme.palette.text.secondary,
@@ -154,13 +156,13 @@ const SearchSuggestionsBox = styled(Paper)(({ theme }) => ({
 }));
 
 const NavLink = styled(Button, {
-  shouldForwardProp: (prop) => !prop.startsWith('$')
+  shouldForwardProp: (prop) => !prop.startsWith("$"),
 })(({ theme, $active }) => ({
   textTransform: "none",
   fontWeight: $active ? 600 : 500,
-  fontSize: "14px",
+  fontSize: "13px",
   color: $active ? colors.primary : theme.palette.text.primary,
-  padding: "10px 18px",
+  padding: "8px 14px",
   borderRadius: "6px",
   position: "relative",
   transition: "all 0.2s ease",
@@ -173,7 +175,7 @@ const NavLink = styled(Button, {
     ? {
         content: '""',
         position: "absolute",
-        bottom: "-14px",
+        bottom: "-12px",
         left: "50%",
         transform: "translateX(-50%)",
         width: "80%",
@@ -473,7 +475,6 @@ const NaukriNavbar = () => {
                     />
                   )}
                 </Box>
-
               </Box>
               <ArrowForward
                 className="arrow-icon"
@@ -534,7 +535,6 @@ const NaukriNavbar = () => {
                     />
                   )}
                 </Box>
-
               </Box>
             </MenuItemStyled>
           </Link>
@@ -569,7 +569,6 @@ const NaukriNavbar = () => {
                 >
                   {item.title}
                 </Typography>
-
               </Box>
             </MenuItemStyled>
           </Link>
@@ -671,7 +670,6 @@ const NaukriNavbar = () => {
                     />
                   )}
                 </Box>
-
               </Box>
             </MenuItemStyled>
           </Link>
@@ -706,7 +704,6 @@ const NaukriNavbar = () => {
                 >
                   {item.title}
                 </Typography>
-
               </Box>
             </MenuItemStyled>
           </Link>
@@ -770,7 +767,7 @@ const NaukriNavbar = () => {
   return (
     <NavbarWrapper $scrolled={trigger}>
       {/* Top Bar */}
-      <TopBar>
+      {/* <TopBar>
         <Container maxWidth="xl">
           <Box
             sx={{
@@ -832,12 +829,12 @@ const NaukriNavbar = () => {
             </Box>
           </Box>
         </Container>
-      </TopBar>
+      </TopBar> */}
 
       {/* Main Navigation */}
       <MainNav>
         <Container maxWidth="xl">
-          <Box sx={{ display: "flex", alignItems: "center", py: 1.5, gap: 3 }}>
+          <Box sx={{ display: "flex", alignItems: "center", py: 1, gap: 2.5 }}>
             {/* Logo */}
             <Link href="/">
               <Box
@@ -851,8 +848,8 @@ const NaukriNavbar = () => {
               >
                 <Box
                   sx={{
-                    width: 44,
-                    height: 44,
+                    width: 38,
+                    height: 38,
                     background:
                       "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
                     borderRadius: "6px",
@@ -862,7 +859,7 @@ const NaukriNavbar = () => {
                     boxShadow: "0 4px 14px rgba(99, 102, 241, 0.4)",
                   }}
                 >
-                  <Work sx={{ color: "#fff", fontSize: 26 }} />
+                  <Work sx={{ color: "#fff", fontSize: 22 }} />
                 </Box>
                 <Box>
                   <Typography
@@ -871,7 +868,7 @@ const NaukriNavbar = () => {
                       fontWeight: 800,
                       color: "text.primary",
                       lineHeight: 1.1,
-                      fontSize: "1.15rem",
+                      fontSize: "1rem",
                       background:
                         "linear-gradient(135deg, #4a3f9f 0%, #6366f1 100%)",
                       WebkitBackgroundClip: "text",
@@ -882,7 +879,7 @@ const NaukriNavbar = () => {
                   </Typography>
                   <Typography
                     variant="caption"
-                    sx={{ color: "#6366f1", fontWeight: 500, fontSize: "10px" }}
+                    sx={{ color: "#6366f1", fontWeight: 500, fontSize: "9px" }}
                   >
                     Find Your Dream Job
                   </Typography>
@@ -916,7 +913,7 @@ const NaukriNavbar = () => {
                   <Search
                     sx={{
                       color: searchFocused ? "primary.main" : "text.secondary",
-                      fontSize: 22,
+                      fontSize: 20,
                       transition: "color 0.2s",
                     }}
                   />
@@ -938,7 +935,7 @@ const NaukriNavbar = () => {
                     px: 1.5,
                   }}
                 >
-                  <LocationOn sx={{ color: "text.secondary", fontSize: 20 }} />
+                  <LocationOn sx={{ color: "text.secondary", fontSize: 18 }} />
                 </Box>
                 <SearchInput
                   placeholder="Location"
@@ -951,10 +948,12 @@ const NaukriNavbar = () => {
                   variant="contained"
                   sx={{
                     m: 0.5,
-                    px: 3,
+                    px: 2.5,
+                    py: 0.5,
                     borderRadius: "6px",
                     textTransform: "none",
                     fontWeight: 600,
+                    fontSize: "13px",
                     background:
                       "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
                     boxShadow: "0 2px 8px rgba(99, 102, 241, 0.3)",
@@ -1155,19 +1154,19 @@ const NaukriNavbar = () => {
                 </Fade>
               </Box>
 
-              {/* Salary Insights Link */}
-              <Link href="/salary-insights">
+              {/* Salary Insights Link - Hidden */}
+              {/* <Link href="/salary-insights">
                 <NavLink $active={location.startsWith("/salary-insights")}>
                   Salary Insights
                 </NavLink>
-              </Link>
+              </Link> */}
 
-              {/* Skills Assessment Link */}
-              <Link href="/skills-assessment">
+              {/* Skills Assessment Link - Hidden */}
+              {/* <Link href="/skills-assessment">
                 <NavLink $active={location.startsWith("/skills-assessment")}>
                   Skills Assessment
                 </NavLink>
-              </Link>
+              </Link> */}
             </Box>
 
             {/* Auth Buttons */}
@@ -1208,7 +1207,7 @@ const NaukriNavbar = () => {
                       alignItems: "center",
                       gap: 1,
                       cursor: "pointer",
-                      p: 1,
+                      p: 0.75,
                       borderRadius: "6px",
                       transition: "all 0.2s",
                       "&:hover": { bgcolor: "rgba(99, 102, 241, 0.08)" },
@@ -1216,11 +1215,11 @@ const NaukriNavbar = () => {
                   >
                     <Avatar
                       sx={{
-                        width: 38,
-                        height: 38,
+                        width: 34,
+                        height: 34,
                         background:
                           "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
-                        fontSize: "15px",
+                        fontSize: "14px",
                         fontWeight: 600,
                         boxShadow: "0 2px 8px rgba(99,102,241,0.3)",
                       }}
@@ -1231,18 +1230,25 @@ const NaukriNavbar = () => {
                       <Typography
                         variant="body2"
                         fontWeight={600}
-                        sx={{ color: "text.primary", lineHeight: 1.2 }}
+                        sx={{
+                          color: "text.primary",
+                          lineHeight: 1.2,
+                          fontSize: "13px",
+                        }}
                       >
                         {user.name ||
                           `${user.firstName} ${user.lastName}` ||
                           "User"}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: "text.secondary", fontSize: "11px" }}
+                      >
                         {user.role === "recruiter" ? "Recruiter" : "Job Seeker"}
                       </Typography>
                     </Box>
                     <KeyboardArrowDown
-                      sx={{ color: "text.secondary", fontSize: 18 }}
+                      sx={{ color: "text.secondary", fontSize: 16 }}
                     />
                   </Box>
 
@@ -1265,7 +1271,10 @@ const NaukriNavbar = () => {
                         py: 2,
                         borderBottom: 1,
                         borderColor: "divider",
-                        background: (theme) => theme.palette.mode === 'dark' ? theme.palette.background.default : "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
+                        background: (theme) =>
+                          theme.palette.mode === "dark"
+                            ? theme.palette.background.default
+                            : "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
                       }}
                     >
                       <Typography variant="subtitle1" fontWeight={700}>
@@ -1366,16 +1375,18 @@ const NaukriNavbar = () => {
                       display: { xs: "none", sm: "flex" },
                       textTransform: "none",
                       fontWeight: 600,
+                      fontSize: "13px",
                       borderColor: "#6366f1",
                       color: "#6366f1",
-                      px: 3,
+                      px: 2.5,
+                      py: 0.75,
                       borderRadius: "6px",
                       "&:hover": {
                         borderColor: "#4f46e5",
                         bgcolor: "rgba(99, 102, 241, 0.08)",
                       },
                     }}
-                    startIcon={<Login />}
+                    startIcon={<Login sx={{ fontSize: 18 }} />}
                   >
                     Login
                   </Button>
@@ -1386,7 +1397,9 @@ const NaukriNavbar = () => {
                     sx={{
                       textTransform: "none",
                       fontWeight: 600,
-                      px: 3,
+                      fontSize: "13px",
+                      px: 2.5,
+                      py: 0.75,
                       borderRadius: "6px",
                       background:
                         "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
@@ -1398,7 +1411,7 @@ const NaukriNavbar = () => {
                         boxShadow: "0 6px 20px rgba(99, 102, 241, 0.5)",
                       },
                     }}
-                    startIcon={<PersonAdd />}
+                    startIcon={<PersonAdd sx={{ fontSize: 18 }} />}
                   >
                     Register
                   </Button>
@@ -1421,193 +1434,347 @@ const NaukriNavbar = () => {
         open={mobileOpen}
         onClose={() => setMobileOpen(false)}
         PaperProps={{
-          sx: { width: "90%", maxWidth: 380, borderRadius: "6px 0 0 6px" },
+          sx: {
+            width: "85%",
+            maxWidth: 380,
+            borderRadius: "12px 0 0 12px",
+            boxShadow: "-10px 0 40px rgba(0,0,0,0.15)",
+          },
         }}
       >
-        <Box sx={{ p: 2.5 }}>
+        <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+          {/* Header with Gradient */}
           <Box
             sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              mb: 3,
+              background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+              p: 3,
+              pb: 4,
+              position: "relative",
+              overflow: "hidden",
+              "&::before": {
+                content: '""',
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background:
+                  "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
+                opacity: 0.3,
+              },
             }}
           >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-              <Box
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                position: "relative",
+                zIndex: 1,
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                <Box
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    bgcolor: "rgba(255,255,255,0.2)",
+                    backdropFilter: "blur(10px)",
+                    borderRadius: "10px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: "2px solid rgba(255,255,255,0.3)",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <Work sx={{ color: "#fff", fontSize: 26 }} />
+                </Box>
+                <Box>
+                  <Typography
+                    variant="h6"
+                    fontWeight={800}
+                    sx={{ color: "#fff", lineHeight: 1.2 }}
+                  >
+                    FinAutoJobs
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: "rgba(255,255,255,0.9)",
+                      fontSize: "11px",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Find Your Dream Job
+                  </Typography>
+                </Box>
+              </Box>
+              <IconButton
+                onClick={() => setMobileOpen(false)}
                 sx={{
-                  width: 40,
-                  height: 40,
-                  background:
-                    "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
-                  borderRadius: "6px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  color: "#fff",
+                  bgcolor: "rgba(255,255,255,0.15)",
+                  backdropFilter: "blur(10px)",
+                  "&:hover": { bgcolor: "rgba(255,255,255,0.25)" },
                 }}
               >
-                <Work sx={{ color: "#fff", fontSize: 22 }} />
-              </Box>
-              <Typography variant="h6" fontWeight={700}>
-                FinAutoJobs
-              </Typography>
+                <Close />
+              </IconButton>
             </Box>
-            <IconButton
-              onClick={() => setMobileOpen(false)}
-              sx={{ bgcolor: "action.hover" }}
-            >
-              <Close />
-            </IconButton>
           </Box>
 
-          <SearchWrapper
-            component="form"
-            onSubmit={handleSearch}
-            sx={{ mb: 3 }}
-          >
-            <Search sx={{ ml: 1.5, color: "text.secondary" }} />
-            <SearchInput
-              placeholder="Search jobs..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              fullWidth
-            />
-          </SearchWrapper>
-
-          <List>
-            <ListItem
-              component={Link}
-              href="/jobs"
-              onClick={() => setMobileOpen(false)}
+          {/* Enhanced Search Box */}
+          <Box sx={{ px: 3, mt: -2.5, mb: 3, position: "relative", zIndex: 2 }}>
+            <SearchWrapper
+              component="form"
+              onSubmit={handleSearch}
               sx={{
-                borderRadius: "6px",
-                mb: 1,
-                "&:hover": { bgcolor: "rgba(99,102,241,0.08)" },
+                boxShadow: "0 4px 20px rgba(99,102,241,0.15)",
+                border: "2px solid transparent",
+                "&:hover": {
+                  boxShadow: "0 6px 24px rgba(99,102,241,0.2)",
+                  borderColor: "rgba(99,102,241,0.2)",
+                },
               }}
             >
-              <ListItemIcon>
-                <Work sx={{ color: "#6366f1" }} />
-              </ListItemIcon>
-              <ListItemText
-                primary="Jobs"
-                primaryTypographyProps={{ fontWeight: 600 }}
-              />
-            </ListItem>
-            <ListItem
-              component={Link}
-              href="/companies"
-              onClick={() => setMobileOpen(false)}
-              sx={{
-                borderRadius: "6px",
-                mb: 1,
-                "&:hover": { bgcolor: "rgba(99,102,241,0.08)" },
-              }}
-            >
-              <ListItemIcon>
-                <Business sx={{ color: "#6366f1" }} />
-              </ListItemIcon>
-              <ListItemText
-                primary="Companies"
-                primaryTypographyProps={{ fontWeight: 600 }}
-              />
-            </ListItem>
-            <ListItem
-              component={Link}
-              href="/salary-insights"
-              onClick={() => setMobileOpen(false)}
-              sx={{
-                borderRadius: "6px",
-                mb: 1,
-                "&:hover": { bgcolor: "rgba(99,102,241,0.08)" },
-              }}
-            >
-              <ListItemIcon>
-                <TrendingUp sx={{ color: "#6366f1" }} />
-              </ListItemIcon>
-              <ListItemText
-                primary="Salary Insights"
-                primaryTypographyProps={{ fontWeight: 600 }}
-              />
-            </ListItem>
-            <ListItem
-              component={Link}
-              href="/skills-assessment"
-              onClick={() => setMobileOpen(false)}
-              sx={{
-                borderRadius: "6px",
-                mb: 1,
-                "&:hover": { bgcolor: "rgba(99,102,241,0.08)" },
-              }}
-            >
-              <ListItemIcon>
-                <School sx={{ color: "#6366f1" }} />
-              </ListItemIcon>
-              <ListItemText
-                primary="Skills Assessment"
-                primaryTypographyProps={{ fontWeight: 600 }}
-              />
-            </ListItem>
-          </List>
-
-          <Divider sx={{ my: 2 }} />
-
-          {user ? (
-            <List>
-              <ListItem
-                component={Link}
-                href={
-                  user.role === "recruiter"
-                    ? "/recruiter-dashboard"
-                    : "/applicant-dashboard"
-                }
-                onClick={() => setMobileOpen(false)}
-                sx={{ borderRadius: "6px", mb: 1 }}
-              >
-                <ListItemIcon>
-                  <Dashboard sx={{ color: "#6366f1" }} />
-                </ListItemIcon>
-                <ListItemText primary="Dashboard" />
-              </ListItem>
-              <ListItem
-                component={Link}
-                href="/profile"
-                onClick={() => setMobileOpen(false)}
-                sx={{ borderRadius: "6px", mb: 1 }}
-              >
-                <ListItemIcon>
-                  <Person sx={{ color: "#6366f1" }} />
-                </ListItemIcon>
-                <ListItemText primary="Profile" />
-              </ListItem>
-              <ListItem
-                onClick={() => {
-                  setMobileOpen(false);
-                  logout();
+              <Search
+                sx={{
+                  ml: 2,
+                  color: "#6366f1",
+                  fontSize: 22,
                 }}
-                sx={{ borderRadius: "6px", color: "error.main" }}
+              />
+              <SearchInput
+                placeholder="Search jobs, companies..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                sx={{
+                  fontSize: "15px",
+                  "& input::placeholder": {
+                    fontWeight: 500,
+                  },
+                }}
+              />
+            </SearchWrapper>
+          </Box>
+
+          {/* Navigation Menu */}
+          <Box sx={{ px: 2, flex: 1, overflowY: "auto" }}>
+            <Typography
+              variant="caption"
+              sx={{
+                px: 2,
+                py: 1,
+                display: "block",
+                color: "text.secondary",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                fontSize: "11px",
+                letterSpacing: "0.5px",
+              }}
+            >
+              Main Menu
+            </Typography>
+            <List sx={{ pt: 0 }}>
+              <ListItem
+                component={Link}
+                href="/jobs"
+                onClick={() => setMobileOpen(false)}
+                sx={{
+                  borderRadius: "8px",
+                  mb: 0.5,
+                  py: 1.5,
+                  transition: "all 0.2s",
+                  "&:hover": {
+                    bgcolor: "rgba(99,102,241,0.08)",
+                    transform: "translateX(4px)",
+                    "& .MuiListItemIcon-root": {
+                      color: "#6366f1",
+                      transform: "scale(1.1)",
+                    },
+                  },
+                }}
               >
-                <ListItemIcon>
-                  <Logout sx={{ color: "error.main" }} />
+                <ListItemIcon sx={{ minWidth: 40, transition: "all 0.2s" }}>
+                  <Work sx={{ color: "#6366f1", fontSize: 22 }} />
                 </ListItemIcon>
-                <ListItemText primary="Logout" />
+                <ListItemText
+                  primary="Jobs"
+                  primaryTypographyProps={{ fontWeight: 600, fontSize: "15px" }}
+                />
+              </ListItem>
+              <ListItem
+                component={Link}
+                href="/companies"
+                onClick={() => setMobileOpen(false)}
+                sx={{
+                  borderRadius: "8px",
+                  mb: 0.5,
+                  py: 1.5,
+                  transition: "all 0.2s",
+                  "&:hover": {
+                    bgcolor: "rgba(99,102,241,0.08)",
+                    transform: "translateX(4px)",
+                    "& .MuiListItemIcon-root": {
+                      color: "#6366f1",
+                      transform: "scale(1.1)",
+                    },
+                  },
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 40, transition: "all 0.2s" }}>
+                  <Business sx={{ color: "#6366f1", fontSize: 22 }} />
+                </ListItemIcon>
+                <ListItemText
+                  primary="Companies"
+                  primaryTypographyProps={{ fontWeight: 600, fontSize: "15px" }}
+                />
               </ListItem>
             </List>
-          ) : (
+
+            <Divider sx={{ my: 2 }} />
+
+            {user ? (
+              <>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    px: 2,
+                    py: 1,
+                    display: "block",
+                    color: "text.secondary",
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    fontSize: "11px",
+                    letterSpacing: "0.5px",
+                  }}
+                >
+                  My Account
+                </Typography>
+                <List sx={{ pt: 0 }}>
+                  <ListItem
+                    component={Link}
+                    href={
+                      user.role === "recruiter"
+                        ? "/recruiter-dashboard"
+                        : "/applicant-dashboard"
+                    }
+                    onClick={() => setMobileOpen(false)}
+                    sx={{
+                      borderRadius: "8px",
+                      mb: 0.5,
+                      py: 1.5,
+                      transition: "all 0.2s",
+                      "&:hover": {
+                        bgcolor: "rgba(99,102,241,0.08)",
+                        transform: "translateX(4px)",
+                      },
+                    }}
+                  >
+                    <ListItemIcon sx={{ minWidth: 40 }}>
+                      <Dashboard sx={{ color: "#6366f1", fontSize: 22 }} />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="Dashboard"
+                      primaryTypographyProps={{
+                        fontWeight: 600,
+                        fontSize: "15px",
+                      }}
+                    />
+                  </ListItem>
+                  <ListItem
+                    component={Link}
+                    href="/profile"
+                    onClick={() => setMobileOpen(false)}
+                    sx={{
+                      borderRadius: "8px",
+                      mb: 0.5,
+                      py: 1.5,
+                      transition: "all 0.2s",
+                      "&:hover": {
+                        bgcolor: "rgba(99,102,241,0.08)",
+                        transform: "translateX(4px)",
+                      },
+                    }}
+                  >
+                    <ListItemIcon sx={{ minWidth: 40 }}>
+                      <Person sx={{ color: "#6366f1", fontSize: 22 }} />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="Profile"
+                      primaryTypographyProps={{
+                        fontWeight: 600,
+                        fontSize: "15px",
+                      }}
+                    />
+                  </ListItem>
+                  <ListItem
+                    onClick={() => {
+                      setMobileOpen(false);
+                      logout();
+                    }}
+                    sx={{
+                      borderRadius: "8px",
+                      py: 1.5,
+                      transition: "all 0.2s",
+                      "&:hover": {
+                        bgcolor: "rgba(239,68,68,0.08)",
+                        transform: "translateX(4px)",
+                      },
+                    }}
+                  >
+                    <ListItemIcon sx={{ minWidth: 40 }}>
+                      <Logout sx={{ color: "error.main", fontSize: 22 }} />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="Logout"
+                      primaryTypographyProps={{
+                        fontWeight: 600,
+                        fontSize: "15px",
+                        color: "error.main",
+                      }}
+                    />
+                  </ListItem>
+                </List>
+              </>
+            ) : null}
+          </Box>
+          {/* Auth Buttons (when not logged in) */}
+          {!user && (
             <Box
-              sx={{ display: "flex", flexDirection: "column", gap: 1.5, p: 2 }}
+              sx={{
+                p: 3,
+                pt: 2,
+                borderTop: "1px solid",
+                borderColor: "divider",
+                background: (theme) =>
+                  theme.palette.mode === "dark"
+                    ? theme.palette.background.paper
+                    : "#fafafa",
+              }}
             >
               <Button
                 component={Link}
                 href="/login"
                 variant="outlined"
                 fullWidth
+                startIcon={<Login />}
                 sx={{
                   textTransform: "none",
                   fontWeight: 600,
                   borderColor: "#6366f1",
                   color: "#6366f1",
-                  py: 1.5,
-                  borderRadius: "6px",
+                  py: 1.75,
+                  borderRadius: "8px",
+                  fontSize: "15px",
+                  borderWidth: "2px",
+                  mb: 1.5,
+                  "&:hover": {
+                    borderWidth: "2px",
+                    borderColor: "#4f46e5",
+                    bgcolor: "rgba(99,102,241,0.08)",
+                  },
                 }}
               >
                 Login
@@ -1617,13 +1784,22 @@ const NaukriNavbar = () => {
                 href="/register"
                 variant="contained"
                 fullWidth
+                startIcon={<PersonAdd />}
                 sx={{
                   textTransform: "none",
                   fontWeight: 600,
-                  py: 1.5,
-                  borderRadius: "6px",
+                  py: 1.75,
+                  borderRadius: "8px",
+                  fontSize: "15px",
                   background:
                     "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                  boxShadow: "0 4px 14px rgba(99, 102, 241, 0.4)",
+                  "&:hover": {
+                    background:
+                      "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
+                    boxShadow: "0 6px 20px rgba(99, 102, 241, 0.5)",
+                    transform: "translateY(-1px)",
+                  },
                 }}
               >
                 Register

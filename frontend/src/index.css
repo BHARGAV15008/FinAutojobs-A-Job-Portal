@@ -5,6 +5,9 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+/* Import mobile-responsive styles */
+@import "./styles/mobile-responsive.css";
+
 /* Import modern theme styles */
 @import "./styles/modern-theme.scss";
 
@@ -36,21 +39,21 @@
 /* Only fix Tailwind gray text classes that conflict with dark backgrounds */
 .dark .text-gray-900,
 .dark .text-gray-800 {
-  color: #F7FAFC;
+  color: #f7fafc;
 }
 
 .dark .text-gray-700,
 .dark .text-gray-600 {
-  color: #E2E8F0;
+  color: #e2e8f0;
 }
 
 .dark .text-gray-500,
 .dark .text-gray-400 {
-  color: #CBD5E0;
+  color: #cbd5e0;
 }
 
 .dark .text-gray-300 {
-  color: #A0AEC0;
+  color: #a0aec0;
 }
 
 /* CRITICAL: Fix form input interactions in dark mode */
@@ -1014,18 +1017,18 @@ a[class*="gradient-"] {
 }
 
 .dark * {
-  border-color: #4A5568;
+  border-color: #4a5568;
 }
 
 /* Global text color inheritance - using CSS custom properties */
 :root {
-  --text-primary: #1A202C;
+  --text-primary: #1a202c;
   --text-secondary: #718096;
 }
 
 .dark {
-  --text-primary: #F7FAFC;
-  --text-secondary: #CBD5E0;
+  --text-primary: #f7fafc;
+  --text-secondary: #cbd5e0;
 }
 
 /* Override for components that already have proper theme classes */
@@ -1062,16 +1065,16 @@ a[class*="gradient-"] {
 
 .dark .dashboard-container .text-gray-900,
 .dark .dashboard-container .text-gray-800 {
-  color: #E2E8F0;
+  color: #e2e8f0;
 }
 
 .dark .dashboard-container .text-gray-700,
 .dark .dashboard-container .text-gray-600 {
-  color: #CBD5E0;
+  color: #cbd5e0;
 }
 
 .dark .dashboard-container .text-gray-500 {
-  color: #A0AEC0;
+  color: #a0aec0;
 }
 
 /* ===== COMPREHENSIVE RESPONSIVE DESIGN SYSTEM ===== */

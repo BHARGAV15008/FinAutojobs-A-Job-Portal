@@ -1,0 +1,80 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Company Account Suspended</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); color: white; padding: 30px; text-align: center; }
+            .content { padding: 30px; background: #f9f9f9; }
+            .footer { padding: 20px; text-align: center; color: #666; font-size: 14px; }
+            .button { display: inline-block; padding: 14px 28px; background: #FF9800; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; }
+            .alert-badge { background: #FF9800; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; margin: 10px 0; }
+            .info-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #FF9800; }
+            .important-box { background: #FFF3E0; padding: 20px; border-radius: 8px; margin: 20px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>⚠️ Account Suspended</h1>
+              <h2>{{companyName}}</h2>
+            </div>
+            <div class="content">
+              <h2>Dear {{recruiterName}},</h2>
+              <p>We're writing to inform you that the company account for <strong>{{companyName}}</strong> has been temporarily suspended.</p>
+              
+              <div class="alert-badge">⚠ Account Suspended</div>
+
+              <div class="info-box">
+                <h3>📋 Suspension Details:</h3>
+                <p><strong>Company Name:</strong> {{companyName}}</p>
+                <p><strong>Suspension Date:</strong> {{suspensionDate}}</p>
+                {{#if suspensionReason}}
+                <div style="margin-top: 15px;">
+                  <p><strong>Reason:</strong></p>
+                  <p style="background: #FFF3E0; padding: 15px; border-radius: 4px;">{{suspensionReason}}</p>
+                </div>
+                {{/if}}
+              </div>
+
+              <div class="important-box">
+                <h3>🚫 What This Means:</h3>
+                <ul>
+                  <li>Your company profile is temporarily hidden from public view</li>
+                  <li>Active job postings are no longer visible to candidates</li>
+                  <li>You cannot post new jobs until the suspension is lifted</li>
+                  <li>Existing applications remain accessible for review</li>
+                </ul>
+              </div>
+
+              <div class="info-box">
+                <h3>🔄 How to Resolve:</h3>
+                <ol>
+                  <li>Review the suspension reason carefully</li>
+                  <li>Address any policy violations or issues mentioned</li>
+                  <li>Contact our support team for clarification</li>
+                  <li>Submit an appeal with corrective actions taken</li>
+                </ol>
+              </div>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="{{appealUrl}}" class="button">Contact Support</a>
+              </div>
+
+              <p><strong>Need Immediate Assistance?</strong></p>
+              <p>Our support team is ready to help resolve this matter quickly.</p>
+              <p>Support Email: <a href="mailto:{{supportEmail}}">{{supportEmail}}</a></p>
+              <p>Support Phone: {{supportPhone}}</p>
+            </div>
+            <div class="footer">
+              <p>We value your partnership and look forward to resolving this matter.</p>
+              <p>&copy; 2024 FinAutoJobs. All rights reserved.</p>
+              <p><a href="{{baseUrl}}">Visit Website</a> | <a href="{{supportUrl}}">Get Support</a></p>
+            </div>
+          </div>
+        </body>
+        </html>
+      

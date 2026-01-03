@@ -80,13 +80,17 @@ const gradientMove = keyframes`
 `;
 
 // Styled Components
-const HeroSection = styled(Box)(() => ({
+const HeroSection = styled(Box)(({ theme }) => ({
   position: "relative",
   minHeight: "85vh",
   background: `linear-gradient(135deg, ${colors.dark} 0%, #312e81 30%, #4338ca 60%, ${colors.primary} 100%)`,
   backgroundSize: "300% 300%",
   animation: `${gradientMove} 15s ease infinite`,
   overflow: "hidden",
+  [theme.breakpoints.down("sm")]: {
+    minHeight: "auto",
+    paddingBottom: "40px",
+  },
   "&::before": {
     content: '""',
     position: "absolute",
@@ -108,20 +112,23 @@ const FloatingCard = styled(Card)(() => ({
   backgroundColor: "rgba(255,255,255,0.95)",
 }));
 
-const StatsCard = styled(Box)(({ bgcolor }) => ({
+const StatsCard = styled(Box)(({ bgcolor, theme }) => ({
   padding: "24px",
   borderRadius: "6px",
   background: bgcolor || "linear-gradient(135deg, #fff 0%, #f9fafb 100%)",
   boxShadow: "0 10px 40px rgba(0,0,0,0.08)",
   transition: "all 0.3s ease",
   cursor: "pointer",
+  [theme.breakpoints.down("sm")]: {
+    padding: "20px",
+  },
   "&:hover": {
     transform: "translateY(-8px)",
     boxShadow: "0 20px 60px rgba(0,0,0,0.12)",
   },
 }));
 
-const CategoryCard = styled(Box)(({ gradient }) => ({
+const CategoryCard = styled(Box)(({ gradient, theme }) => ({
   padding: "28px",
   borderRadius: "6px",
   background: gradient || "#fff",
@@ -130,6 +137,9 @@ const CategoryCard = styled(Box)(({ gradient }) => ({
   transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
   position: "relative",
   overflow: "hidden",
+  [theme.breakpoints.down("sm")]: {
+    padding: "20px",
+  },
   "&::before": {
     content: '""',
     position: "absolute",
@@ -181,7 +191,7 @@ const CompanyCard = styled(Card)(() => ({
   },
 }));
 
-const GradientButton = styled(Button)(() => ({
+const GradientButton = styled(Button)(({ theme }) => ({
   background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
   color: "#fff",
   textTransform: "none",
@@ -190,6 +200,11 @@ const GradientButton = styled(Button)(() => ({
   borderRadius: "6px",
   boxShadow: "0 4px 20px rgba(99, 102, 241, 0.4)",
   transition: "all 0.3s ease",
+  minHeight: 48,
+  [theme.breakpoints.down("sm")]: {
+    padding: "12px 24px",
+    fontSize: "14px",
+  },
   "&:hover": {
     background: `linear-gradient(135deg, ${colors.primaryDark} 0%, ${colors.secondary} 100%)`,
     transform: "translateY(-2px)",
@@ -325,7 +340,6 @@ const HomePageNaukri = () => {
     },
   ];
 
-
   const features = [
     {
       icon: <FlashOn />,
@@ -388,11 +402,16 @@ const HomePageNaukri = () => {
                 <Typography
                   variant="h1"
                   sx={{
-                    fontSize: fontSizes.heroTitle,
+                    fontSize: {
+                      xs: "2rem",
+                      sm: "2.75rem",
+                      md: "3.5rem",
+                      lg: fontSizes.heroTitle,
+                    },
                     fontFamily: fonts.display,
                     fontWeight: 800,
                     lineHeight: 1.05,
-                    mb: 3,
+                    mb: { xs: 2, md: 3 },
                     color: "#fff",
                     letterSpacing: "-0.02em",
                     textShadow: "0 4px 30px rgba(0,0,0,0.3)",
@@ -418,13 +437,17 @@ const HomePageNaukri = () => {
                 <Typography
                   variant="h6"
                   sx={{
-                    mb: 5,
+                    mb: { xs: 3, md: 5 },
                     color: "rgba(255,255,255,0.95)",
                     fontFamily: fonts.body,
                     fontWeight: 400,
                     lineHeight: 1.9,
                     maxWidth: 580,
-                    fontSize: fontSizes.heroSubtitle,
+                    fontSize: {
+                      xs: "14px",
+                      sm: "15px",
+                      md: fontSizes.heroSubtitle,
+                    },
                     letterSpacing: "0.01em",
                   }}
                 >
@@ -433,7 +456,18 @@ const HomePageNaukri = () => {
                   their perfect career here.
                 </Typography>
 
-                <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mb: 6 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 2,
+                    flexWrap: "wrap",
+                    mb: 6,
+                    flexDirection: { xs: "column", sm: "row" },
+                    "& > *": {
+                      flex: { xs: "1 1 100%", sm: "0 1 auto" },
+                    },
+                  }}
+                >
                   <GradientButton
                     component={Link}
                     href="/jobs"
@@ -450,7 +484,7 @@ const HomePageNaukri = () => {
                   >
                     Explore Jobs
                   </GradientButton>
-                  <Button
+                  {/* <Button
                     variant="outlined"
                     size="large"
                     startIcon={<PlayArrow />}
@@ -469,7 +503,7 @@ const HomePageNaukri = () => {
                     }}
                   >
                     How It Works
-                  </Button>
+                  </Button> */}
                 </Box>
 
                 {/* Trust Indicators */}
@@ -827,154 +861,148 @@ const HomePageNaukri = () => {
             </Box>
           ) : (
             <Grid container spacing={3}>
-              {featuredJobs
-                .slice(0, 8)
-                .map((job, index) => (
-                  <Grid item xs={12} sm={6} lg={3} key={job._id || index}>
-                    <JobCard>
-                      {index < 2 && (
-                        <Chip
-                          label="HOT"
+              {featuredJobs.slice(0, 8).map((job, index) => (
+                <Grid item xs={12} sm={6} lg={3} key={job._id || index}>
+                  <JobCard>
+                    {index < 2 && (
+                      <Chip
+                        label="HOT"
+                        size="small"
+                        sx={{
+                          position: "absolute",
+                          top: -10,
+                          left: 16,
+                          bgcolor: "#ef4444",
+                          color: "#fff",
+                          fontWeight: 700,
+                          fontSize: "10px",
+                          animation: `${pulse} 2s infinite`,
+                        }}
+                      />
+                    )}
+                    <CardContent sx={{ p: 3 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                          mb: 2,
+                        }}
+                      >
+                        <Avatar
+                          className="company-logo"
+                          sx={{
+                            width: 52,
+                            height: 52,
+                            bgcolor: colors.primary,
+                            fontWeight: 700,
+                            fontSize: "18px",
+                            transition: "transform 0.3s",
+                          }}
+                        >
+                          {(job.company || "C").charAt(0)}
+                        </Avatar>
+                        <IconButton
+                          onClick={() => toggleSaveJob(job._id)}
                           size="small"
-                          sx={{
-                            position: "absolute",
-                            top: -10,
-                            left: 16,
-                            bgcolor: "#ef4444",
-                            color: "#fff",
-                            fontWeight: 700,
-                            fontSize: "10px",
-                            animation: `${pulse} 2s infinite`,
-                          }}
-                        />
-                      )}
-                      <CardContent sx={{ p: 3 }}>
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "flex-start",
-                            mb: 2,
-                          }}
                         >
-                          <Avatar
-                            className="company-logo"
-                            sx={{
-                              width: 52,
-                              height: 52,
-                              bgcolor: colors.primary,
-                              fontWeight: 700,
-                              fontSize: "18px",
-                              transition: "transform 0.3s",
-                            }}
-                          >
-                            {(job.company || "C").charAt(0)}
-                          </Avatar>
-                          <IconButton
-                            onClick={() => toggleSaveJob(job._id)}
+                          {savedJobs.includes(job._id) ? (
+                            <Bookmark sx={{ color: colors.primary }} />
+                          ) : (
+                            <BookmarkBorder sx={{ color: "#9ca3af" }} />
+                          )}
+                        </IconButton>
+                      </Box>
+
+                      <Typography
+                        variant="body2"
+                        sx={{ color: "#6b7280", fontWeight: 500, mb: 0.5 }}
+                      >
+                        {job.company}
+                      </Typography>
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontWeight: 700,
+                          mb: 1.5,
+                          fontSize: "1rem",
+                          lineHeight: 1.3,
+                        }}
+                      >
+                        {job.title}
+                      </Typography>
+
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 0.5,
+                          mb: 1,
+                          color: "#6b7280",
+                        }}
+                      >
+                        <LocationOn sx={{ fontSize: 16 }} />
+                        <Typography variant="body2">{job.location}</Typography>
+                      </Box>
+
+                      <Box
+                        sx={{
+                          display: "flex",
+                          gap: 1,
+                          mb: 2,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        {(job.skills || []).slice(0, 3).map((skill, i) => (
+                          <Chip
+                            key={i}
+                            label={skill}
                             size="small"
+                            variant="outlined"
+                            sx={{ fontSize: "11px", height: 24 }}
+                          />
+                        ))}
+                      </Box>
+
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Box>
+                          <Typography
+                            variant="body2"
+                            sx={{ color: "#22c55e", fontWeight: 600 }}
                           >
-                            {savedJobs.includes(job._id) ? (
-                              <Bookmark sx={{ color: colors.primary }} />
-                            ) : (
-                              <BookmarkBorder sx={{ color: "#9ca3af" }} />
-                            )}
-                          </IconButton>
-                        </Box>
-
-                        <Typography
-                          variant="body2"
-                          sx={{ color: "#6b7280", fontWeight: 500, mb: 0.5 }}
-                        >
-                          {job.company}
-                        </Typography>
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            fontWeight: 700,
-                            mb: 1.5,
-                            fontSize: "1rem",
-                            lineHeight: 1.3,
-                          }}
-                        >
-                          {job.title}
-                        </Typography>
-
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 0.5,
-                            mb: 1,
-                            color: "#6b7280",
-                          }}
-                        >
-                          <LocationOn sx={{ fontSize: 16 }} />
-                          <Typography variant="body2">
-                            {job.location}
+                            {job.salary}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            sx={{ color: "#9ca3af" }}
+                          >
+                            {job.type}
                           </Typography>
                         </Box>
-
-                        <Box
+                        <Button
+                          component={Link}
+                          href={`/jobs/${job._id}`}
+                          size="small"
                           sx={{
-                            display: "flex",
-                            gap: 1,
-                            mb: 2,
-                            flexWrap: "wrap",
+                            textTransform: "none",
+                            fontWeight: 600,
+                            color: colors.primary,
+                            "&:hover": { bgcolor: "rgba(99,102,241,0.08)" },
                           }}
                         >
-                          {(job.skills || [])
-                            .slice(0, 3)
-                            .map((skill, i) => (
-                              <Chip
-                                key={i}
-                                label={skill}
-                                size="small"
-                                variant="outlined"
-                                sx={{ fontSize: "11px", height: 24 }}
-                              />
-                            ))}
-                        </Box>
-
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                          }}
-                        >
-                          <Box>
-                            <Typography
-                              variant="body2"
-                              sx={{ color: "#22c55e", fontWeight: 600 }}
-                            >
-                              {job.salary}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              sx={{ color: "#9ca3af" }}
-                            >
-                              {job.type}
-                            </Typography>
-                          </Box>
-                          <Button
-                            component={Link}
-                            href={`/jobs/${job._id}`}
-                            size="small"
-                            sx={{
-                              textTransform: "none",
-                              fontWeight: 600,
-                              color: colors.primary,
-                              "&:hover": { bgcolor: "rgba(99,102,241,0.08)" },
-                            }}
-                          >
-                            Apply <KeyboardArrowRight sx={{ fontSize: 18 }} />
-                          </Button>
-                        </Box>
-                      </CardContent>
-                    </JobCard>
-                  </Grid>
-                ))}
+                          Apply <KeyboardArrowRight sx={{ fontSize: 18 }} />
+                        </Button>
+                      </Box>
+                    </CardContent>
+                  </JobCard>
+                </Grid>
+              ))}
             </Grid>
           )}
 
@@ -1271,8 +1299,8 @@ const HomePageNaukri = () => {
                 variant="outlined"
                 size="large"
                 sx={{
-                  bgcolor: "#fff",
-                  color: "#0000",
+                  bgcolor: "#10683bff",
+                  color: "#aca7a7",
                   textTransform: "none",
                   fontWeight: 700,
                   px: 4,
@@ -1292,13 +1320,13 @@ const HomePageNaukri = () => {
                   borderColor: "rgba(255,255,255,0.5)",
                   color: "#fff",
                   textTransform: "none",
-                  fontWeight: 600,
+                  fontWeight: 700,
                   px: 4,
                   py: 1.5,
                   borderRadius: "6px",
                   "&:hover": {
-                    borderColor: "#fff",
-                    bgcolor: "rgba(255,255,255,0.1)",
+                    bgcolor: "#f3f4f6",
+                    color: "rgba(0,0,0,0.95)",
                   },
                 }}
               >

@@ -84,6 +84,7 @@ const FavoritesTab = () => {
 
   const [sortBy, setSortBy] = useState('savedDate');
   const [filterBy, setFilterBy] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedJob, setSelectedJob] = useState(null);
 
   const removeFavorite = (jobId) => {
@@ -97,10 +98,30 @@ const FavoritesTab = () => {
   };
 
   const filteredFavorites = favorites.filter(job => {
-    if (filterBy === 'all') return true;
-    if (filterBy === 'applied') return job.isApplied;
-    if (filterBy === 'not-applied') return !job.isApplied;
-    if (filterBy === 'remote') return job.remote;
+    // Apply filter dropdown
+    if (filterBy === 'all') {
+      // No additional filtering
+    } else if (filterBy === 'applied') {
+      if (!job.isApplied) return false;
+    } else if (filterBy === 'not-applied') {
+      if (job.isApplied) return false;
+    } else if (filterBy === 'remote') {
+      if (!job.remote) return false;
+    }
+    
+    // Apply search term
+    if (searchTerm.trim()) {
+      const search = searchTerm.toLowerCase();
+      const matchesSearch = 
+        job.title.toLowerCase().includes(search) ||
+        job.company.toLowerCase().includes(search) ||
+        job.location.toLowerCase().includes(search) ||
+        (job.department && job.department.toLowerCase().includes(search)) ||
+        (job.skills && job.skills.some(skill => skill.toLowerCase().includes(search)));
+      
+      if (!matchesSearch) return false;
+    }
+    
     return true;
   });
 
@@ -141,6 +162,13 @@ const FavoritesTab = () => {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Favorite Jobs</h2>
         <div className="flex space-x-3">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search favorites..."
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white w-64"
+          />
           <select
             value={filterBy}
             onChange={(e) => setFilterBy(e.target.value)}

@@ -1,52 +1,56 @@
-import nodemailer from 'nodemailer';
-import { Resend } from 'resend';
-import dotenv from 'dotenv';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import nodemailer from "nodemailer";
+import { Resend } from "resend";
+import dotenv from "dotenv";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 // Load environment variables from config.env
-dotenv.config({ path: './config.env' });
+dotenv.config({ path: "./config.env" });
 
 class EmailService {
   constructor() {
     // Determine email service to use
-    this.emailService = process.env.EMAIL_SERVICE || 'smtp';
-    
-    if (this.emailService === 'resend') {
+    this.emailService = process.env.EMAIL_SERVICE || "smtp";
+
+    if (this.emailService === "resend") {
       // Initialize Resend
       this.resend = new Resend(process.env.RESEND_API_KEY);
-      console.log('✅ Resend email service initialized');
+      console.log("✅ Resend email service initialized");
     } else {
       // Initialize SMTP (Gmail)
       this.transporter = nodemailer.createTransport({
-        service: 'gmail',
-        host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+        service: "gmail",
+        host: process.env.EMAIL_HOST || "smtp.gmail.com",
         port: parseInt(process.env.EMAIL_PORT) || 587,
-        secure: process.env.EMAIL_SECURE === 'true' || false,
-        requireTLS: process.env.EMAIL_REQUIRE_TLS === 'true' || true,
+        secure: process.env.EMAIL_SECURE === "true" || false,
+        requireTLS: process.env.EMAIL_REQUIRE_TLS === "true" || true,
         auth: {
           user: process.env.EMAIL_USER || process.env.EMAIL_FROM_ADDRESS,
-          pass: process.env.EMAIL_PASS
+          pass: process.env.EMAIL_PASS,
         },
-        connectionTimeout: parseInt(process.env.EMAIL_CONNECTION_TIMEOUT) || 120000,
+        connectionTimeout:
+          parseInt(process.env.EMAIL_CONNECTION_TIMEOUT) || 120000,
         socketTimeout: parseInt(process.env.EMAIL_SOCKET_TIMEOUT) || 120000,
         greetingTimeout: parseInt(process.env.EMAIL_GREETINGS_TIMEOUT) || 30000,
         tls: {
           rejectUnauthorized: false,
-          ciphers: 'SSLv3'
+          ciphers: "SSLv3",
         },
-        debug: process.env.NODE_ENV !== 'production'
+        debug: process.env.NODE_ENV !== "production",
       });
-      console.log('✅ SMTP email service initialized');
+      console.log("✅ SMTP email service initialized");
     }
 
-    this.fromEmail = process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER || 'noreply@finautojobs.com';
-    this.fromName = process.env.EMAIL_FROM_NAME || 'FinAutoJobs Team';
-    this.baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    
+    this.fromEmail =
+      process.env.EMAIL_FROM_ADDRESS ||
+      process.env.EMAIL_USER ||
+      "noreply@finautojobs.com";
+    this.fromName = process.env.EMAIL_FROM_NAME || "FinAutoJobs Team";
+    this.baseUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+
     // Initialize email templates
     this.templates = this.loadEmailTemplates();
   }
@@ -54,14 +58,14 @@ class EmailService {
   // Unified send email method
   async sendEmail(to, subject, html, options = {}) {
     try {
-      if (this.emailService === 'resend') {
+      if (this.emailService === "resend") {
         // Use Resend API
         const result = await this.resend.emails.send({
           from: options.from || `${this.fromName} <${this.fromEmail}>`,
           to: Array.isArray(to) ? to : [to],
           subject: subject,
           html: html,
-          ...options
+          ...options,
         });
         console.log(`✅ Email sent via Resend to ${to}`);
         return { success: true, messageId: result.data?.id };
@@ -72,7 +76,7 @@ class EmailService {
           to: to,
           subject: subject,
           html: html,
-          ...options
+          ...options,
         });
         console.log(`✅ Email sent via SMTP to ${to}`);
         return { success: true, messageId: result.messageId };
@@ -83,10 +87,9 @@ class EmailService {
     }
   }
 
-
   // Load email templates
   loadEmailTemplates() {
-    const templatesDir = path.join(__dirname, '../templates/emails');
+    const templatesDir = path.join(__dirname, "../templates/emails");
     const templates = {};
 
     try {
@@ -97,16 +100,24 @@ class EmailService {
       }
 
       // Load existing templates
-      const templateFiles = fs.readdirSync(templatesDir).filter(file => file.endsWith('.html'));
-      templateFiles.forEach(file => {
-        const templateName = path.basename(file, '.html');
-        templates[templateName] = fs.readFileSync(path.join(templatesDir, file), 'utf8');
+      const templateFiles = fs
+        .readdirSync(templatesDir)
+        .filter((file) => file.endsWith(".html"));
+      templateFiles.forEach((file) => {
+        const templateName = path.basename(file, ".html");
+        templates[templateName] = fs.readFileSync(
+          path.join(templatesDir, file),
+          "utf8"
+        );
       });
 
       console.log(`✅ Loaded ${Object.keys(templates).length} email templates`);
       return templates;
     } catch (error) {
-      console.warn('⚠️ Could not load email templates, using defaults:', error.message);
+      console.warn(
+        "⚠️ Could not load email templates, using defaults:",
+        error.message
+      );
       return this.getDefaultTemplates();
     }
   }
@@ -114,13 +125,13 @@ class EmailService {
   // Create default email templates
   createDefaultTemplates(templatesDir) {
     const defaultTemplates = this.getDefaultTemplates();
-    
-    Object.keys(defaultTemplates).forEach(templateName => {
+
+    Object.keys(defaultTemplates).forEach((templateName) => {
       const filePath = path.join(templatesDir, `${templateName}.html`);
       fs.writeFileSync(filePath, defaultTemplates[templateName]);
     });
-    
-    console.log('✅ Created default email templates');
+
+    console.log("✅ Created default email templates");
   }
 
   // Get default email templates
@@ -438,7 +449,329 @@ class EmailService {
           </div>
         </body>
         </html>
-      `
+      `,
+
+      companyVerified: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Company Verification Approved</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; padding: 30px; text-align: center; }
+            .content { padding: 30px; background: #f9f9f9; }
+            .footer { padding: 20px; text-align: center; color: #666; font-size: 14px; }
+            .button { display: inline-block; padding: 14px 28px; background: #4CAF50; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; }
+            .success-badge { background: #4CAF50; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; margin: 10px 0; }
+            .info-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4CAF50; }
+            .celebration { text-align: center; font-size: 48px; margin: 20px 0; }
+            .feature-list { background: #E8F5E9; padding: 20px; border-radius: 8px; margin: 20px 0; }
+            .feature-list ul { margin: 10px 0; padding-left: 20px; }
+            .feature-list li { margin: 8px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <div class="celebration">🎉</div>
+              <h1>Congratulations!</h1>
+              <h2>Your Company Has Been Verified</h2>
+            </div>
+            <div class="content">
+              <h2>Dear {{recruiterName}},</h2>
+              <p>We're excited to inform you that <strong>{{companyName}}</strong> has been successfully verified on FinAutoJobs!</p>
+              
+              <div class="success-badge">✓ Verified Company</div>
+
+              <div class="info-box">
+                <h3>📋 Verification Details:</h3>
+                <p><strong>Company Name:</strong> {{companyName}}</p>
+                <p><strong>Industry:</strong> {{industry}}</p>
+                <p><strong>Location:</strong> {{location}}</p>
+                <p><strong>Verification Date:</strong> {{verificationDate}}</p>
+                {{#if adminNotes}}
+                <p><strong>Admin Notes:</strong> {{adminNotes}}</p>
+                {{/if}}
+              </div>
+
+              <div class="feature-list">
+                <h3>🚀 What's Next? You can now:</h3>
+                <ul>
+                  <li>✓ Post unlimited job openings</li>
+                  <li>✓ Appear in verified company listings</li>
+                  <li>✓ Receive applications from qualified candidates</li>
+                  <li>✓ Build your employer brand profile</li>
+                  <li>✓ Access advanced recruitment tools</li>
+                  <li>✓ Get featured in search results</li>
+                </ul>
+              </div>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="{{companyDashboardUrl}}" class="button">Go to Company Dashboard</a>
+              </div>
+
+              <p>Your company profile is now visible to thousands of job seekers. Start posting jobs and building your team today!</p>
+
+              <div class="info-box">
+                <h3>💡 Pro Tips:</h3>
+                <ul>
+                  <li>Complete your company profile with photos and culture information</li>
+                  <li>Post detailed job descriptions to attract the right candidates</li>
+                  <li>Respond promptly to applications to maintain high engagement</li>
+                  <li>Showcase your company benefits and work environment</li>
+                </ul>
+              </div>
+
+              <p>If you have any questions or need assistance, our support team is here to help!</p>
+              <p>Contact us at: <a href="mailto:{{supportEmail}}">{{supportEmail}}</a></p>
+            </div>
+            <div class="footer">
+              <p>Thank you for choosing FinAutoJobs!</p>
+              <p>&copy; 2024 FinAutoJobs. All rights reserved.</p>
+              <p><a href="{{baseUrl}}">Visit Website</a> | <a href="{{supportUrl}}">Get Support</a></p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+
+      companyRejected: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Company Verification Update</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%); color: white; padding: 30px; text-align: center; }
+            .content { padding: 30px; background: #f9f9f9; }
+            .footer { padding: 20px; text-align: center; color: #666; font-size: 14px; }
+            .button { display: inline-block; padding: 14px 28px; background: #2196F3; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; }
+            .warning-badge { background: #f44336; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; margin: 10px 0; }
+            .info-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f44336; }
+            .action-box { background: #FFF3E0; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #FF9800; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Verification Status Update</h1>
+              <h2>{{companyName}}</h2>
+            </div>
+            <div class="content">
+              <h2>Dear {{recruiterName}},</h2>
+              <p>Thank you for submitting <strong>{{companyName}}</strong> for verification on FinAutoJobs.</p>
+              
+              <div class="warning-badge">⚠ Verification Not Approved</div>
+
+              <div class="info-box">
+                <h3>📋 Review Details:</h3>
+                <p><strong>Company Name:</strong> {{companyName}}</p>
+                <p><strong>Submission Date:</strong> {{submissionDate}}</p>
+                <p><strong>Review Date:</strong> {{reviewDate}}</p>
+                {{#if rejectionReason}}
+                <div style="margin-top: 15px;">
+                  <p><strong>Reason for Decision:</strong></p>
+                  <p style="background: #FFEBEE; padding: 15px; border-radius: 4px;">{{rejectionReason}}</p>
+                </div>
+                {{/if}}
+              </div>
+
+              <div class="action-box">
+                <h3>📝 What You Can Do:</h3>
+                <ul>
+                  <li>Review the feedback provided above</li>
+                  <li>Update your company information with accurate details</li>
+                  <li>Ensure all required documents are complete and valid</li>
+                  <li>Resubmit your company profile for verification</li>
+                </ul>
+              </div>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="{{companyProfileUrl}}" class="button">Update Company Profile</a>
+              </div>
+
+              <p><strong>Need Help?</strong></p>
+              <p>If you have questions about the verification process or need assistance updating your profile, please don't hesitate to contact us.</p>
+              <p>Support Email: <a href="mailto:{{supportEmail}}">{{supportEmail}}</a></p>
+              <p>Support Hours: Monday - Friday, 9 AM - 6 PM</p>
+            </div>
+            <div class="footer">
+              <p>We're here to help you succeed!</p>
+              <p>&copy; 2024 FinAutoJobs. All rights reserved.</p>
+              <p><a href="{{baseUrl}}">Visit Website</a> | <a href="{{supportUrl}}">Get Support</a></p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+
+      companySuspended: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Company Account Suspended</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); color: white; padding: 30px; text-align: center; }
+            .content { padding: 30px; background: #f9f9f9; }
+            .footer { padding: 20px; text-align: center; color: #666; font-size: 14px; }
+            .button { display: inline-block; padding: 14px 28px; background: #FF9800; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; }
+            .alert-badge { background: #FF9800; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; margin: 10px 0; }
+            .info-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #FF9800; }
+            .important-box { background: #FFF3E0; padding: 20px; border-radius: 8px; margin: 20px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>⚠️ Account Suspended</h1>
+              <h2>{{companyName}}</h2>
+            </div>
+            <div class="content">
+              <h2>Dear {{recruiterName}},</h2>
+              <p>We're writing to inform you that the company account for <strong>{{companyName}}</strong> has been temporarily suspended.</p>
+              
+              <div class="alert-badge">⚠ Account Suspended</div>
+
+              <div class="info-box">
+                <h3>📋 Suspension Details:</h3>
+                <p><strong>Company Name:</strong> {{companyName}}</p>
+                <p><strong>Suspension Date:</strong> {{suspensionDate}}</p>
+                {{#if suspensionReason}}
+                <div style="margin-top: 15px;">
+                  <p><strong>Reason:</strong></p>
+                  <p style="background: #FFF3E0; padding: 15px; border-radius: 4px;">{{suspensionReason}}</p>
+                </div>
+                {{/if}}
+              </div>
+
+              <div class="important-box">
+                <h3>🚫 What This Means:</h3>
+                <ul>
+                  <li>Your company profile is temporarily hidden from public view</li>
+                  <li>Active job postings are no longer visible to candidates</li>
+                  <li>You cannot post new jobs until the suspension is lifted</li>
+                  <li>Existing applications remain accessible for review</li>
+                </ul>
+              </div>
+
+              <div class="info-box">
+                <h3>🔄 How to Resolve:</h3>
+                <ol>
+                  <li>Review the suspension reason carefully</li>
+                  <li>Address any policy violations or issues mentioned</li>
+                  <li>Contact our support team for clarification</li>
+                  <li>Submit an appeal with corrective actions taken</li>
+                </ol>
+              </div>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="{{appealUrl}}" class="button">Contact Support</a>
+              </div>
+
+              <p><strong>Need Immediate Assistance?</strong></p>
+              <p>Our support team is ready to help resolve this matter quickly.</p>
+              <p>Support Email: <a href="mailto:{{supportEmail}}">{{supportEmail}}</a></p>
+              <p>Support Phone: {{supportPhone}}</p>
+            </div>
+            <div class="footer">
+              <p>We value your partnership and look forward to resolving this matter.</p>
+              <p>&copy; 2024 FinAutoJobs. All rights reserved.</p>
+              <p><a href="{{baseUrl}}">Visit Website</a> | <a href="{{supportUrl}}">Get Support</a></p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+
+      companySubmittedForReview: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Company Submitted for Verification</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); color: white; padding: 30px; text-align: center; }
+            .content { padding: 30px; background: #f9f9f9; }
+            .footer { padding: 20px; text-align: center; color: #666; font-size: 14px; }
+            .button { display: inline-block; padding: 14px 28px; background: #2196F3; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; }
+            .pending-badge { background: #2196F3; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; margin: 10px 0; }
+            .info-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2196F3; }
+            .timeline { background: #E3F2FD; padding: 20px; border-radius: 8px; margin: 20px 0; }
+            .timeline-item { margin: 15px 0; padding-left: 25px; position: relative; }
+            .timeline-item:before { content: "✓"; position: absolute; left: 0; color: #2196F3; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>📝 Thank You!</h1>
+              <h2>Company Verification Submitted</h2>
+            </div>
+            <div class="content">
+              <h2>Dear {{recruiterName}},</h2>
+              <p>Thank you for submitting <strong>{{companyName}}</strong> for verification on FinAutoJobs!</p>
+              
+              <div class="pending-badge">⏳ Under Review</div>
+
+              <div class="info-box">
+                <h3>📋 Submission Summary:</h3>
+                <p><strong>Company Name:</strong> {{companyName}}</p>
+                <p><strong>Industry:</strong> {{industry}}</p>
+                <p><strong>Location:</strong> {{location}}</p>
+                <p><strong>Submission Date:</strong> {{submissionDate}}</p>
+                <p><strong>Reference ID:</strong> {{referenceId}}</p>
+              </div>
+
+              <div class="timeline">
+                <h3>⏱️ What Happens Next:</h3>
+                <div class="timeline-item">Your application is being reviewed by our verification team</div>
+                <div class="timeline-item">We'll verify your company information and documents</div>
+                <div class="timeline-item">You'll receive a decision within 2-3 business days</div>
+                <div class="timeline-item">Once approved, you can start posting jobs immediately</div>
+              </div>
+
+              <div class="info-box">
+                <h3>📞 We May Contact You For:</h3>
+                <ul>
+                  <li>Additional documentation or verification</li>
+                  <li>Clarification on company information</li>
+                  <li>Phone verification of your company address</li>
+                  <li>Any questions regarding your submission</li>
+                </ul>
+              </div>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="{{companyProfileUrl}}" class="button">View Submission Status</a>
+              </div>
+
+              <p><strong>In the meantime:</strong></p>
+              <ul>
+                <li>Prepare your job descriptions and requirements</li>
+                <li>Complete your company profile with photos and culture info</li>
+                <li>Review our best practices for attracting top talent</li>
+              </ul>
+
+              <p>If you have any questions, feel free to reach out!</p>
+              <p>Support Email: <a href="mailto:{{supportEmail}}">{{supportEmail}}</a></p>
+            </div>
+            <div class="footer">
+              <p>We're excited to have you onboard!</p>
+              <p>&copy; 2024 FinAutoJobs. All rights reserved.</p>
+              <p><a href="{{baseUrl}}">Visit Website</a> | <a href="{{supportUrl}}">Get Support</a></p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
     };
   }
 
@@ -451,24 +784,32 @@ class EmailService {
     }
 
     // Simple template replacement (you can use handlebars for more complex templating)
-    Object.keys(data).forEach(key => {
-      const regex = new RegExp(`{{${key}}}`, 'g');
-      template = template.replace(regex, data[key] || '');
+    Object.keys(data).forEach((key) => {
+      const regex = new RegExp(`{{${key}}}`, "g");
+      template = template.replace(regex, data[key] || "");
     });
 
     // Handle conditional blocks (basic implementation)
-    template = template.replace(/{{#if\s+(\w+)}}([\s\S]*?){{\/if}}/g, (match, condition, content) => {
-      return data[condition] ? content : '';
-    });
+    template = template.replace(
+      /{{#if\s+(\w+)}}([\s\S]*?){{\/if}}/g,
+      (match, condition, content) => {
+        return data[condition] ? content : "";
+      }
+    );
 
     // Handle each blocks (basic implementation)
-    template = template.replace(/{{#each\s+(\w+)}}([\s\S]*?){{\/each}}/g, (match, arrayName, content) => {
-      const array = data[arrayName];
-      if (Array.isArray(array)) {
-        return array.map(item => content.replace(/{{this}}/g, item)).join('');
+    template = template.replace(
+      /{{#each\s+(\w+)}}([\s\S]*?){{\/each}}/g,
+      (match, arrayName, content) => {
+        const array = data[arrayName];
+        if (Array.isArray(array)) {
+          return array
+            .map((item) => content.replace(/{{this}}/g, item))
+            .join("");
+        }
+        return "";
       }
-      return '';
-    });
+    );
 
     return template;
   }
@@ -484,7 +825,7 @@ class EmailService {
         applicationId,
         appliedDate,
         status,
-        contactEmail
+        contactEmail,
       } = applicationData;
 
       const templateData = {
@@ -497,23 +838,24 @@ class EmailService {
         contactEmail,
         dashboardUrl: `${this.baseUrl}/applicant-dashboard`,
         unsubscribeUrl: `${this.baseUrl}/unsubscribe`,
-        baseUrl: this.baseUrl
+        baseUrl: this.baseUrl,
       };
 
-      const html = this.renderTemplate('applicationConfirmation', templateData);
+      const html = this.renderTemplate("applicationConfirmation", templateData);
 
       await this.transporter.sendMail({
         from: `"${this.fromName}" <${this.fromEmail}>`,
         to: applicantEmail,
         subject: `Application Received - ${jobTitle} at ${companyName}`,
-        html: html
+        html: html,
       });
 
-      console.log(`✅ Application confirmation email sent to ${applicantEmail}`);
+      console.log(
+        `✅ Application confirmation email sent to ${applicantEmail}`
+      );
       return { success: true };
-
     } catch (error) {
-      console.error('❌ Error sending application confirmation email:', error);
+      console.error("❌ Error sending application confirmation email:", error);
       throw error;
     }
   }
@@ -529,34 +871,35 @@ class EmailService {
         newStatus,
         updatedDate,
         note,
-        nextSteps
+        nextSteps,
       } = updateData;
 
       const templateData = {
         applicantName,
         jobTitle,
         companyName,
-        newStatus: newStatus.charAt(0).toUpperCase() + newStatus.slice(1).replace('_', ' '),
+        newStatus:
+          newStatus.charAt(0).toUpperCase() +
+          newStatus.slice(1).replace("_", " "),
         updatedDate: new Date(updatedDate).toLocaleDateString(),
         note,
         nextSteps,
-        dashboardUrl: `${this.baseUrl}/applicant-dashboard`
+        dashboardUrl: `${this.baseUrl}/applicant-dashboard`,
       };
 
-      const html = this.renderTemplate('statusUpdate', templateData);
+      const html = this.renderTemplate("statusUpdate", templateData);
 
       await this.transporter.sendMail({
         from: `"${this.fromName}" <${this.fromEmail}>`,
         to: applicantEmail,
         subject: `Application Update - ${jobTitle} at ${companyName}`,
-        html: html
+        html: html,
       });
 
       console.log(`✅ Status update email sent to ${applicantEmail}`);
       return { success: true };
-
     } catch (error) {
-      console.error('❌ Error sending status update email:', error);
+      console.error("❌ Error sending status update email:", error);
       throw error;
     }
   }
@@ -575,7 +918,7 @@ class EmailService {
         experience,
         expectedSalary,
         matchScore,
-        applicationUrl
+        applicationUrl,
       } = notificationData;
 
       const templateData = {
@@ -588,24 +931,26 @@ class EmailService {
         experience,
         expectedSalary,
         matchScore,
-        applicationUrl: applicationUrl || `${this.baseUrl}/recruiter-dashboard`
+        applicationUrl: applicationUrl || `${this.baseUrl}/recruiter-dashboard`,
       };
 
-      const html = this.renderTemplate('newApplicationNotification', templateData);
+      const html = this.renderTemplate(
+        "newApplicationNotification",
+        templateData
+      );
 
       await this.transporter.sendMail({
         from: `"${this.fromName}" <${this.fromEmail}>`,
         to: recruiterEmail,
         subject: `New Application Received - ${jobTitle}`,
         html: html,
-        priority: 'high'
+        priority: "high",
       });
 
       console.log(`✅ New application notification sent to ${recruiterEmail}`);
       return { success: true };
-
     } catch (error) {
-      console.error('❌ Error sending new application notification:', error);
+      console.error("❌ Error sending new application notification:", error);
       throw error;
     }
   }
@@ -626,7 +971,7 @@ class EmailService {
         meetingLink,
         interviewers,
         contactEmail,
-        calendarLink
+        calendarLink,
       } = interviewData;
 
       const templateData = {
@@ -639,27 +984,28 @@ class EmailService {
         interviewType,
         location,
         meetingLink,
-        interviewers: Array.isArray(interviewers) ? interviewers.join(', ') : interviewers,
+        interviewers: Array.isArray(interviewers)
+          ? interviewers.join(", ")
+          : interviewers,
         contactEmail,
         calendarLink,
-        dashboardUrl: `${this.baseUrl}/applicant-dashboard`
+        dashboardUrl: `${this.baseUrl}/applicant-dashboard`,
       };
 
-      const html = this.renderTemplate('interviewScheduled', templateData);
+      const html = this.renderTemplate("interviewScheduled", templateData);
 
       await this.transporter.sendMail({
         from: `"${this.fromName}" <${this.fromEmail}>`,
         to: applicantEmail,
         subject: `Interview Scheduled - ${jobTitle} at ${companyName}`,
         html: html,
-        priority: 'high'
+        priority: "high",
       });
 
       console.log(`✅ Interview scheduled email sent to ${applicantEmail}`);
       return { success: true };
-
     } catch (error) {
-      console.error('❌ Error sending interview scheduled email:', error);
+      console.error("❌ Error sending interview scheduled email:", error);
       throw error;
     }
   }
@@ -683,7 +1029,7 @@ class EmailService {
         expiryDate,
         acceptUrl,
         negotiateUrl,
-        declineUrl
+        declineUrl,
       } = offerData;
 
       const templateData = {
@@ -701,24 +1047,23 @@ class EmailService {
         expiryDate: new Date(expiryDate).toLocaleDateString(),
         acceptUrl: acceptUrl || `${this.baseUrl}/offer/accept`,
         negotiateUrl: negotiateUrl || `${this.baseUrl}/offer/negotiate`,
-        declineUrl: declineUrl || `${this.baseUrl}/offer/decline`
+        declineUrl: declineUrl || `${this.baseUrl}/offer/decline`,
       };
 
-      const html = this.renderTemplate('offerExtended', templateData);
+      const html = this.renderTemplate("offerExtended", templateData);
 
       await this.transporter.sendMail({
         from: `"${this.fromName}" <${this.fromEmail}>`,
         to: applicantEmail,
         subject: `🎉 Job Offer - ${jobTitle} at ${companyName}`,
         html: html,
-        priority: 'high'
+        priority: "high",
       });
 
       console.log(`✅ Job offer email sent to ${applicantEmail}`);
       return { success: true };
-
     } catch (error) {
-      console.error('❌ Error sending job offer email:', error);
+      console.error("❌ Error sending job offer email:", error);
       throw error;
     }
   }
@@ -729,7 +1074,7 @@ class EmailService {
       const emailPromises = recipients.map(async (recipient) => {
         const personalizedData = {
           ...templateData,
-          ...recipient.data
+          ...recipient.data,
         };
 
         const html = this.renderTemplate(templateName, personalizedData);
@@ -738,23 +1083,27 @@ class EmailService {
           from: `"${this.fromName}" <${this.fromEmail}>`,
           to: recipient.email,
           subject: subject,
-          html: html
+          html: html,
         });
       });
 
       const results = await Promise.allSettled(emailPromises);
-      const successful = results.filter(result => result.status === 'fulfilled').length;
-      const failed = results.filter(result => result.status === 'rejected').length;
+      const successful = results.filter(
+        (result) => result.status === "fulfilled"
+      ).length;
+      const failed = results.filter(
+        (result) => result.status === "rejected"
+      ).length;
 
-      console.log(`✅ Bulk email sent: ${successful} successful, ${failed} failed`);
+      console.log(
+        `✅ Bulk email sent: ${successful} successful, ${failed} failed`
+      );
       return { successful, failed, total: recipients.length };
-
     } catch (error) {
-      console.error('❌ Error sending bulk emails:', error);
+      console.error("❌ Error sending bulk emails:", error);
       throw error;
     }
   }
-
 
   /**
    * Send welcome email to new user
@@ -768,13 +1117,13 @@ class EmailService {
         from: `"${this.fromName}" <${this.fromEmail}>`,
         to: userEmail,
         subject: subject,
-        html: html
+        html: html,
       });
 
       console.log(`✅ Welcome email sent to ${userEmail}`);
       return true;
     } catch (error) {
-      console.error('❌ Failed to send welcome email:', error);
+      console.error("❌ Failed to send welcome email:", error);
       return false;
     }
   }
@@ -786,46 +1135,64 @@ class EmailService {
     try {
       const { firstName, lastName, role, password, contactNumber } = userData;
       const fullName = `${firstName} ${lastName}`;
-      
+
       const subject = `Your FinAutoJobs Account Has Been Created - Login Details Inside`;
-      const html = this.getAccountCreatedEmailTemplate(fullName, userEmail, password, role, contactNumber);
+      const html = this.getAccountCreatedEmailTemplate(
+        fullName,
+        userEmail,
+        password,
+        role,
+        contactNumber
+      );
 
       await this.transporter.sendMail({
         from: `"${this.fromName}" <${this.fromEmail}>`,
         to: userEmail,
         subject: subject,
         html: html,
-        priority: 'high'
+        priority: "high",
       });
 
-      console.log(`✅ Account creation email with credentials sent to ${userEmail}`);
+      console.log(
+        `✅ Account creation email with credentials sent to ${userEmail}`
+      );
       return true;
     } catch (error) {
-      console.error('❌ Failed to send account creation email:', error);
+      console.error("❌ Failed to send account creation email:", error);
       return false;
     }
   }
 
-
   /**
    * Send application received notification to recruiter
    */
-  async sendApplicationReceivedEmail(recruiterEmail, recruiterName, applicantName, jobTitle, companyName) {
+  async sendApplicationReceivedEmail(
+    recruiterEmail,
+    recruiterName,
+    applicantName,
+    jobTitle,
+    companyName
+  ) {
     try {
       const subject = `New Application Received for ${jobTitle} at ${companyName}`;
-      const html = this.getApplicationReceivedTemplate(recruiterName, applicantName, jobTitle, companyName);
+      const html = this.getApplicationReceivedTemplate(
+        recruiterName,
+        applicantName,
+        jobTitle,
+        companyName
+      );
 
       await this.transporter.sendMail({
         from: `"${this.fromName}" <${this.fromEmail}>`,
         to: recruiterEmail,
         subject: subject,
-        html: html
+        html: html,
       });
 
       console.log(`✅ Application notification sent to ${recruiterEmail}`);
       return true;
     } catch (error) {
-      console.error('❌ Failed to send application notification:', error);
+      console.error("❌ Failed to send application notification:", error);
       return false;
     }
   }
@@ -833,22 +1200,33 @@ class EmailService {
   /**
    * Send application status update notification to applicant
    */
-  async sendApplicationStatusEmail(applicantEmail, applicantName, jobTitle, companyName, newStatus) {
+  async sendApplicationStatusEmail(
+    applicantEmail,
+    applicantName,
+    jobTitle,
+    companyName,
+    newStatus
+  ) {
     try {
       const subject = `Your Application Status Has Been Updated - ${jobTitle}`;
-      const html = this.getApplicationStatusTemplate(applicantName, jobTitle, companyName, newStatus);
+      const html = this.getApplicationStatusTemplate(
+        applicantName,
+        jobTitle,
+        companyName,
+        newStatus
+      );
 
       await this.transporter.sendMail({
         from: `"${this.fromName}" <${this.fromEmail}>`,
         to: applicantEmail,
         subject: subject,
-        html: html
+        html: html,
       });
 
       console.log(`✅ Application status update sent to ${applicantEmail}`);
       return true;
     } catch (error) {
-      console.error('❌ Failed to send application status update:', error);
+      console.error("❌ Failed to send application status update:", error);
       return false;
     }
   }
@@ -859,19 +1237,22 @@ class EmailService {
   async sendCompanyVerificationEmail(adminEmail, companyName, recruiterName) {
     try {
       const subject = `New Company Registration Pending Verification - ${companyName}`;
-      const html = this.getCompanyVerificationTemplate(companyName, recruiterName);
+      const html = this.getCompanyVerificationTemplate(
+        companyName,
+        recruiterName
+      );
 
       await this.transporter.sendMail({
         from: `"${this.fromName}" <${this.fromEmail}>`,
         to: adminEmail,
         subject: subject,
-        html: html
+        html: html,
       });
 
       console.log(`✅ Company verification request sent to ${adminEmail}`);
       return true;
     } catch (error) {
-      console.error('❌ Failed to send company verification request:', error);
+      console.error("❌ Failed to send company verification request:", error);
       return false;
     }
   }
@@ -888,13 +1269,13 @@ class EmailService {
         from: `"${this.fromName}" <${this.fromEmail}>`,
         to: recruiterEmail,
         subject: subject,
-        html: html
+        html: html,
       });
 
       console.log(`✅ Company approval notification sent to ${recruiterEmail}`);
       return true;
     } catch (error) {
-      console.error('❌ Failed to send company approval notification:', error);
+      console.error("❌ Failed to send company approval notification:", error);
       return false;
     }
   }
@@ -904,37 +1285,48 @@ class EmailService {
    */
   async sendPasswordResetEmail(userEmail, userName, resetToken) {
     try {
-      const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
-      const subject = 'Reset Your Password - FinAutoJobs';
+      const resetLink = `${
+        process.env.FRONTEND_URL || "http://localhost:3000"
+      }/reset-password?token=${resetToken}`;
+      const subject = "Reset Your Password - FinAutoJobs";
       const html = this.getPasswordResetTemplate(userName, resetLink);
 
       await this.transporter.sendMail({
         from: `"${this.fromName}" <${this.fromEmail}>`,
         to: userEmail,
         subject: subject,
-        html: html
+        html: html,
       });
 
       console.log(`✅ Password reset email sent to ${userEmail}`);
       return true;
     } catch (error) {
-      console.error('❌ Failed to send password reset email:', error);
+      console.error("❌ Failed to send password reset email:", error);
       return false;
     }
   }
 
   // Email Templates
-  getAccountCreatedEmailTemplate(fullName, email, password, role, contactNumber) {
+  getAccountCreatedEmailTemplate(
+    fullName,
+    email,
+    password,
+    role,
+    contactNumber
+  ) {
     const roleMessages = {
-      applicant: 'You can now search for jobs, create your profile, and apply to positions that match your skills.',
-      recruiter: 'You can now post job openings, manage applications, and find the best talent for your company.',
-      admin: 'You have access to the admin dashboard where you can manage users, companies, and monitor platform activity.'
+      applicant:
+        "You can now search for jobs, create your profile, and apply to positions that match your skills.",
+      recruiter:
+        "You can now post job openings, manage applications, and find the best talent for your company.",
+      admin:
+        "You have access to the admin dashboard where you can manage users, companies, and monitor platform activity.",
     };
 
     const dashboardUrls = {
       applicant: `${this.baseUrl}/applicant-dashboard`,
       recruiter: `${this.baseUrl}/recruiter-dashboard`,
-      admin: `${this.baseUrl}/admin-dashboard`
+      admin: `${this.baseUrl}/admin-dashboard`,
     };
 
     return `
@@ -966,7 +1358,9 @@ class EmailService {
           </div>
           <div class="content">
             <h2>Hello ${fullName}!</h2>
-            <p>Great news! An administrator has created your FinAutoJobs account. You can now access our platform and start ${roleMessages[role] || 'using our services'}.</p>
+            <p>Great news! An administrator has created your FinAutoJobs account. You can now access our platform and start ${
+              roleMessages[role] || "using our services"
+            }.</p>
             
             <div class="credentials-box">
               <h3>🔐 Your Login Credentials</h3>
@@ -990,7 +1384,9 @@ class EmailService {
             </div>
 
             <div style="text-align: center;">
-              <a href="${dashboardUrls[role] || this.baseUrl}" class="cta-button">
+              <a href="${
+                dashboardUrls[role] || this.baseUrl
+              }" class="cta-button">
                 🚀 Access Your Dashboard
               </a>
             </div>
@@ -1000,7 +1396,9 @@ class EmailService {
               <li><strong>Login:</strong> Use the credentials above to access your account</li>
               <li><strong>Complete Profile:</strong> Add your details to get the most out of our platform</li>
               <li><strong>Change Password:</strong> Set a new password for security</li>
-              <li><strong>Explore Features:</strong> ${roleMessages[role] || 'Discover what our platform has to offer'}</li>
+              <li><strong>Explore Features:</strong> ${
+                roleMessages[role] || "Discover what our platform has to offer"
+              }</li>
             </ul>
 
             <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
@@ -1021,9 +1419,12 @@ class EmailService {
 
   getWelcomeEmailTemplate(userName, role) {
     const roleMessages = {
-      applicant: 'You can now search for jobs, create your profile, and apply to positions that match your skills.',
-      recruiter: 'You can now post job openings, manage applications, and find the best talent for your company.',
-      admin: 'You have access to the admin dashboard where you can manage users, companies, and monitor platform activity.'
+      applicant:
+        "You can now search for jobs, create your profile, and apply to positions that match your skills.",
+      recruiter:
+        "You can now post job openings, manage applications, and find the best talent for your company.",
+      admin:
+        "You have access to the admin dashboard where you can manage users, companies, and monitor platform activity.",
     };
 
     return `
@@ -1052,7 +1453,9 @@ class EmailService {
             <p>Dear ${userName},</p>
             <p>Thank you for joining FinAutoJobs! We're excited to have you as part of our community.</p>
             <p>${roleMessages[role]}</p>
-            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/login" class="button">Login to Your Account</a>
+            <a href="${
+              process.env.FRONTEND_URL || "http://localhost:3000"
+            }/login" class="button">Login to Your Account</a>
             <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
             <p>Best regards,<br>The FinAutoJobs Team</p>
           </div>
@@ -1105,7 +1508,12 @@ class EmailService {
     `;
   }
 
-  getApplicationReceivedTemplate(recruiterName, applicantName, jobTitle, companyName) {
+  getApplicationReceivedTemplate(
+    recruiterName,
+    applicantName,
+    jobTitle,
+    companyName
+  ) {
     return `
       <!DOCTYPE html>
       <html>
@@ -1136,7 +1544,9 @@ class EmailService {
               <p><strong>Applicant:</strong> ${applicantName}</p>
             </div>
             <p>Please log in to your dashboard to review the application and take appropriate action.</p>
-            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/recruiter/applications" class="button">Review Applications</a>
+            <a href="${
+              process.env.FRONTEND_URL || "http://localhost:3000"
+            }/recruiter/applications" class="button">Review Applications</a>
             <p>Best regards,<br>The FinAutoJobs Team</p>
           </div>
           <div class="footer">
@@ -1148,13 +1558,22 @@ class EmailService {
     `;
   }
 
-  getApplicationStatusTemplate(applicantName, jobTitle, companyName, newStatus) {
+  getApplicationStatusTemplate(
+    applicantName,
+    jobTitle,
+    companyName,
+    newStatus
+  ) {
     const statusMessages = {
-      'reviewing': 'Your application is currently being reviewed by the hiring team.',
-      'shortlisted': 'Congratulations! You have been shortlisted for the position.',
-      'interviewed': 'Thank you for attending the interview. The team is evaluating your candidacy.',
-      'selected': 'Congratulations! You have been selected for the position.',
-      'rejected': 'Thank you for your interest. Unfortunately, your application was not selected at this time.'
+      reviewing:
+        "Your application is currently being reviewed by the hiring team.",
+      shortlisted:
+        "Congratulations! You have been shortlisted for the position.",
+      interviewed:
+        "Thank you for attending the interview. The team is evaluating your candidacy.",
+      selected: "Congratulations! You have been selected for the position.",
+      rejected:
+        "Thank you for your interest. Unfortunately, your application was not selected at this time.",
     };
 
     return `
@@ -1187,7 +1606,9 @@ class EmailService {
               <p><strong>New Status:</strong> <span style="text-transform: capitalize; color: #667eea;">${newStatus}</span></p>
             </div>
             <p>${statusMessages[newStatus]}</p>
-            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/applicant/applications" class="button">View Application</a>
+            <a href="${
+              process.env.FRONTEND_URL || "http://localhost:3000"
+            }/applicant/applications" class="button">View Application</a>
             <p>Best regards,<br>The FinAutoJobs Team</p>
           </div>
           <div class="footer">
@@ -1229,7 +1650,9 @@ class EmailService {
               <p><strong>Registered by:</strong> ${recruiterName}</p>
             </div>
             <p>Please review the company information and verify the company if it meets our guidelines.</p>
-            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/admin/companies" class="button">Review Companies</a>
+            <a href="${
+              process.env.FRONTEND_URL || "http://localhost:3000"
+            }/admin/companies" class="button">Review Companies</a>
             <p>Best regards,<br>The FinAutoJobs Team</p>
           </div>
           <div class="footer">
@@ -1271,7 +1694,9 @@ class EmailService {
               <p><strong>Status:</strong> <span style="color: #28a745;">Verified</span></p>
             </div>
             <p>You can now post job openings and start receiving applications from qualified candidates.</p>
-            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/recruiter/dashboard" class="button">Go to Dashboard</a>
+            <a href="${
+              process.env.FRONTEND_URL || "http://localhost:3000"
+            }/recruiter/dashboard" class="button">Go to Dashboard</a>
             <p>Best regards,<br>The FinAutoJobs Team</p>
           </div>
           <div class="footer">
@@ -1329,27 +1754,200 @@ class EmailService {
       const hasEmailConfig = process.env.EMAIL_USER && process.env.EMAIL_PASS;
 
       // Skip connection test in production if no proper email config
-      if (process.env.NODE_ENV === 'production' && !hasEmailConfig) {
-        console.log('📧 Skipping email connection test in production (using mock service)');
+      if (process.env.NODE_ENV === "production" && !hasEmailConfig) {
+        console.log(
+          "📧 Skipping email connection test in production (using mock service)"
+        );
         return;
       }
 
       // Add timeout to connection test
       await Promise.race([
         this.transporter.verify(),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Connection timeout')), 5000) // 5 second timeout
-        )
+        new Promise(
+          (_, reject) =>
+            setTimeout(() => reject(new Error("Connection timeout")), 5000) // 5 second timeout
+        ),
       ]);
-      console.log('✅ Email service connected successfully');
+      console.log("✅ Email service connected successfully");
     } catch (error) {
-      console.error('❌ Email service connection failed:', error.message);
-      console.error('Please check your email configuration in environment variables');
-      
+      console.error("❌ Email service connection failed:", error.message);
+      console.error(
+        "Please check your email configuration in environment variables"
+      );
+
       // Don't throw error in production, just log it
-      if (process.env.NODE_ENV !== 'production') {
+      if (process.env.NODE_ENV !== "production") {
         throw error;
       }
+    }
+  }
+
+  // Send company verification approved email
+  async sendCompanyVerifiedEmail(companyData) {
+    try {
+      const {
+        recruiterEmail,
+        recruiterName,
+        companyName,
+        industry,
+        location,
+        verificationDate,
+        adminNotes,
+      } = companyData;
+
+      const templateData = {
+        recruiterName,
+        companyName,
+        industry,
+        location,
+        verificationDate: new Date(verificationDate).toLocaleDateString(),
+        adminNotes,
+        companyDashboardUrl: `${this.baseUrl}/recruiter-dashboard`,
+        supportEmail: process.env.SUPPORT_EMAIL || "support@finautojobs.com",
+        supportUrl: `${this.baseUrl}/support`,
+        baseUrl: this.baseUrl,
+      };
+
+      const html = this.renderTemplate("companyVerified", templateData);
+
+      await this.sendEmail(
+        recruiterEmail,
+        `🎉 ${companyName} - Company Verified Successfully!`,
+        html
+      );
+
+      console.log(`✅ Company verification email sent to ${recruiterEmail}`);
+      return { success: true };
+    } catch (error) {
+      console.error("❌ Error sending company verification email:", error);
+      throw error;
+    }
+  }
+
+  // Send company verification rejected email
+  async sendCompanyRejectedEmail(companyData) {
+    try {
+      const {
+        recruiterEmail,
+        recruiterName,
+        companyName,
+        submissionDate,
+        reviewDate,
+        rejectionReason,
+      } = companyData;
+
+      const templateData = {
+        recruiterName,
+        companyName,
+        submissionDate: new Date(submissionDate).toLocaleDateString(),
+        reviewDate: new Date(reviewDate).toLocaleDateString(),
+        rejectionReason,
+        companyProfileUrl: `${this.baseUrl}/recruiter-dashboard/company`,
+        supportEmail: process.env.SUPPORT_EMAIL || "support@finautojobs.com",
+        supportUrl: `${this.baseUrl}/support`,
+        baseUrl: this.baseUrl,
+      };
+
+      const html = this.renderTemplate("companyRejected", templateData);
+
+      await this.sendEmail(
+        recruiterEmail,
+        `Company Verification Update - ${companyName}`,
+        html
+      );
+
+      console.log(`✅ Company rejection email sent to ${recruiterEmail}`);
+      return { success: true };
+    } catch (error) {
+      console.error("❌ Error sending company rejection email:", error);
+      throw error;
+    }
+  }
+
+  // Send company suspended email
+  async sendCompanySuspendedEmail(companyData) {
+    try {
+      const {
+        recruiterEmail,
+        recruiterName,
+        companyName,
+        suspensionDate,
+        suspensionReason,
+      } = companyData;
+
+      const templateData = {
+        recruiterName,
+        companyName,
+        suspensionDate: new Date(suspensionDate).toLocaleDateString(),
+        suspensionReason,
+        appealUrl: `${this.baseUrl}/support/appeal`,
+        supportEmail: process.env.SUPPORT_EMAIL || "support@finautojobs.com",
+        supportPhone: process.env.SUPPORT_PHONE || "+1-800-123-4567",
+        supportUrl: `${this.baseUrl}/support`,
+        baseUrl: this.baseUrl,
+      };
+
+      const html = this.renderTemplate("companySuspended", templateData);
+
+      await this.sendEmail(
+        recruiterEmail,
+        `⚠️ Company Account Suspended - ${companyName}`,
+        html
+      );
+
+      console.log(`✅ Company suspension email sent to ${recruiterEmail}`);
+      return { success: true };
+    } catch (error) {
+      console.error("❌ Error sending company suspension email:", error);
+      throw error;
+    }
+  }
+
+  // Send company submitted for review email
+  async sendCompanySubmittedEmail(companyData) {
+    try {
+      const {
+        recruiterEmail,
+        recruiterName,
+        companyName,
+        industry,
+        location,
+        submissionDate,
+        referenceId,
+      } = companyData;
+
+      const templateData = {
+        recruiterName,
+        companyName,
+        industry,
+        location,
+        submissionDate: new Date(submissionDate).toLocaleDateString(),
+        referenceId,
+        companyProfileUrl: `${this.baseUrl}/recruiter-dashboard/company`,
+        supportEmail: process.env.SUPPORT_EMAIL || "support@finautojobs.com",
+        supportUrl: `${this.baseUrl}/support`,
+        baseUrl: this.baseUrl,
+      };
+
+      const html = this.renderTemplate(
+        "companySubmittedForReview",
+        templateData
+      );
+
+      await this.sendEmail(
+        recruiterEmail,
+        `Company Verification Submitted - ${companyName}`,
+        html
+      );
+
+      console.log(
+        `✅ Company submission confirmation email sent to ${recruiterEmail}`
+      );
+      return { success: true };
+    } catch (error) {
+      console.error("❌ Error sending company submission email:", error);
+      throw error;
     }
   }
 }

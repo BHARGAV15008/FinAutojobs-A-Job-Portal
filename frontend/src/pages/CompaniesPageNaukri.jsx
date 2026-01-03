@@ -90,11 +90,14 @@ const float = keyframes`
 `;
 
 // Styled Components
-const PageHeader = styled(Box)(() => ({
+const PageHeader = styled(Box)(({ theme }) => ({
   background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%)",
-  padding: "48px 0 80px",
+  padding: "32px 0 48px",
   position: "relative",
   overflow: "hidden",
+  [theme.breakpoints.down("sm")]: {
+    padding: "24px 0 40px",
+  },
   "&::before": {
     content: '""',
     position: "absolute",
@@ -118,12 +121,15 @@ const FilterCard = styled(Card)(() => ({
   "&::-webkit-scrollbar-thumb": { backgroundColor: "#e5e7eb", borderRadius: 3 },
 }));
 
-const FilterSection = styled(Box)(() => ({
+const FilterSection = styled(Box)(({ theme }) => ({
   padding: "16px 20px",
   borderBottom: "1px solid #f3f4f6",
+  [theme.breakpoints.down("sm")]: {
+    padding: "12px 16px",
+  },
 }));
 
-const CompanyCard = styled(Card)(() => ({
+const CompanyCard = styled(Card)(({ theme }) => ({
   borderRadius: "6px",
   boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
   transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -132,6 +138,12 @@ const CompanyCard = styled(Card)(() => ({
   overflow: "visible",
   animation: `${fadeIn} 0.5s ease`,
   position: "relative",
+  [theme.breakpoints.down("sm")]: {
+    "&:active": {
+      transform: "scale(0.98)",
+      boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+    },
+  },
   "&:hover": {
     transform: "translateY(-8px)",
     boxShadow: "0 20px 50px rgba(99, 102, 241, 0.15)",
@@ -179,7 +191,7 @@ const BenefitChip = styled(Chip)(() => ({
   height: "auto",
 }));
 
-const QuickFilterChip = styled(Chip)(({ selected }) => ({
+const QuickFilterChip = styled(Chip)(({ selected, theme }) => ({
   fontWeight: 500,
   borderRadius: "6px",
   transition: "all 0.2s",
@@ -189,6 +201,11 @@ const QuickFilterChip = styled(Chip)(({ selected }) => ({
   paddingTop: "4px",
   paddingBottom: "4px",
   height: "auto",
+  whiteSpace: "nowrap",
+  [theme.breakpoints.down("sm")]: {
+    fontSize: "12px",
+    height: "32px",
+  },
   "& .MuiChip-icon": {
     fontSize: 16,
     marginLeft: "5px",
@@ -198,6 +215,11 @@ const QuickFilterChip = styled(Chip)(({ selected }) => ({
   "&:hover": {
     backgroundColor: selected ? colors.primaryDark : "#e5e7eb",
     transform: "translateY(-2px)",
+  },
+  "&:active": {
+    [theme.breakpoints.down("sm")]: {
+      transform: "scale(0.95)",
+    },
   },
 }));
 
@@ -212,6 +234,13 @@ const CompaniesPageNaukri = () => {
   const [totalPages, setTotalPages] = useState(5);
   const [activeTab, setActiveTab] = useState(0);
   const [searchInFilter, setSearchInFilter] = useState("");
+  const [featuredCompanies, setFeaturedCompanies] = useState([]);
+  const [companyStats, setCompanyStats] = useState({
+    total: 0,
+    byType: {},
+    byIndustry: {},
+    byLocation: {},
+  });
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -239,12 +268,120 @@ const CompaniesPageNaukri = () => {
   const fetchCompanies = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/companies?limit=100`);
+
+      // Build query parameters
+      const params = new URLSearchParams();
+      params.append("verified", "true"); // Only show verified companies
+      params.append("page", page);
+      params.append("limit", "12");
+
+      // Add filters
+      if (filters.industry.length > 0) {
+        params.append("industry", filters.industry[0]); // Backend accepts single industry
+      }
+      if (filters.location.length > 0) {
+        params.append("location", filters.location[0]);
+      }
+      if (filters.companySize.length > 0) {
+        params.append("size", filters.companySize[0]);
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/companies?${params.toString()}`
+      );
+
       if (response.ok) {
         const data = await response.json();
-        setCompanies(data.companies || data.data?.companies || []);
-        setTotalPages(data.totalPages || 1);
+
+        console.log("📊 Companies API response:", data);
+
+        // Extract companies array from response
+        let companiesData = data.companies || [];
+
+        // Transform companies to match frontend expectations
+        const transformedCompanies = companiesData.map((company) => {
+          // Extract location from headquarters
+          const location =
+            company.headquarters?.city ||
+            company.headquarters?.country ||
+            "Not specified";
+
+          return {
+            id: company._id || company.id,
+            name: company.name,
+            logo: company.logo || "/default-company-logo.png",
+            coverImage: company.coverImage,
+            description: company.description || "",
+            tagline: company.tagline || "",
+            industry: company.industry || "Technology",
+            location: location,
+            fullAddress: company.headquarters
+              ? `${company.headquarters.city}, ${company.headquarters.state}, ${company.headquarters.country}`
+              : "Location not specified",
+            size: company.size || "1-10",
+            companyType: company.companyType || "Private",
+            rating: company.stats?.averageRating || 4.0 + Math.random(),
+            reviews:
+              company.stats?.totalReviews ||
+              Math.floor(Math.random() * 500) + 50,
+            openings: company.stats?.totalJobsPosted || 0,
+            isVerified: company.verificationStatus?.isVerified || false,
+            website: company.website,
+            email: company.email,
+            foundedYear: company.foundedYear,
+            totalEmployees: company.stats?.totalEmployees || 0,
+            technologies: company.technologies || [],
+            benefits: company.benefits || [],
+            perks: company.perks || [],
+            socialLinks: company.socialLinks || {},
+            featured: company.featured || false,
+            premium: company.premium || false,
+            color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
+          };
+        });
+
+        console.log("✅ Transformed companies:", transformedCompanies.length);
+        console.log("Sample company:", transformedCompanies[0]);
+
+        setCompanies(transformedCompanies);
+        setTotalPages(data.totalPages || Math.ceil(data.total / 12) || 1);
+
+        // Separate featured companies
+        const featured = transformedCompanies.filter(
+          (c) => c.featured || c.premium
+        );
+        setFeaturedCompanies(
+          featured.length > 0 ? featured : transformedCompanies.slice(0, 3)
+        );
+
+        // Calculate dynamic stats
+        const stats = {
+          total: transformedCompanies.length,
+          byType: {},
+          byIndustry: {},
+          byLocation: {},
+        };
+
+        transformedCompanies.forEach((company) => {
+          // Count by type
+          const type = company.companyType || "Other";
+          stats.byType[type] = (stats.byType[type] || 0) + 1;
+
+          // Count by industry
+          const industry = company.industry || "Other";
+          stats.byIndustry[industry] = (stats.byIndustry[industry] || 0) + 1;
+
+          // Count by location
+          const location = company.location || "Other";
+          stats.byLocation[location] = (stats.byLocation[location] || 0) + 1;
+        });
+
+        setCompanyStats(stats);
+        console.log("📈 Company stats:", stats);
       } else {
+        console.error("Failed to fetch companies:", response.status);
+        const errorText = await response.text();
+        console.error("Error details:", errorText);
         setCompanies([]);
       }
     } catch (error) {
@@ -315,25 +452,48 @@ const CompaniesPageNaukri = () => {
     return count;
   }, [filters]);
 
-  // Filter Options
-  const companyTypeOptions = [
-    { label: "MNCs", count: "2,100+", icon: <Verified /> },
-    { label: "Startups", count: "755", icon: <Lightbulb /> },
-    { label: "Unicorns", count: "91", icon: <EmojiEvents /> },
-    { label: "Product Companies", count: "1,200+", icon: <Laptop /> },
-    { label: "Service Based", count: "3,400+", icon: <Handshake /> },
-  ];
+  // Filter Options - Dynamic
+  const companyTypeOptions = useMemo(
+    () => [
+      {
+        label: "MNCs",
+        count: companyStats.byType["MNC"] || companyStats.byType["mnc"] || 0,
+        icon: <Verified />,
+      },
+      {
+        label: "Startups",
+        count:
+          companyStats.byType["Startup"] || companyStats.byType["startup"] || 0,
+        icon: <Lightbulb />,
+      },
+      {
+        label: "Unicorns",
+        count:
+          companyStats.byType["Unicorn"] || companyStats.byType["unicorn"] || 0,
+        icon: <EmojiEvents />,
+      },
+      {
+        label: "Product Companies",
+        count:
+          companyStats.byType["Product"] || companyStats.byType["product"] || 0,
+        icon: <Laptop />,
+      },
+      {
+        label: "Service Based",
+        count:
+          companyStats.byType["Service"] || companyStats.byType["service"] || 0,
+        icon: <Handshake />,
+      },
+    ],
+    [companyStats]
+  );
 
-  const industryOptions = [
-    { label: "IT Services & Consulting", count: "2,432" },
-    { label: "Software Product", count: "1,856" },
-    { label: "Banking & Financial Services", count: "416" },
-    { label: "Internet & E-commerce", count: "234" },
-    { label: "Healthcare & Pharmaceuticals", count: "658" },
-    { label: "Manufacturing", count: "892" },
-    { label: "Retail", count: "345" },
-    { label: "Education & Training", count: "287" },
-  ];
+  const industryOptions = useMemo(() => {
+    return Object.entries(companyStats.byIndustry)
+      .map(([label, count]) => ({ label, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8); // Show top 8 industries
+  }, [companyStats]);
 
   const locationOptions = [
     "Bangalore",
@@ -373,16 +533,67 @@ const CompaniesPageNaukri = () => {
     },
   ];
 
-  const tabOptions = [
-    { label: "All Companies", count: "6,500+" },
-    { label: "Top Rated", count: "1,200+" },
-    { label: "Trending", count: "350+" },
-    { label: "Newly Listed", count: "180+" },
-  ];
+  // Filter companies based on search and activeTab
+  const filteredCompanies = useMemo(() => {
+    let filtered = [...companies];
 
+    // Filter by search term
+    if (searchInFilter.trim()) {
+      const searchLower = searchInFilter.toLowerCase();
+      filtered = filtered.filter(
+        (company) =>
+          company.name.toLowerCase().includes(searchLower) ||
+          (company.description || "").toLowerCase().includes(searchLower) ||
+          (company.industry || "").toLowerCase().includes(searchLower) ||
+          (company.location || "").toLowerCase().includes(searchLower)
+      );
+    }
 
+    // Filter by active tab
+    if (activeTab === 1) {
+      // Top Rated
+      filtered = filtered.filter((c) => (c.rating || 0) >= 4.0);
+    } else if (activeTab === 2) {
+      // Trending
+      filtered = filtered.filter((c) => c.isTrending || c.trending);
+    } else if (activeTab === 3) {
+      // Newly Listed - companies created in last 30 days
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      filtered = filtered.filter((c) => {
+        const createdDate = new Date(c.createdAt || c.created_at);
+        return createdDate >= thirtyDaysAgo;
+      });
+    } else if (activeTab === 4) {
+      // Featured
+      filtered = filtered.filter((c) => c.featured || c.premium);
+    }
 
+    return filtered;
+  }, [companies, searchInFilter, activeTab]);
 
+  const tabOptions = useMemo(
+    () => [
+      { label: "All Companies", count: companyStats.total },
+      {
+        label: "Top Rated",
+        count: companies.filter((c) => (c.rating || 0) >= 4.0).length,
+      },
+      {
+        label: "Trending",
+        count: companies.filter((c) => c.isTrending || c.trending).length,
+      },
+      {
+        label: "Newly Listed",
+        count: companies.filter((c) => {
+          const createdDate = new Date(c.createdAt || c.created_at);
+          const daysDiff = (new Date() - createdDate) / (1000 * 60 * 60 * 24);
+          return daysDiff <= 30;
+        }).length,
+      },
+    ],
+    [companyStats, companies]
+  );
 
   const benefits = [
     { icon: <Pool />, label: "Gym & Pool" },
@@ -424,7 +635,7 @@ const CompaniesPageNaukri = () => {
         <TextField
           size="small"
           fullWidth
-          placeholder="Search companies..."
+          placeholder="Search by company name, industry, location..."
           value={searchInFilter}
           onChange={(e) => setSearchInFilter(e.target.value)}
           InputProps={{
@@ -739,10 +950,10 @@ const CompaniesPageNaukri = () => {
               <Avatar
                 className="company-logo"
                 sx={{
-                  width: 64,
-                  height: 64,
+                  width: { xs: 56, sm: 64 },
+                  height: { xs: 56, sm: 64 },
                   bgcolor: company.color,
-                  fontSize: "24px",
+                  fontSize: { xs: "20px", sm: "24px" },
                   fontWeight: 700,
                   transition: "transform 0.3s",
                   boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
@@ -762,19 +973,44 @@ const CompaniesPageNaukri = () => {
               </IconButton>
             </Box>
 
-            <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 700,
+                mb: 0.5,
+                fontSize: { xs: "1rem", sm: "1.25rem" },
+              }}
+            >
               {company.name}
             </Typography>
 
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                mb: 1,
+                flexWrap: "wrap",
+              }}
+            >
               <Rating
                 value={company.rating}
                 precision={0.1}
                 size="small"
                 readOnly
+                sx={{
+                  "& .MuiRating-icon": {
+                    fontSize: { xs: "16px", sm: "18px" },
+                  },
+                }}
               />
-              <Typography variant="body2" color="text.secondary">
-                {company.rating} ({company.reviews} reviews)
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ fontSize: { xs: "12px", sm: "14px" } }}
+              >
+                {parseFloat(company.rating || 0).toFixed(1)} (
+                {company.reviews || 0} reviews)
               </Typography>
             </Box>
 
@@ -787,8 +1023,13 @@ const CompaniesPageNaukri = () => {
                 color: "#6b7280",
               }}
             >
-              <Business sx={{ fontSize: 16 }} />
-              <Typography variant="body2">{company.industry}</Typography>
+              <Business sx={{ fontSize: { xs: 14, sm: 16 } }} />
+              <Typography
+                variant="body2"
+                sx={{ fontSize: { xs: "12px", sm: "14px" } }}
+              >
+                {company.industry}
+              </Typography>
             </Box>
 
             <Box
@@ -811,7 +1052,7 @@ const CompaniesPageNaukri = () => {
 
             <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2 }}>
               <Chip
-                label={company.type}
+                label={company.companyType || "Company"}
                 size="small"
                 sx={{
                   bgcolor: "#ede9fe",
@@ -820,7 +1061,7 @@ const CompaniesPageNaukri = () => {
                   fontSize: "11px",
                 }}
               />
-              {company.type === "Unicorn" && (
+              {company.companyType === "Unicorn" && (
                 <Chip
                   icon={
                     <EmojiEvents
@@ -832,6 +1073,23 @@ const CompaniesPageNaukri = () => {
                   sx={{
                     bgcolor: "#fef3c7",
                     color: "#d97706",
+                    fontWeight: 600,
+                    fontSize: "11px",
+                  }}
+                />
+              )}
+              {company.isVerified && (
+                <Chip
+                  icon={
+                    <Verified
+                      sx={{ fontSize: 14, color: "#10b981 !important" }}
+                    />
+                  }
+                  label="Verified"
+                  size="small"
+                  sx={{
+                    bgcolor: "#d1fae5",
+                    color: "#059669",
                     fontWeight: 600,
                     fontSize: "11px",
                   }}
@@ -897,7 +1155,7 @@ const CompaniesPageNaukri = () => {
               color: "#fff",
               mb: 1,
               fontFamily: fonts.heading,
-              fontSize: { xs: "1.75rem", md: "2.5rem" },
+              fontSize: { xs: "1.25rem", sm: "1.5rem", md: "2rem" },
               letterSpacing: "-0.02em",
             }}
           >
@@ -909,7 +1167,7 @@ const CompaniesPageNaukri = () => {
               color: "rgba(255,255,255,0.9)",
               mb: 3,
               fontFamily: fonts.body,
-              fontSize: "1.1rem",
+              fontSize: { xs: "0.875rem", md: "1rem" },
             }}
           >
             Discover top companies actively hiring
@@ -944,11 +1202,11 @@ const CompaniesPageNaukri = () => {
         >
           <Grid container spacing={3}>
             {featuredCompanies.map((company, index) => (
-              <Grid item xs={12} md={4} key={company.id}>
+              <Grid item xs={12} sm={6} md={4} key={company.id}>
                 <FeaturedCompanyCard sx={{ animationDelay: `${index * 0.2}s` }}>
                   <Box
                     sx={{
-                      p: 3,
+                      p: { xs: 2, sm: 3 },
                       background: `linear-gradient(135deg, ${company.color}15 0%, ${company.color}05 100%)`,
                     }}
                   >
@@ -962,10 +1220,10 @@ const CompaniesPageNaukri = () => {
                     >
                       <Avatar
                         sx={{
-                          width: 72,
-                          height: 72,
+                          width: { xs: 60, sm: 72 },
+                          height: { xs: 60, sm: 72 },
                           bgcolor: company.color,
-                          fontSize: "28px",
+                          fontSize: { xs: "24px", sm: "28px" },
                           fontWeight: 700,
                           boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
                         }}
@@ -1103,7 +1361,9 @@ const CompaniesPageNaukri = () => {
                   "& .MuiTab-root": {
                     textTransform: "none",
                     fontWeight: 600,
-                    minHeight: 56,
+                    minHeight: { xs: 48, sm: 56 },
+                    fontSize: { xs: "13px", sm: "14px" },
+                    px: { xs: 1.5, sm: 2 },
                   },
                   "& .Mui-selected": { color: colors.primary },
                   "& .MuiTabs-indicator": {
@@ -1118,15 +1378,21 @@ const CompaniesPageNaukri = () => {
                     key={index}
                     label={
                       <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: { xs: 0.5, sm: 1 },
+                        }}
                       >
-                        {tab.label}
+                        <Box component="span" sx={{ whiteSpace: "nowrap" }}>
+                          {tab.label}
+                        </Box>
                         <Chip
                           label={tab.count}
                           size="small"
                           sx={{
-                            height: 20,
-                            fontSize: "10px",
+                            height: { xs: 18, sm: 20 },
+                            fontSize: { xs: "9px", sm: "10px" },
                             bgcolor:
                               activeTab === index ? "#ede9fe" : "#f3f4f6",
                           }}
@@ -1151,29 +1417,60 @@ const CompaniesPageNaukri = () => {
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                 {isMobile && (
-                  <Button
-                    variant="outlined"
-                    startIcon={
-                      <Badge badgeContent={activeFiltersCount} color="error">
-                        <FilterList />
-                      </Badge>
-                    }
-                    onClick={() => setMobileFiltersOpen(true)}
-                    sx={{
-                      textTransform: "none",
-                      fontWeight: 600,
-                      borderRadius: "6px",
-                    }}
-                  >
-                    Filters
-                  </Button>
+                  <Box sx={{ position: "relative", display: "inline-flex" }}>
+                    <Button
+                      variant="outlined"
+                      startIcon={<FilterList />}
+                      onClick={() => setMobileFiltersOpen(true)}
+                      sx={{
+                        textTransform: "none",
+                        fontWeight: 600,
+                        borderRadius: "6px",
+                        borderColor: "#e5e7eb",
+                        color: "#374151",
+                        bgcolor: "#fff",
+                        "&:hover": {
+                          borderColor: colors.primary,
+                          bgcolor: "#f9fafb",
+                        },
+                      }}
+                    >
+                      Filters
+                    </Button>
+                    {activeFiltersCount > 0 && (
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          top: -6,
+                          right: -6,
+                          bgcolor: colors.primary,
+                          color: "#fff",
+                          borderRadius: "50%",
+                          width: 20,
+                          height: 20,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "11px",
+                          fontWeight: 700,
+                          border: "2px solid #fff",
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                        }}
+                      >
+                        {activeFiltersCount}
+                      </Box>
+                    )}
+                  </Box>
                 )}
-                <FormControl size="small" sx={{ minWidth: 160 }}>
+                <FormControl
+                  size="small"
+                  sx={{ minWidth: { xs: 120, sm: 160 } }}
+                >
                   <Select
                     defaultValue="popularity"
                     sx={{
                       borderRadius: "6px",
-                      fontSize: "14px",
+                      fontSize: { xs: "13px", sm: "14px" },
                       bgcolor: "#fff",
                     }}
                   >
@@ -1184,54 +1481,56 @@ const CompaniesPageNaukri = () => {
                   </Select>
                 </FormControl>
               </Box>
-              <ToggleButtonGroup
-                value={viewMode}
-                exclusive
-                onChange={(e, newMode) => newMode && setViewMode(newMode)}
-                size="small"
-                sx={{
-                  bgcolor: "#fff",
-                  borderRadius: "6px",
-                  border: "1px solid #e5e7eb",
-                  "& .MuiToggleButton-root": {
-                    border: "none",
+              {!isMobile && (
+                <ToggleButtonGroup
+                  value={viewMode}
+                  exclusive
+                  onChange={(e, newMode) => newMode && setViewMode(newMode)}
+                  size="small"
+                  sx={{
+                    bgcolor: "#fff",
                     borderRadius: "6px",
-                    mx: 0.5,
-                    my: 0.5,
-                    color: "#6b7280",
-                    transition: "all 0.2s ease",
-                    "& .MuiSvgIcon-root": {
-                      fontSize: "26px !important",
-                      width: "26px !important",
-                      height: "26px !important",
-                      color: "#6b7280 !important",
-                    },
-                    "&.Mui-selected": {
-                      bgcolor: `${colors.primary} !important`,
-                      color: "#fff !important",
+                    border: "1px solid #e5e7eb",
+                    "& .MuiToggleButton-root": {
+                      border: "none",
+                      borderRadius: "6px",
+                      mx: 0.5,
+                      my: 0.5,
+                      color: "#6b7280",
+                      transition: "all 0.2s ease",
                       "& .MuiSvgIcon-root": {
+                        fontSize: "22px !important",
+                        width: "22px !important",
+                        height: "22px !important",
+                        color: "#6b7280 !important",
+                      },
+                      "&.Mui-selected": {
+                        bgcolor: `${colors.primary} !important`,
                         color: "#fff !important",
+                        "& .MuiSvgIcon-root": {
+                          color: "#fff !important",
+                        },
+                        "&:hover": {
+                          bgcolor: `${colors.primaryDark} !important`,
+                        },
                       },
                       "&:hover": {
-                        bgcolor: `${colors.primaryDark} !important`,
+                        bgcolor: "#f3f4f6",
+                        "& .MuiSvgIcon-root": {
+                          color: `${colors.primary} !important`,
+                        },
                       },
                     },
-                    "&:hover": {
-                      bgcolor: "#f3f4f6",
-                      "& .MuiSvgIcon-root": {
-                        color: `${colors.primary} !important`,
-                      },
-                    },
-                  },
-                }}
-              >
-                <ToggleButton value="grid" sx={{ px: 2 }}>
-                  <ViewModule />
-                </ToggleButton>
-                <ToggleButton value="list" sx={{ px: 2 }}>
-                  <ViewList />
-                </ToggleButton>
-              </ToggleButtonGroup>
+                  }}
+                >
+                  <ToggleButton value="grid" sx={{ px: 2 }}>
+                    <ViewModule />
+                  </ToggleButton>
+                  <ToggleButton value="list" sx={{ px: 2 }}>
+                    <ViewList />
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              )}
             </Box>
 
             {/* Companies Grid */}
@@ -1257,26 +1556,65 @@ const CompaniesPageNaukri = () => {
                   </Grid>
                 ))}
               </Grid>
+            ) : filteredCompanies.length === 0 ? (
+              <Box
+                sx={{
+                  textAlign: "center",
+                  py: 8,
+                  px: 2,
+                }}
+              >
+                <Typography variant="h6" color="text.secondary" gutterBottom>
+                  No companies found
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 3 }}
+                >
+                  {searchInFilter
+                    ? `No results match "${searchInFilter}"`
+                    : "Try adjusting your filters"}
+                </Typography>
+                {searchInFilter && (
+                  <Button
+                    variant="outlined"
+                    onClick={() => setSearchInFilter("")}
+                    sx={{ textTransform: "none" }}
+                  >
+                    Clear Search
+                  </Button>
+                )}
+              </Box>
             ) : (
               <>
                 <Grid container spacing={3}>
-                  {companies.map(
-                    (company) => renderCompanyCard(company)
+                  {filteredCompanies.map((company) =>
+                    renderCompanyCard(company)
                   )}
                 </Grid>
 
                 {/* Pagination */}
-                <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    mt: { xs: 3, md: 5 },
+                  }}
+                >
                   <Pagination
                     count={totalPages}
                     page={page}
                     onChange={(e, value) => setPage(value)}
                     color="primary"
-                    size="large"
+                    size={isMobile ? "medium" : "large"}
                     sx={{
                       "& .MuiPaginationItem-root": {
                         fontWeight: 600,
-                        borderRadius: "6px",
+                        borderRadius: "8px",
+                        fontSize: { xs: "13px", sm: "14px" },
+                        minWidth: { xs: "32px", sm: "36px" },
+                        height: { xs: "32px", sm: "36px" },
                         "&.Mui-selected": {
                           background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
                         },
@@ -1290,33 +1628,106 @@ const CompaniesPageNaukri = () => {
         </Grid>
       </Container>
 
-      {/* Mobile Filters Drawer */}
+      {/* Mobile Filters Bottom Sheet */}
       <Drawer
-        anchor="left"
+        anchor="bottom"
         open={mobileFiltersOpen}
         onClose={() => setMobileFiltersOpen(false)}
         PaperProps={{
-          sx: { width: "85%", maxWidth: 360, borderRadius: "0 20px 20px 0" },
+          sx: {
+            maxHeight: "85vh",
+            borderTopLeftRadius: 16,
+            borderTopRightRadius: 16,
+            bgcolor: "#f9fafb",
+          },
         }}
       >
+        {/* Handle Bar */}
+        <Box
+          sx={{
+            width: 40,
+            height: 4,
+            bgcolor: "#d1d5db",
+            borderRadius: 2,
+            mx: "auto",
+            mt: 1.5,
+            mb: 2,
+          }}
+        />
+
+        {/* Header */}
         <Box
           sx={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            p: 2,
-            borderBottom: "1px solid #f3f4f6",
+            px: 3,
+            pb: 2,
           }}
         >
-          <Typography variant="h6" fontWeight={700}>
-            Filters
+          <Typography variant="h6" fontWeight={700} sx={{ fontSize: "18px" }}>
+            Filter companies
           </Typography>
-          <IconButton onClick={() => setMobileFiltersOpen(false)}>
-            <Close />
-          </IconButton>
+          <Button
+            onClick={() => {
+              setFilters({
+                companyType: [],
+                industry: [],
+                location: [],
+                companySize: [],
+                rating: 0,
+              });
+            }}
+            sx={{
+              textTransform: "none",
+              color: colors.primary,
+              fontWeight: 600,
+              fontSize: "14px",
+              minWidth: "auto",
+              p: 0,
+            }}
+          >
+            Clear all
+          </Button>
         </Box>
-        {renderFilters()}
-        <Box sx={{ p: 2, borderTop: "1px solid #f3f4f6" }}>
+
+        {/* Scrollable Filters */}
+        <Box
+          sx={{
+            overflowY: "auto",
+            maxHeight: "calc(85vh - 140px)",
+            bgcolor: "#fff",
+          }}
+        >
+          {renderFilters()}
+        </Box>
+
+        {/* Action Buttons */}
+        <Box
+          sx={{
+            p: 2,
+            bgcolor: "#fff",
+            borderTop: "1px solid #e5e7eb",
+            display: "flex",
+            gap: 2,
+          }}
+        >
+          <Button
+            fullWidth
+            variant="outlined"
+            onClick={() => setMobileFiltersOpen(false)}
+            sx={{
+              textTransform: "none",
+              fontWeight: 600,
+              py: 1.5,
+              borderRadius: "6px",
+              borderColor: "#e5e7eb",
+              color: "#374151",
+              height: 48,
+            }}
+          >
+            Cancel
+          </Button>
           <Button
             fullWidth
             variant="contained"
@@ -1327,9 +1738,10 @@ const CompaniesPageNaukri = () => {
               py: 1.5,
               borderRadius: "6px",
               background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
+              height: 48,
             }}
           >
-            Apply Filters
+            Apply
           </Button>
         </Box>
       </Drawer>

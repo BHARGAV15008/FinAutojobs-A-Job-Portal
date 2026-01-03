@@ -431,7 +431,7 @@ const RegisterPage = () => {
               </Grid>
 
               {/* Username Field */}
-              <Box sx={{ mb: 3, mt: 2 }}>
+              {/* <Box sx={{ mb: 3, mt: 2 }}>
                 <TextField
                   fullWidth
                   name="username"
@@ -474,7 +474,7 @@ const RegisterPage = () => {
                     💡 Tip: Username will be auto-generated if left empty
                   </Typography>
                 )}
-              </Box>
+              </Box> */}
 
               {/* Email Field */}
               <Box sx={{ mb: 3 }}>
